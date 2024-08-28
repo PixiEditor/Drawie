@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Reference Include="Silk.NET.Core">
+        <HintPath>..\..\..\..\.nuget\packages\silk.net.core\2.21.0\lib\net6.0\Silk.NET.Core.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+</Project>

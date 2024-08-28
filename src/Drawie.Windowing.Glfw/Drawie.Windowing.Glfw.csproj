@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Drawie.Silk</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Silk.NET.Windowing" Version="2.21.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Drawie.Numerics\Drawie.Numerics.csproj" />
+      <ProjectReference Include="..\Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj" />
+      <ProjectReference Include="..\Drawie.Skia\Drawie.Skia.csproj" />
+      <ProjectReference Include="..\Drawie.Windowing\Drawie.Windowing.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup Condition="$([MSBuild]::IsOsPlatform('Linux'))">
+       <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.0.0-preview.4.1"/>
+    </ItemGroup>
+    
+</Project>
