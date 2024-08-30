@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--Make directory /shaders/ if missing-->
+
+    <Target Name="CreateDir" AfterTargets="Build">
+        <MakeDir Directories="$(OutputPath)shaders" />
+    </Target>
+
+    <!--run glslc command Shaders into output dir to /shaders/-->
+
+    <Target Name="CompileShaders" AfterTargets="CreateDir">
+        <Exec Command="glslc -o $(OutputPath)shaders/vert.spv $(ProjectDir)Shaders/basic.vert" />
+        <Exec Command="glslc -o $(OutputPath)shaders/frag.spv $(ProjectDir)Shaders/basic.frag" />
+    </Target>
+</Project>

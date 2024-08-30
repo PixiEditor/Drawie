@@ -2,6 +2,7 @@ namespace Drawie.RenderApi.Vulkan;
 
 public struct QueueFamilyIndices
 {
-    public uint? GraphicsFamily;
-    public bool IsComplete => GraphicsFamily.HasValue;
+    public uint? GraphicsFamily { get; set; }
+    public uint? PresentFamily { get; set; }
+    public bool IsComplete => GraphicsFamily.HasValue && PresentFamily.HasValue;
 }

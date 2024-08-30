@@ -12,4 +12,8 @@
       </Reference>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Drawie.Numerics\Drawie.Numerics.csproj" />
+    </ItemGroup>
+
 </Project>

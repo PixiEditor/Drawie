@@ -41,6 +41,8 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     public event Action<double> Update;
     public event Action<double> Render;
     
+    private SKSurface? surface;
+    
     public GlfwWindow(string name, VecI size, IWindowRenderApi renderApi)
     {
         window = Window.Create(WindowOptions.Default with
@@ -58,16 +60,20 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         if (!isRunning)
         {
             window.Initialize();
-            RenderApi.CreateInstance(window.VkSurface);
+            RenderApi.CreateInstance(window.VkSurface, window.Size.ToVecI());
             
-            VulkanWindowRenderApi vkRenderApi = (VulkanWindowRenderApi) RenderApi;
+            /*VulkanWindowRenderApi vkRenderApi = (VulkanWindowRenderApi) RenderApi;
             SKImageInfo info = new SKImageInfo(Size.X, Size.Y, SKColorType.Rgba8888, SKAlphaType.Premul);
             GRVkBackendContext vkBackendContext = new GRVkBackendContext()
             {
-                Extensions = vkRenderApi.
-            }
-            GRContext ctx = GRContext.CreateVulkan()
-            SKSurface surface = SKSurface.Create()
+                VkDevice = vkRenderApi.LogicalDevice.Handle,
+                VkInstance = vkRenderApi.Instance.Handle,
+                VkPhysicalDevice = vkRenderApi.PhysicalDevice.Handle,
+            };
+            
+            SKImageInfo imageInfo = new SKImageInfo(Size.X, Size.Y, SKColorType.Rgba8888, SKAlphaType.Premul);
+            GRContext ctx = GRContext.CreateVulkan(vkBackendContext);
+            surface = SKSurface.Create(ctx, true, info);*/
             
             window.Render += OnRender;
             window.Update += OnUpdate;

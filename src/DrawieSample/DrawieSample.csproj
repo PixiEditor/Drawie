@@ -13,5 +13,5 @@
     <ProjectReference Include="..\Drawie.Skia\Drawie.Skia.csproj" />
     <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
   </ItemGroup>
-
+  
 </Project>
