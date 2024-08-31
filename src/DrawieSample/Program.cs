@@ -14,7 +14,7 @@ DrawingEngine engine = new DrawingEngine(windowingPlatform, drawingBackend);
 var window = windowingPlatform.CreateWindow("Drawie Sample", new VecI(800, 600));
 
 
-/*window.Update += deltaTime =>
+window.Update += deltaTime =>
 {
     
 };
@@ -22,6 +22,6 @@ var window = windowingPlatform.CreateWindow("Drawie Sample", new VecI(800, 600))
 window.Render += deltaTime =>
 {
     
-};*/
+};
 
 window.Show();

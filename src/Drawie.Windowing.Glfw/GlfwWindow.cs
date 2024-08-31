@@ -3,6 +3,7 @@ using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan;
 using Drawie.Silk.Extensions;
 using PixiEditor.Numerics;
+using Silk.NET.Maths;
 using Silk.NET.Windowing;
 using SkiaSharp;
 
@@ -61,26 +62,32 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         {
             window.Initialize();
             RenderApi.CreateInstance(window.VkSurface, window.Size.ToVecI());
+            window.FramebufferResize += WindowOnFramebufferResize;
             
             /*VulkanWindowRenderApi vkRenderApi = (VulkanWindowRenderApi) RenderApi;
-            SKImageInfo info = new SKImageInfo(Size.X, Size.Y, SKColorType.Rgba8888, SKAlphaType.Premul);
             GRVkBackendContext vkBackendContext = new GRVkBackendContext()
             {
                 VkDevice = vkRenderApi.LogicalDevice.Handle,
                 VkInstance = vkRenderApi.Instance.Handle,
                 VkPhysicalDevice = vkRenderApi.PhysicalDevice.Handle,
+                VkQueue = vkRenderApi.graphicsQueue.Handle,
+                GraphicsQueueIndex = 0,
+                GetProcedureAddress = vkRenderApi.GetProcedureAddress
             };
             
-            SKImageInfo imageInfo = new SKImageInfo(Size.X, Size.Y, SKColorType.Rgba8888, SKAlphaType.Premul);
-            GRContext ctx = GRContext.CreateVulkan(vkBackendContext);
-            surface = SKSurface.Create(ctx, true, info);*/
+            GRContext ctx = GRContext.CreateVulkan(vkBackendContext);*/
             
             window.Render += RenderApi.Render;
-            //window.Render += OnRender;
+            window.Render += OnRender;
             window.Update += OnUpdate;
             isRunning = true;
             window.Run();
         }
+    }
+
+    private void WindowOnFramebufferResize(Vector2D<int> newSize)
+    {
+        RenderApi.UpdateFramebufferSize(newSize.X, newSize.Y);
     }
 
     private void OnUpdate(double dt)
