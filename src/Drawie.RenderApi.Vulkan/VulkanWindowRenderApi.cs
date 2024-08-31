@@ -16,8 +16,9 @@ public class VulkanWindowRenderApi : IWindowRenderApi
 {
     public Vk? Vk { get; private set; }
 
-    
+
     private const int MAX_FRAMES_IN_FLIGHT = 2;
+
     public Instance Instance
     {
         get => instance;
@@ -25,7 +26,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
     }
 
     public bool EnableValidationLayers { get; set; } = true;
-    public PhysicalDevice PhysicalDevice { get; set; }
+    public PhysicalDevice PhysicalDevice { get; private set; }
 
     public Device LogicalDevice
     {
@@ -46,15 +47,15 @@ public class VulkanWindowRenderApi : IWindowRenderApi
     private ExtDebugUtils extDebugUtils;
     private DebugUtilsMessengerEXT debugMessenger;
     private Instance instance;
-    
+
     private Device logicalDevice;
-    
+
     private KhrSurface? khrSurface;
     private SurfaceKHR surface;
-    
+
     private Queue graphicsQueue;
     private Queue presentQueue;
-    
+
     private KhrSwapchain? khrSwapchain;
     private SwapchainKHR swapChain;
     private Image[] swapChainImages;
@@ -62,17 +63,18 @@ public class VulkanWindowRenderApi : IWindowRenderApi
     private Extent2D swapChainExtent;
     private ImageView[] swapChainImageViews;
     private Framebuffer[] swapChainFramebuffers;
-    
+
     private VecI framebufferSize;
-    
+    private VecI lastFramebufferSize;
+
     private RenderPass renderPass;
-    
+
     private PipelineLayout pipelineLayout;
     private Pipeline graphicsPipeline;
-    
+
     private CommandPool commandPool;
     private CommandBuffer[]? commandBuffers;
-    
+
     private Semaphore[]? imageAvailableSemaphores;
     private Semaphore[]? renderFinishedSemaphores;
     private Fence[]? inFlightFences;
@@ -95,7 +97,10 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         SetupInstance(vkSurface);
         SetupDebugMessenger();
         CreateSurface(vkSurface);
-        PickPhysicalDevice();
+        GpuInfo selectedGpu = PickPhysicalDevice();
+        
+        Console.WriteLine($"Selected GPU: {selectedGpu.Name}");
+        
         CreateLogicalDevice();
         CreateSwapChain();
         CreateImageViews();
@@ -111,29 +116,25 @@ public class VulkanWindowRenderApi : IWindowRenderApi
     {
         Vk!.DeviceWaitIdle(LogicalDevice);
         
-        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        CleanupSwapchain();
+
+        for (var i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             Vk!.DestroySemaphore(logicalDevice, renderFinishedSemaphores![i], null);
             Vk!.DestroySemaphore(logicalDevice, imageAvailableSemaphores![i], null);
             Vk!.DestroyFence(logicalDevice, inFlightFences![i], null);
         }
-        
+
         Vk!.DestroyCommandPool(LogicalDevice, commandPool, null);
-        
-        foreach (var framebuffer in swapChainFramebuffers)
-        {
-            Vk!.DestroyFramebuffer(LogicalDevice, framebuffer, null);
-        }
-        
+
+        foreach (var framebuffer in swapChainFramebuffers) Vk!.DestroyFramebuffer(LogicalDevice, framebuffer, null);
+
         Vk!.DestroyPipeline(LogicalDevice, graphicsPipeline, null);
         Vk!.DestroyPipelineLayout(LogicalDevice, pipelineLayout, null);
         Vk!.DestroyRenderPass(LogicalDevice, renderPass, null);
-        
-        foreach (var view in swapChainImageViews)
-        {
-            Vk!.DestroyImageView(LogicalDevice, view, null);
-        }
-        
+
+        foreach (var view in swapChainImageViews) Vk!.DestroyImageView(LogicalDevice, view, null);
+
         khrSwapchain!.DestroySwapchain(LogicalDevice, swapChain, null);
         Vk!.DestroyDevice(LogicalDevice, null);
         if (EnableValidationLayers) extDebugUtils!.DestroyDebugUtilsMessenger(Instance, debugMessenger, null);
@@ -143,57 +144,116 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         Vk!.Dispose();
     }
 
+    private unsafe void CleanupSwapchain()
+    {
+        foreach (var framebuffer in swapChainFramebuffers)
+        {
+            Vk!.DestroyFramebuffer(LogicalDevice, framebuffer, null);
+        }
+        
+        fixed (CommandBuffer* commandBuffersPtr = commandBuffers)
+        {
+            Vk!.FreeCommandBuffers(LogicalDevice, commandPool, (uint)commandBuffers!.Length, commandBuffersPtr);
+        }
+        
+        Vk!.DestroyPipeline(LogicalDevice, graphicsPipeline, null);
+        Vk!.DestroyPipelineLayout(LogicalDevice, pipelineLayout, null);
+        Vk!.DestroyRenderPass(LogicalDevice, renderPass, null);
+        
+        foreach (var imageView in swapChainImageViews)
+        {
+            Vk!.DestroyImageView(LogicalDevice, imageView, null);
+        }
+        
+        khrSwapchain!.DestroySwapchain(LogicalDevice, swapChain, null);
+    }
+
+    private void RecreateSwapchain()
+    {
+        if(framebufferSize.X == 0 || framebufferSize.Y == 0)
+        {
+            // Handle minimized window differently than in tutorial
+            /*
+             *  while (framebufferSize.X == 0 || framebufferSize.Y == 0)
+                      {
+                          framebufferSize = window.FramebufferSize;
+                          window.DoEvents();
+                      }
+             */
+            framebufferSize = lastFramebufferSize;
+            return;
+        }
+        
+        Vk!.DeviceWaitIdle(LogicalDevice);
+        
+        CleanupSwapchain();
+        
+        CreateSwapChain();
+        CreateImageViews();
+        CreateRenderPass();
+        CreateGraphicsPipeline();
+        CreateFramebuffers();
+        CreateCommandBuffers();
+        
+        imagesInFlight = new Fence[swapChainImages.Length];
+        
+        lastFramebufferSize = framebufferSize;
+    }
+    
     private unsafe void CreateSyncObjects()
     {
         imageAvailableSemaphores = new Semaphore[MAX_FRAMES_IN_FLIGHT];
         renderFinishedSemaphores = new Semaphore[MAX_FRAMES_IN_FLIGHT];
         inFlightFences = new Fence[MAX_FRAMES_IN_FLIGHT];
         imagesInFlight = new Fence[swapChainImages.Length];
-        
+
         SemaphoreCreateInfo semaphoreInfo = new()
         {
             SType = StructureType.SemaphoreCreateInfo
         };
-        
+
         FenceCreateInfo fenceInfo = new()
         {
             SType = StructureType.FenceCreateInfo,
             Flags = FenceCreateFlags.SignaledBit
         };
-        
-        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            if (Vk!.CreateSemaphore(LogicalDevice, semaphoreInfo, null, out imageAvailableSemaphores[i]) != Result.Success ||
-                Vk!.CreateSemaphore(LogicalDevice, semaphoreInfo, null, out renderFinishedSemaphores[i]) != Result.Success ||
+
+        for (var i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+            if (Vk!.CreateSemaphore(LogicalDevice, semaphoreInfo, null, out imageAvailableSemaphores[i]) !=
+                Result.Success ||
+                Vk!.CreateSemaphore(LogicalDevice, semaphoreInfo, null, out renderFinishedSemaphores[i]) !=
+                Result.Success ||
                 Vk!.CreateFence(LogicalDevice, fenceInfo, null, out inFlightFences[i]) != Result.Success)
-            {
                 throw new VulkanException("Failed to create synchronization objects for a frame.");
-            }
-        }
     }
 
     public unsafe void Render(double deltaTime)
     {
         Vk!.WaitForFences(LogicalDevice, 1, inFlightFences![currentFrame], true, ulong.MaxValue);
-        
+
         uint imageIndex = 0;
-        khrSwapchain!.AcquireNextImage(LogicalDevice, swapChain, ulong.MaxValue, imageAvailableSemaphores![currentFrame], default, ref imageIndex);
-        
-        if (imagesInFlight![imageIndex].Handle != default)
-        {
-            Vk!.WaitForFences(LogicalDevice, 1, imagesInFlight[imageIndex], true, ulong.MaxValue);
+        var acquireResult = khrSwapchain!.AcquireNextImage(LogicalDevice, swapChain, ulong.MaxValue,
+            imageAvailableSemaphores![currentFrame], default, ref imageIndex);
+
+        if (acquireResult == Result.ErrorOutOfDateKhr)
+        { 
+            RecreateSwapchain();
+            return;
         }
-        
+
+        if (imagesInFlight![imageIndex].Handle != default)
+            Vk!.WaitForFences(LogicalDevice, 1, imagesInFlight[imageIndex], true, ulong.MaxValue);
+
         imagesInFlight[imageIndex] = inFlightFences[currentFrame];
-        
+
         SubmitInfo submitInfo = new()
         {
             SType = StructureType.SubmitInfo
         };
-        
+
         var waitSemaphores = stackalloc[] { imageAvailableSemaphores[currentFrame] };
         var waitStages = stackalloc[] { PipelineStageFlags.ColorAttachmentOutputBit };
-        
+
         var buffer = commandBuffers![imageIndex];
 
         submitInfo = submitInfo with
@@ -205,23 +265,21 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             CommandBufferCount = 1,
             PCommandBuffers = &buffer
         };
-        
+
         var signalSemaphores = stackalloc[] { renderFinishedSemaphores![currentFrame] };
         submitInfo = submitInfo with
         {
             SignalSemaphoreCount = 1,
             PSignalSemaphores = signalSemaphores
         };
-        
+
         Vk!.ResetFences(LogicalDevice, 1, inFlightFences[currentFrame]);
-        
+
         if (Vk!.QueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != Result.Success)
-        {
             throw new VulkanException("Failed to submit draw command buffer.");
-        }
-        
+
         var swapChains = stackalloc[] { swapChain };
-        
+
         PresentInfoKHR presentInfo = new()
         {
             SType = StructureType.PresentInfoKhr,
@@ -231,8 +289,18 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             PSwapchains = swapChains,
             PImageIndices = &imageIndex
         };
+
+        var result = khrSwapchain!.QueuePresent(presentQueue, presentInfo);
         
-        khrSwapchain!.QueuePresent(presentQueue, presentInfo);
+        if(result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr || lastFramebufferSize != framebufferSize)
+        {
+            RecreateSwapchain();
+        }
+        else if(result != Result.Success)
+        {
+            throw new VulkanException("Failed to present swap chain image.");
+        }
+        
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
@@ -243,13 +311,11 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         CommandPoolCreateInfo poolInfo = new()
         {
             SType = StructureType.CommandPoolCreateInfo,
-            QueueFamilyIndex = queueFamilyIndices.GraphicsFamily!.Value,
+            QueueFamilyIndex = queueFamilyIndices.GraphicsFamily!.Value
         };
 
         if (Vk!.CreateCommandPool(LogicalDevice, in poolInfo, null, out commandPool) != Result.Success)
-        {
             throw new VulkanException("Failed to create command pool.");
-        }
     }
 
     private unsafe void CreateCommandBuffers()
@@ -262,27 +328,23 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             Level = CommandBufferLevel.Primary,
             CommandBufferCount = (uint)commandBuffers.Length
         };
-        
+
         fixed (CommandBuffer* commandBuffersPtr = commandBuffers)
         {
             if (Vk!.AllocateCommandBuffers(LogicalDevice, in allocInfo, commandBuffersPtr) != Result.Success)
-            {
                 throw new VulkanException("Failed to allocate command buffers.");
-            }
         }
 
-        for (int i = 0; i < commandBuffers.Length; i++)
+        for (var i = 0; i < commandBuffers.Length; i++)
         {
             CommandBufferBeginInfo beginInfo = new()
             {
                 SType = StructureType.CommandBufferBeginInfo
             };
-            
+
             if (Vk!.BeginCommandBuffer(commandBuffers[i], in beginInfo) != Result.Success)
-            {
                 throw new VulkanException("Failed to begin recording command buffer.");
-            }
-            
+
             RenderPassBeginInfo renderPassInfo = new()
             {
                 SType = StructureType.RenderPassBeginInfo,
@@ -292,34 +354,32 @@ public class VulkanWindowRenderApi : IWindowRenderApi
                 {
                     Offset = new Offset2D(0, 0),
                     Extent = swapChainExtent
-                },
+                }
             };
-            
+
             ClearValue clearColor = new()
             {
                 Color = new ClearColorValue() { Float32_0 = 0, Float32_1 = 0, Float32_2 = 0, Float32_3 = 1 }
             };
-            
+
             renderPassInfo.ClearValueCount = 1;
             renderPassInfo.PClearValues = &clearColor;
-            
+
             Vk!.CmdBeginRenderPass(commandBuffers[i], &renderPassInfo, SubpassContents.Inline);
             Vk!.CmdBindPipeline(commandBuffers[i], PipelineBindPoint.Graphics, graphicsPipeline);
             Vk!.CmdDraw(commandBuffers[i], 3, 1, 0, 0);
             Vk!.CmdEndRenderPass(commandBuffers[i]);
-            
+
             if (Vk!.EndCommandBuffer(commandBuffers[i]) != Result.Success)
-            {
                 throw new VulkanException("Failed to record command buffer.");
-            }
         }
     }
-    
+
     private unsafe void CreateFramebuffers()
     {
         swapChainFramebuffers = new Framebuffer[swapChainImageViews!.Length];
 
-        for (int i = 0; i < swapChainImageViews.Length; i++)
+        for (var i = 0; i < swapChainImageViews.Length; i++)
         {
             var attachment = swapChainImageViews[i];
 
@@ -331,24 +391,22 @@ public class VulkanWindowRenderApi : IWindowRenderApi
                 PAttachments = &attachment,
                 Width = swapChainExtent.Width,
                 Height = swapChainExtent.Height,
-                Layers = 1,
+                Layers = 1
             };
 
-            if (Vk!.CreateFramebuffer(logicalDevice, framebufferInfo, null, out swapChainFramebuffers[i]) != Result.Success)
-            {
-                throw new VulkanException("Failed to create framebuffer.");
-            }
+            if (Vk!.CreateFramebuffer(logicalDevice, framebufferInfo, null, out swapChainFramebuffers[i]) !=
+                Result.Success) throw new VulkanException("Failed to create framebuffer.");
         }
-    } 
+    }
 
     private unsafe void CreateGraphicsPipeline()
     {
         var vertShaderCode = File.ReadAllBytes("shaders/vert.spv");
         var fragShaderCode = File.ReadAllBytes("shaders/frag.spv");
-        
+
         var vertShaderModule = CreateShaderModule(vertShaderCode);
         var fragShaderModule = CreateShaderModule(fragShaderCode);
-        
+
         PipelineShaderStageCreateInfo vertShaderStageInfo = new()
         {
             SType = StructureType.PipelineShaderStageCreateInfo,
@@ -356,7 +414,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             Module = vertShaderModule,
             PName = (byte*)Marshal.StringToHGlobalAnsi("main")
         };
-        
+
         PipelineShaderStageCreateInfo fragShaderStageInfo = new()
         {
             SType = StructureType.PipelineShaderStageCreateInfo,
@@ -364,27 +422,27 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             Module = fragShaderModule,
             PName = (byte*)Marshal.StringToHGlobalAnsi("main")
         };
-        
+
         var shaderStages = stackalloc[]
         {
             vertShaderStageInfo,
             fragShaderStageInfo
         };
-        
+
         PipelineVertexInputStateCreateInfo vertexInputInfo = new()
         {
             SType = StructureType.PipelineVertexInputStateCreateInfo,
             VertexBindingDescriptionCount = 0,
             VertexAttributeDescriptionCount = 0
         };
-        
+
         PipelineInputAssemblyStateCreateInfo inputAssembly = new()
         {
             SType = StructureType.PipelineInputAssemblyStateCreateInfo,
             Topology = PrimitiveTopology.TriangleList,
             PrimitiveRestartEnable = false
         };
-        
+
         Viewport viewport = new()
         {
             X = 0.0f,
@@ -394,13 +452,13 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             MinDepth = 0.0f,
             MaxDepth = 1.0f
         };
-        
+
         Rect2D scissor = new()
         {
             Offset = new Offset2D(0, 0),
             Extent = swapChainExtent
         };
-        
+
         PipelineViewportStateCreateInfo viewportState = new()
         {
             SType = StructureType.PipelineViewportStateCreateInfo,
@@ -409,7 +467,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             ScissorCount = 1,
             PScissors = &scissor
         };
-        
+
         PipelineRasterizationStateCreateInfo rasterizer = new()
         {
             SType = StructureType.PipelineRasterizationStateCreateInfo,
@@ -421,20 +479,21 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             FrontFace = FrontFace.Clockwise,
             DepthBiasEnable = false
         };
-        
+
         PipelineMultisampleStateCreateInfo multisampling = new()
         {
             SType = StructureType.PipelineMultisampleStateCreateInfo,
             SampleShadingEnable = false,
             RasterizationSamples = SampleCountFlags.Count1Bit
         };
-        
+
         PipelineColorBlendAttachmentState colorBlendAttachment = new()
         {
-            ColorWriteMask = ColorComponentFlags.RBit | ColorComponentFlags.GBit | ColorComponentFlags.BBit | ColorComponentFlags.ABit,
+            ColorWriteMask = ColorComponentFlags.RBit | ColorComponentFlags.GBit | ColorComponentFlags.BBit |
+                             ColorComponentFlags.ABit,
             BlendEnable = false
         };
-        
+
         PipelineColorBlendStateCreateInfo colorBlending = new()
         {
             SType = StructureType.PipelineColorBlendStateCreateInfo,
@@ -443,23 +502,21 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             AttachmentCount = 1,
             PAttachments = &colorBlendAttachment
         };
-        
+
         colorBlending.BlendConstants[0] = 0.0f;
         colorBlending.BlendConstants[1] = 0.0f;
         colorBlending.BlendConstants[2] = 0.0f;
         colorBlending.BlendConstants[3] = 0.0f;
-        
+
         PipelineLayoutCreateInfo pipelineLayoutInfo = new()
         {
             SType = StructureType.PipelineLayoutCreateInfo,
             SetLayoutCount = 0,
             PushConstantRangeCount = 0
         };
-        
+
         if (Vk!.CreatePipelineLayout(LogicalDevice, in pipelineLayoutInfo, null, out pipelineLayout) != Result.Success)
-        {
             throw new VulkanException("Failed to create pipeline layout.");
-        }
 
         GraphicsPipelineCreateInfo pipelineCreateInfo = new()
         {
@@ -475,40 +532,36 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             Layout = pipelineLayout,
             RenderPass = renderPass,
             Subpass = 0,
-            BasePipelineHandle = default,
+            BasePipelineHandle = default
         };
-        
-        if (Vk!.CreateGraphicsPipelines(LogicalDevice, default, 1, &pipelineCreateInfo, null, out graphicsPipeline) != Result.Success)
-        {
-            throw new VulkanException("Failed to create graphics pipeline.");
-        }
-        
+
+        if (Vk!.CreateGraphicsPipelines(LogicalDevice, default, 1, &pipelineCreateInfo, null, out graphicsPipeline) !=
+            Result.Success) throw new VulkanException("Failed to create graphics pipeline.");
+
         Vk!.DestroyShaderModule(LogicalDevice, vertShaderModule, null);
         Vk!.DestroyShaderModule(LogicalDevice, fragShaderModule, null);
-        
+
         SilkMarshal.Free((nint)vertShaderStageInfo.PName);
         SilkMarshal.Free((nint)fragShaderStageInfo.PName);
     }
-    
+
     private unsafe ShaderModule CreateShaderModule(byte[] code)
     {
         ShaderModuleCreateInfo createInfo = new()
         {
             SType = StructureType.ShaderModuleCreateInfo,
-            CodeSize = (nuint)code.Length,
+            CodeSize = (nuint)code.Length
         };
 
         ShaderModule shaderModule;
-        
-        fixed(byte* codePtr = code)
+
+        fixed (byte* codePtr = code)
         {
             createInfo.PCode = (uint*)codePtr;
             if (Vk!.CreateShaderModule(LogicalDevice, in createInfo, null, out shaderModule) != Result.Success)
-            {
                 throw new VulkanException("Failed to create shader module");
-            }
         }
-        
+
         return shaderModule;
     }
 
@@ -516,7 +569,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
     {
         swapChainImageViews = new ImageView[swapChainImages.Length];
 
-        for (int i = 0; i < swapChainImages.Length; i++)
+        for (var i = 0; i < swapChainImages.Length; i++)
         {
             ImageViewCreateInfo createInfo = new()
             {
@@ -542,9 +595,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             };
 
             if (Vk!.CreateImageView(LogicalDevice, in createInfo, null, out swapChainImageViews[i]) != Result.Success)
-            {
                 throw new VulkanException("Failed to create image views.");
-            }
         }
     }
 
@@ -560,20 +611,20 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             InitialLayout = ImageLayout.Undefined,
             FinalLayout = ImageLayout.PresentSrcKhr
         };
-        
+
         AttachmentReference colorAttachmentRef = new()
         {
             Attachment = 0,
             Layout = ImageLayout.ColorAttachmentOptimal
         };
-        
+
         SubpassDescription subpass = new()
         {
             PipelineBindPoint = PipelineBindPoint.Graphics,
             ColorAttachmentCount = 1,
             PColorAttachments = &colorAttachmentRef
         };
-        
+
         SubpassDependency dependency = new()
         {
             SrcSubpass = Vk.SubpassExternal,
@@ -583,7 +634,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             DstStageMask = PipelineStageFlags.ColorAttachmentOutputBit,
             DstAccessMask = AccessFlags.ColorAttachmentWriteBit
         };
-        
+
         RenderPassCreateInfo renderPassInfo = new()
         {
             SType = StructureType.RenderPassCreateInfo,
@@ -594,11 +645,9 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             DependencyCount = 1,
             PDependencies = &dependency
         };
-        
+
         if (Vk!.CreateRenderPass(LogicalDevice, in renderPassInfo, null, out renderPass) != Result.Success)
-        {
             throw new VulkanException("Failed to create render pass.");
-        }
     }
 
     private unsafe void CreateSwapChain()
@@ -630,18 +679,14 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         var queueFamilyIndices = stackalloc[] { indices.GraphicsFamily!.Value, indices.PresentFamily!.Value };
 
         if (indices.GraphicsFamily != indices.PresentFamily)
-        {
             creatInfo = creatInfo with
             {
                 ImageSharingMode = SharingMode.Concurrent,
                 QueueFamilyIndexCount = 2,
                 PQueueFamilyIndices = queueFamilyIndices
             };
-        }
         else
-        {
             creatInfo.ImageSharingMode = SharingMode.Exclusive;
-        }
 
         creatInfo = creatInfo with
         {
@@ -810,32 +855,45 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         if (EnableValidationLayers) SilkMarshal.Free((nint)createInfo.PpEnabledLayerNames);
     }
 
-    private void PickPhysicalDevice()
+    private unsafe GpuInfo PickPhysicalDevice()
     {
         var devices = Vk!.GetPhysicalDevices(Instance);
         foreach (var device in devices)
-            if (IsDeviceSuitable(device))
-                PhysicalDevice = device;
-
-        if (PhysicalDevice.Handle == 0)
         {
-            throw new VulkanException("Failed to find a suitable Vulkan GPU.");
+            if (IsDeviceSuitable(device))
+            {
+                var props = Vk.GetPhysicalDeviceProperties(device);
+                var name = props.DeviceName;
+                var deviceName = Marshal.PtrToStringAnsi((nint)name);
+
+                if (deviceName == null)
+                {
+                    throw new VulkanException("Failed to get device name.");
+                }
+                
+                GpuInfo gpuInfo = new(deviceName);
+                PhysicalDevice = device;
+                return gpuInfo;
+            }
         }
+
+        if (PhysicalDevice.Handle == 0) throw new VulkanException("Failed to find a suitable Vulkan GPU.");
+        
+        return new GpuInfo("Unknown");
     }
 
     private unsafe void CreateLogicalDevice()
     {
         var indices = FindQueueFamilies(PhysicalDevice);
-        
-        var uniqueQueueFamilies = new[] {indices.GraphicsFamily!.Value, indices.PresentFamily!.Value};
+
+        var uniqueQueueFamilies = new[] { indices.GraphicsFamily!.Value, indices.PresentFamily!.Value };
         uniqueQueueFamilies = uniqueQueueFamilies.Distinct().ToArray();
-        
+
         using var mem = GlobalMemory.Allocate(uniqueQueueFamilies.Length * sizeof(DeviceQueueCreateInfo));
         var queueCreateInfos = (DeviceQueueCreateInfo*)Unsafe.AsPointer(ref mem.GetPinnableReference());
-        
-        float queuePriority = 1.0f;
-        for (int i = 0; i < uniqueQueueFamilies.Length; i++)
-        {
+
+        var queuePriority = 1.0f;
+        for (var i = 0; i < uniqueQueueFamilies.Length; i++)
             queueCreateInfos[i] = new DeviceQueueCreateInfo
             {
                 SType = StructureType.DeviceQueueCreateInfo,
@@ -843,8 +901,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
                 QueueCount = 1,
                 PQueuePriorities = &queuePriority
             };
-        }
-        
+
         PhysicalDeviceFeatures deviceFeatures = new();
 
         DeviceCreateInfo createInfo = new()
@@ -870,7 +927,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         }
 
         if (Vk!.CreateDevice(PhysicalDevice, in createInfo, null, out logicalDevice) != Result.Success)
-            throw new VulkanException("failed to create logical device.");
+            throw new VulkanException("Failed to create logical device.");
 
         Vk!.GetDeviceQueue(logicalDevice, indices.GraphicsFamily!.Value, 0, out graphicsQueue);
         Vk!.GetDeviceQueue(logicalDevice, indices.PresentFamily!.Value, 0, out presentQueue);
@@ -976,9 +1033,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
 
         if (extDebugUtils!.CreateDebugUtilsMessenger(Instance, in createInfo, null, out debugMessenger) !=
             Result.Success)
-        {
             throw new Exception("failed to set up debug messenger!");
-        }
     }
 
     private void ThrowIfValidationLayersNotSupported()
