@@ -75,7 +75,8 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             GRContext ctx = GRContext.CreateVulkan(vkBackendContext);
             surface = SKSurface.Create(ctx, true, info);*/
             
-            window.Render += OnRender;
+            window.Render += RenderApi.Render;
+            //window.Render += OnRender;
             window.Update += OnUpdate;
             isRunning = true;
             window.Run();

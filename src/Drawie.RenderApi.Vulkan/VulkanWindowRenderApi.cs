@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using PixiEditor.Numerics;
 using Silk.NET.Core;
@@ -15,6 +16,8 @@ public class VulkanWindowRenderApi : IWindowRenderApi
 {
     public Vk? Vk { get; private set; }
 
+    
+    private const int MAX_FRAMES_IN_FLIGHT = 2;
     public Instance Instance
     {
         get => instance;
@@ -106,6 +109,8 @@ public class VulkanWindowRenderApi : IWindowRenderApi
 
     public unsafe void DestroyInstance()
     {
+        Vk!.DeviceWaitIdle(LogicalDevice);
+        
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             Vk!.DestroySemaphore(logicalDevice, renderFinishedSemaphores![i], null);
@@ -138,7 +143,98 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         Vk!.Dispose();
     }
 
-    private const int MAX_FRAMES_IN_FLIGHT = 2;
+    private unsafe void CreateSyncObjects()
+    {
+        imageAvailableSemaphores = new Semaphore[MAX_FRAMES_IN_FLIGHT];
+        renderFinishedSemaphores = new Semaphore[MAX_FRAMES_IN_FLIGHT];
+        inFlightFences = new Fence[MAX_FRAMES_IN_FLIGHT];
+        imagesInFlight = new Fence[swapChainImages.Length];
+        
+        SemaphoreCreateInfo semaphoreInfo = new()
+        {
+            SType = StructureType.SemaphoreCreateInfo
+        };
+        
+        FenceCreateInfo fenceInfo = new()
+        {
+            SType = StructureType.FenceCreateInfo,
+            Flags = FenceCreateFlags.SignaledBit
+        };
+        
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            if (Vk!.CreateSemaphore(LogicalDevice, semaphoreInfo, null, out imageAvailableSemaphores[i]) != Result.Success ||
+                Vk!.CreateSemaphore(LogicalDevice, semaphoreInfo, null, out renderFinishedSemaphores[i]) != Result.Success ||
+                Vk!.CreateFence(LogicalDevice, fenceInfo, null, out inFlightFences[i]) != Result.Success)
+            {
+                throw new VulkanException("Failed to create synchronization objects for a frame.");
+            }
+        }
+    }
+
+    public unsafe void Render(double deltaTime)
+    {
+        Vk!.WaitForFences(LogicalDevice, 1, inFlightFences![currentFrame], true, ulong.MaxValue);
+        
+        uint imageIndex = 0;
+        khrSwapchain!.AcquireNextImage(LogicalDevice, swapChain, ulong.MaxValue, imageAvailableSemaphores![currentFrame], default, ref imageIndex);
+        
+        if (imagesInFlight![imageIndex].Handle != default)
+        {
+            Vk!.WaitForFences(LogicalDevice, 1, imagesInFlight[imageIndex], true, ulong.MaxValue);
+        }
+        
+        imagesInFlight[imageIndex] = inFlightFences[currentFrame];
+        
+        SubmitInfo submitInfo = new()
+        {
+            SType = StructureType.SubmitInfo
+        };
+        
+        var waitSemaphores = stackalloc[] { imageAvailableSemaphores[currentFrame] };
+        var waitStages = stackalloc[] { PipelineStageFlags.ColorAttachmentOutputBit };
+        
+        var buffer = commandBuffers![imageIndex];
+
+        submitInfo = submitInfo with
+        {
+            WaitSemaphoreCount = 1,
+            PWaitSemaphores = waitSemaphores,
+            PWaitDstStageMask = waitStages,
+
+            CommandBufferCount = 1,
+            PCommandBuffers = &buffer
+        };
+        
+        var signalSemaphores = stackalloc[] { renderFinishedSemaphores![currentFrame] };
+        submitInfo = submitInfo with
+        {
+            SignalSemaphoreCount = 1,
+            PSignalSemaphores = signalSemaphores
+        };
+        
+        Vk!.ResetFences(LogicalDevice, 1, inFlightFences[currentFrame]);
+        
+        if (Vk!.QueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != Result.Success)
+        {
+            throw new VulkanException("Failed to submit draw command buffer.");
+        }
+        
+        var swapChains = stackalloc[] { swapChain };
+        
+        PresentInfoKHR presentInfo = new()
+        {
+            SType = StructureType.PresentInfoKhr,
+            WaitSemaphoreCount = 1,
+            PWaitSemaphores = signalSemaphores,
+            SwapchainCount = 1,
+            PSwapchains = swapChains,
+            PImageIndices = &imageIndex
+        };
+        
+        khrSwapchain!.QueuePresent(presentQueue, presentInfo);
+        currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
 
     private unsafe void CreateCommandPool()
     {
@@ -201,13 +297,13 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             
             ClearValue clearColor = new()
             {
-                Color = new ClearColorValue(float32_0: 0, float32_1: 0, float32_2: 0, float32_3: 1)
+                Color = new ClearColorValue() { Float32_0 = 0, Float32_1 = 0, Float32_2 = 0, Float32_3 = 1 }
             };
             
             renderPassInfo.ClearValueCount = 1;
             renderPassInfo.PClearValues = &clearColor;
             
-            Vk!.CmdBeginRenderPass(commandBuffers[i], in renderPassInfo, SubpassContents.Inline);
+            Vk!.CmdBeginRenderPass(commandBuffers[i], &renderPassInfo, SubpassContents.Inline);
             Vk!.CmdBindPipeline(commandBuffers[i], PipelineBindPoint.Graphics, graphicsPipeline);
             Vk!.CmdDraw(commandBuffers[i], 3, 1, 0, 0);
             Vk!.CmdEndRenderPass(commandBuffers[i]);
@@ -322,7 +418,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             PolygonMode = PolygonMode.Fill,
             LineWidth = 1.0f,
             CullMode = CullModeFlags.BackBit,
-            FrontFace = FrontFace.CounterClockwise,
+            FrontFace = FrontFace.Clockwise,
             DepthBiasEnable = false
         };
         
@@ -400,14 +496,19 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         {
             SType = StructureType.ShaderModuleCreateInfo,
             CodeSize = (nuint)code.Length,
-            PCode = (uint*)Marshal.UnsafeAddrOfPinnedArrayElement(code, 0)
         };
 
-        if (Vk!.CreateShaderModule(LogicalDevice, in createInfo, null, out var shaderModule) != Result.Success)
+        ShaderModule shaderModule;
+        
+        fixed(byte* codePtr = code)
         {
-            throw new VulkanException("Failed to create shader module");
+            createInfo.PCode = (uint*)codePtr;
+            if (Vk!.CreateShaderModule(LogicalDevice, in createInfo, null, out shaderModule) != Result.Success)
+            {
+                throw new VulkanException("Failed to create shader module");
+            }
         }
-
+        
         return shaderModule;
     }
 
@@ -456,7 +557,6 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             LoadOp = AttachmentLoadOp.Clear,
             StoreOp = AttachmentStoreOp.Store,
             StencilLoadOp = AttachmentLoadOp.DontCare,
-            StencilStoreOp = AttachmentStoreOp.DontCare,
             InitialLayout = ImageLayout.Undefined,
             FinalLayout = ImageLayout.PresentSrcKhr
         };
@@ -474,13 +574,25 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             PColorAttachments = &colorAttachmentRef
         };
         
+        SubpassDependency dependency = new()
+        {
+            SrcSubpass = Vk.SubpassExternal,
+            DstSubpass = 0,
+            SrcStageMask = PipelineStageFlags.ColorAttachmentOutputBit,
+            SrcAccessMask = 0,
+            DstStageMask = PipelineStageFlags.ColorAttachmentOutputBit,
+            DstAccessMask = AccessFlags.ColorAttachmentWriteBit
+        };
+        
         RenderPassCreateInfo renderPassInfo = new()
         {
             SType = StructureType.RenderPassCreateInfo,
             AttachmentCount = 1,
             PAttachments = &colorAttachment,
             SubpassCount = 1,
-            PSubpasses = &subpass
+            PSubpasses = &subpass,
+            DependencyCount = 1,
+            PDependencies = &dependency
         };
         
         if (Vk!.CreateRenderPass(LogicalDevice, in renderPassInfo, null, out renderPass) != Result.Success)
@@ -518,14 +630,18 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         var queueFamilyIndices = stackalloc[] { indices.GraphicsFamily!.Value, indices.PresentFamily!.Value };
 
         if (indices.GraphicsFamily != indices.PresentFamily)
+        {
             creatInfo = creatInfo with
             {
                 ImageSharingMode = SharingMode.Concurrent,
                 QueueFamilyIndexCount = 2,
                 PQueueFamilyIndices = queueFamilyIndices
             };
+        }
         else
+        {
             creatInfo.ImageSharingMode = SharingMode.Exclusive;
+        }
 
         creatInfo = creatInfo with
         {
@@ -701,28 +817,41 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             if (IsDeviceSuitable(device))
                 PhysicalDevice = device;
 
-        if (PhysicalDevice.Handle == 0) throw new VulkanException("Failed to find a suitable Vulkan GPU.");
+        if (PhysicalDevice.Handle == 0)
+        {
+            throw new VulkanException("Failed to find a suitable Vulkan GPU.");
+        }
     }
 
     private unsafe void CreateLogicalDevice()
     {
         var indices = FindQueueFamilies(PhysicalDevice);
-        DeviceQueueCreateInfo queueCreateInfo = new()
+        
+        var uniqueQueueFamilies = new[] {indices.GraphicsFamily!.Value, indices.PresentFamily!.Value};
+        uniqueQueueFamilies = uniqueQueueFamilies.Distinct().ToArray();
+        
+        using var mem = GlobalMemory.Allocate(uniqueQueueFamilies.Length * sizeof(DeviceQueueCreateInfo));
+        var queueCreateInfos = (DeviceQueueCreateInfo*)Unsafe.AsPointer(ref mem.GetPinnableReference());
+        
+        float queuePriority = 1.0f;
+        for (int i = 0; i < uniqueQueueFamilies.Length; i++)
         {
-            SType = StructureType.DeviceQueueCreateInfo,
-            QueueFamilyIndex = indices.GraphicsFamily!.Value,
-            QueueCount = 1
-        };
-
-        var queuePriority = 1.0f;
-        queueCreateInfo.PQueuePriorities = &queuePriority;
+            queueCreateInfos[i] = new DeviceQueueCreateInfo
+            {
+                SType = StructureType.DeviceQueueCreateInfo,
+                QueueFamilyIndex = uniqueQueueFamilies[i],
+                QueueCount = 1,
+                PQueuePriorities = &queuePriority
+            };
+        }
+        
         PhysicalDeviceFeatures deviceFeatures = new();
 
         DeviceCreateInfo createInfo = new()
         {
             SType = StructureType.DeviceCreateInfo,
-            QueueCreateInfoCount = 1,
-            PQueueCreateInfos = &queueCreateInfo,
+            QueueCreateInfoCount = (uint)uniqueQueueFamilies.Length,
+            PQueueCreateInfos = queueCreateInfos,
 
             PEnabledFeatures = &deviceFeatures,
 
@@ -794,7 +923,6 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             Vk!.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilityCount, queueFamiliesPtr);
         }
 
-
         uint i = 0;
         foreach (var queueFamily in queueFamilies)
         {
@@ -847,7 +975,10 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         PopulateDebugMessengerCreateInfo(ref createInfo);
 
         if (extDebugUtils!.CreateDebugUtilsMessenger(Instance, in createInfo, null, out debugMessenger) !=
-            Result.Success) throw new Exception("failed to set up debug messenger!");
+            Result.Success)
+        {
+            throw new Exception("failed to set up debug messenger!");
+        }
     }
 
     private void ThrowIfValidationLayersNotSupported()
