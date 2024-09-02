@@ -162,7 +162,7 @@ public record struct ColorMatrix
     /// The rgb values become grayscale according to the weights image. Alpha becomes zero <br/>
     /// (r, g, b, a) => (rgb: r * rWeight + g * gWeight + b * bWeight + a * aWeight, 0)
     /// </summary>
-    public static ColorMatrix WeightedGrayscale(VecD3 vector) =>
+    public static ColorMatrix WeightedGrayscale(Vec3D vector) =>
         WeightedGrayscale((float)vector.X, (float)vector.Y, (float)vector.Z, 0);
     
     public static ColorMatrix Lerp(ColorMatrix from, ColorMatrix to, float amount) => new(float.Lerp(from.M11, to.M11, amount),

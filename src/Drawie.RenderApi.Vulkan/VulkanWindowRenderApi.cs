@@ -3,13 +3,16 @@ using System.Runtime.InteropServices;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Stages;
 using Drawie.RenderApi.Vulkan.Stages.Builders;
+using Drawie.RenderApi.Vulkan.Structs;
 using PixiEditor.Numerics;
 using Silk.NET.Core;
 using Silk.NET.Core.Contexts;
 using Silk.NET.Core.Native;
+using Silk.NET.Maths;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.EXT;
 using Silk.NET.Vulkan.Extensions.KHR;
+using Buffer = Silk.NET.Vulkan.Buffer;
 using Semaphore = Silk.NET.Vulkan.Semaphore;
 
 namespace Drawie.RenderApi.Vulkan;
@@ -72,6 +75,13 @@ public class VulkanWindowRenderApi : IWindowRenderApi
     private GraphicsPipeline graphicsPipeline;
 
     private CommandPool commandPool;
+    
+    private Buffer vertexBuffer;
+    private DeviceMemory vertexBufferMemory;
+    
+    private Buffer indexBuffer;
+    private DeviceMemory indexBufferMemory;
+    
     private CommandBuffer[]? commandBuffers;
 
     private Semaphore[]? imageAvailableSemaphores;
@@ -79,6 +89,19 @@ public class VulkanWindowRenderApi : IWindowRenderApi
     private Fence[]? inFlightFences;
     private Fence[]? imagesInFlight;
     private int currentFrame = 0;
+    
+    private Vertex[] vertices = new Vertex[]
+    {
+        new Vertex { Position = new Vector2D<float>(-0.5f,-0.5f), Color = new Vector3D<float>(1.0f, 0.0f, 0.0f) },
+        new Vertex { Position = new Vector2D<float>(0.5f,-0.5f), Color = new Vector3D<float>(0.0f, 1.0f, 0.0f) },
+        new Vertex { Position = new Vector2D<float>(0.5f,0.5f), Color = new Vector3D<float>(0.0f, 0.0f, 1.0f) },
+        new Vertex { Position = new Vector2D<float>(-0.5f,0.5f), Color = new Vector3D<float>(1.0f, 1.0f, 1.0f) },
+    };
+    
+    private ushort[] indices = new ushort[]
+    {
+        0, 1, 2, 2, 3, 0
+    };
 
     public GraphicsApi GraphicsApi => GraphicsApi.Vulkan;
 
@@ -106,6 +129,8 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         CreateGraphicsPipeline();
         CreateFramebuffers();
         CreateCommandPool();
+        CreateVertexBuffer();
+        CreateIndexBuffer();
         CreateCommandBuffers();
         CreateSyncObjects();
     }
@@ -115,6 +140,12 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         Vk!.DeviceWaitIdle(LogicalDevice);
         
         CleanupSwapchain();
+        
+        Vk!.DestroyBuffer(LogicalDevice, indexBuffer, null);
+        Vk!.FreeMemory(LogicalDevice, indexBufferMemory, null);
+        
+        Vk!.DestroyBuffer(LogicalDevice, vertexBuffer, null);
+        Vk!.FreeMemory(LogicalDevice, vertexBufferMemory, null);
 
         for (var i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
@@ -360,7 +391,19 @@ public class VulkanWindowRenderApi : IWindowRenderApi
 
             Vk!.CmdBeginRenderPass(commandBuffers[i], &renderPassInfo, SubpassContents.Inline);
             Vk!.CmdBindPipeline(commandBuffers[i], PipelineBindPoint.Graphics, graphicsPipeline.VkPipeline);
-            Vk!.CmdDraw(commandBuffers[i], 3, 1, 0, 0);
+            
+            var vertexBuffers = new[] { vertexBuffer };
+            var offsets = new ulong[] { 0 };
+            
+            fixed (ulong* offsetsPtr = offsets)
+            fixed (Buffer* vertexBuffersPtr = vertexBuffers)
+            {
+                Vk!.CmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffersPtr, offsetsPtr);
+            }
+            
+            Vk!.CmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, IndexType.Uint16);
+            Vk!.CmdDrawIndexed(commandBuffers[i], (uint)indices.Length, 1, 0, 0, 0);
+            
             Vk!.CmdEndRenderPass(commandBuffers[i]);
 
             if (Vk!.EndCommandBuffer(commandBuffers[i]) != Result.Success)
@@ -589,6 +632,138 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             throw new NotSupportedException("KHR_surface extension not found.");
 
         surface = vkSurface!.Create<AllocationCallbacks>(instance.ToHandle(), null).ToSurface();
+    }
+
+    private unsafe void CreateIndexBuffer()
+    {
+        ulong bufferSize = (ulong)Unsafe.SizeOf<ushort>() * (ulong)indices.Length;
+        
+        Buffer stagingBuffer = default;
+        DeviceMemory stagingBufferMemory = default;
+        
+        CreateBuffer(bufferSize, BufferUsageFlags.TransferSrcBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref stagingBuffer, ref stagingBufferMemory);
+        
+        void* data;
+        Vk!.MapMemory(LogicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
+        indices.AsSpan().CopyTo(new Span<ushort>(data, indices.Length));
+        Vk!.UnmapMemory(LogicalDevice, stagingBufferMemory);
+        
+        CreateBuffer(bufferSize, BufferUsageFlags.TransferDstBit | BufferUsageFlags.IndexBufferBit, MemoryPropertyFlags.DeviceLocalBit, ref indexBuffer, ref indexBufferMemory);
+        
+        CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+        
+        Vk!.DestroyBuffer(LogicalDevice, stagingBuffer, null);
+        Vk!.FreeMemory(LogicalDevice, stagingBufferMemory, null);
+    }
+    
+    private unsafe void CreateVertexBuffer()
+    {
+        ulong bufferSize = (ulong)Marshal.SizeOf<Vertex>() * (ulong)vertices.Length;
+        
+        Buffer stagingBuffer = default;
+        DeviceMemory stagingBufferMemory = default;
+        CreateBuffer(bufferSize, BufferUsageFlags.TransferSrcBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit, ref stagingBuffer, ref stagingBufferMemory);
+        
+        void* data;
+        Vk!.MapMemory(LogicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
+        vertices.AsSpan().CopyTo(new Span<Vertex>(data, vertices.Length));
+        Vk!.UnmapMemory(LogicalDevice, stagingBufferMemory);
+        
+        CreateBuffer(bufferSize, BufferUsageFlags.TransferDstBit | BufferUsageFlags.VertexBufferBit, MemoryPropertyFlags.DeviceLocalBit, ref vertexBuffer, ref vertexBufferMemory);
+        CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+        
+        Vk!.DestroyBuffer(LogicalDevice, stagingBuffer, null);
+        Vk!.FreeMemory(LogicalDevice, stagingBufferMemory, null);
+    }
+
+    private unsafe void CreateBuffer(ulong bufferSize, BufferUsageFlags usageFlags, MemoryPropertyFlags properties, ref Buffer buffer, ref DeviceMemory bufferMemory)
+    {
+        BufferCreateInfo bufferInfo = new()
+        {
+            SType = StructureType.BufferCreateInfo,
+            Size = bufferSize,
+            Usage = usageFlags,
+            SharingMode = SharingMode.Exclusive
+        };
+        
+        fixed (Buffer* bufferPtr = &buffer)
+        {
+            if (Vk!.CreateBuffer(LogicalDevice, bufferInfo, null, bufferPtr) != Result.Success)
+                throw new VulkanException("Failed to create vertex buffer.");
+        }
+
+        Vk!.GetBufferMemoryRequirements(LogicalDevice, buffer, out var memoryRequirements);
+        
+        MemoryAllocateInfo allocInfo = new()
+        {
+            SType = StructureType.MemoryAllocateInfo,
+            AllocationSize = memoryRequirements.Size,
+            MemoryTypeIndex = FindMemoryType(memoryRequirements.MemoryTypeBits, properties) 
+        };
+
+        fixed (DeviceMemory* bufferMemoryPtr = &bufferMemory)
+        {
+            if (Vk!.AllocateMemory(LogicalDevice, in allocInfo, null, bufferMemoryPtr) != Result.Success)
+                throw new VulkanException("Failed to allocate vertex buffer memory.");
+        }
+        
+        Vk!.BindBufferMemory(LogicalDevice, buffer, bufferMemory, 0);
+    }
+
+    private unsafe void CopyBuffer(Buffer srcBuffer, Buffer dstBuffer, ulong size)
+    {
+        CommandBufferAllocateInfo allocInfo = new()
+        {
+            SType = StructureType.CommandBufferAllocateInfo,
+            Level = CommandBufferLevel.Primary,
+            CommandPool = commandPool,
+            CommandBufferCount = 1
+        };
+        
+        Vk!.AllocateCommandBuffers(LogicalDevice, in allocInfo, out CommandBuffer commandBuffer);
+        
+        CommandBufferBeginInfo beginInfo = new()
+        {
+            SType = StructureType.CommandBufferBeginInfo,
+            Flags = CommandBufferUsageFlags.OneTimeSubmitBit
+        };
+        
+        Vk!.BeginCommandBuffer(commandBuffer, beginInfo);
+        
+        BufferCopy copyRegion = new()
+        {
+            Size = size
+        };
+        
+        Vk!.CmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, copyRegion);
+        Vk.EndCommandBuffer(commandBuffer);
+        
+        SubmitInfo submitInfo = new()
+        {
+            SType = StructureType.SubmitInfo,
+            CommandBufferCount = 1,
+            PCommandBuffers = &commandBuffer
+        };
+        
+        Vk!.QueueSubmit(graphicsQueue, 1, &submitInfo, default);
+        Vk!.QueueWaitIdle(graphicsQueue);
+        
+        Vk!.FreeCommandBuffers(LogicalDevice, commandPool, 1, &commandBuffer);
+    }
+
+    private uint FindMemoryType(uint typeFilter, MemoryPropertyFlags properties)
+    {
+        Vk!.GetPhysicalDeviceMemoryProperties(PhysicalDevice, out var memProperties);
+
+        for (int i = 0; i < memProperties.MemoryTypeCount; i++)
+        {
+            if ((typeFilter & (1 << i)) != 0 && (memProperties.MemoryTypes[i].PropertyFlags & properties) == properties)
+            {
+                return (uint)i;
+            }
+        }
+
+        throw new VulkanException("Failed to find suitable memory type.");
     }
 
     private unsafe void SetupInstance(IVkSurface surface)

@@ -17,6 +17,12 @@
       <ProjectReference Include="..\Drawie.Numerics\Drawie.Numerics.csproj" />
       <ProjectReference Include="..\Drawie.RenderApi\Drawie.RenderApi.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Silk.NET.Maths">
+        <HintPath>..\..\..\..\.nuget\packages\silk.net.maths\2.21.0\lib\net5.0\Silk.NET.Maths.dll</HintPath>
+      </Reference>
+    </ItemGroup>
     
     <!--TODO: Copy to actual final dir-->
     <Import Project="Build\compile_shaders.targets" />
