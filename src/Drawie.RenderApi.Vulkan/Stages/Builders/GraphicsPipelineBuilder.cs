@@ -34,7 +34,8 @@ public class GraphicsPipelineBuilder
         return this;
     }
 
-    public unsafe GraphicsPipeline Create(Extent2D swapChainExtent, Format swapChainImageFormat)
+    public unsafe GraphicsPipeline Create(Extent2D swapChainExtent, Format swapChainImageFormat,
+        ref DescriptorSetLayout descriptorSetLayout)
     {
         if (Stages.Count == 0) throw new GraphicsPipelineBuilderException("No stages were added to the pipeline.");
         if (RenderPassBuilder == null) throw new GraphicsPipelineBuilderException("No render pass was added to the pipeline.");
@@ -48,6 +49,7 @@ public class GraphicsPipelineBuilder
         var attributeDescriptions = Vertex.GetAttributeDescriptions();
 
         fixed (VertexInputAttributeDescription* attributeDescriptionsPtr = attributeDescriptions)
+        fixed (DescriptorSetLayout* descriptorPtr = &descriptorSetLayout)
         {
 
             PipelineVertexInputStateCreateInfo vertexInputInfo = new()
@@ -99,7 +101,7 @@ public class GraphicsPipelineBuilder
                 PolygonMode = PolygonMode.Fill,
                 LineWidth = 1.0f,
                 CullMode = CullModeFlags.BackBit,
-                FrontFace = FrontFace.Clockwise,
+                FrontFace = FrontFace.CounterClockwise,
                 DepthBiasEnable = false
             };
 
@@ -134,8 +136,9 @@ public class GraphicsPipelineBuilder
             PipelineLayoutCreateInfo pipelineLayoutInfo = new()
             {
                 SType = StructureType.PipelineLayoutCreateInfo,
-                SetLayoutCount = 0,
-                PushConstantRangeCount = 0
+                PushConstantRangeCount = 0,
+                SetLayoutCount = 1,
+                PSetLayouts = descriptorPtr
             };
 
             if (Vk!.CreatePipelineLayout(LogicalDevice, in pipelineLayoutInfo, null, out var pipelineLayout) !=

@@ -10,6 +10,8 @@ public class GraphicsPipeline : IDisposable
     public Pipeline VkPipeline => pipeline;
     public RenderPass VkRenderPass => renderPass;
     
+    public PipelineLayout VkPipelineLayout => pipelineLayout;
+    
     private PipelineLayout pipelineLayout;
     private Pipeline pipeline;
     private RenderPass renderPass;
