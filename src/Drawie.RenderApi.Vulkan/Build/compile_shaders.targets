@@ -7,9 +7,9 @@
     </Target>
 
     <!--run glslc command Shaders into output dir to /shaders/-->
-
+    
     <Target Name="CompileShaders" AfterTargets="CreateDir">
-        <Exec Command="glslc -o $(OutputPath)shaders/vert.spv $(ProjectDir)Shaders/basic.vert" />
-        <Exec Command="glslc -o $(OutputPath)shaders/frag.spv $(ProjectDir)Shaders/basic.frag" />
+        <Exec Command="glslc -o $(OutputPath)shaders/vert.spv $(MSBuildThisFileDirectory)/../Shaders/basic.vert" />
+        <Exec Command="glslc -o $(OutputPath)shaders/frag.spv $(MSBuildThisFileDirectory)/../Shaders/basic.frag" />
     </Target>
 </Project>

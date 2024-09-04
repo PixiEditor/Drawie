@@ -47,7 +47,7 @@ public class BufferObject : IDisposable
         {
             SType = StructureType.MemoryAllocateInfo,
             AllocationSize = memoryRequirements.Size,
-            MemoryTypeIndex = FindMemoryType(memoryRequirements.MemoryTypeBits, properties)
+            MemoryTypeIndex = FindMemoryType(vk, this.physicalDevice, memoryRequirements.MemoryTypeBits, properties)
         };
 
         fixed (DeviceMemory* bufferMemoryPtr = &vkBufferMemory)
@@ -67,9 +67,9 @@ public class BufferObject : IDisposable
         vk!.UnmapMemory(device, vkBufferMemory);
     }
 
-    private uint FindMemoryType(uint typeFilter, MemoryPropertyFlags properties)
+    public static uint FindMemoryType(Vk vk, PhysicalDevice device, uint typeFilter, MemoryPropertyFlags properties)
     {
-        vk!.GetPhysicalDeviceMemoryProperties(physicalDevice, out var memProperties);
+        vk!.GetPhysicalDeviceMemoryProperties(device, out var memProperties);
 
         for (int i = 0; i < memProperties.MemoryTypeCount; i++)
         {
