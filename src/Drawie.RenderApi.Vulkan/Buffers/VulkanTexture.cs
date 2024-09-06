@@ -1,8 +1,7 @@
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Helpers;
+using PixiEditor.Numerics;
 using Silk.NET.Vulkan;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using Buffer = Silk.NET.Vulkan.Buffer;
 using Image = Silk.NET.Vulkan.Image;
 
@@ -12,6 +11,7 @@ public class VulkanTexture : IDisposable
 {
     public ImageView ImageView { get; private set; }
     public Sampler Sampler => sampler;
+    public Image VkImage => textureImage;
     private Vk Vk { get; }
     private Device LogicalDevice { get; }
     private PhysicalDevice PhysicalDevice { get; }
@@ -19,13 +19,19 @@ public class VulkanTexture : IDisposable
     private CommandPool CommandPool { get; }
 
     private Queue GraphicsQueue { get; }
+    public uint ImageFormat { get; private set; }
+    public uint Tiling { get; private set; }
+    public uint UsageFlags { get; set; }
+    public uint TargetSharingMode { get; } = (uint)SharingMode.Exclusive;
+    public static uint ColorAttachmentOptimal => (uint)ImageLayout.ColorAttachmentOptimal;
+    public static uint ShaderReadOnlyOptimal => (uint)ImageLayout.ShaderReadOnlyOptimal;
 
     private Image textureImage;
     private DeviceMemory textureImageMemory;
     private Sampler sampler;
-
+    
     public unsafe VulkanTexture(Vk vk, Device logicalDevice, PhysicalDevice physicalDevice, CommandPool commandPool,
-        Queue graphicsQueue, string path)
+        Queue graphicsQueue, VecI size)
     {
         Vk = vk;
         LogicalDevice = logicalDevice;
@@ -33,26 +39,30 @@ public class VulkanTexture : IDisposable
         CommandPool = commandPool;
         GraphicsQueue = graphicsQueue;
 
-        using var image = SixLabors.ImageSharp.Image.Load<Rgba32>(path);
+        var imageSize = (ulong)size.X * (ulong)size.Y * 4;
 
-        var imageSize = (ulong)image.Width * (ulong)image.Height * 4;
-
-        using var stagingBuffer = new StagingBuffer(vk, logicalDevice, physicalDevice, imageSize);
+        /*using var stagingBuffer = new StagingBuffer(vk, logicalDevice, physicalDevice, imageSize);
 
         void* data;
         vk!.MapMemory(LogicalDevice, stagingBuffer.VkBufferMemory, 0, imageSize, 0, &data);
         image.CopyPixelDataTo(new Span<byte>(data, (int)imageSize));
-        vk!.UnmapMemory(LogicalDevice, stagingBuffer.VkBufferMemory);
+        vk!.UnmapMemory(LogicalDevice, stagingBuffer.VkBufferMemory);*/
 
-        CreateImage((uint)image.Width, (uint)image.Height, Format.R8G8B8A8Srgb, ImageTiling.Optimal,
-            ImageUsageFlags.TransferDstBit | ImageUsageFlags.SampledBit, MemoryPropertyFlags.DeviceLocalBit);
+        ImageFormat = (uint)Format.R8G8B8A8Unorm;
+        Tiling = (uint)ImageTiling.Optimal;
+        UsageFlags = (uint)(ImageUsageFlags.SampledBit | ImageUsageFlags.TransferSrcBit | ImageUsageFlags.TransferDstBit | ImageUsageFlags.ColorAttachmentBit);
 
-        TransitionImageLayout(textureImage, Format.R8G8B8A8Srgb, ImageLayout.Undefined, ImageLayout.TransferDstOptimal);
-        CopyBufferToImage(stagingBuffer.VkBuffer, textureImage, (uint)image.Width, (uint)image.Height);
+        CreateImage((uint)size.X, (uint)size.Y, (Format)ImageFormat, (ImageTiling)Tiling,
+            (ImageUsageFlags)UsageFlags, MemoryPropertyFlags.DeviceLocalBit);
+
+        /*TransitionImageLayout(textureImage, Format.R8G8B8A8Srgb, ImageLayout.Undefined, ImageLayout.TransferDstOptimal);
+        CopyBufferToImage(stagingBuffer.VkBuffer, textureImage, (uint)size.X, (uint)size.Y);
         TransitionImageLayout(textureImage, Format.R8G8B8A8Srgb, ImageLayout.TransferDstOptimal,
-            ImageLayout.ShaderReadOnlyOptimal);
+            ImageLayout.ShaderReadOnlyOptimal);*/
+        
+        TransitionImageLayout(textureImage, (Format)ImageFormat, ImageLayout.Undefined, ImageLayout.ColorAttachmentOptimal);
 
-        ImageView = ImageUtility.CreateViewForImage(Vk, LogicalDevice, textureImage, Format.R8G8B8A8Srgb);
+        ImageView = ImageUtility.CreateViewForImage(Vk, LogicalDevice, textureImage, Format.R8G8B8A8Unorm);
         
         CreateSampler();
     }
@@ -156,25 +166,41 @@ public class VulkanTexture : IDisposable
         PipelineStageFlags sourceStage;
         PipelineStageFlags destinationStage;
 
-        if (oldLayout == ImageLayout.Undefined && newLayout == ImageLayout.TransferDstOptimal)
+        if (oldLayout == ImageLayout.Undefined)
         {
             barrier.SrcAccessMask = 0;
-            barrier.DstAccessMask = AccessFlags.TransferWriteBit;
-
             sourceStage = PipelineStageFlags.TopOfPipeBit;
-            destinationStage = PipelineStageFlags.TransferBit;
         }
-        else if (oldLayout == ImageLayout.TransferDstOptimal && newLayout == ImageLayout.ShaderReadOnlyOptimal)
+        else if (oldLayout == ImageLayout.ColorAttachmentOptimal)
         {
-            barrier.SrcAccessMask = AccessFlags.TransferWriteBit;
+            barrier.SrcAccessMask = AccessFlags.ColorAttachmentWriteBit;
+            sourceStage = PipelineStageFlags.ColorAttachmentOutputBit;
+        }
+        else if (oldLayout == ImageLayout.ShaderReadOnlyOptimal)
+        {
+            barrier.SrcAccessMask = AccessFlags.ShaderReadBit;
+            sourceStage = PipelineStageFlags.FragmentShaderBit;
+        }
+        else
+        {
+            barrier.SrcAccessMask = AccessFlags.MemoryReadBit;
+            sourceStage = PipelineStageFlags.BottomOfPipeBit;
+        }
+        
+        if (newLayout == ImageLayout.ColorAttachmentOptimal)
+        {
+            barrier.DstAccessMask = AccessFlags.ColorAttachmentWriteBit;
+            destinationStage = PipelineStageFlags.ColorAttachmentOutputBit;
+        }
+        else if (newLayout == ImageLayout.ShaderReadOnlyOptimal)
+        {
             barrier.DstAccessMask = AccessFlags.ShaderReadBit;
-
-            sourceStage = PipelineStageFlags.TransferBit;
             destinationStage = PipelineStageFlags.FragmentShaderBit;
         }
         else
         {
-            throw new InvalidOperationException("Unsupported layout transition.");
+            barrier.DstAccessMask = AccessFlags.MemoryReadBit;
+            destinationStage = PipelineStageFlags.BottomOfPipeBit;
         }
 
         Vk.CmdPipelineBarrier(commandBuffer.CommandBuffer, sourceStage, destinationStage, 0, 0, null, 0, null, 1,
@@ -211,5 +237,10 @@ public class VulkanTexture : IDisposable
 
         Vk.DestroyImage(LogicalDevice, textureImage, null);
         Vk.FreeMemory(LogicalDevice, textureImageMemory, null);
+    }
+
+    public void TransitionLayoutTo(uint from, uint to)
+    {
+        TransitionImageLayout(textureImage, (Format)ImageFormat, (ImageLayout)from, (ImageLayout)to); 
     }
 }

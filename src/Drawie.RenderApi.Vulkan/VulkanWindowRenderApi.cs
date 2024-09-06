@@ -60,7 +60,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
     private KhrSurface? khrSurface;
     private SurfaceKHR surface;
 
-    private Queue graphicsQueue;
+    public Queue graphicsQueue;
     private Queue presentQueue;
 
     private KhrSwapchain? khrSwapchain;
@@ -83,7 +83,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
 
     private IndexBuffer indexBuffer;
 
-    private VulkanTexture texture;
+    public VulkanTexture texture;
 
     private UniformBuffer[] uniformBuffers;
 
@@ -250,8 +250,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
 
     private void CreateTextureImage()
     {
-        texture = new VulkanTexture(Vk!, LogicalDevice, PhysicalDevice, commandPool, graphicsQueue,
-            "Textures/texture.jpg");
+        texture = new VulkanTexture(Vk!, LogicalDevice, PhysicalDevice, commandPool, graphicsQueue, framebufferSize);
     }
 
     private unsafe void CreateDescriptorPool()
@@ -698,7 +697,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
     private SurfaceFormatKHR ChooseSwapSurfaceFormat(IReadOnlyList<SurfaceFormatKHR> availableFormats)
     {
         foreach (var availableFormat in availableFormats)
-            if (availableFormat.Format == Format.B8G8R8A8Srgb &&
+            if (availableFormat.Format == Format.R8G8B8A8Srgb &&
                 availableFormat.ColorSpace == ColorSpaceKHR.SpaceSrgbNonlinearKhr)
                 return availableFormat;
 
@@ -840,7 +839,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             model = Matrix4X4<float>.Identity *
                     Matrix4X4.CreateFromAxisAngle<float>(new Vector3D<float>(0, 0, 1),
                         time * float.DegreesToRadians(90)),
-            view = Matrix4X4.CreateLookAt(new Vector3D<float>(2, 2, 2), new Vector3D<float>(0, 0, 0),
+            view = Matrix4X4.CreateLookAt(new Vector3D<float>(1, 1, 1), new Vector3D<float>(0, 0, 0),
                 new Vector3D<float>(0, 0, 1)),
             proj = Matrix4X4.CreatePerspectiveFieldOfView(float.DegreesToRadians(45),
                 swapChainExtent.Width / (float)swapChainExtent.Height, 0.1f, 10f)
@@ -1116,5 +1115,10 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         Console.WriteLine($"validation layer:" + Marshal.PtrToStringAnsi((nint)pCallbackData->PMessage));
 
         return Vk.False;
+    }
+
+    public IntPtr GetProcedureAddress(string name, IntPtr instance1, IntPtr device)
+    {
+        return Vk!.GetInstanceProcAddr(Instance, name);
     }
 }

@@ -13,12 +13,6 @@
     <ProjectReference Include="..\Drawie.Skia\Drawie.Skia.csproj" />
     <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Textures\texture.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
   
   <Import Project="..\Drawie.RenderApi.Vulkan\Build\compile_shaders.targets" />
   

@@ -1,6 +1,6 @@
-
 using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan;
+using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.Silk.Extensions;
 using PixiEditor.Numerics;
 using Silk.NET.Maths;
@@ -19,21 +19,16 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         get => window?.Title ?? string.Empty;
         set
         {
-            if (window != null)
-            {
-                window.Title = value;
-            }
+            if (window != null) window.Title = value;
         }
     }
+
     public VecI Size
     {
         get => window?.Size.ToVecI() ?? VecI.Zero;
         set
         {
-            if (window != null)
-            {
-                window.Size = value.ToVector2DInt();
-            }
+            if (window != null) window.Size = value.ToVector2DInt();
         }
     }
 
@@ -41,9 +36,9 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
     public event Action<double> Update;
     public event Action<double> Render;
-    
+
     private SKSurface? surface;
-    
+
     public GlfwWindow(string name, VecI size, IWindowRenderApi renderApi)
     {
         window = Window.Create(WindowOptions.Default with
@@ -52,10 +47,10 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             Size = size.ToVector2DInt(),
             API = renderApi.GraphicsApi.ToSilkGraphicsApi()
         });
-        
+
         RenderApi = renderApi;
     }
-    
+
     public void Show()
     {
         if (!isRunning)
@@ -63,9 +58,9 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             window.Initialize();
             RenderApi.CreateInstance(window.VkSurface, window.Size.ToVecI());
             window.FramebufferResize += WindowOnFramebufferResize;
-            
-            /*VulkanWindowRenderApi vkRenderApi = (VulkanWindowRenderApi) RenderApi;
-            GRVkBackendContext vkBackendContext = new GRVkBackendContext()
+
+            var vkRenderApi = (VulkanWindowRenderApi)RenderApi;
+            var vkBackendContext = new GRVkBackendContext()
             {
                 VkDevice = vkRenderApi.LogicalDevice.Handle,
                 VkInstance = vkRenderApi.Instance.Handle,
@@ -74,11 +69,39 @@ public class GlfwWindow : Drawie.Windowing.IWindow
                 GraphicsQueueIndex = 0,
                 GetProcedureAddress = vkRenderApi.GetProcedureAddress
             };
+
+            var ctx = GRContext.CreateVulkan(vkBackendContext);
+
+            var imageInfo = new GRVkImageInfo()
+            {
+                CurrentQueueFamily = 0,
+                Format = vkRenderApi.texture.ImageFormat,
+                Image = vkRenderApi.texture.VkImage.Handle,
+                ImageLayout = VulkanTexture.ColorAttachmentOptimal,
+                ImageTiling = vkRenderApi.texture.Tiling,
+                ImageUsageFlags = vkRenderApi.texture.UsageFlags,
+                LevelCount = 1,
+                SampleCount = 1,
+                Protected = false,
+                SharingMode = vkRenderApi.texture.TargetSharingMode
+            };
+
+            surface = SKSurface.Create(ctx, new GRBackendRenderTarget(Size.X, Size.Y, 1, imageInfo),
+                GRSurfaceOrigin.TopLeft, SKColorType.Rgba8888, new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
             
-            GRContext ctx = GRContext.CreateVulkan(vkBackendContext);*/
-            
-            window.Render += RenderApi.Render;
+            vkRenderApi.texture.TransitionLayoutTo(0, VulkanTexture.ShaderReadOnlyOptimal);
+
+            window.Render += d =>
+            {
+                vkRenderApi.texture.TransitionLayoutTo(VulkanTexture.ShaderReadOnlyOptimal, VulkanTexture.ColorAttachmentOptimal);
+            };
             window.Render += OnRender;
+            window.Render += d =>
+            {
+                vkRenderApi.texture.TransitionLayoutTo(VulkanTexture.ColorAttachmentOptimal, VulkanTexture.ShaderReadOnlyOptimal);
+            };
+            window.Render += RenderApi.Render;
+            
             window.Update += OnUpdate;
             isRunning = true;
             window.Run();
@@ -97,6 +120,10 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
     private void OnRender(double dt)
     {
+        surface?.Canvas.Clear(SKColors.White);
+        surface.Canvas.DrawText($"Hello Vulkan {dt}!", 500, 500, SKTextAlign.Center, new SKFont(SKTypeface.Default, 64),
+            new SKPaint());
+        surface!.Flush();
         Render?.Invoke(dt);
     }
 
@@ -105,7 +132,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         window.Update -= OnUpdate;
         window.Render -= OnRender;
         RenderApi.DestroyInstance();
-        
+
         window?.Close();
         window?.Dispose();
     }
