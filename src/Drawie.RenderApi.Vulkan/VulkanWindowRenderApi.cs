@@ -120,6 +120,11 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         framebufferSize = new VecI(width, height);
     }
 
+    public void PrepareTextureToWrite()
+    {
+        texture.TransitionLayoutTo(VulkanTexture.ShaderReadOnlyOptimal, VulkanTexture.ColorAttachmentOptimal);
+    }
+
     public void CreateInstance(object surfaceObject, VecI framebufferSize)
     {
         if (surfaceObject is not IVkSurface vkSurface) throw new VulkanNotSupportedException();
@@ -433,6 +438,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             throw new VulkanException("Failed to acquire swap chain image.");
         }
 
+        UpdateTextureLayout();
         UpdateUniformUpdate(imageIndex);
 
         if (imagesInFlight![imageIndex].Handle != default)
@@ -492,6 +498,11 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         else if (result != Result.Success) throw new VulkanException("Failed to present swap chain image.");
 
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
+
+    private void UpdateTextureLayout()
+    {
+        texture.TransitionLayoutTo(VulkanTexture.ColorAttachmentOptimal, VulkanTexture.ShaderReadOnlyOptimal);
     }
 
     private unsafe void CreateCommandPool()
@@ -833,12 +844,12 @@ public class VulkanWindowRenderApi : IWindowRenderApi
     {
         var currentTime = (float)DateTime.Now.TimeOfDay.TotalSeconds;
         var time = (float)currentTime - startTime;
+        
 
         UniformBufferModel ubo = new()
         {
             model = Matrix4X4<float>.Identity *
-                    Matrix4X4.CreateFromAxisAngle<float>(new Vector3D<float>(0, 0, 1),
-                        time * float.DegreesToRadians(90)),
+                    Matrix4X4.CreateFromAxisAngle<float>(new Vector3D<float>(0, 0, 1), float.DegreesToRadians(-45)),
             view = Matrix4X4.CreateLookAt(new Vector3D<float>(1, 1, 1), new Vector3D<float>(0, 0, 0),
                 new Vector3D<float>(0, 0, 1)),
             proj = Matrix4X4.CreatePerspectiveFieldOfView(float.DegreesToRadians(45),
@@ -950,7 +961,7 @@ public class VulkanWindowRenderApi : IWindowRenderApi
 
         PhysicalDeviceFeatures deviceFeatures = new()
         {
-            SamplerAnisotropy = true
+            SamplerAnisotropy = false
         };
 
         DeviceCreateInfo createInfo = new()

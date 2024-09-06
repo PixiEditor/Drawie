@@ -9,5 +9,6 @@ public interface IWindowRenderApi
 
     public GraphicsApi GraphicsApi { get; }
     public void UpdateFramebufferSize(int width, int height);
+    public void PrepareTextureToWrite();
     public void Render(double deltaTime);
 }

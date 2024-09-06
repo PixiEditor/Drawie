@@ -1,3 +1,4 @@
+using Drawie.Core;
 using Drawie.RenderApi;
 using PixiEditor.Numerics;
 
@@ -11,7 +12,7 @@ public interface IWindow
     public IWindowRenderApi RenderApi { get; set; }
     
     public event Action<double> Update;
-    public event Action<double> Render;
+    public event Action<Texture, double> Render;
     
     public void Show();
     public void Close();

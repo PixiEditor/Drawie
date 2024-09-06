@@ -1,3 +1,6 @@
+using Drawie.Core;
+using Drawie.Core.ColorsImpl;
+using Drawie.Core.Surfaces;
 using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan;
 using Drawie.RenderApi.Vulkan.Buffers;
@@ -35,10 +38,11 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     public IWindowRenderApi RenderApi { get; set; }
 
     public event Action<double> Update;
-    public event Action<double> Render;
+    public event Action<Texture, double> Render;
 
     private SKSurface? surface;
-
+    private Texture renderTexture;
+    
     public GlfwWindow(string name, VecI size, IWindowRenderApi renderApi)
     {
         window = Window.Create(WindowOptions.Default with
@@ -88,18 +92,11 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
             surface = SKSurface.Create(ctx, new GRBackendRenderTarget(Size.X, Size.Y, 1, imageInfo),
                 GRSurfaceOrigin.TopLeft, SKColorType.Rgba8888, new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
+
+            renderTexture = Texture.FromExisting(DrawingSurface.FromNative(surface));
             
             vkRenderApi.texture.TransitionLayoutTo(0, VulkanTexture.ShaderReadOnlyOptimal);
-
-            window.Render += d =>
-            {
-                vkRenderApi.texture.TransitionLayoutTo(VulkanTexture.ShaderReadOnlyOptimal, VulkanTexture.ColorAttachmentOptimal);
-            };
             window.Render += OnRender;
-            window.Render += d =>
-            {
-                vkRenderApi.texture.TransitionLayoutTo(VulkanTexture.ColorAttachmentOptimal, VulkanTexture.ShaderReadOnlyOptimal);
-            };
             window.Render += RenderApi.Render;
             
             window.Update += OnUpdate;
@@ -117,20 +114,20 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     {
         Update?.Invoke(dt);
     }
-
+    
     private void OnRender(double dt)
     {
-        surface?.Canvas.Clear(SKColors.White);
-        surface.Canvas.DrawText($"Hello Vulkan {dt}!", 500, 500, SKTextAlign.Center, new SKFont(SKTypeface.Default, 64),
-            new SKPaint());
+        RenderApi.PrepareTextureToWrite();
+        renderTexture.DrawingSurface.Canvas.Clear(Colors.Transparent);
+        Render?.Invoke(renderTexture, dt);
         surface!.Flush();
-        Render?.Invoke(dt);
     }
 
     public void Close()
     {
         window.Update -= OnUpdate;
         window.Render -= OnRender;
+        renderTexture.Dispose();
         RenderApi.DestroyInstance();
 
         window?.Close();

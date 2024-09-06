@@ -69,8 +69,6 @@ public class VulkanTexture : IDisposable
 
     private unsafe void CreateSampler()
     {
-        Vk.GetPhysicalDeviceProperties(PhysicalDevice, out var features);
-        
         SamplerCreateInfo samplerCreateInfo = new()
         {
             SType = StructureType.SamplerCreateInfo,
@@ -79,8 +77,8 @@ public class VulkanTexture : IDisposable
             AddressModeU = SamplerAddressMode.Repeat,
             AddressModeV = SamplerAddressMode.Repeat,
             AddressModeW = SamplerAddressMode.Repeat,
-            AnisotropyEnable = true,
-            MaxAnisotropy = features.Limits.MaxSamplerAnisotropy,
+            AnisotropyEnable = false,
+            MaxAnisotropy = 1, 
             BorderColor = BorderColor.IntOpaqueBlack,
             UnnormalizedCoordinates = false,
             CompareEnable = false,

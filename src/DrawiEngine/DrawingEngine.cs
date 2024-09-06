@@ -13,4 +13,9 @@ public class DrawingEngine
           WindowingPlatform = windowingPlatform;
           DrawingBackend = drawingBackend;
      }
+
+     public void Run()
+     {
+          DrawingBackendApi.SetupBackend(DrawingBackend, new DrawieRenderingServer());
+     }
 }
