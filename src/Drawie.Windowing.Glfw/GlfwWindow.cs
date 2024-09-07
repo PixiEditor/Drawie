@@ -42,7 +42,8 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
     private SKSurface? surface;
     private Texture renderTexture;
-    
+    private GRContext context;
+
     public GlfwWindow(string name, VecI size, IWindowRenderApi renderApi)
     {
         window = Window.Create(WindowOptions.Default with
@@ -62,7 +63,8 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             window.Initialize();
             RenderApi.CreateInstance(window.VkSurface, window.Size.ToVecI());
             window.FramebufferResize += WindowOnFramebufferResize;
-
+            RenderApi.FramebufferResized += RenderApiOnFramebufferResized;
+            
             var vkRenderApi = (VulkanWindowRenderApi)RenderApi;
             var vkBackendContext = new GRVkBackendContext()
             {
@@ -74,35 +76,49 @@ public class GlfwWindow : Drawie.Windowing.IWindow
                 GetProcedureAddress = vkRenderApi.GetProcedureAddress
             };
 
-            var ctx = GRContext.CreateVulkan(vkBackendContext);
+            context = GRContext.CreateVulkan(vkBackendContext);
 
-            var imageInfo = new GRVkImageInfo()
-            {
-                CurrentQueueFamily = 0,
-                Format = vkRenderApi.texture.ImageFormat,
-                Image = vkRenderApi.texture.VkImage.Handle,
-                ImageLayout = VulkanTexture.ColorAttachmentOptimal,
-                ImageTiling = vkRenderApi.texture.Tiling,
-                ImageUsageFlags = vkRenderApi.texture.UsageFlags,
-                LevelCount = 1,
-                SampleCount = 1,
-                Protected = false,
-                SharingMode = vkRenderApi.texture.TargetSharingMode
-            };
-
-            surface = SKSurface.Create(ctx, new GRBackendRenderTarget(Size.X, Size.Y, 1, imageInfo),
-                GRSurfaceOrigin.TopLeft, SKColorType.Rgba8888, new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
-
-            renderTexture = Texture.FromExisting(DrawingSurface.FromNative(surface));
-            
-            vkRenderApi.texture.TransitionLayoutTo(0, VulkanTexture.ShaderReadOnlyOptimal);
+            CreateRenderTarget(window.FramebufferSize.ToVecI(), vkRenderApi);
             window.Render += OnRender;
             window.Render += RenderApi.Render;
-            
+
             window.Update += OnUpdate;
             isRunning = true;
             window.Run();
         }
+    }
+
+    private void RenderApiOnFramebufferResized()
+    {
+        renderTexture.Dispose();
+        renderTexture = null!;
+        surface = null!;
+
+        CreateRenderTarget(window!.FramebufferSize.ToVecI(), (VulkanWindowRenderApi)RenderApi);
+    }
+
+    private void CreateRenderTarget(VecI size, VulkanWindowRenderApi vkRenderApi)
+    {
+        var imageInfo = new GRVkImageInfo()
+        {
+            CurrentQueueFamily = 0,
+            Format = vkRenderApi.texture.ImageFormat,
+            Image = vkRenderApi.texture.VkImage.Handle,
+            ImageLayout = VulkanTexture.ColorAttachmentOptimal,
+            ImageTiling = vkRenderApi.texture.Tiling,
+            ImageUsageFlags = vkRenderApi.texture.UsageFlags,
+            LevelCount = 1,
+            SampleCount = 1,
+            Protected = false,
+            SharingMode = vkRenderApi.texture.TargetSharingMode
+        };
+
+        surface = SKSurface.Create(context, new GRBackendRenderTarget(size.X, size.Y, 1, imageInfo),
+            GRSurfaceOrigin.TopLeft, SKColorType.Rgba8888, new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
+
+        renderTexture = Texture.FromExisting(DrawingSurface.FromNative(surface));
+
+        vkRenderApi.texture.TransitionLayoutTo(0, VulkanTexture.ShaderReadOnlyOptimal);
     }
 
     private void WindowOnFramebufferResize(Vector2D<int> newSize)
@@ -114,13 +130,13 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     {
         Update?.Invoke(dt);
     }
-    
+
     private void OnRender(double dt)
     {
         RenderApi.PrepareTextureToWrite();
-        renderTexture.DrawingSurface.Canvas.Clear(Colors.Transparent);
+        surface?.Canvas.Clear(SKColors.LightCoral);
         Render?.Invoke(renderTexture, dt);
-        surface!.Flush();
+        surface?.Flush();
     }
 
     public void Close()

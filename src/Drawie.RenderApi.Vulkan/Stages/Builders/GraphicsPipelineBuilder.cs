@@ -101,7 +101,7 @@ public class GraphicsPipelineBuilder
                 PolygonMode = PolygonMode.Fill,
                 LineWidth = 1.0f,
                 CullMode = CullModeFlags.BackBit,
-                FrontFace = FrontFace.CounterClockwise,
+                FrontFace = FrontFace.Clockwise,
                 DepthBiasEnable = false
             };
 

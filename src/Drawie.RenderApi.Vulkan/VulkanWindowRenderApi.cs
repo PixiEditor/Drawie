@@ -85,8 +85,6 @@ public class VulkanWindowRenderApi : IWindowRenderApi
 
     public VulkanTexture texture;
 
-    private UniformBuffer[] uniformBuffers;
-
     private DescriptorPool descriptorPool;
     private DescriptorSet[] descriptorSets;
 
@@ -98,14 +96,28 @@ public class VulkanWindowRenderApi : IWindowRenderApi
     private Fence[]? imagesInFlight;
     private int currentFrame = 0;
 
-    private float startTime;
-
     private Vertex[] vertices = new Vertex[]
     {
-        new() { Position = new Vector2D<float>(-0.5f, -0.5f), Color = new Vector3D<float>(1.0f, 0.0f, 0.0f), TexCoord = new Vector2D<float>(1.0f, 0.0f) },
-        new() { Position = new Vector2D<float>(0.5f, -0.5f), Color = new Vector3D<float>(0.0f, 1.0f, 0.0f), TexCoord = new Vector2D<float>(0.0f, 0.0f) },
-        new() { Position = new Vector2D<float>(0.5f, 0.5f), Color = new Vector3D<float>(0.0f, 0.0f, 1.0f) , TexCoord = new Vector2D<float>(0.0f, 1.0f) },
-        new() { Position = new Vector2D<float>(-0.5f, 0.5f), Color = new Vector3D<float>(1.0f, 1.0f, 1.0f), TexCoord = new Vector2D<float>(1.0f, 1.0f) }
+        new()
+        {
+            Position = new Vector2D<float>(-1f, -1f), Color = new Vector3D<float>(1.0f, 0.0f, 0.0f),
+            TexCoord = new Vector2D<float>(0.0f, 0.0f)
+        },
+        new()
+        {
+            Position = new Vector2D<float>(1f, -1f), Color = new Vector3D<float>(0.0f, 1.0f, 0.0f),
+            TexCoord = new Vector2D<float>(1.0f, 0.0f)
+        },
+        new()
+        {
+            Position = new Vector2D<float>(1f, 1f), Color = new Vector3D<float>(0.0f, 0.0f, 1.0f),
+            TexCoord = new Vector2D<float>(1.0f, 1.0f)
+        },
+        new()
+        {
+            Position = new Vector2D<float>(-1f, 1f), Color = new Vector3D<float>(1.0f, 1.0f, 1.0f),
+            TexCoord = new Vector2D<float>(0.0f, 1.0f)
+        }
     };
 
     private ushort[] indices = new ushort[]
@@ -148,14 +160,12 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         CreateTextureImage();
         CreateVertexBuffer();
         CreateIndexBuffer();
-        CreateUniformBuffers();
         CreateDescriptorPool();
         CreateDescriptorSets();
         CreateCommandBuffers();
         CreateSyncObjects();
-
-
-        startTime = (float)DateTime.Now.TimeOfDay.TotalSeconds;
+        
+        lastFramebufferSize = framebufferSize;
     }
 
     public unsafe void DestroyInstance()
@@ -210,22 +220,11 @@ public class VulkanWindowRenderApi : IWindowRenderApi
 
         khrSwapchain!.DestroySwapchain(LogicalDevice, swapChain, null);
 
-        foreach (var buffer in uniformBuffers) buffer.Dispose();
-
         Vk!.DestroyDescriptorPool(LogicalDevice, descriptorPool, null);
     }
 
     private unsafe void CreateDescriptorSetLayout()
     {
-        DescriptorSetLayoutBinding uboLayoutBinding = new()
-        {
-            Binding = 0,
-            DescriptorType = DescriptorType.UniformBuffer,
-            DescriptorCount = 1,
-            StageFlags = ShaderStageFlags.VertexBit,
-            PImmutableSamplers = null
-        };
-
         var samplerLayoutBinding = new DescriptorSetLayoutBinding()
         {
             Binding = 1,
@@ -235,16 +234,14 @@ public class VulkanWindowRenderApi : IWindowRenderApi
             StageFlags = ShaderStageFlags.FragmentBit
         };
 
-        var bindings = new[] { uboLayoutBinding, samplerLayoutBinding };
 
-        fixed (DescriptorSetLayoutBinding* bindingsPtr = bindings)
         fixed (DescriptorSetLayout* descriptorSetLayoutPtr = &descriptorSetLayout)
         {
             DescriptorSetLayoutCreateInfo layoutInfo = new()
             {
                 SType = StructureType.DescriptorSetLayoutCreateInfo,
-                BindingCount = (uint)bindings.Length,
-                PBindings = bindingsPtr
+                BindingCount = 1,
+                PBindings = &samplerLayoutBinding
             };
 
             if (Vk!.CreateDescriptorSetLayout(LogicalDevice, layoutInfo, null, descriptorSetLayoutPtr) !=
@@ -253,35 +250,26 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         }
     }
 
-    private void CreateTextureImage()
+    public void CreateTextureImage()
     {
         texture = new VulkanTexture(Vk!, LogicalDevice, PhysicalDevice, commandPool, graphicsQueue, framebufferSize);
     }
 
     private unsafe void CreateDescriptorPool()
     {
-        var poolSizes = new DescriptorPoolSize[]
+        var poolSize = new DescriptorPoolSize()
         {
-            new()
-            {
-                Type = DescriptorType.UniformBuffer,
-                DescriptorCount = (uint)swapChainImages.Length
-            },
-            new()
-            {
-                Type = DescriptorType.CombinedImageSampler,
-                DescriptorCount = (uint)swapChainImages.Length
-            }
+            Type = DescriptorType.CombinedImageSampler,
+            DescriptorCount = (uint)swapChainImages.Length
         };
 
-        fixed (DescriptorPoolSize* poolSizePtr = poolSizes)
         fixed (DescriptorPool* descriptorPoolPtr = &descriptorPool)
         {
             DescriptorPoolCreateInfo poolInfo = new()
             {
                 SType = StructureType.DescriptorPoolCreateInfo,
-                PoolSizeCount = (uint)poolSizes.Length,
-                PPoolSizes = poolSizePtr,
+                PoolSizeCount = 1,
+                PPoolSizes = &poolSize,
                 MaxSets = (uint)swapChainImages.Length
             };
             if (Vk!.CreateDescriptorPool(LogicalDevice, poolInfo, null, descriptorPoolPtr) != Result.Success)
@@ -314,13 +302,6 @@ public class VulkanWindowRenderApi : IWindowRenderApi
 
         for (var i = 0; i < swapChainImages.Length; i++)
         {
-            DescriptorBufferInfo bufferInfo = new()
-            {
-                Buffer = uniformBuffers[i].VkBuffer,
-                Offset = 0,
-                Range = (ulong)Unsafe.SizeOf<UniformBufferModel>()
-            };
-
             DescriptorImageInfo imageInfo = new()
             {
                 Sampler = texture.Sampler,
@@ -328,34 +309,18 @@ public class VulkanWindowRenderApi : IWindowRenderApi
                 ImageLayout = ImageLayout.ShaderReadOnlyOptimal
             };
 
-            var descriptorWrites = new WriteDescriptorSet[]
+            var samplerDescriptorSet = new WriteDescriptorSet()
             {
-                new()
-                {
-                    SType = StructureType.WriteDescriptorSet,
-                    DstSet = descriptorSets[i],
-                    DstBinding = 0,
-                    DstArrayElement = 0,
-                    DescriptorType = DescriptorType.UniformBuffer,
-                    DescriptorCount = 1,
-                    PBufferInfo = &bufferInfo
-                },
-                new()
-                {
-                    SType = StructureType.WriteDescriptorSet,
-                    DstSet = descriptorSets[i],
-                    DstBinding = 1,
-                    DstArrayElement = 0,
-                    DescriptorType = DescriptorType.CombinedImageSampler,
-                    DescriptorCount = 1,
-                    PImageInfo = &imageInfo
-                }
+                SType = StructureType.WriteDescriptorSet,
+                DstSet = descriptorSets[i],
+                DstBinding = 1,
+                DstArrayElement = 0,
+                DescriptorType = DescriptorType.CombinedImageSampler,
+                DescriptorCount = 1,
+                PImageInfo = &imageInfo
             };
-
-            fixed (WriteDescriptorSet* descriptorWritePtr = descriptorWrites)
-            {
-                Vk!.UpdateDescriptorSets(LogicalDevice, (uint)descriptorWrites.Length, descriptorWritePtr, 0, null);
-            }
+            
+            Vk!.UpdateDescriptorSets(LogicalDevice, 1, &samplerDescriptorSet, 0, null);
         }
     }
 
@@ -378,12 +343,14 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         Vk!.DeviceWaitIdle(LogicalDevice);
 
         CleanupSwapchain();
+        
+        texture.Dispose();
 
         CreateSwapChain();
         CreateImageViews();
         CreateGraphicsPipeline();
         CreateFramebuffers();
-        CreateUniformBuffers();
+        CreateTextureImage();
         CreateDescriptorPool();
         CreateDescriptorSets();
         CreateCommandBuffers();
@@ -391,6 +358,8 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         imagesInFlight = new Fence[swapChainImages.Length];
 
         lastFramebufferSize = framebufferSize;
+        
+        FramebufferResized?.Invoke();
     }
 
     private unsafe void CreateSyncObjects()
@@ -439,7 +408,6 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         }
 
         UpdateTextureLayout();
-        UpdateUniformUpdate(imageIndex);
 
         if (imagesInFlight![imageIndex].Handle != default)
             Vk!.WaitForFences(LogicalDevice, 1, imagesInFlight[imageIndex], true, ulong.MaxValue);
@@ -499,6 +467,8 @@ public class VulkanWindowRenderApi : IWindowRenderApi
 
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
+
+    public event Action? FramebufferResized;
 
     private void UpdateTextureLayout()
     {
@@ -806,16 +776,6 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
     }
 
-    private unsafe void CreateUniformBuffers()
-    {
-        var bufferSize = (ulong)Unsafe.SizeOf<UniformBufferModel>();
-
-        uniformBuffers = new UniformBuffer[swapChainImages.Length];
-
-        for (var i = 0; i < swapChainImages.Length; i++)
-            uniformBuffers[i] = new UniformBuffer(Vk!, LogicalDevice, PhysicalDevice, bufferSize);
-    }
-
     private void CreateVertexBuffer()
     {
         var bufferSize = (ulong)Marshal.SizeOf<Vertex>() * (ulong)vertices.Length;
@@ -838,31 +798,6 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         };
 
         Vk!.CmdCopyBuffer(commandBuffer.CommandBuffer, srcBuffer.VkBuffer, dstBuffer.VkBuffer, 1, copyRegion);
-    }
-
-    private unsafe void UpdateUniformUpdate(uint currentImage)
-    {
-        var currentTime = (float)DateTime.Now.TimeOfDay.TotalSeconds;
-        var time = (float)currentTime - startTime;
-        
-
-        UniformBufferModel ubo = new()
-        {
-            model = Matrix4X4<float>.Identity *
-                    Matrix4X4.CreateFromAxisAngle<float>(new Vector3D<float>(0, 0, 1), float.DegreesToRadians(-45)),
-            view = Matrix4X4.CreateLookAt(new Vector3D<float>(1, 1, 1), new Vector3D<float>(0, 0, 0),
-                new Vector3D<float>(0, 0, 1)),
-            proj = Matrix4X4.CreatePerspectiveFieldOfView(float.DegreesToRadians(45),
-                swapChainExtent.Width / (float)swapChainExtent.Height, 0.1f, 10f)
-        };
-
-        ubo.proj.M22 *= -1;
-
-        void* data;
-        Vk!.MapMemory(LogicalDevice, uniformBuffers[currentImage].VkBufferMemory, 0,
-            (ulong)Marshal.SizeOf<UniformBufferModel>(), 0, &data);
-        new Span<UniformBufferModel>(data, 1)[0] = ubo;
-        Vk!.UnmapMemory(LogicalDevice, uniformBuffers[currentImage].VkBufferMemory);
     }
 
     private unsafe void SetupInstance(IVkSurface surface)
