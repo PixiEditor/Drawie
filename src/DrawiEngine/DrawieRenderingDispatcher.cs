@@ -2,7 +2,7 @@ using Drawie.Core;
 
 namespace DrawiEngine;
 
-public class DrawieRenderingServer : IRenderingServer
+public class DrawieRenderingDispatcher : IRenderingDispatcher
 {
     public Action<Action> Invoke { get; }
 }

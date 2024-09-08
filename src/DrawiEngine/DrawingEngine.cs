@@ -16,10 +16,13 @@ public class DrawingEngine
           RenderApi = renderApi;
           WindowingPlatform = windowingPlatform;
           DrawingBackend = drawingBackend;
+
+          DrawingBackendApi.SetupBackend(DrawingBackend, new DrawieRenderingDispatcher());
      }
 
-     public void Run()
+     public void RunWithWindow(IWindow window)
      {
-          DrawingBackendApi.SetupBackend(DrawingBackend, new DrawieRenderingServer());
+          DrawingBackendApi.InitializeBackend(RenderApi);
+          window.Show();
      }
 }

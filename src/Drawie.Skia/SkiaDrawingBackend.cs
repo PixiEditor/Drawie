@@ -2,6 +2,7 @@
 using Drawie.Core.Bridge;
 using Drawie.Core.Bridge.NativeObjectsImpl;
 using Drawie.Core.Bridge.Operations;
+using Drawie.RenderApi;
 using Drawie.Skia.Exceptions;
 using Drawie.Skia.Implementations;
 using SkiaSharp;
@@ -13,7 +14,7 @@ namespace Drawie.Skia
         public GRContext? GraphicsContext
         {
             get => _grContext;
-            set
+            private set
             {
                 if (_grContext != null)
                 {
@@ -26,7 +27,7 @@ namespace Drawie.Skia
         
         public bool IsHardwareAccelerated => GraphicsContext != null;
         
-        public IRenderingServer RenderingServer { get; set; }
+        public IRenderingDispatcher RenderingDispatcher { get; set; }
 
         public IColorImplementation ColorImplementation { get; }
         public IImageImplementation ImageImplementation { get; }
@@ -91,9 +92,33 @@ namespace Drawie.Skia
             CanvasImplementation = canvasImpl;
         }
         
-        public void Setup()
+        public void Setup(IRenderApi renderApi)
         {
+            if(renderApi is not IVulkanRenderApi vulkanRenderApi)
+            {
+                throw new UnsupportedRenderApiException(renderApi);
+            }
+            
+            SetGraphicsContext(vulkanRenderApi);
+            
             SurfaceImplementation.GrContext = GraphicsContext;
+        }
+        
+        private void SetGraphicsContext(IVulkanRenderApi vulkanRenderApi)
+        {
+            var windowRenderApi = vulkanRenderApi.WindowRenderApis.First();
+            
+            var vkBackendContext = new GRVkBackendContext()
+            {
+                VkDevice = windowRenderApi.LogicalDeviceHandle,
+                VkInstance = windowRenderApi.InstanceHandle,
+                VkPhysicalDevice = windowRenderApi.PhysicalDeviceHandle,
+                VkQueue = windowRenderApi.GraphicsQueueHandle,
+                GraphicsQueueIndex = 0,
+                GetProcedureAddress = windowRenderApi.GetProcedureAddress
+            };
+            
+            GraphicsContext = GRContext.CreateVulkan(vkBackendContext);
         }
     }
 }

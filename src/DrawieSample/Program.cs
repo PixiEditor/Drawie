@@ -11,7 +11,6 @@ VulkanRenderApi renderApi = new VulkanRenderApi();
 GlfwWindowingPlatform windowingPlatform = new GlfwWindowingPlatform(renderApi);
 
 DrawingEngine engine = new DrawingEngine(renderApi, windowingPlatform, drawingBackend);
-engine.Run();
 
 var window = windowingPlatform.CreateWindow("Drawie Sample", new VecI(800, 600));
 
@@ -27,4 +26,4 @@ window.Render += (targetTexture, deltaTime) =>
    targetTexture.DrawingSurface.Canvas.DrawCircle(100, 100, 100, paint);
 };
 
-window.Show();
+engine.RunWithWindow(window);

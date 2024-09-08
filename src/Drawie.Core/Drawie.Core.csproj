@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Drawie.Numerics\Drawie.Numerics.csproj" />
+    <ProjectReference Include="..\Drawie.RenderApi\Drawie.RenderApi.csproj" />
   </ItemGroup>
 
 </Project>

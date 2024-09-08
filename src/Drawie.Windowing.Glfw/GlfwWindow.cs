@@ -7,6 +7,7 @@ using Drawie.RenderApi.Vulkan;
 using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.Silk.Extensions;
 using PixiEditor.Numerics;
+using Silk.NET.GLFW;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
 using SkiaSharp;
@@ -53,7 +54,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             Size = size.ToVector2DInt(),
             API = renderApi.GraphicsApi.ToSilkGraphicsApi()
         });
-
+        
         RenderApi = renderApi;
     }
 
@@ -74,23 +75,9 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
             window.FramebufferResize += WindowOnFramebufferResize;
             RenderApi.FramebufferResized += RenderApiOnFramebufferResized;
-            
-            DrawingBackendApi.Current.Setup(RenderApi.GraphicsApi);
-            
-            var vkRenderApi = (VulkanWindowRenderApi)RenderApi;
-            var vkBackendContext = new GRVkBackendContext()
-            {
-                VkDevice = vkRenderApi.LogicalDevice.Handle,
-                VkInstance = vkRenderApi.Instance.Handle,
-                VkPhysicalDevice = vkRenderApi.PhysicalDevice.Handle,
-                VkQueue = vkRenderApi.graphicsQueue.Handle,
-                GraphicsQueueIndex = 0,
-                GetProcedureAddress = vkRenderApi.GetProcedureAddress
-            };
 
-            context = GRContext.CreateVulkan(vkBackendContext);
-
-            CreateRenderTarget(window.FramebufferSize.ToVecI(), vkRenderApi);
+            CreateRenderTarget(window.FramebufferSize.ToVecI());
+            
             window.Render += OnRender;
             window.Render += RenderApi.Render;
 
@@ -109,7 +96,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         CreateRenderTarget(window!.FramebufferSize.ToVecI(), (VulkanWindowRenderApi)RenderApi);
     }
 
-    private void CreateRenderTarget(VecI size, VulkanWindowRenderApi vkRenderApi)
+    private void CreateRenderTarget(VecI size)
     {
         var imageInfo = new GRVkImageInfo()
         {

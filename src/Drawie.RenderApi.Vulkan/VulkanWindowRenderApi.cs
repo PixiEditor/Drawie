@@ -19,7 +19,7 @@ using Semaphore = Silk.NET.Vulkan.Semaphore;
 
 namespace Drawie.RenderApi.Vulkan;
 
-public class VulkanWindowRenderApi : IWindowRenderApi
+public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 {
     public Vk? Vk { get; private set; }
 
@@ -1063,7 +1063,11 @@ public class VulkanWindowRenderApi : IWindowRenderApi
         return Vk.False;
     }
 
-    public IntPtr GetProcedureAddress(string name, IntPtr instance1, IntPtr device)
+    public IntPtr LogicalDeviceHandle => logicalDevice.Handle; 
+    public IntPtr PhysicalDeviceHandle => PhysicalDevice.Handle;
+    public IntPtr InstanceHandle => Instance.Handle;
+    public IntPtr GraphicsQueueHandle => graphicsQueue.Handle;
+    public IntPtr GetProcedureAddress(string name, IntPtr instance, IntPtr device)
     {
         return Vk!.GetInstanceProcAddr(Instance, name);
     }

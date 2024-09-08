@@ -11,7 +11,7 @@ public class GlfwWindowingPlatform : IWindowingPlatform
 
     public IReadOnlyCollection<IWindow> Windows => _windows;
     public IRenderApi RenderApi { get; }
-    
+
     public GlfwWindowingPlatform(IRenderApi renderApi)
     {
         RenderApi = renderApi;

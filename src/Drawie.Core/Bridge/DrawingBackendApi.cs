@@ -1,4 +1,5 @@
 ﻿using Drawie.Core.Exceptions;
+using Drawie.RenderApi;
 
 namespace Drawie.Core.Bridge
 {
@@ -19,7 +20,7 @@ namespace Drawie.Core.Bridge
         
         public static bool HasBackend => _current != null;
         
-        public static void SetupBackend(IDrawingBackend backend, IRenderingServer server)
+        public static void SetupBackend(IDrawingBackend backend, IRenderingDispatcher dispatcher)
         {
             if (_current != null)
             {
@@ -27,8 +28,17 @@ namespace Drawie.Core.Bridge
             }
             
             _current = backend;
-            _current.RenderingServer = server;
-            backend.Setup();
+            _current.RenderingDispatcher = dispatcher;
+        }
+
+        public static void InitializeBackend(IRenderApi renderApi)
+        {
+            if (_current == null)
+            {
+                throw new NullReferenceException("Drawing backend was not yet initialized.");
+            }
+
+            _current.Setup(renderApi);
         }
     }
 }
