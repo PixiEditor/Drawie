@@ -1,3 +1,5 @@
+using Silk.NET.Vulkan;
+
 namespace Drawie.RenderApi.Vulkan;
 
 public class VulkanRenderApi : IRenderApi

@@ -1,4 +1,5 @@
 using Drawie.Core;
+using Drawie.Core.Bridge;
 using Drawie.Core.ColorsImpl;
 using Drawie.Core.Surfaces;
 using Drawie.RenderApi;
@@ -61,9 +62,20 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         if (!isRunning)
         {
             window.Initialize();
-            RenderApi.CreateInstance(window.VkSurface, window.Size.ToVecI());
+
+            if (RenderApi.GraphicsApi == GraphicsApi.Vulkan)
+            {
+                RenderApi.CreateInstance(window.VkSurface, window.Size.ToVecI());
+            }
+            else
+            {
+                throw new NotSupportedException($"Provided graphics API '{RenderApi.GraphicsApi}' is not supported.");
+            }
+
             window.FramebufferResize += WindowOnFramebufferResize;
             RenderApi.FramebufferResized += RenderApiOnFramebufferResized;
+            
+            DrawingBackendApi.Current.Setup(RenderApi.GraphicsApi);
             
             var vkRenderApi = (VulkanWindowRenderApi)RenderApi;
             var vkBackendContext = new GRVkBackendContext()
@@ -134,9 +146,9 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     private void OnRender(double dt)
     {
         RenderApi.PrepareTextureToWrite();
-        surface?.Canvas.Clear(SKColors.LightCoral);
+        renderTexture.DrawingSurface?.Canvas.Clear(Colors.LightCoral);
         Render?.Invoke(renderTexture, dt);
-        surface?.Flush();
+        renderTexture.DrawingSurface?.Flush();
     }
 
     public void Close()
