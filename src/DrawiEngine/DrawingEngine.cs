@@ -22,6 +22,8 @@ public class DrawingEngine
 
      public void RunWithWindow(IWindow window)
      {
+          window.Initialize();
+          
           DrawingBackendApi.InitializeBackend(RenderApi);
           window.Show();
      }

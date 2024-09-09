@@ -1,13 +1,9 @@
 using Drawie.Core;
 using Drawie.Core.Bridge;
 using Drawie.Core.ColorsImpl;
-using Drawie.Core.Surfaces;
 using Drawie.RenderApi;
-using Drawie.RenderApi.Vulkan;
-using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.Silk.Extensions;
 using PixiEditor.Numerics;
-using Silk.NET.GLFW;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
 using SkiaSharp;
@@ -45,6 +41,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     private SKSurface? surface;
     private Texture renderTexture;
     private GRContext context;
+    private bool initialized;
 
     public GlfwWindow(string name, VecI size, IWindowRenderApi renderApi)
     {
@@ -54,30 +51,38 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             Size = size.ToVector2DInt(),
             API = renderApi.GraphicsApi.ToSilkGraphicsApi()
         });
-        
+
         RenderApi = renderApi;
+    }
+
+    public void Initialize()
+    {
+        if (initialized) return;
+        
+        window.Initialize();
+
+        if (RenderApi.GraphicsApi == GraphicsApi.Vulkan)
+            RenderApi.CreateInstance(window.VkSurface, window.Size.ToVecI());
+        else
+            throw new NotSupportedException($"Provided graphics API '{RenderApi.GraphicsApi}' is not supported.");
+        
+        initialized = true;
     }
 
     public void Show()
     {
         if (!isRunning)
         {
-            window.Initialize();
-
-            if (RenderApi.GraphicsApi == GraphicsApi.Vulkan)
+            if (!initialized)
             {
-                RenderApi.CreateInstance(window.VkSurface, window.Size.ToVecI());
+                Initialize();
             }
-            else
-            {
-                throw new NotSupportedException($"Provided graphics API '{RenderApi.GraphicsApi}' is not supported.");
-            }
-
+            
             window.FramebufferResize += WindowOnFramebufferResize;
             RenderApi.FramebufferResized += RenderApiOnFramebufferResized;
 
-            CreateRenderTarget(window.FramebufferSize.ToVecI());
-            
+            CreateRenderTarget(window.FramebufferSize.ToVecI(), RenderApi);
+
             window.Render += OnRender;
             window.Render += RenderApi.Render;
 
@@ -93,31 +98,13 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         renderTexture = null!;
         surface = null!;
 
-        CreateRenderTarget(window!.FramebufferSize.ToVecI(), (VulkanWindowRenderApi)RenderApi);
+        CreateRenderTarget(window!.FramebufferSize.ToVecI(), RenderApi);
     }
 
-    private void CreateRenderTarget(VecI size)
+    private void CreateRenderTarget(VecI size, IWindowRenderApi renderApi)
     {
-        var imageInfo = new GRVkImageInfo()
-        {
-            CurrentQueueFamily = 0,
-            Format = vkRenderApi.texture.ImageFormat,
-            Image = vkRenderApi.texture.VkImage.Handle,
-            ImageLayout = VulkanTexture.ColorAttachmentOptimal,
-            ImageTiling = vkRenderApi.texture.Tiling,
-            ImageUsageFlags = vkRenderApi.texture.UsageFlags,
-            LevelCount = 1,
-            SampleCount = 1,
-            Protected = false,
-            SharingMode = vkRenderApi.texture.TargetSharingMode
-        };
-
-        surface = SKSurface.Create(context, new GRBackendRenderTarget(size.X, size.Y, 1, imageInfo),
-            GRSurfaceOrigin.TopLeft, SKColorType.Rgba8888, new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
-
-        renderTexture = Texture.FromExisting(DrawingSurface.FromNative(surface));
-
-        vkRenderApi.texture.TransitionLayoutTo(0, VulkanTexture.ShaderReadOnlyOptimal);
+        var drawingSurface = DrawingBackendApi.Current.CreateRenderSurface(size, renderApi);
+        renderTexture = Texture.FromExisting(drawingSurface);
     }
 
     private void WindowOnFramebufferResize(Vector2D<int> newSize)

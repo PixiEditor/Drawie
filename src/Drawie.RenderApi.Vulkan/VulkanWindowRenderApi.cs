@@ -1067,6 +1067,8 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
     public IntPtr PhysicalDeviceHandle => PhysicalDevice.Handle;
     public IntPtr InstanceHandle => Instance.Handle;
     public IntPtr GraphicsQueueHandle => graphicsQueue.Handle;
+    public IVkTexture RenderTexture => texture;
+
     public IntPtr GetProcedureAddress(string name, IntPtr instance, IntPtr device)
     {
         return Vk!.GetInstanceProcAddr(Instance, name);

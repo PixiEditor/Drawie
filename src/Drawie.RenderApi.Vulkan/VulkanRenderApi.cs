@@ -7,7 +7,7 @@ public class VulkanRenderApi : IVulkanRenderApi
     private List<IWindowRenderApi> windowRenderApis = new List<IWindowRenderApi>();
     public IReadOnlyCollection<IWindowRenderApi> WindowRenderApis => windowRenderApis;
 
-    IReadOnlyCollection<IVulkanWindowRenderApi> IVulkanRenderApi.WindowRenderApis { get; }
+    IReadOnlyCollection<IVulkanWindowRenderApi> IVulkanRenderApi.WindowRenderApis => windowRenderApis.Cast<IVulkanWindowRenderApi>().ToList();
 
     public IWindowRenderApi CreateWindowRenderApi()
     {

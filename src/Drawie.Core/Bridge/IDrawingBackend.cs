@@ -1,6 +1,8 @@
 ﻿using Drawie.Core.Bridge.NativeObjectsImpl;
 using Drawie.Core.Bridge.Operations;
+using Drawie.Core.Surfaces;
 using Drawie.RenderApi;
+using PixiEditor.Numerics;
 
 namespace Drawie.Core.Bridge
 {
@@ -23,5 +25,6 @@ namespace Drawie.Core.Bridge
         public IShaderImplementation ShaderImplementation { get; set; }
         public bool IsHardwareAccelerated { get; }
         public IRenderingDispatcher RenderingDispatcher { get; set; }
+        public DrawingSurface CreateRenderSurface(VecI size, IWindowRenderApi renderApi);
     }
 }

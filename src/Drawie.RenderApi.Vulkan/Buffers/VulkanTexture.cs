@@ -7,7 +7,7 @@ using Image = Silk.NET.Vulkan.Image;
 
 namespace Drawie.RenderApi.Vulkan.Buffers;
 
-public class VulkanTexture : IDisposable
+public class VulkanTexture : IDisposable, IVkTexture
 {
     public ImageView ImageView { get; private set; }
     public Sampler Sampler => sampler;
@@ -20,8 +20,10 @@ public class VulkanTexture : IDisposable
 
     private Queue GraphicsQueue { get; }
     public uint ImageFormat { get; private set; }
-    public uint Tiling { get; private set; }
+    public ulong ImageHandle => textureImage.Handle;
+    public uint Tiling { get; }
     public uint UsageFlags { get; set; }
+    public uint Layout => ColorAttachmentOptimal;
     public uint TargetSharingMode { get; } = (uint)SharingMode.Exclusive;
     public static uint ColorAttachmentOptimal => (uint)ImageLayout.ColorAttachmentOptimal;
     public static uint ShaderReadOnlyOptimal => (uint)ImageLayout.ShaderReadOnlyOptimal;
@@ -65,6 +67,17 @@ public class VulkanTexture : IDisposable
         ImageView = ImageUtility.CreateViewForImage(Vk, LogicalDevice, textureImage, Format.R8G8B8A8Unorm);
         
         CreateSampler();
+    }
+    
+    
+    public void MakeReadOnly()
+    {
+        TransitionLayoutTo(ColorAttachmentOptimal, ShaderReadOnlyOptimal);
+    }
+
+    public void MakeWriteable()
+    {
+        TransitionLayoutTo(ShaderReadOnlyOptimal, ColorAttachmentOptimal); 
     }
 
     private unsafe void CreateSampler()

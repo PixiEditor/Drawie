@@ -14,6 +14,7 @@ public interface IWindow
     public event Action<double> Update;
     public event Action<Texture, double> Render;
     
+    public void Initialize();
     public void Show();
     public void Close();
 }

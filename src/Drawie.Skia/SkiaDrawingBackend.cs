@@ -2,15 +2,19 @@
 using Drawie.Core.Bridge;
 using Drawie.Core.Bridge.NativeObjectsImpl;
 using Drawie.Core.Bridge.Operations;
+using Drawie.Core.Surfaces;
 using Drawie.RenderApi;
 using Drawie.Skia.Exceptions;
 using Drawie.Skia.Implementations;
+using PixiEditor.Numerics;
 using SkiaSharp;
 
 namespace Drawie.Skia
 {
     public class SkiaDrawingBackend : IDrawingBackend
     {
+        private IVulkanRenderApi? vulkanRenderApi;
+        
         public GRContext? GraphicsContext
         {
             get => _grContext;
@@ -102,6 +106,36 @@ namespace Drawie.Skia
             SetGraphicsContext(vulkanRenderApi);
             
             SurfaceImplementation.GrContext = GraphicsContext;
+        }
+
+        public DrawingSurface CreateRenderSurface(VecI size, IWindowRenderApi windowRenderApi)
+        {
+            if (windowRenderApi is IVulkanWindowRenderApi vkRenderApi)
+            {
+                var imageInfo = new GRVkImageInfo()
+                {
+                    CurrentQueueFamily = 0,
+                    Format = vkRenderApi.RenderTexture.ImageFormat,
+                    Image = vkRenderApi.RenderTexture.ImageHandle,
+                    ImageLayout = vkRenderApi.RenderTexture.Layout, 
+                    ImageTiling = vkRenderApi.RenderTexture.Tiling, 
+                    ImageUsageFlags = vkRenderApi.RenderTexture.UsageFlags, 
+                    LevelCount = 1,
+                    SampleCount = 1,
+                    Protected = false,
+                    SharingMode = vkRenderApi.RenderTexture.TargetSharingMode, 
+                };
+
+                var surface = SKSurface.Create(GraphicsContext, new GRBackendRenderTarget(size.X, size.Y, 1, imageInfo),
+                    GRSurfaceOrigin.TopLeft, SKColorType.Rgba8888,
+                    new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
+                
+                vkRenderApi.RenderTexture.MakeReadOnly();
+
+                return DrawingSurface.FromNative(surface);
+            }
+         
+            throw new RenderApiNotInitializedException();
         }
         
         private void SetGraphicsContext(IVulkanRenderApi vulkanRenderApi)
