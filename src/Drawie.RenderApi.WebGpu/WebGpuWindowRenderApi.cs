@@ -10,6 +10,12 @@ using static Evergine.Bindings.WebGPU.WebGPUNative;
 
 namespace Drawie.RenderApi.WebGpu;
 
+/*
+ * TODO:
+ * [] - Add texture support
+ * [] - Draw rectangle with texture
+ * [] - Convert rectangle into big clipped triangle
+ */
 public class WebGpuWindowRenderApi : IWindowRenderApi
 {
     public GraphicsApi GraphicsApi { get; }
@@ -31,14 +37,14 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
 
     private VecI framebufferSize;
 
-    public unsafe void CreateInstance(object surface, VecI size)
+    public void CreateInstance(object surface, VecI size)
     {
         if (surface is not INativeWindow nativeWindow)
         {
             throw new ArgumentException("Surface must be a window handle");
         }
 
-        this.framebufferSize = size;
+        framebufferSize = size;
 
         InitWebGpu(size, nativeWindow);
         InitResources();
@@ -48,16 +54,10 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
     {
         WGPUSurfaceTexture surfaceTexture = default;
         wgpuSurfaceGetCurrentTexture(Surface, &surfaceTexture);
-        
-        if (surfaceTexture.status == WGPUSurfaceGetCurrentTextureStatus.Timeout)
-        {
-            Console.WriteLine("Cannot acquire next swap chain texture");
-            return;
-        }
 
-        if (surfaceTexture.status == WGPUSurfaceGetCurrentTextureStatus.Outdated)
+        if (surfaceTexture.status == WGPUSurfaceGetCurrentTextureStatus.Outdated || surfaceTexture.suboptimal)
         {
-            Console.WriteLine("Surface texture is outdated, reconfigure the surface!");
+            ReconfigureSwapchain();
             return;
         }
 
@@ -109,6 +109,12 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
         wgpuSurfacePresent(Surface);
     }
 
+    private void ReconfigureSwapchain()
+    {
+        ConfigureSwapchain(framebufferSize);
+        FramebufferResized?.Invoke();
+    }
+
     public void DestroyInstance()
     {
         wgpuSurfaceRelease(Surface);
@@ -120,50 +126,42 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
 
     public void UpdateFramebufferSize(int width, int height)
     {
-        throw new NotImplementedException();
+        framebufferSize = new VecI(width, height);
     }
 
     public void PrepareTextureToWrite()
     {
-        throw new NotImplementedException();
+        // Not needed
     }
 
-    private unsafe void InitWebGpu(VecI size, INativeWindow nativeWindow)
+    private void InitWebGpu(VecI size, INativeWindow nativeWindow)
     {
-        var window = nativeWindow.Win32;
+        CreateInstance();
+        CreateSurface(nativeWindow);
+        CreateDevice();
+        ConfigureSwapchain(size);
+    }
 
-        WGPUInstanceExtras instanceExtras = new WGPUInstanceExtras()
+    private unsafe void ConfigureSwapchain(VecI size)
+    {
+        SwapChainFormat = wgpuSurfaceGetPreferredFormat(Surface, Adapter);
+
+        WGPUSurfaceConfiguration surfaceConfiguration = new WGPUSurfaceConfiguration()
         {
-            chain = new WGPUChainedStruct()
-            {
-                sType = (WGPUSType)WGPUNativeSType.InstanceExtras,
-            },
-            backends = WGPUInstanceBackend.Vulkan,
+            nextInChain = null,
+            device = Device,
+            format = SwapChainFormat,
+            usage = WGPUTextureUsage.RenderAttachment,
+            width = (uint)size.X,
+            height = (uint)size.Y,
+            presentMode = WGPUPresentMode.Fifo,
         };
 
-        WGPUInstanceDescriptor instanceDescriptor = new WGPUInstanceDescriptor()
-        {
-            nextInChain = &instanceExtras.chain,
-        };
-        Instance = wgpuCreateInstance(&instanceDescriptor);
+        wgpuSurfaceConfigure(Surface, &surfaceConfiguration);
+    }
 
-        WGPUSurfaceDescriptorFromWindowsHWND windowsSurface = new WGPUSurfaceDescriptorFromWindowsHWND()
-        {
-            chain = new WGPUChainedStruct()
-            {
-                sType = WGPUSType.SurfaceDescriptorFromWindowsHWND,
-            },
-            hinstance = window.Value.HInstance.ToPointer(),
-            hwnd = window.Value.Hwnd.ToPointer(),
-        };
-
-        WGPUSurfaceDescriptor surfaceDescriptor = new WGPUSurfaceDescriptor()
-        {
-            nextInChain = &windowsSurface.chain,
-        };
-
-        Surface = wgpuInstanceCreateSurface(Instance, &surfaceDescriptor);
-
+    private unsafe void CreateDevice()
+    {
         WGPURequestAdapterOptions options = new WGPURequestAdapterOptions()
         {
             nextInChain = null,
@@ -186,22 +184,46 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
         wgpuDeviceSetUncapturedErrorCallback(Device, HandleUncapturedErrorCallback, (void*)0);
 
         Queue = wgpuDeviceGetQueue(Device);
+    }
 
-        SwapChainFormat = wgpuSurfaceGetPreferredFormat(Surface, Adapter);
+    private unsafe void CreateSurface(INativeWindow nativeWindow)
+    {
+        var window = nativeWindow.Win32;
 
-        WGPUTextureFormat textureFormat = SwapChainFormat;
-        WGPUSurfaceConfiguration surfaceConfiguration = new WGPUSurfaceConfiguration()
+        WGPUSurfaceDescriptorFromWindowsHWND windowsSurface = new WGPUSurfaceDescriptorFromWindowsHWND()
         {
-            nextInChain = null,
-            device = Device,
-            format = SwapChainFormat,
-            usage = WGPUTextureUsage.RenderAttachment,
-            width = (uint)size.X,
-            height = (uint)size.Y,
-            presentMode = WGPUPresentMode.Fifo,
+            chain = new WGPUChainedStruct()
+            {
+                sType = WGPUSType.SurfaceDescriptorFromWindowsHWND,
+            },
+            hinstance = window.Value.HInstance.ToPointer(),
+            hwnd = window.Value.Hwnd.ToPointer(),
         };
 
-        wgpuSurfaceConfigure(Surface, &surfaceConfiguration);
+        WGPUSurfaceDescriptor surfaceDescriptor = new WGPUSurfaceDescriptor()
+        {
+            nextInChain = &windowsSurface.chain,
+        };
+
+        Surface = wgpuInstanceCreateSurface(Instance, &surfaceDescriptor);
+    }
+
+    private unsafe void CreateInstance()
+    {
+        WGPUInstanceExtras instanceExtras = new WGPUInstanceExtras()
+        {
+            chain = new WGPUChainedStruct()
+            {
+                sType = (WGPUSType)WGPUNativeSType.InstanceExtras,
+            },
+            backends = WGPUInstanceBackend.Vulkan,
+        };
+
+        WGPUInstanceDescriptor instanceDescriptor = new WGPUInstanceDescriptor()
+        {
+            nextInChain = &instanceExtras.chain,
+        };
+        Instance = wgpuCreateInstance(&instanceDescriptor);
     }
 
     private unsafe void InitResources()
@@ -329,13 +351,18 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
 
         wgpuShaderModuleRelease(shaderModule);
 
+        // triangle
         Vector4* vertexData = stackalloc Vector4[]
         {
-            new Vector4(0.0f, 0.5f, 0.5f, 1.0f),
+            new Vector4(-1.0f, 3f, 0.5f, 1.0f),
             new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
-            new Vector4(0.5f, -0.5f, 0.5f, 1.0f),
+            
+            new Vector4(3f, -1f, 0.5f, 1.0f),
+            
             new Vector4(0.0f, 1.0f, 0.0f, 1.0f),
-            new Vector4(-0.5f, -0.5f, 0.5f, 1.0f),
+            
+            new Vector4(-1f, -1f, 0.5f, 1.0f),
+            
             new Vector4(0.0f, 0.0f, 1.0f, 1.0f)
         };
 
@@ -347,6 +374,7 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
             size = size,
             mappedAtCreation = false,
         };
+        
         vertexBuffer = wgpuDeviceCreateBuffer(Device, &bufferDescriptor);
         wgpuQueueWriteBuffer(Queue, vertexBuffer, 0, vertexData, size);
     }
@@ -356,7 +384,8 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
         Console.WriteLine($"Uncaptured device error: type: {type} ({StringExtensions.GetString(pMessage)})");
     }
 
-    private unsafe void OnAdapterRequestEnded(WGPURequestAdapterStatus status, WGPUAdapter candidateAdapter, char* message,
+    private unsafe void OnAdapterRequestEnded(WGPURequestAdapterStatus status, WGPUAdapter candidateAdapter,
+        char* message,
         void* pUserData)
     {
         if (status == WGPURequestAdapterStatus.Success)
