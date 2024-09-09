@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Drawie.RenderApi\Drawie.RenderApi.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Silk.NET.WebGPU" Version="2.21.0" />
+      <PackageReference Include="Silk.NET.WebGPU.Extensions.Dawn" Version="2.21.0" />
+      <PackageReference Include="Silk.NET.WebGPU.Extensions.Disposal" Version="2.21.0" />
+      <PackageReference Include="Silk.NET.WebGPU.Extensions.WGPU" Version="2.21.0" />
+      <PackageReference Include="Silk.NET.WebGPU.Native.WGPU" Version="2.21.0" />
+    </ItemGroup>
+
+</Project>

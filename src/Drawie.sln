@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.RenderApi", "Drawie.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.RenderApi.Vulkan", "Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj", "{C66A9ACB-904D-42B4-8FFE-6ED36E855A11}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.RenderApi.WebGpu", "Drawie.RenderApi.WebGpu\Drawie.RenderApi.WebGpu.csproj", "{1262A719-EDA6-4239-B37A-19745A763742}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,5 +68,9 @@ Global
 		{C66A9ACB-904D-42B4-8FFE-6ED36E855A11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C66A9ACB-904D-42B4-8FFE-6ED36E855A11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C66A9ACB-904D-42B4-8FFE-6ED36E855A11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1262A719-EDA6-4239-B37A-19745A763742}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1262A719-EDA6-4239-B37A-19745A763742}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1262A719-EDA6-4239-B37A-19745A763742}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1262A719-EDA6-4239-B37A-19745A763742}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

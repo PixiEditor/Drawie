@@ -1,11 +1,17 @@
 ﻿using Drawie.Core.ColorsImpl;
 using Drawie.Core.Surfaces.PaintImpl;
 using Drawie.RenderApi.Vulkan;
+using Drawie.RenderApi.WebGpu;
 using Drawie.Silk;
 using Drawie.Skia;
 using DrawiEngine;
 using PixiEditor.Numerics;
-DrawingEngine engine = DrawingEngine.CreateDefault();
+
+//DrawingEngine engine = DrawingEngine.CreateDefault();
+
+var renderApi = new WebGpuRenderApi();
+DrawingEngine engine = new DrawingEngine(renderApi, new GlfwWindowingPlatform(renderApi), new SkiaDrawingBackend());
+
 
 var window = engine.WindowingPlatform.CreateWindow("Drawie Sample", new VecI(800, 600));
 
@@ -13,15 +19,6 @@ Paint paint = new Paint()
 {
    Color = Colors.Green,
    Style = PaintStyle.StrokeAndFill
-};
-
-window.Update += (deltaTime) =>
-{
-   if (engine.WindowingPlatform.Windows.Count == 1)
-   {
-      var window2 = engine.WindowingPlatform.CreateWindow("Drawie Sample 2", new VecI(800, 600));
-      window2.Show();
-   }
 };
 
 window.Render += (targetTexture, deltaTime) =>

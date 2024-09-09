@@ -2,5 +2,7 @@ namespace Drawie.RenderApi;
 
 public enum GraphicsApi
 {
-    Vulkan
+    Unknown,
+    Vulkan,
+    WebGpu
 }

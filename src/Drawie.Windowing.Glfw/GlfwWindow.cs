@@ -64,7 +64,9 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         if (RenderApi.GraphicsApi == GraphicsApi.Vulkan)
             RenderApi.CreateInstance(window.VkSurface, window.Size.ToVecI());
         else
-            throw new NotSupportedException($"Provided graphics API '{RenderApi.GraphicsApi}' is not supported.");
+        {
+            RenderApi.CreateInstance(window.Native, window.Size.ToVecI());
+        }
         
         initialized = true;
     }
