@@ -2,13 +2,19 @@
 
 public static class StringExtensions
 {
-    public static unsafe byte* ToPointer(this string str)
+    public static unsafe char* ToPointer(this string text)
     {
-        byte[] bytes = System.Text.Encoding.ASCII.GetBytes(str);
-    
-        fixed (byte* p = bytes)
+        return (char*)System.Runtime.InteropServices.Marshal.StringToHGlobalAnsi(text);
+    }
+
+    public static unsafe string GetString(char* stringStart)
+    {
+        int characters = 0;
+        while (stringStart[characters] != 0)
         {
-            return p;
+            characters++;
         }
+
+        return System.Text.Encoding.UTF8.GetString((byte*)stringStart, characters * 2);
     }
 }

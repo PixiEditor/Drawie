@@ -1,12 +1,12 @@
+using System.ComponentModel.Design.Serialization;
+using System.Drawing;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Drawie.RenderApi.WebGpu.Extensions;
+using Evergine.Bindings.WebGPU;
 using PixiEditor.Numerics;
 using Silk.NET.Core.Contexts;
-using Silk.NET.WebGPU;
-using Silk.NET.WebGPU.Extensions.Dawn;
-using Silk.NET.WebGPU.Extensions.WGPU;
-using Buffer = Silk.NET.WebGPU.Buffer;
+using static Evergine.Bindings.WebGPU.WebGPUNative;
 
 namespace Drawie.RenderApi.WebGpu;
 
@@ -16,23 +16,20 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
 
     public event Action? FramebufferResized;
 
-    private WebGPU wgpu;
-    private unsafe Instance* instance;
-    private unsafe Adapter* adapter;
-    private AdapterProperties adapterProperties;
-    private SupportedLimits adapterLimits;
-    private unsafe Device* device;
-    private unsafe Queue* queue;
-    private unsafe Surface* wgpuSurface;
-    private TextureFormat swapChainFormat;
+    private WGPUInstance Instance;
+    private WGPUSurface Surface;
+    private WGPUAdapter Adapter;
+    private WGPUAdapterProperties AdapterProperties;
+    private WGPUSupportedLimits AdapterLimits;
+    private WGPUDevice Device;
+    private WGPUTextureFormat SwapChainFormat;
+    private WGPUQueue Queue;
 
-    private unsafe PipelineLayout* pipelineLayout;
-    private unsafe RenderPipeline* renderPipeline;
-    private unsafe Buffer* vertexBuffer;
+    private WGPUPipelineLayout pipelineLayout;
+    private WGPURenderPipeline pipeline;
+    private WGPUBuffer vertexBuffer;
 
     private VecI framebufferSize;
-
-    private const int DeviceExtrasFlag = 0x00030001;
 
     public unsafe void CreateInstance(object surface, VecI size)
     {
@@ -43,79 +40,82 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
 
         this.framebufferSize = size;
 
-        wgpu = WebGPU.GetApi();
-
         InitWebGpu(size, nativeWindow);
         InitResources();
     }
 
     public unsafe void Render(double deltaTime)
     {
-        SurfaceTexture surfaceTexture = default;
-        wgpu.SurfaceGetCurrentTexture(wgpuSurface, &surfaceTexture);
-
-        if (surfaceTexture.Status != SurfaceGetCurrentTextureStatus.Success)
+        WGPUSurfaceTexture surfaceTexture = default;
+        wgpuSurfaceGetCurrentTexture(Surface, &surfaceTexture);
+        
+        if (surfaceTexture.status == WGPUSurfaceGetCurrentTextureStatus.Timeout)
         {
-            // recreate surface
-            Console.WriteLine("Failed to get the texture!");
+            Console.WriteLine("Cannot acquire next swap chain texture");
+            return;
         }
 
-        TextureView* nextView = wgpu.TextureCreateView(surfaceTexture.Texture, null);
-
-        CommandEncoderDescriptor encoderDescriptor = new CommandEncoderDescriptor()
+        if (surfaceTexture.status == WGPUSurfaceGetCurrentTextureStatus.Outdated)
         {
-            NextInChain = null
+            Console.WriteLine("Surface texture is outdated, reconfigure the surface!");
+            return;
+        }
+
+        WGPUTextureView nextView = wgpuTextureCreateView(surfaceTexture.texture, null);
+
+        WGPUCommandEncoderDescriptor encoderDescriptor = new WGPUCommandEncoderDescriptor()
+        {
+            nextInChain = null,
         };
-        
-        CommandEncoder* encoder = wgpu.DeviceCreateCommandEncoder(device, &encoderDescriptor);
+        WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(Device, &encoderDescriptor);
 
-        RenderPassColorAttachment colorAttachment = new RenderPassColorAttachment()
+        WGPURenderPassColorAttachment renderPassColorAttachment = new WGPURenderPassColorAttachment()
         {
-            View = nextView,
-            ResolveTarget = null,
-            LoadOp = LoadOp.Clear,
-            StoreOp = StoreOp.Store,
-            ClearValue = new Color() { A = 1 }
-        };
-
-        RenderPassDescriptor renderPassDescriptor = new RenderPassDescriptor()
-        {
-            NextInChain = null,
-            ColorAttachmentCount = 1,
-            ColorAttachments = &colorAttachment,
-            DepthStencilAttachment = null,
-            TimestampWrites = null
+            view = nextView,
+            resolveTarget = WGPUTextureView.Null,
+            loadOp = WGPULoadOp.Clear,
+            storeOp = WGPUStoreOp.Store,
+            clearValue = new WGPUColor() { a = 1.0f },
         };
 
-        RenderPassEncoder* renderPass = wgpu.CommandEncoderBeginRenderPass(encoder, &renderPassDescriptor);
-
-        wgpu.RenderPassEncoderSetPipeline(renderPass, renderPipeline);
-        wgpu.RenderPassEncoderSetVertexBuffer(renderPass, 0, vertexBuffer, 0, WebGPU.WholeMapSize);
-        wgpu.RenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
-        wgpu.RenderPassEncoderEnd(renderPass);
-
-        wgpu.TextureViewRelease(nextView);
-
-        CommandBufferDescriptor commandBufferDescriptor = new CommandBufferDescriptor()
+        WGPURenderPassDescriptor renderPassDescriptor = new WGPURenderPassDescriptor()
         {
-            NextInChain = null
+            nextInChain = null,
+            colorAttachmentCount = 1,
+            colorAttachments = &renderPassColorAttachment,
+            depthStencilAttachment = null,
+            timestampWrites = null,
         };
 
-        CommandBuffer* command = wgpu.CommandEncoderFinish(encoder, &commandBufferDescriptor);
-        wgpu.QueueSubmit(queue, 1, &command);
+        WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDescriptor);
 
-        wgpu.CommandEncoderRelease(encoder);
+        wgpuRenderPassEncoderSetPipeline(renderPass, pipeline);
+        wgpuRenderPassEncoderSetVertexBuffer(renderPass, 0, vertexBuffer, 0, WGPU_WHOLE_MAP_SIZE);
+        wgpuRenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
+        wgpuRenderPassEncoderEnd(renderPass);
 
-        wgpu.SurfacePresent(wgpuSurface);
+        wgpuTextureViewRelease(nextView);
+
+        WGPUCommandBufferDescriptor commandBufferDescriptor = new WGPUCommandBufferDescriptor()
+        {
+            nextInChain = null,
+        };
+
+        WGPUCommandBuffer command = wgpuCommandEncoderFinish(encoder, &commandBufferDescriptor);
+        wgpuQueueSubmit(Queue, 1, &command);
+
+        wgpuCommandEncoderRelease(encoder);
+
+        wgpuSurfacePresent(Surface);
     }
 
-    public unsafe void DestroyInstance()
+    public void DestroyInstance()
     {
-        wgpu.SurfaceRelease(wgpuSurface);
-        wgpu.DeviceDestroy(device);
-        wgpu.DeviceRelease(device);
-        wgpu.AdapterRelease(adapter);
-        wgpu.InstanceRelease(instance);
+        wgpuSurfaceRelease(Surface);
+        wgpuDeviceDestroy(Device);
+        wgpuDeviceRelease(Device);
+        wgpuAdapterRelease(Adapter);
+        wgpuInstanceRelease(Instance);
     }
 
     public void UpdateFramebufferSize(int width, int height)
@@ -130,206 +130,206 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
 
     private unsafe void InitWebGpu(VecI size, INativeWindow nativeWindow)
     {
-        InstanceExtras instanceExtras = new InstanceExtras()
-        {
-            Backends = InstanceBackend.Vulkan
-        };
-
-        InstanceDescriptor instanceDescriptor = new InstanceDescriptor()
-        {
-            NextInChain = &instanceExtras.Chain
-        };
-
-        instance = wgpu.CreateInstance(instanceDescriptor);
-
         var window = nativeWindow.Win32;
 
-        SurfaceDescriptorFromWindowsHWND windowSurfaceDescriptor =
-            new SurfaceDescriptorFromWindowsHWND()
+        WGPUInstanceExtras instanceExtras = new WGPUInstanceExtras()
+        {
+            chain = new WGPUChainedStruct()
             {
-                Chain = new ChainedStruct()
-                {
-                    SType = SType.SurfaceDescriptorFromWindowsHwnd,
-                },
-
-                Hwnd = window.Value.Hwnd.ToPointer(),
-                Hinstance = window.Value.HInstance.ToPointer()
-            };
-
-        SurfaceDescriptor surfaceDescriptor = new SurfaceDescriptor()
-        {
-            NextInChain = &windowSurfaceDescriptor.Chain
+                sType = (WGPUSType)WGPUNativeSType.InstanceExtras,
+            },
+            backends = WGPUInstanceBackend.Vulkan,
         };
 
-        wgpuSurface = wgpu.InstanceCreateSurface(instance, &surfaceDescriptor);
-
-        var adapterOptions = new RequestAdapterOptions()
+        WGPUInstanceDescriptor instanceDescriptor = new WGPUInstanceDescriptor()
         {
-            NextInChain = null,
-            PowerPreference = PowerPreference.HighPerformance,
-            CompatibleSurface = wgpuSurface,
+            nextInChain = &instanceExtras.chain,
+        };
+        Instance = wgpuCreateInstance(&instanceDescriptor);
+
+        WGPUSurfaceDescriptorFromWindowsHWND windowsSurface = new WGPUSurfaceDescriptorFromWindowsHWND()
+        {
+            chain = new WGPUChainedStruct()
+            {
+                sType = WGPUSType.SurfaceDescriptorFromWindowsHWND,
+            },
+            hinstance = window.Value.HInstance.ToPointer(),
+            hwnd = window.Value.Hwnd.ToPointer(),
         };
 
-        var requestAdapterCallback = new PfnRequestAdapterCallback(AdapterRequestEndedCallback);
-
-        wgpu.InstanceRequestAdapter(instance, &adapterOptions, requestAdapterCallback, (void*)0);
-
-        DeviceDescriptor deviceDescriptor = new DeviceDescriptor()
+        WGPUSurfaceDescriptor surfaceDescriptor = new WGPUSurfaceDescriptor()
         {
-            NextInChain = null,
-            Label = null,
-            RequiredFeatures = (FeatureName*)0,
-            RequiredLimits = null,
+            nextInChain = &windowsSurface.chain,
         };
 
-        var deviceCallback = new PfnRequestDeviceCallback(OnDeviceRequestEnded);
+        Surface = wgpuInstanceCreateSurface(Instance, &surfaceDescriptor);
 
-        wgpu.AdapterRequestDevice(adapter, &deviceDescriptor, deviceCallback, (void*)0);
-        wgpu.DeviceSetUncapturedErrorCallback(device, new PfnErrorCallback(OnDeviceError), (void*)0);
-        queue = wgpu.DeviceGetQueue(device);
-
-        swapChainFormat = wgpu.SurfaceGetPreferredFormat(wgpuSurface, adapter);
-
-        var surfaceConfig = new SurfaceConfiguration()
+        WGPURequestAdapterOptions options = new WGPURequestAdapterOptions()
         {
-            NextInChain = null,
-            Device = device,
-            Usage = TextureUsage.RenderAttachment,
-            Format = swapChainFormat,
-            Width = (uint)size.X,
-            Height = (uint)size.Y,
-            PresentMode = PresentMode.Fifo,
+            nextInChain = null,
+            compatibleSurface = Surface,
+            powerPreference = WGPUPowerPreference.HighPerformance
         };
 
-        wgpu.SurfaceConfigure(wgpuSurface, &surfaceConfig);
+        wgpuInstanceRequestAdapter(Instance, &options, OnAdapterRequestEnded, (void*)0);
+
+        WGPUDeviceDescriptor deviceDescriptor = new WGPUDeviceDescriptor()
+        {
+            nextInChain = null,
+            label = null,
+            requiredFeatures = (WGPUFeatureName*)0,
+            requiredLimits = null,
+        };
+
+        wgpuAdapterRequestDevice(Adapter, &deviceDescriptor, OnDeviceRequestEnded, (void*)0);
+
+        wgpuDeviceSetUncapturedErrorCallback(Device, HandleUncapturedErrorCallback, (void*)0);
+
+        Queue = wgpuDeviceGetQueue(Device);
+
+        SwapChainFormat = wgpuSurfaceGetPreferredFormat(Surface, Adapter);
+
+        WGPUTextureFormat textureFormat = SwapChainFormat;
+        WGPUSurfaceConfiguration surfaceConfiguration = new WGPUSurfaceConfiguration()
+        {
+            nextInChain = null,
+            device = Device,
+            format = SwapChainFormat,
+            usage = WGPUTextureUsage.RenderAttachment,
+            width = (uint)size.X,
+            height = (uint)size.Y,
+            presentMode = WGPUPresentMode.Fifo,
+        };
+
+        wgpuSurfaceConfigure(Surface, &surfaceConfiguration);
     }
 
     private unsafe void InitResources()
     {
-        PipelineLayoutDescriptor layoutDescriptor = new PipelineLayoutDescriptor()
+        WGPUPipelineLayoutDescriptor layoutDescription = new()
         {
-            NextInChain = null,
-            BindGroupLayouts = null,
-            BindGroupLayoutCount = 0,
+            nextInChain = null,
+            bindGroupLayoutCount = 0,
+            bindGroupLayouts = null,
         };
 
-        pipelineLayout = wgpu.DeviceCreatePipelineLayout(device, &layoutDescriptor);
+        pipelineLayout = wgpuDeviceCreatePipelineLayout(Device, &layoutDescription);
 
         string shaderSource = File.ReadAllText(Path.Combine("Shaders", "wgpu_shader.wgsl"));
 
-        ShaderModuleWGSLDescriptor shaderModuleDescriptor = new ShaderModuleWGSLDescriptor()
+        WGPUShaderModuleWGSLDescriptor shaderCodeDescriptor = new()
         {
-            Chain = new ChainedStruct()
+            chain = new WGPUChainedStruct()
             {
-                SType = SType.ShaderModuleWgslDescriptor,
-                Next = null
+                next = null,
+                sType = WGPUSType.ShaderModuleWGSLDescriptor,
             },
-            
-            Code = shaderSource.ToPointer()
+            code = shaderSource.ToPointer(),
         };
 
-        ShaderModuleDescriptor shaderModule = new ShaderModuleDescriptor()
+        WGPUShaderModuleDescriptor moduleDescriptor = new()
         {
-            NextInChain = &shaderModuleDescriptor.Chain,
-            HintCount = 0,
-            Hints = null,
+            nextInChain = &shaderCodeDescriptor.chain,
+            hintCount = 0,
+            hints = null,
         };
 
-        var shaderModulePtr = wgpu.DeviceCreateShaderModule(device, &shaderModule);
+        WGPUShaderModule shaderModule = wgpuDeviceCreateShaderModule(Device, &moduleDescriptor);
 
-        VertexAttribute* vertexAttributes = stackalloc VertexAttribute[2];
-
-        vertexAttributes[0] = new VertexAttribute()
+        WGPUVertexAttribute* vertexAttributes = stackalloc WGPUVertexAttribute[2]
         {
-            Format = VertexFormat.Float32x4,
-            Offset = 0,
-            ShaderLocation = 0,
-        };
-
-        vertexAttributes[1] = new VertexAttribute()
-        {
-            Format = VertexFormat.Float32x4,
-            Offset = 16,
-            ShaderLocation = 1,
-        };
-
-        VertexBufferLayout vertexBufferLayout = new VertexBufferLayout()
-        {
-            ArrayStride = (ulong)sizeof(Vector4) * 2,
-            AttributeCount = 2,
-            Attributes = vertexAttributes,
-            StepMode = VertexStepMode.Vertex
-        };
-
-        BlendState blendState = new BlendState()
-        {
-            Color = new BlendComponent()
+            new WGPUVertexAttribute()
             {
-                Operation = BlendOperation.Add,
-                SrcFactor = BlendFactor.One,
-                DstFactor = BlendFactor.Zero,
+                format = WGPUVertexFormat.Float32x4,
+                offset = 0,
+                shaderLocation = 0,
             },
-            Alpha = new BlendComponent()
+            new WGPUVertexAttribute()
             {
-                Operation = BlendOperation.Add,
-                SrcFactor = BlendFactor.One,
-                DstFactor = BlendFactor.Zero,
+                format = WGPUVertexFormat.Float32x4,
+                offset = 16,
+                shaderLocation = 1,
             },
         };
 
-        ColorTargetState colorTargetState = new ColorTargetState()
+        WGPUVertexBufferLayout vertexLayout = new WGPUVertexBufferLayout()
         {
-            NextInChain = null,
-            Format = swapChainFormat,
-            Blend = &blendState,
-            WriteMask = ColorWriteMask.All,
+            attributeCount = 2,
+            attributes = vertexAttributes,
+            arrayStride = (ulong)sizeof(Vector4) * 2,
+            stepMode = WGPUVertexStepMode.Vertex,
         };
 
-        FragmentState fragmentState = new FragmentState()
+        WGPUBlendState blendState = new WGPUBlendState()
         {
-            NextInChain = null,
-            Module = shaderModulePtr,
-            EntryPoint = "fragmentMain".ToPointer(),
-            TargetCount = 1,
-            Targets = &colorTargetState,
-            Constants = null,
-            ConstantCount = 0
+            color = new WGPUBlendComponent()
+            {
+                srcFactor = WGPUBlendFactor.One,
+                dstFactor = WGPUBlendFactor.Zero,
+                operation = WGPUBlendOperation.Add,
+            },
+            alpha = new WGPUBlendComponent()
+            {
+                srcFactor = WGPUBlendFactor.One,
+                dstFactor = WGPUBlendFactor.Zero,
+                operation = WGPUBlendOperation.Add,
+            }
         };
 
-        RenderPipelineDescriptor renderPipelineDescriptor = new RenderPipelineDescriptor()
+        WGPUColorTargetState colorTargetState = new WGPUColorTargetState()
         {
-            Layout = pipelineLayout,
-            Vertex = new VertexState()
-            {
-                Module = shaderModulePtr,
-                EntryPoint = "vertexMain".ToPointer(),
-                BufferCount = 1,
-                Buffers = &vertexBufferLayout,
-                Constants = null,
-                ConstantCount = 0
-            },
-            Primitive = new PrimitiveState()
-            {
-                Topology = PrimitiveTopology.TriangleList,
-                StripIndexFormat = IndexFormat.Undefined,
-                FrontFace = FrontFace.Ccw,
-                CullMode = CullMode.None,
-            },
-            Fragment = &fragmentState,
-            DepthStencil = null,
-            Multisample = new MultisampleState()
-            {
-                Count = 1,
-                Mask = ~0u,
-                AlphaToCoverageEnabled = false,
-            },
+            nextInChain = null,
+            format = SwapChainFormat,
+            blend = &blendState,
+            writeMask = WGPUColorWriteMask.All,
         };
 
-        renderPipeline = wgpu.DeviceCreateRenderPipeline(device, &renderPipelineDescriptor);
+        WGPUFragmentState fragmentState = new WGPUFragmentState()
+        {
+            nextInChain = null,
+            module = shaderModule,
+            entryPoint = "fragmentMain".ToPointer(),
+            constantCount = 0,
+            constants = null,
+            targetCount = 1,
+            targets = &colorTargetState,
+        };
 
-        wgpu.ShaderModuleRelease(shaderModulePtr);
+        WGPURenderPipelineDescriptor pipelineDescriptor = new WGPURenderPipelineDescriptor()
+        {
+            layout = pipelineLayout,
+            vertex = new WGPUVertexState()
+            {
+                bufferCount = 1,
+                buffers = &vertexLayout,
 
-        Vector4* vertices = stackalloc Vector4[]
+                module = shaderModule,
+                entryPoint = "vertexMain".ToPointer(),
+                constantCount = 0,
+                constants = null,
+            },
+            primitive = new WGPUPrimitiveState()
+            {
+                topology = WGPUPrimitiveTopology.TriangleList,
+                stripIndexFormat = WGPUIndexFormat.Undefined,
+                frontFace = WGPUFrontFace.CCW,
+                cullMode = WGPUCullMode.None,
+            },
+            fragment = &fragmentState,
+            depthStencil = null,
+            multisample = new WGPUMultisampleState()
+            {
+                count = 1,
+                mask = ~0u,
+                alphaToCoverageEnabled = false,
+            }
+        };
+
+        pipeline = wgpuDeviceCreateRenderPipeline(Device, &pipelineDescriptor);
+
+        wgpuShaderModuleRelease(shaderModule);
+
+        Vector4* vertexData = stackalloc Vector4[]
         {
             new Vector4(0.0f, 0.5f, 0.5f, 1.0f),
             new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
@@ -339,61 +339,54 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
             new Vector4(0.0f, 0.0f, 1.0f, 1.0f)
         };
 
-        ulong size = (ulong)(sizeof(Vector4) * 6);
-        BufferDescriptor bufferDescriptor = new BufferDescriptor()
+        ulong size = (ulong)(6 * sizeof(Vector4));
+        WGPUBufferDescriptor bufferDescriptor = new WGPUBufferDescriptor()
         {
-            NextInChain = null,
-            Usage = BufferUsage.Vertex | BufferUsage.CopyDst,
-            Size = size,
-            MappedAtCreation = false,
+            nextInChain = null,
+            usage = WGPUBufferUsage.Vertex | WGPUBufferUsage.CopyDst,
+            size = size,
+            mappedAtCreation = false,
         };
-
-        vertexBuffer = wgpu.DeviceCreateBuffer(device, &bufferDescriptor);
-        wgpu.QueueWriteBuffer(queue, vertexBuffer, 0, vertices, (nuint)size);
+        vertexBuffer = wgpuDeviceCreateBuffer(Device, &bufferDescriptor);
+        wgpuQueueWriteBuffer(Queue, vertexBuffer, 0, vertexData, size);
     }
 
-    private unsafe void AdapterRequestEndedCallback(RequestAdapterStatus status, Adapter* adapter, byte* message,
-        void* userData)
+    private static unsafe void HandleUncapturedErrorCallback(WGPUErrorType type, char* pMessage, void* pUserData)
     {
-        if (status == RequestAdapterStatus.Success)
+        Console.WriteLine($"Uncaptured device error: type: {type} ({StringExtensions.GetString(pMessage)})");
+    }
+
+    private unsafe void OnAdapterRequestEnded(WGPURequestAdapterStatus status, WGPUAdapter candidateAdapter, char* message,
+        void* pUserData)
+    {
+        if (status == WGPURequestAdapterStatus.Success)
         {
-            this.adapter = adapter;
+            Adapter = candidateAdapter;
+            WGPUAdapterProperties properties;
+            wgpuAdapterGetProperties(candidateAdapter, &properties);
 
-            AdapterProperties fetchedAdapterProperties = default;
+            WGPUSupportedLimits limits;
+            wgpuAdapterGetLimits(candidateAdapter, &limits);
 
-            wgpu.AdapterGetProperties(adapter, &fetchedAdapterProperties);
-
-            this.adapterProperties = fetchedAdapterProperties;
-
-            SupportedLimits limits;
-            wgpu.AdapterGetLimits(adapter, &limits);
-
-            this.adapterLimits = limits;
-
-            string name = Marshal.PtrToStringAnsi((IntPtr)adapterProperties.Name);
-
-            Console.WriteLine($"Adapter name: {name}");
+            AdapterProperties = properties;
+            AdapterLimits = limits;
         }
         else
         {
-            throw new Exception("Failed to get adapter");
+            Console.WriteLine($"Could not get WebGPU adapter: {StringExtensions.GetString(message)}");
         }
     }
 
-    private unsafe void OnDeviceRequestEnded(RequestDeviceStatus status, Device* device, byte* message, void* userData)
+    private unsafe void OnDeviceRequestEnded(WGPURequestDeviceStatus status, WGPUDevice device, char* message,
+        void* pUserData)
     {
-        if (status == RequestDeviceStatus.Success)
+        if (status == WGPURequestDeviceStatus.Success)
         {
-            this.device = device;
+            Device = device;
         }
         else
         {
-            throw new Exception("Failed to get device");
+            Console.WriteLine($"Could not get WebGPU device: {StringExtensions.GetString(message)}");
         }
-    }
-
-    private unsafe void OnDeviceError(ErrorType errorType, byte* message, void* userData)
-    {
-        throw new Exception($"Device error of type {errorType}: '{Marshal.PtrToStringAnsi((IntPtr)message)}'");
     }
 }
