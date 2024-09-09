@@ -5,19 +5,23 @@ using Drawie.Silk;
 using Drawie.Skia;
 using DrawiEngine;
 using PixiEditor.Numerics;
+DrawingEngine engine = DrawingEngine.CreateDefault();
 
-SkiaDrawingBackend drawingBackend = new SkiaDrawingBackend();
-VulkanRenderApi renderApi = new VulkanRenderApi();
-GlfwWindowingPlatform windowingPlatform = new GlfwWindowingPlatform(renderApi);
-
-DrawingEngine engine = new DrawingEngine(renderApi, windowingPlatform, drawingBackend);
-
-var window = windowingPlatform.CreateWindow("Drawie Sample", new VecI(800, 600));
+var window = engine.WindowingPlatform.CreateWindow("Drawie Sample", new VecI(800, 600));
 
 Paint paint = new Paint()
 {
    Color = Colors.Green,
    Style = PaintStyle.StrokeAndFill
+};
+
+window.Update += (deltaTime) =>
+{
+   if (engine.WindowingPlatform.Windows.Count == 1)
+   {
+      var window2 = engine.WindowingPlatform.CreateWindow("Drawie Sample 2", new VecI(800, 600));
+      window2.Show();
+   }
 };
 
 window.Render += (targetTexture, deltaTime) =>

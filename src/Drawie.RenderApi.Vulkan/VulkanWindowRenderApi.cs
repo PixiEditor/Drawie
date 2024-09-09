@@ -61,7 +61,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
     private SurfaceKHR surface;
 
     public Queue graphicsQueue;
-    private Queue presentQueue;
+    public Queue presentQueue;
 
     private KhrSwapchain? khrSwapchain;
     private SwapchainKHR swapChain;
@@ -127,6 +127,20 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
     public GraphicsApi GraphicsApi => GraphicsApi.Vulkan;
 
+    public VulkanWindowRenderApi()
+    {
+        
+    }
+    
+    public VulkanWindowRenderApi(Instance instance, Device logicalDevice, PhysicalDevice physicalDevice, Queue graphicsQueue, Queue presentQueue)
+    {
+        this.instance = instance;
+        this.logicalDevice = logicalDevice;
+        PhysicalDevice = physicalDevice;
+        this.graphicsQueue = graphicsQueue;
+        this.presentQueue = presentQueue;
+    }
+
     public void UpdateFramebufferSize(int width, int height)
     {
         framebufferSize = new VecI(width, height);
@@ -142,15 +156,25 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         if (surfaceObject is not IVkSurface vkSurface) throw new VulkanNotSupportedException();
 
         this.framebufferSize = framebufferSize;
+        
+        Vk = Vk.GetApi();
 
-        SetupInstance(vkSurface);
-        SetupDebugMessenger();
+        if (instance.Handle == default)
+        {
+            SetupInstance(vkSurface);
+            SetupDebugMessenger();
+        }
+
         CreateSurface(vkSurface);
-        var selectedGpu = PickPhysicalDevice();
+        if (logicalDevice.Handle == default)
+        {
+            var selectedGpu = PickPhysicalDevice();
 
-        Console.WriteLine($"Selected GPU: {selectedGpu.Name}");
+            Console.WriteLine($"Selected GPU: {selectedGpu.Name}");
 
-        CreateLogicalDevice();
+            CreateLogicalDevice();
+        }
+
         CreateSwapChain();
         CreateImageViews();
         CreateDescriptorSetLayout();
@@ -802,8 +826,6 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
     private unsafe void SetupInstance(IVkSurface surface)
     {
-        Vk = Vk.GetApi();
-
         ThrowIfValidationLayersNotSupported();
 
         ApplicationInfo appInfo = new()

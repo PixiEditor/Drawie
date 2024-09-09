@@ -154,5 +154,10 @@ namespace Drawie.Skia
             
             GraphicsContext = GRContext.CreateVulkan(vkBackendContext);
         }
+
+        public override string ToString()
+        {
+            return "Skia";
+        }
     }
 }

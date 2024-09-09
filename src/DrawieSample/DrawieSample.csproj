@@ -8,9 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj" />
-    <ProjectReference Include="..\Drawie.Windowing.Glfw\Drawie.Windowing.Glfw.csproj" />
-    <ProjectReference Include="..\Drawie.Skia\Drawie.Skia.csproj" />
     <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
   </ItemGroup>
   

@@ -120,7 +120,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     private void OnRender(double dt)
     {
         RenderApi.PrepareTextureToWrite();
-        renderTexture.DrawingSurface?.Canvas.Clear(Colors.LightCoral);
+        renderTexture.DrawingSurface?.Canvas.Clear();
         Render?.Invoke(renderTexture, dt);
         renderTexture.DrawingSurface?.Flush();
     }

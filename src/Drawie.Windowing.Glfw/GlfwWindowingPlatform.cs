@@ -23,4 +23,9 @@ public class GlfwWindowingPlatform : IWindowingPlatform
         _windows.Add(window);
         return window;
     }
+
+    public override string ToString()
+    {
+        return "Glfw";
+    }
 }
