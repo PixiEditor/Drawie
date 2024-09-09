@@ -13,10 +13,16 @@
 
     <ItemGroup>
       <PackageReference Include="Silk.NET.WebGPU" Version="2.21.0" />
-      <PackageReference Include="Silk.NET.WebGPU.Extensions.Dawn" Version="2.21.0" />
-      <PackageReference Include="Silk.NET.WebGPU.Extensions.Disposal" Version="2.21.0" />
-      <PackageReference Include="Silk.NET.WebGPU.Extensions.WGPU" Version="2.21.0" />
-      <PackageReference Include="Silk.NET.WebGPU.Native.WGPU" Version="2.21.0" />
+      <PackageReference Include="Silk.NET.WebGPU.Extensions.Dawn" Version="2.20.0" />
+      <PackageReference Include="Silk.NET.WebGPU.Extensions.Disposal" Version="2.20.0" />
+      <PackageReference Include="Silk.NET.WebGPU.Extensions.WGPU" Version="2.20.0" />
+      <PackageReference Include="Silk.NET.WebGPU.Native.WGPU" Version="2.20.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Shaders\wgpu_shader.wgsl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

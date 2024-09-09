@@ -98,6 +98,7 @@ namespace Drawie.Skia
         
         public void Setup(IRenderApi renderApi)
         {
+            return;
             if(renderApi is not IVulkanRenderApi vulkanRenderApi)
             {
                 throw new UnsupportedRenderApiException(renderApi);
