@@ -15,11 +15,15 @@
       <None Update="Shaders\wgpu_shader.wgsl">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="textur.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Evergine.Bindings.WebGPU" Version="2024.9.4.13" />
       <PackageReference Include="Silk.NET.Core" Version="2.21.0" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
     </ItemGroup>
 
 </Project>

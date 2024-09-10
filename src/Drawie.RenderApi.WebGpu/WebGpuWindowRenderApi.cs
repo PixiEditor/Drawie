@@ -31,6 +31,10 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
     private WGPUTextureFormat SwapChainFormat;
     private WGPUQueue Queue;
 
+    private TextureBuffer texture;
+    private WGPUSampler sampler;
+    private WGPUBindGroup textureBindGroup;
+
     private WGPUPipelineLayout pipelineLayout;
     private WGPURenderPipeline pipeline;
     private WGPUBuffer vertexBuffer;
@@ -91,7 +95,8 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
 
         wgpuRenderPassEncoderSetPipeline(renderPass, pipeline);
         wgpuRenderPassEncoderSetVertexBuffer(renderPass, 0, vertexBuffer, 0, WGPU_WHOLE_MAP_SIZE);
-        wgpuRenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
+        wgpuRenderPassEncoderSetBindGroup(renderPass, 0, textureBindGroup, 0, null);
+        wgpuRenderPassEncoderDraw(renderPass, 6, 1, 0, 0);
         wgpuRenderPassEncoderEnd(renderPass);
 
         wgpuTextureViewRelease(nextView);
@@ -117,6 +122,9 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
 
     public void DestroyInstance()
     {
+        wgpuBindGroupRelease(textureBindGroup);
+        wgpuSamplerRelease(sampler);
+        texture.Dispose();
         wgpuSurfaceRelease(Surface);
         wgpuDeviceDestroy(Device);
         wgpuDeviceRelease(Device);
@@ -228,11 +236,46 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
 
     private unsafe void InitResources()
     {
+        WGPUSamplerBindingLayout samplerBindingLayout = new WGPUSamplerBindingLayout()
+        {
+            type = WGPUSamplerBindingType.Filtering
+        };
+        
+        WGPUTextureBindingLayout textureBindingLayout = new WGPUTextureBindingLayout()
+        {
+            sampleType = WGPUTextureSampleType.Float,
+            viewDimension = WGPUTextureViewDimension._2D,
+            multisampled = false,
+        };
+        
+        WGPUBindGroupLayoutEntry* bindGroupLayoutEntries = stackalloc WGPUBindGroupLayoutEntry[2]
+        {
+            new WGPUBindGroupLayoutEntry()
+            {
+                visibility = WGPUShaderStage.Fragment,
+                binding = 0,
+                sampler = samplerBindingLayout
+            },
+            new WGPUBindGroupLayoutEntry()
+            {
+                visibility = WGPUShaderStage.Fragment,
+                binding = 1,
+                texture = textureBindingLayout
+            }
+        };
+        var bindGroupLayoutDescriptor = new WGPUBindGroupLayoutDescriptor()
+        {
+            entryCount = 2,
+            entries = bindGroupLayoutEntries,
+        };
+        
+        var bindGroupLayout = wgpuDeviceCreateBindGroupLayout(Device, &bindGroupLayoutDescriptor); 
+
         WGPUPipelineLayoutDescriptor layoutDescription = new()
         {
             nextInChain = null,
-            bindGroupLayoutCount = 0,
-            bindGroupLayouts = null,
+            bindGroupLayoutCount = 1,
+            bindGroupLayouts = &bindGroupLayout,
         };
 
         pipelineLayout = wgpuDeviceCreatePipelineLayout(Device, &layoutDescription);
@@ -262,14 +305,14 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
         {
             new WGPUVertexAttribute()
             {
-                format = WGPUVertexFormat.Float32x4,
+                format = WGPUVertexFormat.Float32x2,
                 offset = 0,
                 shaderLocation = 0,
             },
             new WGPUVertexAttribute()
             {
-                format = WGPUVertexFormat.Float32x4,
-                offset = 16,
+                format = WGPUVertexFormat.Float32x2,
+                offset = 8,
                 shaderLocation = 1,
             },
         };
@@ -278,7 +321,7 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
         {
             attributeCount = 2,
             attributes = vertexAttributes,
-            arrayStride = (ulong)sizeof(Vector4) * 2,
+            arrayStride = (ulong)sizeof(Vector2) * 2,
             stepMode = WGPUVertexStepMode.Vertex,
         };
 
@@ -352,21 +395,29 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
         wgpuShaderModuleRelease(shaderModule);
 
         // triangle
-        Vector4* vertexData = stackalloc Vector4[]
+        Vector2* vertexData = stackalloc Vector2[]
         {
-            new Vector4(-1.0f, 3f, 0.5f, 1.0f),
-            new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
-            
-            new Vector4(3f, -1f, 0.5f, 1.0f),
-            
-            new Vector4(0.0f, 1.0f, 0.0f, 1.0f),
-            
-            new Vector4(-1f, -1f, 0.5f, 1.0f),
-            
-            new Vector4(0.0f, 0.0f, 1.0f, 1.0f)
+            new Vector2(-1.0f, -1f), // bottom left pos
+            new Vector2(0.0f, 1.0f), // texture coords bottom left (flipped from 0.0f to 1.0f)
+
+            new Vector2(1.0f, -1.0f), // top right pos
+            new Vector2(1.0f, 1.0f), // texture coords top right (flipped from 0.0f to 1.0f)
+
+            new Vector2(-1.0f, 1.0f), // bottom left pos
+            new Vector2(0.0f, 0.0f), // texture coords bottom left (flipped from 1.0f to 0.0f)
+
+            new Vector2(-1.0f, 1.0f), // bottom left pos
+            new Vector2(0.0f, 0.0f), // texture coords bottom left (flipped from 1.0f to 0.0f)
+
+            new Vector2(1.0f, -1.0f), // top right pos
+            new Vector2(1.0f, 1.0f), // texture coords top right (flipped from 0.0f to 1.0f)
+
+            new Vector2(1.0f, 1.0f), // bottom right pos
+            new Vector2(1.0f, 0.0f), // texture coords bottom right (flipped from 1.0f to 0.0f)
+
         };
 
-        ulong size = (ulong)(6 * sizeof(Vector4));
+        ulong size = (ulong)(12 * sizeof(Vector2));
         WGPUBufferDescriptor bufferDescriptor = new WGPUBufferDescriptor()
         {
             nextInChain = null,
@@ -374,9 +425,67 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
             size = size,
             mappedAtCreation = false,
         };
-        
+
         vertexBuffer = wgpuDeviceCreateBuffer(Device, &bufferDescriptor);
         wgpuQueueWriteBuffer(Queue, vertexBuffer, 0, vertexData, size);
+
+        CreateTexture();
+    }
+
+    private unsafe void CreateTexture()
+    {
+        texture = new TextureBuffer(Device, Queue, new VecI(128, 128));
+        sampler = CreateSampler();
+        textureBindGroup = CreateBindGroup();
+    }
+
+    private unsafe WGPUSampler CreateSampler()
+    {
+        WGPUSamplerDescriptor samplerDescriptor = new WGPUSamplerDescriptor()
+        {
+            nextInChain = null,
+            addressModeU = WGPUAddressMode.ClampToEdge,
+            addressModeV = WGPUAddressMode.ClampToEdge,
+            addressModeW = WGPUAddressMode.ClampToEdge,
+            magFilter = WGPUFilterMode.Linear,
+            minFilter = WGPUFilterMode.Linear,
+            mipmapFilter = WGPUMipmapFilterMode.Linear,
+            lodMinClamp = 0,
+            lodMaxClamp = 0,
+            compare = WGPUCompareFunction.Undefined,
+            maxAnisotropy = 1,
+        };
+
+        return wgpuDeviceCreateSampler(Device, &samplerDescriptor);
+    }
+
+    private unsafe WGPUBindGroup CreateBindGroup()
+    {
+        var bindLayout = wgpuRenderPipelineGetBindGroupLayout(pipeline, 0);
+
+        WGPUBindGroupEntry* textureBindGroupEntries = stackalloc WGPUBindGroupEntry[]
+        {
+            new WGPUBindGroupEntry()
+            {
+                binding = 0,
+                sampler = sampler,
+            },
+            new WGPUBindGroupEntry()
+            {
+                binding = 1,
+                textureView = wgpuTextureCreateView(texture.WgpuTexture, null),
+            }
+        };
+
+        WGPUBindGroupDescriptor bindGroupDescriptor = new WGPUBindGroupDescriptor()
+        {
+            nextInChain = null,
+            layout = bindLayout,
+            entryCount = 2,
+            entries = textureBindGroupEntries,
+        };
+
+        return wgpuDeviceCreateBindGroup(Device, &bindGroupDescriptor);
     }
 
     private static unsafe void HandleUncapturedErrorCallback(WGPUErrorType type, char* pMessage, void* pUserData)

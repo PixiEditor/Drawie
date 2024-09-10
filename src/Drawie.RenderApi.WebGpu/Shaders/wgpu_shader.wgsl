@@ -1,8 +1,6 @@
-﻿/*https://github.com/EvergineTeam/WebGPU.NET/blob/master/WebGPUGen/HelloTriangle/Content/triangle.wgsl*/
-
-struct VertexInput {
-    @location(0) position: vec4f,
-    @location(1) color: vec4f,
+﻿struct VertexInput {
+    @location(0) position: vec2f,
+    @location(1) texCoord: vec2f,
 };
 
 /**
@@ -16,18 +14,21 @@ struct VertexOutput {
     // that this field must be handled by the rasterizer.
     // (It can also refer to another field of another struct that would be used
     // as input to the fragment shader.)
-    @location(0) color: vec4f,
+    @location(0) texCoord: vec2f, 
 };
 
 @vertex
 fn vertexMain(in: VertexInput) -> VertexOutput {
     var out: VertexOutput;
-    out.position = in.position;
-    out.color = in.color; // forward to the fragment shader
+    out.position = vec4<f32>(in.position, 0, 1);
+    out.texCoord = in.texCoord;
     return out;
 }
 
+@group(0) @binding(0) var tex_sampler: sampler;
+@group(0) @binding(1) var tex: texture_2d<f32>;
+
 @fragment
 fn fragmentMain(in: VertexOutput) -> @location(0) vec4f {
-    return in.color;
+    return textureSample(tex, tex_sampler, in.texCoord); 
 }
