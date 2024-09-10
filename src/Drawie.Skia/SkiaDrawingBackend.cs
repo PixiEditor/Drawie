@@ -98,7 +98,8 @@ namespace Drawie.Skia
         
         public void Setup(IRenderApi renderApi)
         {
-            return;
+            // skia doesn't support webgpu :(
+            
             if(renderApi is not IVulkanRenderApi vulkanRenderApi)
             {
                 throw new UnsupportedRenderApiException(renderApi);

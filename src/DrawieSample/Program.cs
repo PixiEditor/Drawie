@@ -7,11 +7,7 @@ using Drawie.Skia;
 using DrawiEngine;
 using PixiEditor.Numerics;
 
-//DrawingEngine engine = DrawingEngine.CreateDefault();
-
-var renderApi = new WebGpuRenderApi();
-DrawingEngine engine = new DrawingEngine(renderApi, new GlfwWindowingPlatform(renderApi), new SkiaDrawingBackend());
-
+DrawingEngine engine = DrawingEngine.CreateDefault();
 
 var window = engine.WindowingPlatform.CreateWindow("Drawie Sample", new VecI(800, 600));
 

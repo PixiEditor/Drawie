@@ -83,9 +83,9 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             window.FramebufferResize += WindowOnFramebufferResize;
             RenderApi.FramebufferResized += RenderApiOnFramebufferResized;
 
-            //CreateRenderTarget(window.FramebufferSize.ToVecI(), RenderApi);
+            CreateRenderTarget(window.FramebufferSize.ToVecI(), RenderApi);
 
-            //window.Render += OnRender;
+            window.Render += OnRender;
             window.Render += RenderApi.Render;
 
             window.Update += OnUpdate;
