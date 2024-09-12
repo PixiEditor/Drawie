@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.Skia", "Drawie.Skia\Drawie.Skia.csproj", "{F549B8B4-B40C-4E79-B9D9-272FF9C648F0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.Backend.Skia", "Drawie.Backend.Skia\Drawie.Backend.Skia.csproj", "{F549B8B4-B40C-4E79-B9D9-272FF9C648F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.Core", "Drawie.Core\Drawie.Core.csproj", "{860067DF-D78D-4459-BD5F-96AEC70C281B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.Backend.Core", "Drawie.Backend.Core\Drawie.Backend.Core.csproj", "{860067DF-D78D-4459-BD5F-96AEC70C281B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawieSample", "DrawieSample\DrawieSample.csproj", "{645AF54D-D58F-492E-A2A9-12F86EA8C00A}"
 EndProject
@@ -22,6 +22,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.RenderApi.Vulkan", "Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj", "{C66A9ACB-904D-42B4-8FFE-6ED36E855A11}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.RenderApi.WebGpu", "Drawie.RenderApi.WebGpu\Drawie.RenderApi.WebGpu.csproj", "{1262A719-EDA6-4239-B37A-19745A763742}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawieSample.Browser", "DrawieSample.Browser\DrawieSample.Browser.csproj", "{16A45076-AAE6-497E-BBA6-E8CA974E19CD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{239DB1B4-E66F-444A-87DA-B19775F40974}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.Backend.Html5Canvas", "Drawie.Backend.Html5Canvas\Drawie.Backend.Html5Canvas.csproj", "{1B10A722-5A59-4563-9E0F-4F2A35274C8B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.Windowing.Browser", "Drawie.Windowing.Browser\Drawie.Windowing.Browser.csproj", "{14896E27-47BA-48E9-81D1-612582C8FF5B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,5 +80,21 @@ Global
 		{1262A719-EDA6-4239-B37A-19745A763742}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1262A719-EDA6-4239-B37A-19745A763742}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1262A719-EDA6-4239-B37A-19745A763742}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16A45076-AAE6-497E-BBA6-E8CA974E19CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16A45076-AAE6-497E-BBA6-E8CA974E19CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16A45076-AAE6-497E-BBA6-E8CA974E19CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16A45076-AAE6-497E-BBA6-E8CA974E19CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B10A722-5A59-4563-9E0F-4F2A35274C8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B10A722-5A59-4563-9E0F-4F2A35274C8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B10A722-5A59-4563-9E0F-4F2A35274C8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B10A722-5A59-4563-9E0F-4F2A35274C8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14896E27-47BA-48E9-81D1-612582C8FF5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14896E27-47BA-48E9-81D1-612582C8FF5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14896E27-47BA-48E9-81D1-612582C8FF5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14896E27-47BA-48E9-81D1-612582C8FF5B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{645AF54D-D58F-492E-A2A9-12F86EA8C00A} = {239DB1B4-E66F-444A-87DA-B19775F40974}
+		{16A45076-AAE6-497E-BBA6-E8CA974E19CD} = {239DB1B4-E66F-444A-87DA-B19775F40974}
 	EndGlobalSection
 EndGlobal

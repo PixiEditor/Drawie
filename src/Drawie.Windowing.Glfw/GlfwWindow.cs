@@ -1,6 +1,5 @@
-using Drawie.Core;
-using Drawie.Core.Bridge;
-using Drawie.Core.ColorsImpl;
+using Drawie.Backend.Core;
+using Drawie.Backend.Core.Bridge;
 using Drawie.RenderApi;
 using Drawie.Silk.Extensions;
 using PixiEditor.Numerics;

@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Drawie.Core\Drawie.Core.csproj" />
+      <ProjectReference Include="..\Drawie.Backend.Core\Drawie.Backend.Core.csproj" />
       <ProjectReference Include="..\Drawie.Numerics\Drawie.Numerics.csproj" />
       <ProjectReference Include="..\Drawie.RenderApi\Drawie.RenderApi.csproj" />
     </ItemGroup>

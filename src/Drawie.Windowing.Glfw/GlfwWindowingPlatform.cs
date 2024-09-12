@@ -17,6 +17,11 @@ public class GlfwWindowingPlatform : IWindowingPlatform
         RenderApi = renderApi;
     }
 
+    public IWindow CreateWindow(string name)
+    {
+        return CreateWindow(name, VecI.Zero);
+    }
+
     public IWindow CreateWindow(string name, VecI size)
     {
         GlfwWindow window = new(name, size, RenderApi.CreateWindowRenderApi());

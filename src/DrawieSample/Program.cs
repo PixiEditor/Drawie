@@ -1,13 +1,9 @@
-﻿using Drawie.Core.ColorsImpl;
-using Drawie.Core.Surfaces.PaintImpl;
-using Drawie.RenderApi.Vulkan;
-using Drawie.RenderApi.WebGpu;
-using Drawie.Silk;
-using Drawie.Skia;
+﻿using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.Surfaces.PaintImpl;
 using DrawiEngine;
 using PixiEditor.Numerics;
 
-DrawingEngine engine = DrawingEngine.CreateDefault();
+DrawingEngine engine = DrawingEngine.CreateDefaultDesktop();
 
 var window = engine.WindowingPlatform.CreateWindow("Drawie Sample", new VecI(800, 600));
 

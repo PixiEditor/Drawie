@@ -1,9 +1,11 @@
-﻿using Drawie.Core.Bridge;
+﻿using Draiwe.Html5Canvas;
+using Drawie.Backend.Core.Bridge;
 using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan;
 using Drawie.Silk;
 using Drawie.Skia;
 using Drawie.Windowing;
+using Drawie.Windowing.Browser;
 
 namespace DrawiEngine;
 
@@ -23,16 +25,21 @@ public class DrawingEngine
           DrawingBackendApi.SetupBackend(DrawingBackend, new DrawieRenderingDispatcher());
      }
      
-     public static DrawingEngine CreateDefault()
+     public static DrawingEngine CreateDefaultDesktop()
      {
           VulkanRenderApi renderApi = new VulkanRenderApi();
           return new DrawingEngine(renderApi, new GlfwWindowingPlatform(renderApi), new SkiaDrawingBackend());
+     }
+     
+     public static DrawingEngine CreateDefaultBrowser()
+     {
+          return new DrawingEngine(null, new BrowserWindowingPlatform(), new HtmlCanvasDrawingBackend());
      }
 
      public void RunWithWindow(IWindow window)
      {
           Console.WriteLine("Running DrawieEngine with configuration:");
-          Console.WriteLine($"\t- RenderApi: {RenderApi.GraphicsApi}");
+          Console.WriteLine($"\t- RenderApi: {RenderApi?.GraphicsApi}");
           Console.WriteLine($"\t- WindowingPlatform: {WindowingPlatform}");
           Console.WriteLine($"\t- DrawingBackend: {DrawingBackend}");
           
