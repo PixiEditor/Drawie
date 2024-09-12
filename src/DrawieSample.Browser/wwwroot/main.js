@@ -11,6 +11,10 @@ const { setModuleImports, getAssemblyExports, getConfig } = await dotnet
 setModuleImports('main.js', {
     interop: {
         invokeJs: (js) => eval(js)
+    },
+    window: {
+        innerWidth: () => window.innerWidth,
+        innerHeight: () => window.innerHeight
     }
 });
 

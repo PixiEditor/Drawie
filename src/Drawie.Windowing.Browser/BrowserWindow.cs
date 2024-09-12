@@ -4,7 +4,7 @@ using PixiEditor.Numerics;
 
 namespace Drawie.Windowing.Browser;
 
-public class BrowserWindow : IWindow
+public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
 {
     public string Name
     {
@@ -13,14 +13,16 @@ public class BrowserWindow : IWindow
     }
     
     public VecI Size { get; set; }
-    
-    public IWindowRenderApi RenderApi { get; set; }
+
+    public VecI UsableWindowSize => BrowserInterop.GetWindowSize();
+
+    public IWindowRenderApi RenderApi { get; set; } = windowRenderApi;
     
     public event Action<double>? Update;
     public event Action<Texture, double>? Render;
     public void Initialize()
     {
-        
+        RenderApi.CreateInstance(null, UsableWindowSize);
     }
 
     public void Show()

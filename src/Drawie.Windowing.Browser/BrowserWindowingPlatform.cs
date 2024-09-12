@@ -3,10 +3,10 @@ using PixiEditor.Numerics;
 
 namespace Drawie.Windowing.Browser;
 
-public class BrowserWindowingPlatform : IWindowingPlatform
+public class BrowserWindowingPlatform(IRenderApi renderApi) : IWindowingPlatform
 {
     public BrowserWindow Window { get; private set; }
-    public IRenderApi RenderApi { get; }
+    public IRenderApi RenderApi { get; } = renderApi;
     IReadOnlyCollection<IWindow> IWindowingPlatform.Windows => new IWindow[] { Window };
     public IWindow CreateWindow(string name)
     {
@@ -18,9 +18,9 @@ public class BrowserWindowingPlatform : IWindowingPlatform
         if (Window != null)
         {
             throw new InvalidOperationException("Browser windowing platform can only have one window.");
-        } 
-        
-        BrowserWindow window = new BrowserWindow
+        }
+
+        BrowserWindow window = new BrowserWindow(RenderApi.CreateWindowRenderApi())
         {
             Name = name
         };

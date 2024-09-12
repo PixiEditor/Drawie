@@ -5,11 +5,12 @@ using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Surfaces.Vector;
+using Drawie.Html5Canvas.Objects;
 using PixiEditor.Numerics;
 
-namespace Draiwe.Html5Canvas.Impl;
+namespace Drawie.Html5Canvas.Impl;
 
-public class HtmlCanvasImplementation : ICanvasImplementation
+public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplementation
 {
     public void DrawPixel(IntPtr objPtr, int posX, int posY, Paint drawingPaint)
     {

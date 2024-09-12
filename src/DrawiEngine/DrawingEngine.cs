@@ -1,6 +1,7 @@
-﻿using Draiwe.Html5Canvas;
+﻿using Drawie.Html5Canvas;
 using Drawie.Backend.Core.Bridge;
 using Drawie.RenderApi;
+using Drawie.RenderApi.Html5Canvas;
 using Drawie.RenderApi.Vulkan;
 using Drawie.Silk;
 using Drawie.Skia;
@@ -33,13 +34,14 @@ public class DrawingEngine
      
      public static DrawingEngine CreateDefaultBrowser()
      {
-          return new DrawingEngine(null, new BrowserWindowingPlatform(), new HtmlCanvasDrawingBackend());
+          Html5CanvasRenderApi renderApi = new Html5CanvasRenderApi();
+          return new DrawingEngine(renderApi, new BrowserWindowingPlatform(renderApi), new HtmlCanvasDrawingBackend());
      }
 
      public void RunWithWindow(IWindow window)
      {
           Console.WriteLine("Running DrawieEngine with configuration:");
-          Console.WriteLine($"\t- RenderApi: {RenderApi?.GraphicsApi}");
+          Console.WriteLine($"\t- RenderApi: {RenderApi}");
           Console.WriteLine($"\t- WindowingPlatform: {WindowingPlatform}");
           Console.WriteLine($"\t- DrawingBackend: {DrawingBackend}");
           

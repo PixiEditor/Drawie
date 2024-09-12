@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Drawie.RenderApi.WebGpu\Drawie.RenderApi.WebGpu.csproj" />
+    <ProjectReference Include="..\Drawie.RenderApi.WebGpu.Desktop\Drawie.RenderApi.WebGpu.Desktop.csproj" />
     <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
   </ItemGroup>
   

@@ -31,7 +31,7 @@ namespace Drawie.Backend.Core.Bridge
             _current.RenderingDispatcher = dispatcher;
         }
 
-        public static void InitializeBackend(IRenderApi? renderApi)
+        public static void InitializeBackend(IRenderApi renderApi)
         {
             if (_current == null)
             {

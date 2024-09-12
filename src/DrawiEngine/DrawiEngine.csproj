@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Drawie.Backend.Core\Drawie.Backend.Core.csproj" />
     <ProjectReference Include="..\Drawie.Backend.Html5Canvas\Drawie.Backend.Html5Canvas.csproj" />
+    <ProjectReference Include="..\Drawie.RenderApi.Html5Canvas\Drawie.RenderApi.Html5Canvas.csproj" />
     <ProjectReference Include="..\Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj" />
     <ProjectReference Include="..\Drawie.Windowing.Browser\Drawie.Windowing.Browser.csproj" />
     <ProjectReference Include="..\Drawie.Windowing.Glfw\Drawie.Windowing.Glfw.csproj" />

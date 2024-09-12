@@ -1,18 +1,25 @@
 ﻿using System.Runtime.InteropServices.JavaScript;
-using Microsoft.JSInterop;
+using Drawie.JSInterop;
+using PixiEditor.Numerics;
 
 namespace Drawie.Windowing.Browser;
 
 public partial class BrowserInterop
 {
-    [JSImport("interop.invokeJs", "main.js")]
-    internal static partial void InvokeJs(string js);
-    
-    [JSImport("window.document.title", "main.js")]
-    internal static partial string GetTitle();
-
+    public static string GetTitle()
+    {
+        return JSRuntime.GetTitle();
+    }
     public static void SetTitle(string value)
     {
-        InvokeJs($"document.title = '{value}'");
+        JSRuntime.InvokeJs($"document.title = '{value}'");
+    }
+
+    public static VecI GetWindowSize()
+    {
+        int width = JSRuntime.GetWindowWidth();
+        int height = JSRuntime.GetWindowHeight();
+        
+        return new VecI(width, height);
     }
 }

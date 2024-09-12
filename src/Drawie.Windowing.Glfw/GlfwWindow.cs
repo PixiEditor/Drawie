@@ -48,7 +48,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         {
             Title = name,
             Size = size.ToVector2DInt(),
-            API = renderApi.GraphicsApi.ToSilkGraphicsApi()
+            API = renderApi is IVulkanWindowRenderApi ? GraphicsAPI.DefaultVulkan : GraphicsAPI.Default 
         });
 
         RenderApi = renderApi;
@@ -60,7 +60,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         
         window.Initialize();
 
-        if (RenderApi.GraphicsApi == GraphicsApi.Vulkan)
+        if (RenderApi is IVulkanWindowRenderApi)
             RenderApi.CreateInstance(window.VkSurface, window.Size.ToVecI());
         else
         {

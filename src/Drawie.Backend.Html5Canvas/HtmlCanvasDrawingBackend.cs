@@ -1,13 +1,14 @@
-﻿using Draiwe.Html5Canvas.Impl;
+﻿using Drawie.Html5Canvas.Impl;
 using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.Surfaces;
+using Drawie.Html5Canvas.Objects;
 using Drawie.RenderApi;
 using PixiEditor.Numerics;
 
-namespace Draiwe.Html5Canvas;
+namespace Drawie.Html5Canvas;
 
 public class HtmlCanvasDrawingBackend : IDrawingBackend
 {
@@ -30,16 +31,22 @@ public class HtmlCanvasDrawingBackend : IDrawingBackend
     
     public HtmlCanvasDrawingBackend()
     {
-        CanvasImplementation = new HtmlCanvasImplementation(); 
+        CanvasImplementation = new Impl.Html5CanvasImpl(); 
     }
 
-    public void Setup(IRenderApi? renderApi)
+    public void Setup(IRenderApi renderApi)
     {
         
     }
 
     public DrawingSurface CreateRenderSurface(VecI size, IWindowRenderApi renderApi)
     {
+        if(renderApi is IBrowserWindowRenderApi browserWindowRenderApi)
+        {
+            HtmlCanvasObject canvasObject = new HtmlCanvasObject(browserWindowRenderApi.CanvasId, size); 
+            return DrawingSurface.FromNative(canvasObject);
+        }
         
+        throw new ArgumentException("Unsupported render API.");
     }
 }

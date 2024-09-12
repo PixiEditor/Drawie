@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Drawie.JSInterop\Drawie.JSInterop.csproj" />
       <ProjectReference Include="..\Drawie.Windowing\Drawie.Windowing.csproj" />
     </ItemGroup>
 

@@ -1,12 +1,22 @@
-﻿using Drawie.Backend.Core.Bridge.Operations;
+﻿using System.Collections.Concurrent;
+using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
+using Drawie.Html5Canvas.Objects;
 
-namespace Draiwe.Html5Canvas.Impl;
+namespace Drawie.Html5Canvas.Impl;
 
-public class HtmlCanvasSurfaceImplementation : ISurfaceImplementation
+public class Html5CanvasSurface : ISurfaceImplementation
 {
+    private int handleCounter = 0;
+    private readonly Html5CanvasImpl canvasImpl;
+    
+    public Html5CanvasSurface(Html5CanvasImpl canvasImpl)
+    {
+        canvasImpl = canvasImpl;
+    }
+    
     public Pixmap PeekPixels(DrawingSurface drawingSurface)
     {
         throw new NotImplementedException();
@@ -55,11 +65,24 @@ public class HtmlCanvasSurfaceImplementation : ISurfaceImplementation
 
     public void Flush(DrawingSurface drawingSurface)
     {
-        throw new NotImplementedException();
+        
     }
 
     public DrawingSurface FromNative(object native)
     {
-        throw new NotImplementedException();
+        if(native is not HtmlCanvasObject canvasObject)
+            throw new ArgumentException("Native object is not a HtmlCanvasObject", nameof(native));
+        
+        return CreateDrawingSurface(canvasObject); 
+    }
+    
+    private DrawingSurface CreateDrawingSurface(HtmlCanvasObject canvasObject)
+    {
+        canvasImpl.ManagedObjects.TryAdd(canvasObject.Handle, canvasObject);
+
+        handleCounter++;
+        
+        DrawingSurface drawingSurface = new DrawingSurface(handleCounter, new Canvas(canvasObject.Handle)); 
+        return drawingSurface;
     }
 }

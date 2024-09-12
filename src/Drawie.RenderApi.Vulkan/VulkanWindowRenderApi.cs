@@ -125,7 +125,6 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         0, 1, 2, 2, 3, 0
     };
 
-    public GraphicsApi GraphicsApi => GraphicsApi.Vulkan;
 
     public VulkanWindowRenderApi()
     {

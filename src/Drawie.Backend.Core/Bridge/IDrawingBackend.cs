@@ -8,7 +8,7 @@ namespace Drawie.Backend.Core.Bridge
 {
     public interface IDrawingBackend
     {
-        public void Setup(IRenderApi? renderApi);
+        public void Setup(IRenderApi renderApi);
         public IColorImplementation ColorImplementation { get; }
         public IImageImplementation ImageImplementation { get; }
         public ICanvasImplementation CanvasImplementation { get; }
