@@ -1,14 +1,14 @@
 ﻿namespace Drawie.JSInterop;
 
-public class HtmlObject
+public class HtmlObject(string tagName)
 {
-    public string TagName { get; set; } = string.Empty;
+    public string TagName { get; } = tagName; 
     public Dictionary<string, string> Attributes { get; } = new Dictionary<string, string>();
-    public int Id { get; internal set; }
+    public string Id { get; internal set; }
 
     public void SetAttribute(string name, string value)
     {
         Attributes[name] = value;
-        JSRuntime.InvokeJs($"document.getElementById('element{Id}').setAttribute('{name}', '{value}')");
+        JSRuntime.InvokeJs($"document.getElementById('{Id}').setAttribute('{name}', '{value}')");
     }
 }

@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.Backend.Skia", "Draw
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.Backend.Core", "Drawie.Backend.Core\Drawie.Backend.Core.csproj", "{860067DF-D78D-4459-BD5F-96AEC70C281B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawieSample", "DrawieSample\DrawieSample.csproj", "{645AF54D-D58F-492E-A2A9-12F86EA8C00A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawieSample.Desktop", "DrawieSample.Desktop\DrawieSample.Desktop.csproj", "{645AF54D-D58F-492E-A2A9-12F86EA8C00A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.Numerics", "Drawie.Numerics\Drawie.Numerics.csproj", "{2C84A8E2-9DAF-43CF-AFCB-030922AEA412}"
 EndProject
@@ -40,6 +40,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.RenderApi.Html5Canvas", "Drawie.RenderApi.Html5Canvas\Drawie.RenderApi.Html5Canvas.csproj", "{5BAFF790-4C5C-450E-9D31-924229F0C5C6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.JSInterop", "Drawie.JSInterop\Drawie.JSInterop.csproj", "{6B57DDAF-FE9A-496C-B290-D019004B6B11}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawieSample", "DrawieSample\DrawieSample.csproj", "{6E2E0A40-4156-43C2-B0BD-2100FE4B0E4A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -110,6 +112,10 @@ Global
 		{6B57DDAF-FE9A-496C-B290-D019004B6B11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6B57DDAF-FE9A-496C-B290-D019004B6B11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6B57DDAF-FE9A-496C-B290-D019004B6B11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E2E0A40-4156-43C2-B0BD-2100FE4B0E4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E2E0A40-4156-43C2-B0BD-2100FE4B0E4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E2E0A40-4156-43C2-B0BD-2100FE4B0E4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E2E0A40-4156-43C2-B0BD-2100FE4B0E4A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{645AF54D-D58F-492E-A2A9-12F86EA8C00A} = {239DB1B4-E66F-444A-87DA-B19775F40974}
@@ -124,5 +130,6 @@ Global
 		{14896E27-47BA-48E9-81D1-612582C8FF5B} = {823F63C1-3DD7-4DE7-A41E-B4E0159FBCB4}
 		{D4927AD1-8A67-4358-B867-EA19771D47C8} = {823F63C1-3DD7-4DE7-A41E-B4E0159FBCB4}
 		{5BAFF790-4C5C-450E-9D31-924229F0C5C6} = {9A805C39-3EC4-478F-B7F2-5D54F9F35CB8}
+		{6E2E0A40-4156-43C2-B0BD-2100FE4B0E4A} = {239DB1B4-E66F-444A-87DA-B19775F40974}
 	EndGlobalSection
 EndGlobal

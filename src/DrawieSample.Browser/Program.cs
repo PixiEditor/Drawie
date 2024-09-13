@@ -1,9 +1,8 @@
-using System;
-using Drawie.Windowing.Browser;
 using DrawiEngine;
+using DrawieSample;
 
 DrawingEngine engine = DrawingEngine.CreateDefaultBrowser();
 
-var window = engine.WindowingPlatform.CreateWindow("Drawie Browser Sample");
+DrawieSampleApp sampleApp = new DrawieSampleApp();
 
-engine.RunWithWindow(window);
+engine.RunWithApp(sampleApp);

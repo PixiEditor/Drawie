@@ -1,11 +1,19 @@
 ﻿using System.Runtime.InteropServices.JavaScript;
-using Drawie.JSInterop;
+using Microsoft.JSInterop;
 using PixiEditor.Numerics;
+using JSRuntime = Drawie.JSInterop.JSRuntime;
 
 namespace Drawie.Windowing.Browser;
 
 public partial class BrowserInterop
 {
+    private static event Action<double> OnRender;
+
+    static BrowserInterop()
+    {
+        JSRuntime.OnAnimationFrameCalled += OnAnimationFrame;
+    }
+    
     public static string GetTitle()
     {
         return JSRuntime.GetTitle();
@@ -21,5 +29,17 @@ public partial class BrowserInterop
         int height = JSRuntime.GetWindowHeight();
         
         return new VecI(width, height);
+    }
+
+    public static void RequestAnimationFrame(Action<double> onRender)
+    {
+        OnRender += onRender; 
+        JSRuntime.RequestAnimationFrame();
+    }
+
+    private static void OnAnimationFrame(double obj)
+    {
+        OnRender?.Invoke(obj);
+        OnRender = null;
     }
 }

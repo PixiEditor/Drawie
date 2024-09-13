@@ -31,7 +31,10 @@ public class HtmlCanvasDrawingBackend : IDrawingBackend
     
     public HtmlCanvasDrawingBackend()
     {
-        CanvasImplementation = new Impl.Html5CanvasImpl(); 
+        Html5CanvasImpl canvasImpl = new Html5CanvasImpl();
+        CanvasImplementation = canvasImpl;
+        SurfaceImplementation = new Html5CanvasSurface(canvasImpl);
+        PaintImplementation = new Html5PaintImpl();
     }
 
     public void Setup(IRenderApi renderApi)
@@ -47,6 +50,6 @@ public class HtmlCanvasDrawingBackend : IDrawingBackend
             return DrawingSurface.FromNative(canvasObject);
         }
         
-        throw new ArgumentException("Unsupported render API.");
+        throw new ArgumentException($"Unsupported render API: {renderApi}.");
     }
 }

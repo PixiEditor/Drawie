@@ -1,4 +1,5 @@
 ﻿using Drawie.Backend.Core;
+using Drawie.Backend.Core.Bridge;
 using Drawie.RenderApi;
 using PixiEditor.Numerics;
 
@@ -11,15 +12,18 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
         get => BrowserInterop.GetTitle();
         set => BrowserInterop.SetTitle(value);
     }
-    
+
     public VecI Size { get; set; }
 
     public VecI UsableWindowSize => BrowserInterop.GetWindowSize();
-
-    public IWindowRenderApi RenderApi { get; set; } = windowRenderApi;
     
+    public IWindowRenderApi RenderApi { get; set; } = windowRenderApi;
+
     public event Action<double>? Update;
     public event Action<Texture, double>? Render;
+
+    private Texture renderTexture;
+
     public void Initialize()
     {
         RenderApi.CreateInstance(null, UsableWindowSize);
@@ -27,11 +31,27 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
 
     public void Show()
     {
+        renderTexture = CreateRenderTexture();
+        BrowserInterop.RequestAnimationFrame(OnRender);
+    }
+
+    private void OnRender(double dt)
+    {
+        RenderApi.PrepareTextureToWrite();
+        renderTexture.DrawingSurface?.Canvas.Clear();
+        Render?.Invoke(renderTexture, dt);
+        //renderTexture.DrawingSurface?.Flush();
         
+        BrowserInterop.RequestAnimationFrame(OnRender);
     }
 
     public void Close()
     {
-        
+    }
+
+    private Texture CreateRenderTexture()
+    {
+        var drawingSurface = DrawingBackendApi.Current.CreateRenderSurface(UsableWindowSize, RenderApi);
+        return Texture.FromExisting(drawingSurface);
     }
 }

@@ -38,16 +38,21 @@ public class DrawingEngine
           return new DrawingEngine(renderApi, new BrowserWindowingPlatform(renderApi), new HtmlCanvasDrawingBackend());
      }
 
-     public void RunWithWindow(IWindow window)
+     public void RunWithApp(DrawieApp app)
      {
           Console.WriteLine("Running DrawieEngine with configuration:");
           Console.WriteLine($"\t- RenderApi: {RenderApi}");
           Console.WriteLine($"\t- WindowingPlatform: {WindowingPlatform}");
           Console.WriteLine($"\t- DrawingBackend: {DrawingBackend}");
           
+          app.Initialize(this);
+          IWindow window = app.CreateMainWindow();
+          
           window.Initialize();
           
           DrawingBackendApi.InitializeBackend(RenderApi);
+          
+          app.Run();
           window.Show();
      }
 }

@@ -14,7 +14,7 @@ public class Html5CanvasSurface : ISurfaceImplementation
     
     public Html5CanvasSurface(Html5CanvasImpl canvasImpl)
     {
-        canvasImpl = canvasImpl;
+        this.canvasImpl = canvasImpl;
     }
     
     public Pixmap PeekPixels(DrawingSurface drawingSurface)
@@ -60,7 +60,10 @@ public class Html5CanvasSurface : ISurfaceImplementation
 
     public object GetNativeSurface(IntPtr objectPointer)
     {
-        throw new NotImplementedException();
+        if(canvasImpl.ManagedObjects.TryGetValue((int)objectPointer, out HtmlCanvasObject? native))
+            return native;
+        
+        throw new ArgumentException("Object pointer is not valid", nameof(objectPointer));
     }
 
     public void Flush(DrawingSurface drawingSurface)

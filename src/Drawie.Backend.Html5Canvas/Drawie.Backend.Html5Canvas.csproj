@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Drawie.Backend.Core\Drawie.Backend.Core.csproj" />
+      <ProjectReference Include="..\Drawie.JSInterop\Drawie.JSInterop.csproj" />
     </ItemGroup>
 
 </Project>

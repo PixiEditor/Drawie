@@ -5,6 +5,7 @@ using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Surfaces.Vector;
+using Drawie.Html5Canvas.Extensions;
 using Drawie.Html5Canvas.Objects;
 using PixiEditor.Numerics;
 
@@ -64,7 +65,23 @@ public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplemen
 
     public void DrawRect(IntPtr objPtr, int x, int y, int width, int height, Paint paint)
     {
-        throw new NotImplementedException();
+        HtmlCanvasObject canvasObject = ManagedObjects[(int)objPtr];
+        
+        SetPaint(canvasObject.Context, paint);
+
+        if (paint.Style == PaintStyle.Fill)
+        {
+            canvasObject.Context.DrawFillRect(x, y, width, height);
+        }
+        else if (paint.Style == PaintStyle.Stroke)
+        {
+            canvasObject.Context.DrawStrokeRect(x, y, width, height);
+        }
+        else if (paint.Style == PaintStyle.StrokeAndFill)
+        {
+            canvasObject.Context.DrawFillRect(x, y, width, height);
+            canvasObject.Context.DrawStrokeRect(x, y, width, height);
+        }
     }
 
     public void DrawCircle(IntPtr objPtr, int cx, int cy, int radius, Paint paint)
@@ -89,12 +106,16 @@ public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplemen
 
     public void Clear(IntPtr objPtr)
     {
-        throw new NotImplementedException();
+        HtmlCanvasObject canvasObject = ManagedObjects[(int)objPtr];
+        canvasObject.Context.ClearRect(0, 0, canvasObject.Size.X, canvasObject.Size.Y);
     }
 
     public void Clear(IntPtr objPtr, Color color)
     {
-        throw new NotImplementedException();
+        HtmlCanvasObject canvasObject = ManagedObjects[(int)objPtr];
+        
+        canvasObject.Context.SetFillStyle(color.ToCssColor());
+        canvasObject.Context.DrawFillRect(0, 0, canvasObject.Size.X, canvasObject.Size.Y);
     }
 
     public void DrawLine(IntPtr objPtr, VecI from, VecI to, Paint paint)
@@ -165,5 +186,22 @@ public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplemen
     public void DrawImage(IntPtr objectPointer, Image image, int x, int y, Paint paint)
     {
         throw new NotImplementedException();
+    }
+    
+    private void SetPaint(CanvasContext ctx, Paint paint)
+    {
+        if(paint.Style == PaintStyle.Fill)
+        {
+            ctx.SetFillStyle(paint.Color.ToCssColor());
+        }
+        else if (paint.Style == PaintStyle.Stroke)
+        {
+            ctx.SetStrokeStyle(paint.Color.ToCssColor());
+        }
+        else if (paint.Style == PaintStyle.StrokeAndFill)
+        {
+            ctx.SetFillStyle(paint.Color.ToCssColor());
+            ctx.SetStrokeStyle(paint.Color.ToCssColor());
+        }
     }
 }
