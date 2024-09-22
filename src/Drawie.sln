@@ -43,6 +43,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.JSInterop", "Drawie.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawieSample", "DrawieSample\DrawieSample.csproj", "{6E2E0A40-4156-43C2-B0BD-2100FE4B0E4A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawiEngine.Browser", "DrawiEngine.Browser\DrawiEngine.Browser.csproj", "{6E4896DE-D6A3-433F-B350-2B35D0320F53}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawiEngine.Desktop", "DrawiEngine.Desktop\DrawiEngine.Desktop.csproj", "{88620A08-0FC3-4A60-835C-2FB516141375}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -116,6 +120,14 @@ Global
 		{6E2E0A40-4156-43C2-B0BD-2100FE4B0E4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E2E0A40-4156-43C2-B0BD-2100FE4B0E4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E2E0A40-4156-43C2-B0BD-2100FE4B0E4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E4896DE-D6A3-433F-B350-2B35D0320F53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E4896DE-D6A3-433F-B350-2B35D0320F53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E4896DE-D6A3-433F-B350-2B35D0320F53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E4896DE-D6A3-433F-B350-2B35D0320F53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88620A08-0FC3-4A60-835C-2FB516141375}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88620A08-0FC3-4A60-835C-2FB516141375}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88620A08-0FC3-4A60-835C-2FB516141375}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88620A08-0FC3-4A60-835C-2FB516141375}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{645AF54D-D58F-492E-A2A9-12F86EA8C00A} = {239DB1B4-E66F-444A-87DA-B19775F40974}

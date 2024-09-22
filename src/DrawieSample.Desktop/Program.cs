@@ -1,7 +1,8 @@
 ﻿using DrawiEngine;
+using DrawiEngine.Desktop;
 using DrawieSample;
 
-DrawingEngine engine = DrawingEngine.CreateDefaultDesktop();
+DrawingEngine engine = DesktopDrawingEngine.CreateDefaultDesktop();
 
 DrawieSampleApp app = new DrawieSampleApp();
 

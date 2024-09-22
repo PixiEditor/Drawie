@@ -2,8 +2,11 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <IsBrowserProject>true</IsBrowserProject>
     </PropertyGroup>
+    
     <ItemGroup>
+      <ProjectReference Include="..\DrawiEngine.Browser\DrawiEngine.Browser.csproj" />
       <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
       <ProjectReference Include="..\DrawieSample\DrawieSample.csproj" />
     </ItemGroup>

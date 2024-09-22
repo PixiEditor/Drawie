@@ -1,7 +1,8 @@
 using DrawiEngine;
+using DrawiEngine.Browser;
 using DrawieSample;
 
-DrawingEngine engine = DrawingEngine.CreateDefaultBrowser();
+DrawingEngine engine = BrowserDrawingEngine.CreateDefaultBrowser();
 
 DrawieSampleApp sampleApp = new DrawieSampleApp();
 
