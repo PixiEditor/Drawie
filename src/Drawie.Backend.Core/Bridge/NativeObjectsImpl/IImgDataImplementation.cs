@@ -10,4 +10,5 @@ public interface IImgDataImplementation
     public ReadOnlySpan<byte> AsSpan(ImgData imgData);
     public ImgData Create(ReadOnlySpan<byte> buffer);
     public object GetNativeImgData(IntPtr objectPointer);
+    public void SaveTo(ImgData imgData, Stream stream);
 }

@@ -1,6 +1,6 @@
 ﻿using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces.Vector;
-using PixiEditor.Numerics;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 

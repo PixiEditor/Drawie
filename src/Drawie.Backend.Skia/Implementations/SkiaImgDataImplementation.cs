@@ -44,5 +44,11 @@ namespace Drawie.Skia.Implementations
         {
             return ManagedInstances[objectPointer];
         }
+
+        public void SaveTo(ImgData imgData, Stream stream)
+        {
+            SKData data = ManagedInstances[imgData.ObjectPointer];
+            data.SaveTo(stream);
+        }
     }
 }

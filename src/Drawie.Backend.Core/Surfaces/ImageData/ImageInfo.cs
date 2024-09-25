@@ -1,5 +1,5 @@
 ﻿using Drawie.Backend.Core.Bridge;
-using PixiEditor.Numerics;
+using Drawie.Numerics;
 using HashCode = System.HashCode;
 
 namespace Drawie.Backend.Core.Surfaces.ImageData;

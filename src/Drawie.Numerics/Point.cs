@@ -1,4 +1,4 @@
-﻿namespace PixiEditor.Numerics;
+﻿namespace Drawie.Numerics;
 
 /// <summary>
 ///     Represents an ordered pair of floating-point x- and y-coordinates that defines a point in a two-dimensional

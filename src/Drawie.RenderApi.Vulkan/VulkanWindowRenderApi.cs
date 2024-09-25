@@ -1,12 +1,12 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Drawie.Numerics;
 using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Helpers;
 using Drawie.RenderApi.Vulkan.Stages;
 using Drawie.RenderApi.Vulkan.Stages.Builders;
 using Drawie.RenderApi.Vulkan.Structs;
-using PixiEditor.Numerics;
 using Silk.NET.Core;
 using Silk.NET.Core.Contexts;
 using Silk.NET.Core.Native;

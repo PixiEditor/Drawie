@@ -1,6 +1,6 @@
+using Drawie.Numerics;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Helpers;
-using PixiEditor.Numerics;
 using Silk.NET.Vulkan;
 using Buffer = Silk.NET.Vulkan.Buffer;
 using Image = Silk.NET.Vulkan.Image;

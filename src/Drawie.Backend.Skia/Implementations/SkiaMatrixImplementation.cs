@@ -1,6 +1,6 @@
 ﻿using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 using Drawie.Backend.Core.Numerics;
-using PixiEditor.Numerics;
+using Drawie.Numerics;
 
 namespace Drawie.Skia.Implementations
 {

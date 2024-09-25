@@ -1,4 +1,4 @@
-﻿namespace PixiEditor.Numerics;
+﻿namespace Drawie.Numerics;
 
 /// <summary>
 /// A helper class for creating 4x5 color matrices

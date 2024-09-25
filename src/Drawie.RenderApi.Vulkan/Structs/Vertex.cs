@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using PixiEditor.Numerics;
 using Silk.NET.Maths;
 using Silk.NET.Vulkan;
 

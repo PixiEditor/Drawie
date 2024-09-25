@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace PixiEditor.Numerics;
+﻿namespace Drawie.Numerics;
 
 public class Kernel : ICloneable, IEquatable<Kernel>
 {

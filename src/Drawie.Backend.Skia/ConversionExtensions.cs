@@ -2,8 +2,8 @@
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces.ImageData;
+using Drawie.Numerics;
 using Drawie.Skia.Implementations;
-using PixiEditor.Numerics;
 using SkiaSharp;
 
 namespace Drawie.Skia

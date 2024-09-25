@@ -1,7 +1,7 @@
-﻿using Drawie.RenderApi;
+﻿using Drawie.Numerics;
+using Drawie.RenderApi;
 using Drawie.Windowing;
 using Drawie.Windowing.Input;
-using PixiEditor.Numerics;
 using Silk.NET.Input;
 using IWindow = Drawie.Windowing.IWindow;
 

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace PixiEditor.Numerics;
+namespace Drawie.Numerics;
 [StructLayout(LayoutKind.Sequential)]
 public struct RectI : IEquatable<RectI>
 {

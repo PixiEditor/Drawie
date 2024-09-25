@@ -3,10 +3,10 @@ using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.Surfaces;
+using Drawie.Numerics;
 using Drawie.RenderApi;
 using Drawie.Skia.Exceptions;
 using Drawie.Skia.Implementations;
-using PixiEditor.Numerics;
 using SkiaSharp;
 
 namespace Drawie.Skia

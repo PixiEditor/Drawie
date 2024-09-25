@@ -1,4 +1,4 @@
-﻿namespace PixiEditor.Numerics;
+﻿namespace Drawie.Numerics;
 public struct RectD : IEquatable<RectD>
 {
     public static RectD Empty { get; } = new RectD();

@@ -1,6 +1,6 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Surfaces.ImageData;
-using PixiEditor.Numerics;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Surfaces;
 

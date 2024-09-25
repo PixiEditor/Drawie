@@ -1,10 +1,10 @@
 using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
+using Drawie.Numerics;
 using Drawie.RenderApi;
 using Drawie.Silk.Extensions;
 using Drawie.Silk.Input;
 using Drawie.Windowing.Input;
-using PixiEditor.Numerics;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;

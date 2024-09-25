@@ -26,6 +26,11 @@ public class ImgData : NativeObject
         DrawingBackendApi.Current.ImgDataImplementation.SaveTo(this, stream);
     }
 
+    public void SaveTo(Stream stream)
+    {
+        DrawingBackendApi.Current.ImgDataImplementation.SaveTo(this, stream);
+    }
+
     public Stream AsStream()
     {
         return DrawingBackendApi.Current.ImgDataImplementation.AsStream(this);

@@ -1,4 +1,4 @@
-using PixiEditor.Numerics;
+using Drawie.Numerics;
 using Silk.NET.Maths;
 
 namespace Drawie.Silk.Extensions;

@@ -1,4 +1,4 @@
-﻿namespace PixiEditor.Numerics;
+﻿namespace Drawie.Numerics;
 
 public record struct Matrix4x5F
 {

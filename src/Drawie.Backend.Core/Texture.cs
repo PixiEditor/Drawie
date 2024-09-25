@@ -3,7 +3,7 @@ using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
-using PixiEditor.Numerics;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core;
 

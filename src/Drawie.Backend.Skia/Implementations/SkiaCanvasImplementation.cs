@@ -5,7 +5,7 @@ using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Surfaces.Vector;
-using PixiEditor.Numerics;
+using Drawie.Numerics;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations

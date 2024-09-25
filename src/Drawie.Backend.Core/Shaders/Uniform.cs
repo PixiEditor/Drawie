@@ -1,5 +1,5 @@
 ﻿using Drawie.Backend.Core.ColorsImpl;
-using PixiEditor.Numerics;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Shaders;
 

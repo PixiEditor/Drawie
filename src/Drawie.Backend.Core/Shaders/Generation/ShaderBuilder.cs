@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Shaders.Generation.Expressions;
-using PixiEditor.Numerics;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Shaders.Generation;
 

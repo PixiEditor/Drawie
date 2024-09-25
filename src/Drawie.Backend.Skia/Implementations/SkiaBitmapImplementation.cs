@@ -1,7 +1,7 @@
 ﻿using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
-using PixiEditor.Numerics;
+using Drawie.Numerics;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations

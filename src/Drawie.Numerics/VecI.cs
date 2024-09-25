@@ -1,4 +1,4 @@
-﻿namespace PixiEditor.Numerics;
+﻿namespace Drawie.Numerics;
 
 public struct VecI : IEquatable<VecI>, IComparable<VecI>
 {
