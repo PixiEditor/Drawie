@@ -17,5 +17,11 @@ public abstract class DrawieApp
     }
 
     public abstract IWindow CreateMainWindow();
-    public abstract void Run();
+
+    public void Run()
+    {
+        OnBegin();
+    }
+
+    protected abstract void OnBegin();
 }

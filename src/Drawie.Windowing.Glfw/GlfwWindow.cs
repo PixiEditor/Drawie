@@ -2,10 +2,14 @@ using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.RenderApi;
 using Drawie.Silk.Extensions;
+using Drawie.Silk.Input;
+using Drawie.Windowing.Input;
 using PixiEditor.Numerics;
+using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
 using SkiaSharp;
+using IKeyboard = Drawie.Windowing.Input.IKeyboard;
 
 namespace Drawie.Silk;
 
@@ -34,6 +38,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
     public IWindowRenderApi RenderApi { get; set; }
 
+    public InputController InputController { get; private set; }
     public event Action<double> Update;
     public event Action<Texture, double> Render;
 
@@ -60,6 +65,8 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         
         window.Initialize();
 
+        InitInput();
+
         if (RenderApi is IVulkanWindowRenderApi)
             RenderApi.CreateInstance(window.VkSurface, window.Size.ToVecI());
         else
@@ -68,6 +75,21 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         }
         
         initialized = true;
+    }
+
+    private void InitInput()
+    {
+        var input = window.CreateInput();
+        GlfwKeyboard[] keyboards = new GlfwKeyboard[input.Keyboards.Count];
+        for (var i = 0; i < input.Keyboards.Count; i++)
+        {
+            var key = input.Keyboards[i];
+            var keyboard = new GlfwKeyboard(key);
+            
+            keyboards[i] = keyboard;
+        }
+
+        InputController = new InputController(keyboards);
     }
 
     public void Show()

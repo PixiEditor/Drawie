@@ -15,7 +15,7 @@ public class DrawieSampleApp : DrawieApp
         return window;
     }
 
-    public override void Run()
+    protected override void OnBegin()
     {
         Paint paint = new Paint()
         {

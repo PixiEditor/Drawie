@@ -1,6 +1,7 @@
 ﻿using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.RenderApi;
+using Drawie.Windowing.Input;
 using PixiEditor.Numerics;
 
 namespace Drawie.Windowing.Browser;
@@ -19,6 +20,7 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
     
     public IWindowRenderApi RenderApi { get; set; } = windowRenderApi;
 
+    public InputController InputController => throw new NotImplementedException();
     public event Action<double>? Update;
     public event Action<Texture, double>? Render;
 
