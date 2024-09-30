@@ -1,8 +1,8 @@
 ﻿using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
+using Drawie.Numerics;
 using Drawie.RenderApi;
 using Drawie.Windowing.Input;
-using PixiEditor.Numerics;
 
 namespace Drawie.Windowing.Browser;
 

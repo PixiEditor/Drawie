@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices.JavaScript;
-using Microsoft.JSInterop;
-using PixiEditor.Numerics;
+﻿using Drawie.Numerics;
 using JSRuntime = Drawie.JSInterop.JSRuntime;
 
 namespace Drawie.Windowing.Browser;

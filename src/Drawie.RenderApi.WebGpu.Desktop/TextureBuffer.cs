@@ -1,5 +1,5 @@
-﻿using Evergine.Bindings.WebGPU;
-using PixiEditor.Numerics;
+﻿using Drawie.Numerics;
+using Evergine.Bindings.WebGPU;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 

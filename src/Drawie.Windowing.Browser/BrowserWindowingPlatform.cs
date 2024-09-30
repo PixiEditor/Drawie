@@ -1,5 +1,5 @@
-﻿using Drawie.RenderApi;
-using PixiEditor.Numerics;
+﻿using Drawie.Numerics;
+using Drawie.RenderApi;
 
 namespace Drawie.Windowing.Browser;
 

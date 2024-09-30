@@ -7,7 +7,7 @@ using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Surfaces.Vector;
 using Drawie.Html5Canvas.Extensions;
 using Drawie.Html5Canvas.Objects;
-using PixiEditor.Numerics;
+using Drawie.Numerics;
 
 namespace Drawie.Html5Canvas.Impl;
 

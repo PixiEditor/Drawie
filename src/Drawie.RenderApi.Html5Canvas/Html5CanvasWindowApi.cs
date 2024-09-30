@@ -1,5 +1,5 @@
 ﻿using Drawie.JSInterop;
-using PixiEditor.Numerics;
+using Drawie.Numerics;
 
 namespace Drawie.RenderApi.Html5Canvas;
 

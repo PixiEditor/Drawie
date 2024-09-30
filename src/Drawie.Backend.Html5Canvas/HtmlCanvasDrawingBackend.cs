@@ -5,8 +5,8 @@ using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Html5Canvas.Objects;
+using Drawie.Numerics;
 using Drawie.RenderApi;
-using PixiEditor.Numerics;
 
 namespace Drawie.Html5Canvas;
 

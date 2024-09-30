@@ -1,8 +1,8 @@
 ﻿using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
+using Drawie.Numerics;
 using Drawie.Windowing;
 using DrawiEngine;
-using PixiEditor.Numerics;
 
 namespace DrawieSample;
 
