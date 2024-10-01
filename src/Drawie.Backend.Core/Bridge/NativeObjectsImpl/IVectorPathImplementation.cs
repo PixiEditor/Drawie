@@ -24,10 +24,10 @@ public interface IVectorPathImplementation
     public RectD GetBounds(VectorPath vectorPath);
     public void Reset(VectorPath vectorPath);
     public void AddRect(VectorPath path, RectI rect, PathDirection direction);
-    public void MoveTo(VectorPath vectorPath, Point point);
-    public void LineTo(VectorPath vectorPath, Point point);
-    public void QuadTo(VectorPath vectorPath, Point mid, Point point);
-    public void CubicTo(VectorPath vectorPath, Point mid1, Point mid2, Point point);
+    public void MoveTo(VectorPath vectorPath, VecF vecF);
+    public void LineTo(VectorPath vectorPath, VecF vecF);
+    public void QuadTo(VectorPath vectorPath, VecF mid, VecF vecF);
+    public void CubicTo(VectorPath vectorPath, VecF mid1, VecF mid2, VecF vecF);
     public void ArcTo(VectorPath vectorPath, RectI oval, int startAngle, int sweepAngle, bool forceMoveTo);
     public void AddOval(VectorPath vectorPath, RectI borders);
     public VectorPath Op(VectorPath vectorPath, VectorPath ellipsePath, VectorPathOp pathOp);
@@ -37,4 +37,5 @@ public interface IVectorPathImplementation
     public bool Contains(VectorPath vectorPath, float x, float y);
     public void AddPath(VectorPath vectorPath, VectorPath path, AddPathMode mode);
     public object GetNativePath(IntPtr objectPointer);
+    public VecD GetLastPoint(VectorPath vectorPath);
 }

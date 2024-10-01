@@ -27,28 +27,28 @@ namespace Drawie.Backend.Core.Surfaces
             Changed?.Invoke(new RectD(posX, posY, 1, 1));
         }
 
-        public void DrawSurface(DrawingSurface original, int x, int y, Paint? paint)
+        public void DrawSurface(DrawingSurface original, float x, float y, Paint? paint)
         {
             DrawingBackendApi.Current.CanvasImplementation.DrawSurface(ObjectPointer, original, x, y, paint);
             Changed?.Invoke(null);
         }
 
-        public void DrawSurface(DrawingSurface original, int x, int y) => DrawSurface(original, x, y, null);
+        public void DrawSurface(DrawingSurface original, float x, float y) => DrawSurface(original, x, y, null);
 
         public void DrawSurface(DrawingSurface surfaceToDraw, VecI size, Paint paint)
         {
             DrawSurface(surfaceToDraw, size.X, size.Y, paint);
         }
 
-        public void DrawImage(Image image, int x, int y) =>
+        public void DrawImage(Image image, float x, float y) =>
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y);
-        
-        public void DrawImage(Image image, int x, int y, Paint paint) =>
+
+        public void DrawImage(Image image, float x, float y, Paint paint) =>
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, paint);
 
         public void DrawImage(Image image, RectD destRect, Paint paint) =>
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, destRect, paint);
-        
+
         public void DrawImage(Image image, RectD sourceRect, RectD destRect, Paint paint) =>
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, sourceRect, destRect, paint);
 
@@ -66,7 +66,7 @@ namespace Drawie.Backend.Core.Surfaces
 
         /// <param name="size">The amount to scale.</param>
         /// <summary>Pre-concatenates the current matrix with the specified scale.</summary>
-        public void Scale(Point size) => Scale(size.X, size.Y);
+        public void Scale(VecF size) => Scale(size.X, size.Y);
 
         /// <param name="sx">The amount to scale in the x-direction.</param>
         /// <param name="sy">The amount to scale in the y-direction.</param>
@@ -107,30 +107,31 @@ namespace Drawie.Backend.Core.Surfaces
             Changed?.Invoke(new RectD(pos.X, pos.Y, 1, 1));
         }
 
-        public void DrawPoints(PointMode pointMode, Point[] points, Paint paint)
+        public void DrawPoints(PointMode pointMode, VecF[] points, Paint paint)
         {
             DrawingBackendApi.Current.CanvasImplementation.DrawPoints(ObjectPointer, pointMode, points, paint);
             Changed?.Invoke(RectD.FromPoints(points));
         }
 
-        public void DrawRect(int x, int y, int width, int height, Paint paint)
+        public void DrawRect(float x, float y, float width, float height, Paint paint)
         {
             DrawingBackendApi.Current.CanvasImplementation.DrawRect(ObjectPointer, x, y, width, height, paint);
             Changed?.Invoke(new RectD(x, y, width, height));
         }
 
-        public void DrawCircle(int centerX, int centerY, int radius, Paint paint)
+        public void DrawCircle(float centerX, float centerY, float radius, Paint paint)
         {
             DrawingBackendApi.Current.CanvasImplementation.DrawCircle(ObjectPointer, centerX, centerY, radius, paint);
             Changed?.Invoke(new RectD(centerX - radius, centerY - radius, radius * 2, radius * 2));
         }
 
-        public void DrawCircle(VecI center, int radius, Paint paint) =>
+        public void DrawCircle(VecI center, float radius, Paint paint) =>
             DrawCircle(center.X, center.Y, radius, paint);
 
-        public void DrawOval(int centerX, int centerY, int radiusX, int radiusY, Paint paint)
+        public void DrawOval(float centerX, float centerY, float radiusX, float radiusY, Paint paint)
         {
-            DrawingBackendApi.Current.CanvasImplementation.DrawOval(ObjectPointer, centerX, centerY, radiusX, radiusY, paint);
+            DrawingBackendApi.Current.CanvasImplementation.DrawOval(ObjectPointer, centerX, centerY, radiusX, radiusY,
+                paint);
             Changed?.Invoke(new RectD(centerX - radiusX, centerY - radiusY, radiusX * 2, radiusY * 2));
         }
 
@@ -138,6 +139,14 @@ namespace Drawie.Backend.Core.Surfaces
             DrawOval(center.X, center.Y, radius.X, radius.Y, paint);
 
         public void DrawRect(RectI rect, Paint paint) => DrawRect(rect.X, rect.Y, rect.Width, rect.Height, paint);
+
+        public void DrawRoundRect(float x, float y, float width, float height, float radiusX, float radiusY,
+            Paint paint)
+        {
+            DrawingBackendApi.Current.CanvasImplementation.DrawRoundRect(ObjectPointer, x, y, width, height, radiusX,
+                radiusY, paint);
+            Changed?.Invoke(new RectD(x, y, width, height));
+        }
 
         public void ClipPath(VectorPath clipPath) => ClipPath(clipPath, ClipOperation.Intersect);
 

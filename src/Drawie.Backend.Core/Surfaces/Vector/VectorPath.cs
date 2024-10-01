@@ -50,7 +50,12 @@ public class VectorPath : NativeObject
     public RectD Bounds => DrawingBackendApi.Current.PathImplementation.GetBounds(this);
     
     public bool IsDisposed { get; private set; }
-    
+
+    public VecD LastPoint
+    {
+        get => DrawingBackendApi.Current.PathImplementation.GetLastPoint(this);
+    }
+
     public VectorPath(IntPtr nativePointer) : base(nativePointer)
     {
     }
@@ -78,24 +83,24 @@ public class VectorPath : NativeObject
         DrawingBackendApi.Current.PathImplementation.Reset(this);
     }
 
-    public void MoveTo(Point point)
+    public void MoveTo(VecF vecF)
     {
-        DrawingBackendApi.Current.PathImplementation.MoveTo(this, point);
+        DrawingBackendApi.Current.PathImplementation.MoveTo(this, vecF);
     }
 
-    public void LineTo(Point point)
+    public void LineTo(VecF vecF)
     {
-        DrawingBackendApi.Current.PathImplementation.LineTo(this, point);
+        DrawingBackendApi.Current.PathImplementation.LineTo(this, vecF);
     }
 
-    public void QuadTo(Point mid, Point point)
+    public void QuadTo(VecF mid, VecF vecF)
     {
-        DrawingBackendApi.Current.PathImplementation.QuadTo(this, mid, point);
+        DrawingBackendApi.Current.PathImplementation.QuadTo(this, mid, vecF);
     }
 
-    public void CubicTo(Point mid1, Point mid2, Point point)
+    public void CubicTo(VecF mid1, VecF mid2, VecF vecF)
     {
-        DrawingBackendApi.Current.PathImplementation.CubicTo(this, mid1, mid2, point);
+        DrawingBackendApi.Current.PathImplementation.CubicTo(this, mid1, mid2, vecF);
     }
 
     public void ArcTo(RectI oval, int startAngle, int sweepAngle, bool forceMoveTo)

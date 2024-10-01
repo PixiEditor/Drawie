@@ -161,12 +161,12 @@ public struct VecI : IEquatable<VecI>, IComparable<VecI>
     {
         return !(a.X == b.X && a.Y == b.Y);
     }
-    public static implicit operator VecI(Point point)
+    public static implicit operator VecI(VecF vecF)
     {
-        return new VecI((int)point.X, (int)point.Y);
+        return new VecI((int)vecF.X, (int)vecF.Y);
     }
 
-    public static implicit operator Point(VecI vec)
+    public static implicit operator VecF(VecI vec)
     {
         return new(vec.X, vec.Y);
     }

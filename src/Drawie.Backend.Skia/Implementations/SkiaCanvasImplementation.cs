@@ -33,13 +33,13 @@ namespace Drawie.Skia.Implementations
             _surfaceImpl = surfaceImpl;
         }
 
-        public void DrawPixel(IntPtr objectPointer, int posX, int posY, Paint drawingPaint)
+        public void DrawPixel(IntPtr objectPointer, float posX, float posY, Paint drawingPaint)
         {
             var canvas = ManagedInstances[objectPointer];
             canvas.DrawPoint(posX, posY, _paintImpl.ManagedInstances[drawingPaint.ObjectPointer]);
         }
 
-        public void DrawSurface(IntPtr objPtr, DrawingSurface drawingSurface, int x, int y, Paint? paint)
+        public void DrawSurface(IntPtr objPtr, DrawingSurface drawingSurface, float x, float y, Paint? paint)
         {
             var canvas = ManagedInstances[objPtr];
             canvas.DrawSurface(
@@ -48,13 +48,13 @@ namespace Drawie.Skia.Implementations
                 paint != null ? _paintImpl.ManagedInstances[paint.ObjectPointer] : null);
         }
 
-        public void DrawImage(IntPtr objPtr, Image image, int x, int y)
+        public void DrawImage(IntPtr objPtr, Image image, float x, float y)
         {
             var canvas = ManagedInstances[objPtr];
             canvas.DrawImage(_imageImpl.ManagedInstances[image.ObjectPointer], x, y);
         }
 
-        public void DrawImage(IntPtr objPtr, Image image, int x, int y, Paint paint)
+        public void DrawImage(IntPtr objPtr, Image image, float x, float y, Paint paint)
         {
             if(!ManagedInstances.TryGetValue(objPtr, out var canvas))
             {
@@ -72,6 +72,12 @@ namespace Drawie.Skia.Implementations
             }
             
             canvas.DrawImage(img, x, y, skPaint);
+        }
+
+        public void DrawRoundRect(IntPtr objectPointer, float x, float y, float width, float height, float radiusX, float radiusY,
+            Paint paint)
+        {
+            ManagedInstances[objectPointer].DrawRoundRect(x, y, width, height, radiusX, radiusY, _paintImpl[paint.ObjectPointer]);
         }
 
         public int Save(IntPtr objPtr)
@@ -109,15 +115,15 @@ namespace Drawie.Skia.Implementations
                 _paintImpl[paint.ObjectPointer]);
         }
 
-        public void DrawPoints(IntPtr objPtr, PointMode pointMode, Point[] points, Paint paint)
+        public void DrawPoints(IntPtr objPtr, PointMode pointMode, VecF[] points, Paint paint)
         {
             ManagedInstances[objPtr].DrawPoints(
                 (SKPointMode)pointMode,
-                CastUtility.UnsafeArrayCast<Point, SKPoint>(points),
+                CastUtility.UnsafeArrayCast<VecF, SKPoint>(points),
                 _paintImpl[paint.ObjectPointer]);
         }
 
-        public void DrawRect(IntPtr objPtr, int x, int y, int width, int height, Paint paint)
+        public void DrawRect(IntPtr objPtr, float x, float y, float width, float height, Paint paint)
         {
             SKPaint skPaint = _paintImpl[paint.ObjectPointer];
             
@@ -125,13 +131,13 @@ namespace Drawie.Skia.Implementations
             canvas.DrawRect(x, y, width, height, skPaint);
         }
 
-        public void DrawCircle(IntPtr objPtr, int cx, int cy, int radius, Paint paint)
+        public void DrawCircle(IntPtr objPtr, float cx, float cy, float radius, Paint paint)
         {
             var canvas = ManagedInstances[objPtr];
             canvas.DrawCircle(cx, cy, radius, _paintImpl[paint.ObjectPointer]);
         }
 
-        public void DrawOval(IntPtr objPtr, int cx, int cy, int width, int height, Paint paint)
+        public void DrawOval(IntPtr objPtr, float cx, float cy, float width, float height, Paint paint)
         {
             var canvas = ManagedInstances[objPtr];
             canvas.DrawOval(cx, cy, width, height, _paintImpl[paint.ObjectPointer]);
@@ -219,7 +225,7 @@ namespace Drawie.Skia.Implementations
                 _paintImpl[paint.ObjectPointer]);
         }
 
-        public void DrawBitmap(IntPtr objPtr, Bitmap bitmap, int x, int y)
+        public void DrawBitmap(IntPtr objPtr, Bitmap bitmap, float x, float y)
         {
             ManagedInstances[objPtr].DrawBitmap(_bitmapImpl[bitmap.ObjectPointer], x, y);
         }

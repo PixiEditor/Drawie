@@ -4,18 +4,18 @@
 ///     Represents an ordered pair of floating-point x- and y-coordinates that defines a point in a two-dimensional
 ///     plane.
 /// </summary>
-public struct Point : IEquatable<Point>
+public struct VecF : IEquatable<VecF>
 {
-    /// <summary>Represents a new instance of the <see cref="Point" /> class with member data left uninitialized.</summary>
-    public static readonly Point Empty;
+    /// <summary>Represents a new instance of the <see cref="VecF" /> class with member data left uninitialized.</summary>
+    public static readonly VecF Empty;
 
-    public Point(float x, float y)
+    public VecF(float x, float y)
     {
         X = x;
         Y = y;
     }
 
-    public Point(VecI pointPos)
+    public VecF(VecI pointPos)
     {
         X = pointPos.X;
         Y = pointPos.Y;
@@ -39,7 +39,7 @@ public struct Point : IEquatable<Point>
     /// <param name="p">The offset value.</param>
     /// <summary>Translates a given point by a specified offset.</summary>
     /// <remarks />
-    public void Offset(Point p)
+    public void Offset(VecF p)
     {
         X += p.X;
         Y += p.Y;
@@ -54,59 +54,59 @@ public struct Point : IEquatable<Point>
         Y += dy;
     }
 
-    /// <summary>Converts this <see cref="Point" /> to a human readable string.</summary>
-    /// <returns>A string that represents this <see cref="Point" />.</returns>
+    /// <summary>Converts this <see cref="VecF" /> to a human readable string.</summary>
+    /// <returns>A string that represents this <see cref="VecF" />.</returns>
     public override readonly string ToString()
     {
         return string.Format("{{X={0}, Y={1}}}", X, Y);
     }
 
-    /// <param name="point">The point to normalize.</param>
+    /// <param name="vecF">The point to normalize.</param>
     /// <summary>Returns a point with the same direction as the specified point, but with a length of one.</summary>
     /// <returns>Returns a point with a length of one.</returns>
-    public static Point Normalize(Point point)
+    public static VecF Normalize(VecF vecF)
     {
-        var num = 1.0 / Math.Sqrt((point.X * (double)point.X) + (point.Y * (double)point.Y));
-        return new Point(point.X * (float)num, point.Y * (float)num);
+        var num = 1.0 / Math.Sqrt((vecF.X * (double)vecF.X) + (vecF.Y * (double)vecF.Y));
+        return new VecF(vecF.X * (float)num, vecF.Y * (float)num);
     }
 
-    /// <param name="point">The first point.</param>
+    /// <param name="vecF">The first point.</param>
     /// <param name="other">The second point.</param>
     /// <summary>Calculate the Euclidean distance between two points.</summary>
     /// <returns>Returns the Euclidean distance between two points.</returns>
-    public static float Distance(Point point, Point other)
+    public static float Distance(VecF vecF, VecF other)
     {
-        var num1 = point.X - other.X;
-        var num2 = point.Y - other.Y;
+        var num1 = vecF.X - other.X;
+        var num2 = vecF.Y - other.Y;
         return (float)Math.Sqrt((num1 * (double)num1) + (num2 * (double)num2));
     }
 
-    /// <param name="point">The first point.</param>
+    /// <param name="vecF">The first point.</param>
     /// <param name="other">The second point.</param>
     /// <summary>Calculate the Euclidean distance squared between two points.</summary>
     /// <returns>Returns the Euclidean distance squared between two points.</returns>
-    public static float DistanceSquared(Point point, Point other)
+    public static float DistanceSquared(VecF vecF, VecF other)
     {
-        var num1 = point.X - other.X;
-        var num2 = point.Y - other.Y;
+        var num1 = vecF.X - other.X;
+        var num2 = vecF.Y - other.Y;
         return (float)((num1 * (double)num1) + (num2 * (double)num2));
     }
 
-    /// <param name="point">The point to reflect.</param>
+    /// <param name="vecF">The point to reflect.</param>
     /// <param name="normal">The normal.</param>
     /// <summary>Returns the reflection of a point off a surface that has the specified normal.</summary>
     /// <returns>Returns the reflection of a point.</returns>
-    public static Point Reflect(Point point, Point normal)
+    public static VecF Reflect(VecF vecF, VecF normal)
     {
-        var num = (float)((point.X * (double)point.X) + (point.Y * (double)point.Y));
-        return new Point(point.X - (2f * num * normal.X), point.Y - (2f * num * normal.Y));
+        var num = (float)((vecF.X * (double)vecF.X) + (vecF.Y * (double)vecF.Y));
+        return new VecF(vecF.X - (2f * num * normal.X), vecF.Y - (2f * num * normal.Y));
     }
 
     /// <param name="pt">The point to translate</param>
     /// <param name="sz">The offset size.</param>
     /// <summary>Translates a given point by a specified size.</summary>
     /// <returns>Returns the translated point.</returns>
-    public static Point Add(Point pt, VecI sz)
+    public static VecF Add(VecF pt, VecI sz)
     {
         return pt + sz;
     }
@@ -115,7 +115,7 @@ public struct Point : IEquatable<Point>
     /// <param name="sz">The offset size.</param>
     /// <summary>Translates a given point by a specified size.</summary>
     /// <returns>Returns the translated point.</returns>
-    public static Point Add(Point pt, VecD sz)
+    public static VecF Add(VecF pt, VecD sz)
     {
         return pt + sz;
     }
@@ -124,40 +124,40 @@ public struct Point : IEquatable<Point>
     /// <param name="sz">The offset value.</param>
     /// <summary>Translates a given point by a specified offset.</summary>
     /// <returns>Returns the translated point.</returns>
-    public static Point Add(Point pt, Point sz)
+    public static VecF Add(VecF pt, VecF sz)
     {
         return pt + sz;
     }
 
-    /// <param name="pt">The <see cref="Point" /> to translate.</param>
+    /// <param name="pt">The <see cref="VecF" /> to translate.</param>
     /// <param name="sz">
     ///     The <see cref="VecD" /> that specifies the numbers to subtract from the coordinates of
     ///     <paramref name="pt" />.
     /// </param>
-    /// <summary>Translates a <see cref="Point" /> by the negative of a specified size.</summary>
-    /// <returns>The translated <see cref="Point" />.</returns>
-    public static Point Subtract(Point pt, VecI sz)
+    /// <summary>Translates a <see cref="VecF" /> by the negative of a specified size.</summary>
+    /// <returns>The translated <see cref="VecF" />.</returns>
+    public static VecF Subtract(VecF pt, VecI sz)
     {
         return pt - sz;
     }
 
-    /// <param name="pt">The <see cref="Point" /> to translate.</param>
+    /// <param name="pt">The <see cref="VecF" /> to translate.</param>
     /// <param name="sz">
     ///     The <see cref="VecD" /> that specifies the numbers to subtract from the coordinates of
     ///     <paramref name="pt" />.
     /// </param>
-    /// <summary>Translates a <see cref="Point" /> by the negative of a specified size.</summary>
-    /// <returns>The translated <see cref="Point" />.</returns>
-    public static Point Subtract(Point pt, VecD sz)
+    /// <summary>Translates a <see cref="VecF" /> by the negative of a specified size.</summary>
+    /// <returns>The translated <see cref="VecF" />.</returns>
+    public static VecF Subtract(VecF pt, VecD sz)
     {
         return pt - sz;
     }
 
-    /// <param name="pt">The <see cref="Point" /> to translate.</param>
+    /// <param name="pt">The <see cref="VecF" /> to translate.</param>
     /// <param name="sz">The offset that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
     /// <summary>Translates a given point by the negative of a specified offset.</summary>
-    /// <returns>The translated <see cref="Point" />.</returns>
-    public static Point Subtract(Point pt, Point sz)
+    /// <returns>The translated <see cref="VecF" />.</returns>
+    public static VecF Subtract(VecF pt, VecF sz)
     {
         return pt - sz;
     }
@@ -166,143 +166,143 @@ public struct Point : IEquatable<Point>
     /// <param name="sz">The offset size.</param>
     /// <summary>Translates a given point by a specified size.</summary>
     /// <returns>Returns the translated point.</returns>
-    public static Point operator +(Point pt, VecI sz)
+    public static VecF operator +(VecF pt, VecI sz)
     {
-        return new Point(pt.X + sz.X, pt.Y + sz.Y);
+        return new VecF(pt.X + sz.X, pt.Y + sz.Y);
     }
 
     /// <param name="pt">The point to translate.</param>
     /// <param name="sz">The offset size.</param>
     /// <summary>Translates a given point by a specified size.</summary>
     /// <returns>Returns the translated point.</returns>
-    public static Point operator +(Point pt, VecD sz)
+    public static VecF operator +(VecF pt, VecD sz)
     {
-        return new Point(pt.X + (float)sz.X, pt.Y + (float)sz.Y);
+        return new VecF(pt.X + (float)sz.X, pt.Y + (float)sz.Y);
     }
 
     /// <param name="pt">The point to translate.</param>
     /// <param name="sz">The offset value.</param>
     /// <summary>Translates a given point by a specified offset.</summary>
     /// <returns>Returns the translated point.</returns>
-    public static Point operator +(Point pt, Point sz)
+    public static VecF operator +(VecF pt, VecF sz)
     {
-        return new Point(pt.X + sz.X, pt.Y + sz.Y);
+        return new VecF(pt.X + sz.X, pt.Y + sz.Y);
     }
 
-    /// <param name="pt">The <see cref="Point" /> to translate.</param>
+    /// <param name="pt">The <see cref="VecF" /> to translate.</param>
     /// <param name="sz">
     ///     The <see cref="VecI" /> that specifies the numbers to subtract from the coordinates of
     ///     <paramref name="pt" />.
     /// </param>
-    /// <summary>Translates a <see cref="Point" /> by the negative of a given <see cref="VecI" />.</summary>
-    /// <returns>The translated <see cref="Point" />.</returns>
-    public static Point operator -(Point pt, VecI sz)
+    /// <summary>Translates a <see cref="VecF" /> by the negative of a given <see cref="VecI" />.</summary>
+    /// <returns>The translated <see cref="VecF" />.</returns>
+    public static VecF operator -(VecF pt, VecI sz)
     {
-        return new Point(pt.X - sz.X, pt.Y - sz.Y);
+        return new VecF(pt.X - sz.X, pt.Y - sz.Y);
     }
 
-    /// <param name="pt">The <see cref="Point" /> to translate.</param>
+    /// <param name="pt">The <see cref="VecF" /> to translate.</param>
     /// <param name="sz">
     ///     The <see cref="VecD" /> that specifies the numbers to subtract from the coordinates of
     ///     <paramref name="pt" />.
     /// </param>
-    /// <summary>Translates a <see cref="Point" /> by the negative of a given <see cref="VecD" />.</summary>
-    /// <returns>The translated <see cref="Point" />.</returns>
-    public static Point operator -(Point pt, VecD sz)
+    /// <summary>Translates a <see cref="VecF" /> by the negative of a given <see cref="VecD" />.</summary>
+    /// <returns>The translated <see cref="VecF" />.</returns>
+    public static VecF operator -(VecF pt, VecD sz)
     {
-        return new Point(pt.X - (float)sz.X, pt.Y - (float)sz.Y);
+        return new VecF(pt.X - (float)sz.X, pt.Y - (float)sz.Y);
     }
 
-    /// <param name="pt">The <see cref="Point" /> to translate.</param>
+    /// <param name="pt">The <see cref="VecF" /> to translate.</param>
     /// <param name="sz">The point that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
     /// <summary>Translates a given point by the negative of a specified offset.</summary>
-    /// <returns>The translated <see cref="Point" />.</returns>
-    public static Point operator -(Point pt, Point sz)
+    /// <returns>The translated <see cref="VecF" />.</returns>
+    public static VecF operator -(VecF pt, VecF sz)
     {
-        return new Point(pt.X - sz.X, pt.Y - sz.Y);
+        return new VecF(pt.X - sz.X, pt.Y - sz.Y);
     }
 
-    /// <summary>Gets or sets the x-coordinate of this <see cref="Point" />.</summary>
+    /// <summary>Gets or sets the x-coordinate of this <see cref="VecF" />.</summary>
     /// <value />
     public float X { get; set; }
 
-    /// <summary>Gets or sets the x-coordinate of this <see cref="Point" />.</summary>
+    /// <summary>Gets or sets the x-coordinate of this <see cref="VecF" />.</summary>
     /// <value />
     public float Y { get; set; }
 
-    /// <param name="obj">The <see cref="Point" /> to test.</param>
+    /// <param name="obj">The <see cref="VecF" /> to test.</param>
     /// <summary>
-    ///     Specifies whether this <see cref="Point" /> contains the same coordinates as the specified
-    ///     <see cref="Point" />.
+    ///     Specifies whether this <see cref="VecF" /> contains the same coordinates as the specified
+    ///     <see cref="VecF" />.
     /// </summary>
     /// <returns>
     ///     This method returns true if <paramref name="obj" /> has the same coordinates as this
-    ///     <see cref="Point" />.
+    ///     <see cref="VecF" />.
     /// </returns>
-    public readonly bool Equals(Point obj)
+    public readonly bool Equals(VecF obj)
     {
         return X == (double)obj.X && Y == (double)obj.Y;
     }
 
     /// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
     /// <summary>
-    ///     Specifies whether this <see cref="Point" /> contains the same coordinates as the specified
+    ///     Specifies whether this <see cref="VecF" /> contains the same coordinates as the specified
     ///     <see cref="T:System.Object" />.
     /// </summary>
     /// <returns>
-    ///     This method returns true if <paramref name="obj" /> is a <see cref="Point" /> and has the same
-    ///     coordinates as this <see cref="Point" />.
+    ///     This method returns true if <paramref name="obj" /> is a <see cref="VecF" /> and has the same
+    ///     coordinates as this <see cref="VecF" />.
     /// </returns>
     /// <remarks />
     public override readonly bool Equals(object obj)
     {
-        return obj is Point Point && Equals(Point);
+        return obj is VecF Point && Equals(Point);
     }
 
-    /// <param name="left">A <see cref="Point" /> to compare.</param>
-    /// <param name="right">A <see cref="Point" /> to compare with.</param>
+    /// <param name="left">A <see cref="VecF" /> to compare.</param>
+    /// <param name="right">A <see cref="VecF" /> to compare with.</param>
     /// <summary>
-    ///     Compares two <see cref="Point" /> structures. The result specifies whether the values of the
+    ///     Compares two <see cref="VecF" /> structures. The result specifies whether the values of the
     ///     <see cref="P:.Point.X" /> and <see cref="P:.Point.Y" /> properties of the two
-    ///     <see cref="Point" /> structures are equal.
+    ///     <see cref="VecF" /> structures are equal.
     /// </summary>
     /// <returns>
     ///     true if the <see cref="P:.Point.X" /> and <see cref="P:.Point.Y" /> values of the left and
-    ///     right <see cref="Point" /> structures are equal; otherwise, false.
+    ///     right <see cref="VecF" /> structures are equal; otherwise, false.
     /// </returns>
-    public static bool operator ==(Point left, Point right)
+    public static bool operator ==(VecF left, VecF right)
     {
         return left.Equals(right);
     }
 
-    /// <param name="left">A <see cref="Point" /> to compare.</param>
-    /// <param name="right">A <see cref="Point" /> to compare with.</param>
+    /// <param name="left">A <see cref="VecF" /> to compare.</param>
+    /// <param name="right">A <see cref="VecF" /> to compare with.</param>
     /// <summary>Determines whether the coordinates of the specified points are not equal.</summary>
     /// <returns>
-    ///     true if the <see cref="Point.X" /> and <see cref="Point.Y" /> values of the left and
-    ///     right <see cref="Point" /> structures differ; otherwise, false.
+    ///     true if the <see cref="VecF.X" /> and <see cref="VecF.Y" /> values of the left and
+    ///     right <see cref="VecF" /> structures differ; otherwise, false.
     /// </returns>
-    public static bool operator !=(Point left, Point right)
+    public static bool operator !=(VecF left, VecF right)
     {
         return !left.Equals(right);
     }
     
-    public static explicit operator Point(VecI vec)
+    public static explicit operator VecF(VecI vec)
     {
-        return new Point(vec.X, vec.Y);
+        return new VecF(vec.X, vec.Y);
     }
     
-    public static explicit operator Point(VecD vec)
+    public static explicit operator VecF(VecD vec)
     {
-        return new Point((float)vec.X, (float)vec.Y);
+        return new VecF((float)vec.X, (float)vec.Y);
     }
     
-    public static explicit operator VecI(Point vec)
+    public static explicit operator VecI(VecF vec)
     {
         return new VecI((int)vec.X, (int)vec.Y);
     }
     
-    public static explicit operator VecD(Point vec)
+    public static explicit operator VecD(VecF vec)
     {
         return new VecD(vec.X, vec.Y);
     }

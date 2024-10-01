@@ -156,7 +156,7 @@ public struct RectD : IEquatable<RectD>
         return new RectD(min, max - min);
     }
 
-    public static RectD? FromPoints(Point[] points)
+    public static RectD? FromPoints(VecF[] points)
     {
         if (points.Length == 0)
             return null;
@@ -167,7 +167,7 @@ public struct RectD : IEquatable<RectD>
         maxY = double.MinValue;
         maxX = double.MinValue;
 
-        foreach (Point point in points)
+        foreach (VecF point in points)
         {
             if (point.X < minX)
                 minX = point.X;

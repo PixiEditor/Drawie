@@ -106,24 +106,24 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[path.ObjectPointer].AddRect(rect.ToSkRect(), (SKPathDirection)direction);
         }
 
-        public void MoveTo(VectorPath vectorPath, Point point)
+        public void MoveTo(VectorPath vectorPath, VecF vecF)
         {
-            ManagedInstances[vectorPath.ObjectPointer].MoveTo(point.ToSkPoint());
+            ManagedInstances[vectorPath.ObjectPointer].MoveTo(vecF.ToSkPoint());
         }
 
-        public void LineTo(VectorPath vectorPath, Point point)
+        public void LineTo(VectorPath vectorPath, VecF vecF)
         {
-            ManagedInstances[vectorPath.ObjectPointer].LineTo(point.ToSkPoint());
+            ManagedInstances[vectorPath.ObjectPointer].LineTo(vecF.ToSkPoint());
         }
 
-        public void QuadTo(VectorPath vectorPath, Point mid, Point point)
+        public void QuadTo(VectorPath vectorPath, VecF mid, VecF vecF)
         {
-            ManagedInstances[vectorPath.ObjectPointer].QuadTo(mid.ToSkPoint(), point.ToSkPoint());
+            ManagedInstances[vectorPath.ObjectPointer].QuadTo(mid.ToSkPoint(), vecF.ToSkPoint());
         }
 
-        public void CubicTo(VectorPath vectorPath, Point mid1, Point mid2, Point point)
+        public void CubicTo(VectorPath vectorPath, VecF mid1, VecF mid2, VecF vecF)
         {
-            ManagedInstances[vectorPath.ObjectPointer].CubicTo(mid1.ToSkPoint(), mid2.ToSkPoint(), point.ToSkPoint());
+            ManagedInstances[vectorPath.ObjectPointer].CubicTo(mid1.ToSkPoint(), mid2.ToSkPoint(), vecF.ToSkPoint());
         }
 
         public void ArcTo(VectorPath vectorPath, RectI oval, int startAngle, int sweepAngle, bool forceMoveTo)
@@ -144,6 +144,12 @@ namespace Drawie.Skia.Implementations
         public object GetNativePath(IntPtr objectPointer)
         {
             return ManagedInstances[objectPointer];
+        }
+
+        public VecD GetLastPoint(VectorPath vectorPath)
+        {
+            SKPoint point = ManagedInstances[vectorPath.ObjectPointer].LastPoint;
+            return new VecD(point.X, point.Y);
         }
 
         /// <summary>

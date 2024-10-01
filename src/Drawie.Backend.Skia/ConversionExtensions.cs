@@ -32,7 +32,7 @@ namespace Drawie.Skia
                 matrix.ScaleY, matrix.TransY, matrix.Persp0, matrix.Persp1, matrix.Persp2);
         }
         
-        public static SKPoint ToSkPoint(this Point vector)
+        public static SKPoint ToSkPoint(this VecF vector)
         {
             return new SKPoint(vector.X, vector.Y);
         }
