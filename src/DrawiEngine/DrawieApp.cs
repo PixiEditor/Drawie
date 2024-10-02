@@ -20,8 +20,8 @@ public abstract class DrawieApp
 
     public void Run()
     {
-        OnBegin();
+        OnInitialize();
     }
 
-    protected abstract void OnBegin();
+    protected abstract void OnInitialize();
 }
