@@ -139,6 +139,7 @@ namespace Drawie.Backend.Core.Surfaces
             DrawOval(center.X, center.Y, radius.X, radius.Y, paint);
 
         public void DrawRect(RectI rect, Paint paint) => DrawRect(rect.X, rect.Y, rect.Width, rect.Height, paint);
+        public void DrawRect(RectD rect, Paint paint) => DrawRect((float)rect.X, (float)rect.Y, (float)rect.Width, (float)rect.Height, paint);
 
         public void DrawRoundRect(float x, float y, float width, float height, float radiusX, float radiusY,
             Paint paint)

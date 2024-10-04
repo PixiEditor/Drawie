@@ -24,7 +24,7 @@ namespace Drawie.Skia.Implementations
             return first.ToSkMatrix().PostConcat(second.ToSkMatrix()).ToMatrix3X3();
         }
 
-        public VecD MapPoint(Matrix3X3 matrix, int p0, int p1)
+        public VecD MapPoint(Matrix3X3 matrix, float p0, float p1)
         {
             var mapped = matrix.ToSkMatrix().MapPoint(p0, p1);
             return new VecD(mapped.X, mapped.Y);

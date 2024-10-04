@@ -196,6 +196,7 @@ public struct Matrix3X3 : IEquatable<Matrix3X3>
     }
     
     public VecD MapPoint(VecI size) => MapPoint(size.X, size.Y);
+    public VecD MapPoint(VecD point) => MapPoint((float)point.X, (float)point.Y);
 
     public static Matrix3X3 CreateIdentity()
     {
@@ -351,7 +352,7 @@ public struct Matrix3X3 : IEquatable<Matrix3X3>
         return DrawingBackendApi.Current.MatrixImplementation.PostConcat(in this, in globalMatrix);
     }
 
-    public VecD MapPoint(int p0, int p1)
+    public VecD MapPoint(float p0, float p1)
     {
         return DrawingBackendApi.Current.MatrixImplementation.MapPoint(this, p0, p1);
     }
