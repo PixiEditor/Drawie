@@ -7,6 +7,7 @@ using Drawie.RenderApi.Vulkan.Helpers;
 using Drawie.RenderApi.Vulkan.Stages;
 using Drawie.RenderApi.Vulkan.Stages.Builders;
 using Drawie.RenderApi.Vulkan.Structs;
+using ImGuiNET;
 using Silk.NET.Core;
 using Silk.NET.Core.Contexts;
 using Silk.NET.Core.Native;
@@ -34,6 +35,8 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
     public bool EnableValidationLayers { get; set; } = true;
     public PhysicalDevice PhysicalDevice { get; private set; }
+    
+    public VecI FramebufferSize => framebufferSize;
 
     public Device LogicalDevice
     {
@@ -128,10 +131,10 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
     public VulkanWindowRenderApi()
     {
-        
     }
-    
-    public VulkanWindowRenderApi(Instance instance, Device logicalDevice, PhysicalDevice physicalDevice, Queue graphicsQueue, Queue presentQueue)
+
+    public VulkanWindowRenderApi(Instance instance, Device logicalDevice, PhysicalDevice physicalDevice,
+        Queue graphicsQueue, Queue presentQueue)
     {
         this.instance = instance;
         this.logicalDevice = logicalDevice;
@@ -155,7 +158,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         if (surfaceObject is not IVkSurface vkSurface) throw new VulkanNotSupportedException();
 
         this.framebufferSize = framebufferSize;
-        
+
         Vk = Vk.GetApi();
 
         if (instance.Handle == default)
@@ -187,7 +190,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         CreateDescriptorSets();
         CreateCommandBuffers();
         CreateSyncObjects();
-        
+
         lastFramebufferSize = framebufferSize;
     }
 
@@ -342,7 +345,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
                 DescriptorCount = 1,
                 PImageInfo = &imageInfo
             };
-            
+
             Vk!.UpdateDescriptorSets(LogicalDevice, 1, &samplerDescriptorSet, 0, null);
         }
     }
@@ -366,7 +369,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         Vk!.DeviceWaitIdle(LogicalDevice);
 
         CleanupSwapchain();
-        
+
         texture.Dispose();
 
         CreateSwapChain();
@@ -381,7 +384,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         imagesInFlight = new Fence[swapChainImages.Length];
 
         lastFramebufferSize = framebufferSize;
-        
+
         FramebufferResized?.Invoke();
     }
 
@@ -489,6 +492,11 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         else if (result != Result.Success) throw new VulkanException("Failed to present swap chain image.");
 
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
+
+    public void InitializeOverlayDebugger()
+    {
+        
     }
 
     public event Action? FramebufferResized;
@@ -1084,7 +1092,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         return Vk.False;
     }
 
-    public IntPtr LogicalDeviceHandle => logicalDevice.Handle; 
+    public IntPtr LogicalDeviceHandle => logicalDevice.Handle;
     public IntPtr PhysicalDeviceHandle => PhysicalDevice.Handle;
     public IntPtr InstanceHandle => Instance.Handle;
     public IntPtr GraphicsQueueHandle => graphicsQueue.Handle;

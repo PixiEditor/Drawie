@@ -10,6 +10,7 @@ public interface IWindowRenderApi
     public void UpdateFramebufferSize(int width, int height);
     public void PrepareTextureToWrite();
     public void Render(double deltaTime);
+    public void InitializeOverlayDebugger();
     
     public event Action FramebufferResized;
 }

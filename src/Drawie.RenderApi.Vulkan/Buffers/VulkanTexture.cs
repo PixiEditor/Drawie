@@ -68,8 +68,7 @@ public class VulkanTexture : IDisposable, IVkTexture
         
         CreateSampler();
     }
-    
-    
+
     public void MakeReadOnly()
     {
         TransitionLayoutTo(ColorAttachmentOptimal, ShaderReadOnlyOptimal);

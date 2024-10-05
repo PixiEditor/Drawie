@@ -58,7 +58,7 @@ public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplemen
         throw new NotImplementedException();
     }
 
-    public void DrawPoints(IntPtr objPtr, PointMode pointMode, Point[] points, Paint paint)
+    public void DrawPoints(IntPtr objPtr, PointMode pointMode, VecF[] points, Paint paint)
     {
         throw new NotImplementedException();
     }

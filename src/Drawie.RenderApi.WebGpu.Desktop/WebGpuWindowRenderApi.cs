@@ -109,6 +109,10 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
         wgpuSurfacePresent(Surface);
     }
 
+    public void InitializeOverlayDebugger()
+    {
+    }
+
     private void ReconfigureSwapchain()
     {
         ConfigureSwapchain(framebufferSize);
@@ -235,14 +239,14 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
         {
             type = WGPUSamplerBindingType.Filtering
         };
-        
+
         WGPUTextureBindingLayout textureBindingLayout = new WGPUTextureBindingLayout()
         {
             sampleType = WGPUTextureSampleType.Float,
             viewDimension = WGPUTextureViewDimension._2D,
             multisampled = false,
         };
-        
+
         WGPUBindGroupLayoutEntry* bindGroupLayoutEntries = stackalloc WGPUBindGroupLayoutEntry[2]
         {
             new WGPUBindGroupLayoutEntry()
@@ -263,8 +267,8 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
             entryCount = 2,
             entries = bindGroupLayoutEntries,
         };
-        
-        var bindGroupLayout = wgpuDeviceCreateBindGroupLayout(Device, &bindGroupLayoutDescriptor); 
+
+        var bindGroupLayout = wgpuDeviceCreateBindGroupLayout(Device, &bindGroupLayoutDescriptor);
 
         WGPUPipelineLayoutDescriptor layoutDescription = new()
         {
@@ -409,7 +413,6 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
 
             new Vector2(1.0f, 1.0f), // bottom right pos
             new Vector2(1.0f, 0.0f), // texture coords bottom right (flipped from 1.0f to 0.0f)
-
         };
 
         ulong size = (ulong)(12 * sizeof(Vector2));

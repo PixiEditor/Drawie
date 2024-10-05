@@ -6,6 +6,7 @@ namespace Drawie.RenderApi.Html5Canvas;
 public class Html5CanvasWindowApi : IBrowserWindowRenderApi
 {
     private HtmlCanvas canvasObject;
+
     public event Action? FramebufferResized;
 
     public string CanvasId { get; private set; }
@@ -19,6 +20,12 @@ public class Html5CanvasWindowApi : IBrowserWindowRenderApi
     }
 
     public void DestroyInstance()
+    {
+        
+    }
+    
+    
+    public void InitializeOverlayDebugger()
     {
         
     }

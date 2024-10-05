@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="ImGui.NET" Version="1.91.0.1" />
       <PackageReference Include="Silk.NET.Maths" Version="2.21.0" />
       <PackageReference Include="Silk.NET.Vulkan" Version="2.21.0" />
       <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.21.0" />
