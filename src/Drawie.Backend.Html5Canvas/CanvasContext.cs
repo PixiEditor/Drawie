@@ -17,12 +17,12 @@ public class CanvasContext
         JSRuntime.ClearCanvasRect(ContextHandle, x, y, width, height);
     }
 
-    public void DrawStrokeRect(int x, int y, int width, int height)
+    public void DrawStrokeRect(float x, float y, float width, float height)
     {
         JSRuntime.StrokeCanvasRect(ContextHandle, x, y, width, height);
     }
 
-    public void DrawFillRect(int x, int y, int width, int height)
+    public void DrawFillRect(float x, float y, float width, float height)
     {
         JSRuntime.FillCanvasRect(ContextHandle, x, y, width, height);
     }

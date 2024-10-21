@@ -13,17 +13,17 @@ namespace Drawie.Html5Canvas.Impl;
 
 public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplementation
 {
-    public void DrawPixel(IntPtr objPtr, int posX, int posY, Paint drawingPaint)
+    public void DrawPixel(IntPtr objPtr, float posX, float posY, Paint drawingPaint)
     {
         throw new NotImplementedException();
     }
 
-    public void DrawSurface(IntPtr objPtr, DrawingSurface drawingSurface, int x, int y, Paint? paint)
+    public void DrawSurface(IntPtr objPtr, DrawingSurface drawingSurface, float x, float y, Paint? paint)
     {
         throw new NotImplementedException();
     }
 
-    public void DrawImage(IntPtr objPtr, Image image, int x, int y)
+    public void DrawImage(IntPtr objPtr, Image image, float x, float y)
     {
         throw new NotImplementedException();
     }
@@ -58,12 +58,12 @@ public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplemen
         throw new NotImplementedException();
     }
 
-    public void DrawPoints(IntPtr objPtr, PointMode pointMode, Point[] points, Paint paint)
+    public void DrawPoints(IntPtr objPtr, PointMode pointMode, VecF[] points, Paint paint)
     {
         throw new NotImplementedException();
     }
 
-    public void DrawRect(IntPtr objPtr, int x, int y, int width, int height, Paint paint)
+    public void DrawRect(IntPtr objPtr, float x, float y, float width, float height, Paint paint)
     {
         HtmlCanvasObject canvasObject = ManagedObjects[(int)objPtr];
         
@@ -84,12 +84,12 @@ public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplemen
         }
     }
 
-    public void DrawCircle(IntPtr objPtr, int cx, int cy, int radius, Paint paint)
+    public void DrawCircle(IntPtr objPtr, float cx, float cy, float radius, Paint paint)
     {
         throw new NotImplementedException();
     }
 
-    public void DrawOval(IntPtr objPtr, int cx, int cy, int width, int height, Paint paint)
+    public void DrawOval(IntPtr objPtr, float cx, float cy, float width, float height, Paint paint)
     {
         throw new NotImplementedException();
     }
@@ -163,7 +163,7 @@ public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplemen
         throw new NotImplementedException();
     }
 
-    public void DrawBitmap(IntPtr objPtr, Bitmap bitmap, int x, int y)
+    public void DrawBitmap(IntPtr objPtr, Bitmap bitmap, float x, float y)
     {
         throw new NotImplementedException();
     }
@@ -183,11 +183,17 @@ public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplemen
         throw new NotImplementedException();
     }
 
-    public void DrawImage(IntPtr objectPointer, Image image, int x, int y, Paint paint)
+    public void DrawImage(IntPtr objectPointer, Image image, float x, float y, Paint paint)
     {
         throw new NotImplementedException();
     }
-    
+
+    public void DrawRoundRect(IntPtr objectPointer, float x, float y, float width, float height, float radiusX, float radiusY,
+        Paint paint)
+    {
+        throw new NotImplementedException();
+    }
+
     private void SetPaint(CanvasContext ctx, Paint paint)
     {
         if(paint.Style == PaintStyle.Fill)
