@@ -36,9 +36,9 @@ public class WebGpuWindowRenderApi : IWindowRenderApi
 
     private VecI framebufferSize;
 
-    public void CreateInstance(object surface, VecI size)
+    public void CreateInstance(object contextObject, VecI size)
     {
-        if (surface is not INativeWindow nativeWindow)
+        if (contextObject is not INativeWindow nativeWindow)
         {
             throw new ArgumentException("Surface must be a window handle");
         }

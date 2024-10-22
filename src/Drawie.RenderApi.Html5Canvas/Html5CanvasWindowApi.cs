@@ -10,7 +10,7 @@ public class Html5CanvasWindowApi : IBrowserWindowRenderApi
 
     public string CanvasId { get; private set; }
     
-    public void CreateInstance(object surface, VecI framebufferSize)
+    public void CreateInstance(object contextObject, VecI framebufferSize)
     {
         canvasObject = JSRuntime.CreateElement<HtmlCanvas>();
         CanvasId = canvasObject.Id;

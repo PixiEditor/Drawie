@@ -68,7 +68,15 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         InitInput();
 
         if (RenderApi is IVulkanWindowRenderApi)
-            RenderApi.CreateInstance(window.VkSurface, window.Size.ToVecI());
+        {
+            if (window.VkSurface == null)
+            {
+                throw new Exception("Vulkan surface is null");
+            }
+            
+            GlfwVulkanContextInfo info = new GlfwVulkanContextInfo(window.VkSurface!);
+            RenderApi.CreateInstance(info, window.Size.ToVecI());
+        }
         else
         {
             RenderApi.CreateInstance(window.Native, window.Size.ToVecI());

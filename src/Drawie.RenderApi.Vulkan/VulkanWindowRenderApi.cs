@@ -150,9 +150,9 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         texture.TransitionLayoutTo(VulkanTexture.ShaderReadOnlyOptimal, VulkanTexture.ColorAttachmentOptimal);
     }
 
-    public void CreateInstance(object surfaceObject, VecI framebufferSize)
+    public void CreateInstance(object contextObject, VecI framebufferSize)
     {
-        if (surfaceObject is not IVkSurface vkSurface) throw new VulkanNotSupportedException();
+        if (contextObject is not IVulkanContextInfo vkContext) throw new VulkanNotSupportedException();
 
         this.framebufferSize = framebufferSize;
         
@@ -160,11 +160,11 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
         if (instance.Handle == default)
         {
-            SetupInstance(vkSurface);
+            SetupInstance(vkContext);
             SetupDebugMessenger();
         }
 
-        CreateSurface(vkSurface);
+        CreateSurface(vkContext);
         if (logicalDevice.Handle == default)
         {
             var selectedGpu = PickPhysicalDevice();
@@ -778,12 +778,12 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         return details;
     }
 
-    private unsafe void CreateSurface(IVkSurface vkSurface)
+    private unsafe void CreateSurface(IVulkanContextInfo vkContext)
     {
         if (!Vk!.TryGetInstanceExtension<KhrSurface>(instance, out khrSurface))
             throw new NotSupportedException("KHR_surface extension not found.");
 
-        surface = vkSurface!.Create<AllocationCallbacks>(instance.ToHandle(), null).ToSurface();
+        surface = new VkNonDispatchableHandle(vkContext.GetSurfaceHandle(instance.Handle)).ToSurface();
     }
 
     private unsafe void CreateIndexBuffer()
@@ -823,7 +823,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         Vk!.CmdCopyBuffer(commandBuffer.CommandBuffer, srcBuffer.VkBuffer, dstBuffer.VkBuffer, 1, copyRegion);
     }
 
-    private unsafe void SetupInstance(IVkSurface surface)
+    private unsafe void SetupInstance(IVulkanContextInfo contextInfo)
     {
         ThrowIfValidationLayersNotSupported();
 
@@ -843,7 +843,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
             PApplicationInfo = &appInfo
         };
 
-        var extensions = GetExtensions(surface);
+        var extensions = GetExtensions(contextInfo);
 
         createInfo.EnabledExtensionCount = (uint)extensions.Length;
         createInfo.PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(extensions);
@@ -1015,14 +1015,15 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         return indices;
     }
 
-    private unsafe string[] GetExtensions(IVkSurface surface)
+    private unsafe string[] GetExtensions(IVulkanContextInfo contextInfo)
     {
-        var windowExtensions = surface.GetRequiredExtensions(out var count);
-        var extensions = SilkMarshal.PtrToStringArray((nint)windowExtensions, (int)count);
+        string[] contextExtensions = contextInfo.GetRequiredExtensions();
+        if (EnableValidationLayers)
+        {
+            return contextExtensions.Append(ExtDebugUtils.ExtensionName).ToArray();
+        }
 
-        if (EnableValidationLayers) return extensions.Append(ExtDebugUtils.ExtensionName).ToArray();
-
-        return extensions;
+        return contextExtensions;
     }
 
     private unsafe void PopulateDebugMessengerCreateInfo(ref DebugUtilsMessengerCreateInfoEXT createInfo)
