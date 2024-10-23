@@ -9,7 +9,7 @@ public class IndexBuffer : BufferObject
     {
     }
 
-    public IndexBuffer(VulkanContext context, ulong bufferSize) : this(context.Vk!, context.LogicalDevice.Device, context.PhysicalDevice, bufferSize)
+    public IndexBuffer(VulkanContext context, ulong bufferSize) : this(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, bufferSize)
     {
     } 
 }

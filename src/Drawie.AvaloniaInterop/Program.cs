@@ -1,5 +1,7 @@
 ﻿using Avalonia;
 using System;
+using Avalonia.Logging;
+using Avalonia.Vulkan;
 
 namespace Drawie.AvaloniaGraphics;
 
@@ -17,5 +19,20 @@ class Program
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
-            .LogToTrace();
+            .With(new Win32PlatformOptions
+            {
+                RenderingMode = new[]
+                {
+                    Win32RenderingMode.Vulkan
+                }
+            })
+            .With(new X11PlatformOptions() { RenderingMode = new[] { X11RenderingMode.Vulkan } })
+            .With(new VulkanOptions()
+            {
+                VulkanInstanceCreationOptions = new VulkanInstanceCreationOptions()
+                {
+                    UseDebug = true
+                }
+            })
+            .LogToTrace(LogEventLevel.Debug, "Vulkan");
 }

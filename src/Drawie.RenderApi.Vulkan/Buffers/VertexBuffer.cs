@@ -8,7 +8,7 @@ public class VertexBuffer : BufferObject
     {
     }
 
-    public VertexBuffer(VulkanContext context, ulong bufferSize) : this(context.Vk!, context.LogicalDevice.Device, context.PhysicalDevice, bufferSize)
+    public VertexBuffer(VulkanContext context, ulong bufferSize) : this(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, bufferSize)
     {
     }
 }

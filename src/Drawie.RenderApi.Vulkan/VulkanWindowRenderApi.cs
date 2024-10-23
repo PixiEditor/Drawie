@@ -143,27 +143,27 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
         texture.Dispose();
 
-        context.Vk!.DestroyDescriptorSetLayout(context.LogicalDevice.Device, descriptorSetLayout, null);
+        context.Api!.DestroyDescriptorSetLayout(context.LogicalDevice.Device, descriptorSetLayout, null);
 
         indexBuffer.Dispose();
         vertexBuffer.Dispose();
 
         for (var i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            context.Vk!.DestroySemaphore(context.LogicalDevice.Device, renderFinishedSemaphores![i], null);
-            context.Vk!.DestroySemaphore(context.LogicalDevice.Device, imageAvailableSemaphores![i], null);
-            context.Vk!.DestroyFence(context.LogicalDevice.Device, inFlightFences![i], null);
+            context.Api!.DestroySemaphore(context.LogicalDevice.Device, renderFinishedSemaphores![i], null);
+            context.Api!.DestroySemaphore(context.LogicalDevice.Device, imageAvailableSemaphores![i], null);
+            context.Api!.DestroyFence(context.LogicalDevice.Device, inFlightFences![i], null);
         }
 
-        context.Vk!.DestroyCommandPool(context.LogicalDevice.Device, commandPool, null);
+        context.Api!.DestroyCommandPool(context.LogicalDevice.Device, commandPool, null);
 
         foreach (var framebuffer in swapChainFramebuffers)
-            context.Vk!.DestroyFramebuffer(context.LogicalDevice.Device, framebuffer, null);
+            context.Api!.DestroyFramebuffer(context.LogicalDevice.Device, framebuffer, null);
 
         graphicsPipeline.Dispose();
 
         foreach (var view in swapChainImageViews)
-            context.Vk!.DestroyImageView(context.LogicalDevice.Device, view, null);
+            context.Api!.DestroyImageView(context.LogicalDevice.Device, view, null);
 
         khrSwapchain!.DestroySwapchain(context.LogicalDevice.Device, swapChain, null);
         context.Dispose();
@@ -172,22 +172,22 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
     private unsafe void CleanupSwapchain()
     {
         foreach (var framebuffer in swapChainFramebuffers)
-            context.Vk!.DestroyFramebuffer(context.LogicalDevice.Device, framebuffer, null);
+            context.Api!.DestroyFramebuffer(context.LogicalDevice.Device, framebuffer, null);
 
         fixed (CommandBuffer* commandBuffersPtr = commandBuffers)
         {
-            context.Vk!.FreeCommandBuffers(context.LogicalDevice.Device, commandPool, (uint)commandBuffers!.Length,
+            context.Api!.FreeCommandBuffers(context.LogicalDevice.Device, commandPool, (uint)commandBuffers!.Length,
                 commandBuffersPtr);
         }
 
         graphicsPipeline.Dispose();
 
         foreach (var imageView in swapChainImageViews)
-            context.Vk!.DestroyImageView(context.LogicalDevice.Device, imageView, null);
+            context.Api!.DestroyImageView(context.LogicalDevice.Device, imageView, null);
 
         khrSwapchain!.DestroySwapchain(context.LogicalDevice.Device, swapChain, null);
 
-        context.Vk!.DestroyDescriptorPool(context.LogicalDevice.Device, descriptorPool, null);
+        context.Api!.DestroyDescriptorPool(context.LogicalDevice.Device, descriptorPool, null);
     }
 
     private unsafe void CreateDescriptorSetLayout()
@@ -211,7 +211,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
                 PBindings = &samplerLayoutBinding
             };
 
-            if (context.Vk!.CreateDescriptorSetLayout(context.LogicalDevice.Device, layoutInfo, null,
+            if (context.Api!.CreateDescriptorSetLayout(context.LogicalDevice.Device, layoutInfo, null,
                     descriptorSetLayoutPtr) !=
                 Result.Success)
                 throw new VulkanException("Failed to create descriptor set layout.");
@@ -220,7 +220,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
     public void CreateTextureImage()
     {
-        texture = new VulkanTexture(context.Vk!, context.LogicalDevice.Device, context.PhysicalDevice, commandPool,
+        texture = new VulkanTexture(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, commandPool,
             context.GraphicsQueue, framebufferSize);
     }
 
@@ -241,7 +241,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
                 PPoolSizes = &poolSize,
                 MaxSets = (uint)swapChainImages.Length
             };
-            if (context.Vk!.CreateDescriptorPool(context.LogicalDevice.Device, poolInfo, null, descriptorPoolPtr) !=
+            if (context.Api!.CreateDescriptorPool(context.LogicalDevice.Device, poolInfo, null, descriptorPoolPtr) !=
                 Result.Success)
                 throw new VulkanException("Failed to create descriptor pool.");
         }
@@ -265,7 +265,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
             descriptorSets = new DescriptorSet[swapChainImages.Length];
             fixed (DescriptorSet* descriptorSetsPtr = descriptorSets)
             {
-                if (context.Vk!.AllocateDescriptorSets(context.LogicalDevice.Device, allocInfo, descriptorSetsPtr) !=
+                if (context.Api!.AllocateDescriptorSets(context.LogicalDevice.Device, allocInfo, descriptorSetsPtr) !=
                     Result.Success)
                     throw new VulkanException("Failed to allocate descriptor sets.");
             }
@@ -291,7 +291,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
                 PImageInfo = &imageInfo
             };
 
-            context.Vk!.UpdateDescriptorSets(context.LogicalDevice.Device, 1, &samplerDescriptorSet, 0, null);
+            context.Api!.UpdateDescriptorSets(context.LogicalDevice.Device, 1, &samplerDescriptorSet, 0, null);
         }
     }
 
@@ -311,7 +311,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
             return;
         }
 
-        context.Vk!.DeviceWaitIdle(context.LogicalDevice.Device);
+        context.Api!.DeviceWaitIdle(context.LogicalDevice.Device);
 
         CleanupSwapchain();
 
@@ -352,20 +352,20 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         };
 
         for (var i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-            if (context.Vk!.CreateSemaphore(context.LogicalDevice.Device, semaphoreInfo, null,
+            if (context.Api!.CreateSemaphore(context.LogicalDevice.Device, semaphoreInfo, null,
                     out imageAvailableSemaphores[i]) !=
                 Result.Success ||
-                context.Vk!.CreateSemaphore(context.LogicalDevice.Device, semaphoreInfo, null,
+                context.Api!.CreateSemaphore(context.LogicalDevice.Device, semaphoreInfo, null,
                     out renderFinishedSemaphores[i]) !=
                 Result.Success ||
-                context.Vk!.CreateFence(context.LogicalDevice.Device, fenceInfo, null, out inFlightFences[i]) !=
+                context.Api!.CreateFence(context.LogicalDevice.Device, fenceInfo, null, out inFlightFences[i]) !=
                 Result.Success)
                 throw new VulkanException("Failed to create synchronization objects for a frame.");
     }
 
     public unsafe void Render(double deltaTime)
     {
-        context.Vk!.WaitForFences(context.LogicalDevice.Device, 1, inFlightFences![currentFrame], true, ulong.MaxValue);
+        context.Api!.WaitForFences(context.LogicalDevice.Device, 1, inFlightFences![currentFrame], true, ulong.MaxValue);
 
         uint imageIndex = 0;
         var acquireResult = khrSwapchain!.AcquireNextImage(context.LogicalDevice.Device, swapChain, ulong.MaxValue,
@@ -384,7 +384,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         UpdateTextureLayout();
 
         if (imagesInFlight![imageIndex].Handle != default)
-            context.Vk!.WaitForFences(context.LogicalDevice.Device, 1, imagesInFlight[imageIndex], true,
+            context.Api!.WaitForFences(context.LogicalDevice.Device, 1, imagesInFlight[imageIndex], true,
                 ulong.MaxValue);
 
         imagesInFlight[imageIndex] = inFlightFences[currentFrame];
@@ -416,9 +416,9 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
             PSignalSemaphores = signalSemaphores
         };
 
-        context.Vk!.ResetFences(context.LogicalDevice.Device, 1, inFlightFences[currentFrame]);
+        context.Api!.ResetFences(context.LogicalDevice.Device, 1, inFlightFences[currentFrame]);
 
-        if (context.Vk!.QueueSubmit(context.GraphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) !=
+        if (context.Api!.QueueSubmit(context.GraphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) !=
             Result.Success)
             throw new VulkanException("Failed to submit draw command buffer.");
 
@@ -460,7 +460,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
             QueueFamilyIndex = queueFamilyIndices.GraphicsFamily!.Value
         };
 
-        if (context.Vk!.CreateCommandPool(context.LogicalDevice.Device, in poolInfo, null, out commandPool) !=
+        if (context.Api!.CreateCommandPool(context.LogicalDevice.Device, in poolInfo, null, out commandPool) !=
             Result.Success)
             throw new VulkanException("Failed to create command pool.");
     }
@@ -478,7 +478,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
         fixed (CommandBuffer* commandBuffersPtr = commandBuffers)
         {
-            if (context.Vk!.AllocateCommandBuffers(context.LogicalDevice.Device, in allocInfo, commandBuffersPtr) !=
+            if (context.Api!.AllocateCommandBuffers(context.LogicalDevice.Device, in allocInfo, commandBuffersPtr) !=
                 Result.Success)
                 throw new VulkanException("Failed to allocate command buffers.");
         }
@@ -490,7 +490,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
                 SType = StructureType.CommandBufferBeginInfo
             };
 
-            if (context.Vk!.BeginCommandBuffer(commandBuffers[i], in beginInfo) != Result.Success)
+            if (context.Api!.BeginCommandBuffer(commandBuffers[i], in beginInfo) != Result.Success)
                 throw new VulkanException("Failed to begin recording command buffer.");
 
             RenderPassBeginInfo renderPassInfo = new()
@@ -513,8 +513,8 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
             renderPassInfo.ClearValueCount = 1;
             renderPassInfo.PClearValues = &clearColor;
 
-            context.Vk!.CmdBeginRenderPass(commandBuffers[i], &renderPassInfo, SubpassContents.Inline);
-            context.Vk!.CmdBindPipeline(commandBuffers[i], PipelineBindPoint.Graphics, graphicsPipeline.VkPipeline);
+            context.Api!.CmdBeginRenderPass(commandBuffers[i], &renderPassInfo, SubpassContents.Inline);
+            context.Api!.CmdBindPipeline(commandBuffers[i], PipelineBindPoint.Graphics, graphicsPipeline.VkPipeline);
 
             var vertexBuffers = new[] { vertexBuffer.VkBuffer };
             var offsets = new ulong[] { 0 };
@@ -522,20 +522,20 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
             fixed (ulong* offsetsPtr = offsets)
             fixed (Buffer* vertexBuffersPtr = vertexBuffers)
             {
-                context.Vk!.CmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffersPtr, offsetsPtr);
+                context.Api!.CmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffersPtr, offsetsPtr);
             }
 
-            context.Vk!.CmdBindIndexBuffer(commandBuffers[i], indexBuffer.VkBuffer, 0, IndexType.Uint16);
+            context.Api!.CmdBindIndexBuffer(commandBuffers[i], indexBuffer.VkBuffer, 0, IndexType.Uint16);
 
-            context.Vk!.CmdBindDescriptorSets(commandBuffers[i], PipelineBindPoint.Graphics,
+            context.Api!.CmdBindDescriptorSets(commandBuffers[i], PipelineBindPoint.Graphics,
                 graphicsPipeline.VkPipelineLayout,
                 0, 1, descriptorSets[i], 0, null);
 
-            context.Vk!.CmdDrawIndexed(commandBuffers[i], (uint)indices.Length, 1, 0, 0, 0);
+            context.Api!.CmdDrawIndexed(commandBuffers[i], (uint)indices.Length, 1, 0, 0, 0);
 
-            context.Vk!.CmdEndRenderPass(commandBuffers[i]);
+            context.Api!.CmdEndRenderPass(commandBuffers[i]);
 
-            if (context.Vk!.EndCommandBuffer(commandBuffers[i]) != Result.Success)
+            if (context.Api!.EndCommandBuffer(commandBuffers[i]) != Result.Success)
                 throw new VulkanException("Failed to record command buffer.");
         }
     }
@@ -559,7 +559,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
                 Layers = 1
             };
 
-            if (context.Vk!.CreateFramebuffer(context.LogicalDevice.Device, framebufferInfo, null,
+            if (context.Api!.CreateFramebuffer(context.LogicalDevice.Device, framebufferInfo, null,
                     out swapChainFramebuffers[i]) !=
                 Result.Success) throw new VulkanException("Failed to create framebuffer.");
         }
@@ -567,7 +567,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
     private void CreateGraphicsPipeline()
     {
-        GraphicsPipelineBuilder builder = new(context.Vk!, context.LogicalDevice.Device);
+        GraphicsPipelineBuilder builder = new(context.Api!, context.LogicalDevice.Device);
 
         builder
             .AddStage(stage => stage.OfType(GraphicsPipelineStageType.Vertex).WithShader("shaders/vert.spv"))
@@ -585,7 +585,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         swapChainImageViews = new ImageView[swapChainImages.Length];
 
         for (var i = 0; i < swapChainImages.Length; i++)
-            swapChainImageViews[i] = ImageUtility.CreateViewForImage(context.Vk!, context.LogicalDevice.Device,
+            swapChainImageViews[i] = ImageUtility.CreateViewForImage(context.Api!, context.LogicalDevice.Device,
                 swapChainImages[i],
                 swapChainImageFormat);
     }
@@ -638,7 +638,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
             OldSwapchain = default
         };
 
-        if (!context.Vk!.TryGetDeviceExtension(context.Instance, context.LogicalDevice.Device, out khrSwapchain))
+        if (!context.Api!.TryGetDeviceExtension(context.Instance, context.LogicalDevice.Device, out khrSwapchain))
             throw new NotSupportedException("VK_KHR_swapchain extension not found.");
 
         if (khrSwapchain!.CreateSwapchain(context.LogicalDevice.Device, creatInfo, null, out swapChain) !=
@@ -729,7 +729,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
             Size = size
         };
 
-        context.Vk!.CmdCopyBuffer(commandBuffer.CommandBuffer, srcBuffer.VkBuffer, dstBuffer.VkBuffer, 1, copyRegion);
+        context.Api!.CmdCopyBuffer(commandBuffer.CommandBuffer, srcBuffer.VkBuffer, dstBuffer.VkBuffer, 1, copyRegion);
     }
     
     public IVkTexture RenderTexture => texture;

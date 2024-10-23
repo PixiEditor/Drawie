@@ -14,7 +14,7 @@ namespace Drawie.RenderApi.Vulkan;
 
 public abstract class VulkanContext : IDisposable, IVulkanContext
 {
-    public Vk? Vk { get; protected set; }
+    public Vk? Api { get; protected set; }
 
     public Instance Instance
     {
@@ -49,7 +49,7 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
 
     public IntPtr GetProcedureAddress(string name, IntPtr instance, IntPtr device)
     {
-        return Vk!.GetInstanceProcAddr(Instance, name);
+        return Api!.GetInstanceProcAddr(Instance, name);
     }
 
     public VulkanContext()
@@ -98,7 +98,7 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
             createInfo.PNext = null;
         }
 
-        if (Vk!.CreateInstance(&createInfo, null, out instance) != Result.Success)
+        if (Api!.CreateInstance(&createInfo, null, out instance) != Result.Success)
             throw new VulkanException("Failed to create instance.");
 
         Marshal.FreeHGlobal((nint)appInfo.PApplicationName);
@@ -113,7 +113,7 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
     {
         if (!EnableValidationLayers) return;
 
-        if (!Vk!.TryGetInstanceExtension(Instance, out extDebugUtils)) return;
+        if (!Api!.TryGetInstanceExtension(Instance, out extDebugUtils)) return;
 
         DebugUtilsMessengerCreateInfoEXT createInfo = new();
         PopulateDebugMessengerCreateInfo(ref createInfo);
@@ -125,12 +125,12 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
 
     protected unsafe GpuInfo PickPhysicalDevice()
     {
-        var devices = Vk!.GetPhysicalDevices(Instance);
+        var devices = Api!.GetPhysicalDevices(Instance);
         foreach (var device in devices)
         {
             if (IsDeviceSuitable(device))
             {
-                var props = Vk.GetPhysicalDeviceProperties(device);
+                var props = Api.GetPhysicalDeviceProperties(device);
                 var name = props.DeviceName;
                 var deviceName = Marshal.PtrToStringAnsi((nint)name);
 
@@ -186,11 +186,11 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
     private unsafe bool CheckValidationLayerSupport()
     {
         uint layerCount = 0;
-        Vk!.EnumerateInstanceLayerProperties(ref layerCount, null);
+        Api!.EnumerateInstanceLayerProperties(ref layerCount, null);
         var availableLayers = new LayerProperties[layerCount];
         fixed (LayerProperties* availableLayersPtr = availableLayers)
         {
-            Vk!.EnumerateInstanceLayerProperties(ref layerCount, availableLayersPtr);
+            Api!.EnumerateInstanceLayerProperties(ref layerCount, availableLayersPtr);
         }
 
         var availableLayerNames = availableLayers.Select(layer => Marshal.PtrToStringAnsi((IntPtr)layer.LayerName))
@@ -202,11 +202,11 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
     protected unsafe bool CheckDeviceExtensionSupport(PhysicalDevice device)
     {
         uint extensionCount = 0;
-        Vk!.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extensionCount, null);
+        Api!.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extensionCount, null);
         var availableExtensions = new ExtensionProperties[extensionCount];
         fixed (ExtensionProperties* availableExtensionsPtr = availableExtensions)
         {
-            Vk!.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extensionCount, availableExtensionsPtr);
+            Api!.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extensionCount, availableExtensionsPtr);
         }
 
         var availableExtensionNames = availableExtensions
@@ -238,14 +238,14 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
     {
         uint layerPropertiesCount;
 
-        Vk!.EnumerateInstanceLayerProperties(&layerPropertiesCount, null)
+        Api!.EnumerateInstanceLayerProperties(&layerPropertiesCount, null)
             .ThrowOnError("Failed to enumerate instance layer properties.");
 
         var layerProperties = new LayerProperties[layerPropertiesCount];
 
         fixed (LayerProperties* pLayerProperties = layerProperties)
         {
-            Vk.EnumerateInstanceLayerProperties(&layerPropertiesCount, layerProperties)
+            Api.EnumerateInstanceLayerProperties(&layerPropertiesCount, layerProperties)
                 .ThrowOnError("Failed to enumerate instance layer properties.");
 
             for (var i = 0; i < layerPropertiesCount; i++)

@@ -1,5 +1,7 @@
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Rendering.Composition;
 using Drawie.AvaloniaGraphics.Interop;
@@ -16,27 +18,22 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
+    internal static VulkanInteropContext InteropContext { get; set; }
+
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            ICompositionGpuInterop interop = GetInterop();
-            VulkanInteropContext context = new VulkanInteropContext(interop);
-            
-            AvaloniaInteropContextInfo contextInfo = new AvaloniaInteropContextInfo();
-            
-            context.Initialize(contextInfo);
-            
-            VulkanRenderApi renderApi = new VulkanRenderApi(context);
-            SkiaDrawingBackend drawingBackend = new SkiaDrawingBackend();
-            DrawingEngine drawingEngine = new DrawingEngine(renderApi, null, drawingBackend);
-
-            drawingEngine.Run();
-            
             desktop.MainWindow = new MainWindow();
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private void MainWindowOnLoaded(object? sender, EventArgs eventArgs)
+    {
+        ICompositionGpuInterop interop = GetInterop();
+       
     }
 
     private ICompositionGpuInterop GetInterop()

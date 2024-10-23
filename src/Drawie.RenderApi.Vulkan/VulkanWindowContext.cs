@@ -21,7 +21,7 @@ public class VulkanWindowContext : VulkanContext
 
     private unsafe void CreateSurface(IVulkanContextInfo vkContext)
     {
-        if (!Vk!.TryGetInstanceExtension(Instance, out khrSurface))
+        if (!Api!.TryGetInstanceExtension(Instance, out khrSurface))
             throw new NotSupportedException("KHR_surface extension not found.");
 
         surface = new VkNonDispatchableHandle(vkContext.GetSurfaceHandle(Instance.Handle)).ToSurface();
@@ -29,7 +29,7 @@ public class VulkanWindowContext : VulkanContext
 
     public override void Initialize(IVulkanContextInfo contextInfo)
     {
-        Vk = Vk.GetApi();
+        Api = Vk.GetApi();
         
         TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
         
@@ -50,7 +50,7 @@ public class VulkanWindowContext : VulkanContext
 
     protected override unsafe void CreateLogicalDevice()
     {
-        var indices = SetupUtility.FindQueueFamilies(Vk!, PhysicalDevice, khrSurface, surface);
+        var indices = SetupUtility.FindQueueFamilies(Api!, PhysicalDevice, khrSurface, surface);
 
         var uniqueQueueFamilies = new[] { indices.GraphicsFamily!.Value };
         if (indices.PresentFamily != null && indices.PresentFamily != indices.GraphicsFamily)
@@ -102,12 +102,12 @@ public class VulkanWindowContext : VulkanContext
 
         Device logicalDevice = default;
 
-        if (Vk!.CreateDevice(PhysicalDevice, in createInfo, null, out logicalDevice) != Result.Success)
+        if (Api!.CreateDevice(PhysicalDevice, in createInfo, null, out logicalDevice) != Result.Success)
             throw new VulkanException("Failed to create logical device.");
 
-        LogicalDevice = new VulkanDevice(Vk, logicalDevice);
+        LogicalDevice = new VulkanDevice(Api, logicalDevice);
 
-        Vk!.GetDeviceQueue(LogicalDevice.Device, indices.GraphicsFamily!.Value, 0, out var graphicsQueue);
+        Api!.GetDeviceQueue(LogicalDevice.Device, indices.GraphicsFamily!.Value, 0, out var graphicsQueue);
         GraphicsQueue = graphicsQueue;
         if (indices.GraphicsFamily == indices.PresentFamily)
         {
@@ -115,7 +115,7 @@ public class VulkanWindowContext : VulkanContext
         }
         else
         {
-            Vk!.GetDeviceQueue(logicalDevice, indices.PresentFamily!.Value, 0, out var presentQueue);
+            Api!.GetDeviceQueue(logicalDevice, indices.PresentFamily!.Value, 0, out var presentQueue);
             PresentQueue = presentQueue;
         }
 
@@ -124,7 +124,7 @@ public class VulkanWindowContext : VulkanContext
 
     protected override bool IsDeviceSuitable(PhysicalDevice device)
     {
-        var indices = SetupUtility.FindQueueFamilies(Vk!, device, khrSurface, surface);
+        var indices = SetupUtility.FindQueueFamilies(Api!, device, khrSurface, surface);
 
         var extensionsSupported = CheckDeviceExtensionSupport(device);
 
@@ -135,7 +135,7 @@ public class VulkanWindowContext : VulkanContext
             swapChainAdequate = swapChainSupport.Formats.Any() && swapChainSupport.PresentModes.Any();
         }
 
-        var features = Vk!.GetPhysicalDeviceFeatures(device);
+        var features = Api!.GetPhysicalDeviceFeatures(device);
 
         return indices.IsComplete && extensionsSupported && swapChainAdequate;
     }
@@ -149,7 +149,7 @@ public class VulkanWindowContext : VulkanContext
         }
 
         khrSurface?.DestroySurface(Instance, surface, null);
-        Vk!.DestroyInstance(Instance, null);
-        Vk!.Dispose();
+        Api!.DestroyInstance(Instance, null);
+        Api!.Dispose();
     }
 }

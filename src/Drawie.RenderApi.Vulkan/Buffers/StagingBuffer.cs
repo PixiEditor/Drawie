@@ -4,7 +4,7 @@ namespace Drawie.RenderApi.Vulkan.Buffers;
 
 public class StagingBuffer : BufferObject
 {
-    public StagingBuffer(VulkanContext context, ulong size) : this(context.Vk!, context.LogicalDevice.Device, context.PhysicalDevice, size)
+    public StagingBuffer(VulkanContext context, ulong size) : this(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, size)
     {
     }
     

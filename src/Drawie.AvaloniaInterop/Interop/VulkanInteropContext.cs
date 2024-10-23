@@ -30,7 +30,7 @@ public class VulkanInteropContext : VulkanContext
 
     public override void Initialize(IVulkanContextInfo contextInfo)
     {
-        Vk = Vk.GetApi();
+        Api = Vk.GetApi();
 
         TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
 
@@ -87,7 +87,7 @@ public class VulkanInteropContext : VulkanContext
 
     protected override unsafe bool IsDeviceSuitable(PhysicalDevice device)
     {
-        if (requiredDeviceExtensions.Any(x => !Vk!.IsDeviceExtensionPresent(device, x)))
+        if (requiredDeviceExtensions.Any(x => !Api!.IsDeviceExtensionPresent(device, x)))
             return false;
 
         var physicalDeviceIDProperties = new PhysicalDeviceIDProperties()
@@ -101,7 +101,7 @@ public class VulkanInteropContext : VulkanContext
             PNext = &physicalDeviceIDProperties
         };
 
-        Vk!.GetPhysicalDeviceProperties2(device, &physicalDeviceProperties2);
+        Api!.GetPhysicalDeviceProperties2(device, &physicalDeviceProperties2);
 
         if (gpuInterop.DeviceLuid != null && physicalDeviceIDProperties.DeviceLuidvalid)
         {
@@ -122,9 +122,9 @@ public class VulkanInteropContext : VulkanContext
     protected override unsafe void CreateLogicalDevice()
     {
         uint queueFamilyCount = 0;
-        Vk!.GetPhysicalDeviceQueueFamilyProperties(PhysicalDevice, ref queueFamilyCount, null);
+        Api!.GetPhysicalDeviceQueueFamilyProperties(PhysicalDevice, ref queueFamilyCount, null);
         var familyProperties = stackalloc QueueFamilyProperties[(int)queueFamilyCount];
-        Vk!.GetPhysicalDeviceQueueFamilyProperties(PhysicalDevice, ref queueFamilyCount, familyProperties);
+        Api!.GetPhysicalDeviceQueueFamilyProperties(PhysicalDevice, ref queueFamilyCount, familyProperties);
 
         for (uint i = 0; i < queueFamilyCount; i++)
         {
@@ -164,9 +164,9 @@ public class VulkanInteropContext : VulkanContext
             };
 
             Device logicalDevice = default;
-            Vk!.CreateDevice(PhysicalDevice, &deviceCreateInfo, null, out logicalDevice)
+            Api!.CreateDevice(PhysicalDevice, &deviceCreateInfo, null, out logicalDevice)
                 .ThrowOnError("Could not create logical device");
-            LogicalDevice = new VulkanDevice(Vk, logicalDevice);
+            LogicalDevice = new VulkanDevice(Api, logicalDevice);
             GraphicsQueueFamilyIndex = i;
             break;
         }
@@ -174,7 +174,7 @@ public class VulkanInteropContext : VulkanContext
     
     private unsafe void CreatePool()
     {
-        Vk!.GetDeviceQueue(LogicalDevice.Device, GraphicsQueueFamilyIndex, 0, out var queue);
+        Api!.GetDeviceQueue(LogicalDevice.Device, GraphicsQueueFamilyIndex, 0, out var queue);
         GraphicsQueue = queue;
 
         var descriptorPoolSize = new DescriptorPoolSize
@@ -190,11 +190,11 @@ public class VulkanInteropContext : VulkanContext
             Flags = DescriptorPoolCreateFlags.FreeDescriptorSetBit
         };
                     
-        Vk!.CreateDescriptorPool(LogicalDevice.Device, &descriptorPoolInfo, null, out var descriptorPool)
+        Api!.CreateDescriptorPool(LogicalDevice.Device, &descriptorPoolInfo, null, out var descriptorPool)
             .ThrowOnError("Could not create descriptor pool");
 
         DescriptorPool = descriptorPool;
-        Pool = new VulkanCommandBufferPool(Vk, LogicalDevice.Device, queue, (uint)GraphicsQueueFamilyIndex);
+        Pool = new VulkanCommandBufferPool(Api, LogicalDevice.Device, queue, (uint)GraphicsQueueFamilyIndex);
     }
 
     public override void Dispose()
