@@ -19,7 +19,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 {
     private const int MAX_FRAMES_IN_FLIGHT = 2;
 
-    private VulkanContext context;
+    private VulkanWindowContext context;
 
     private KhrSwapchain? khrSwapchain;
     private SwapchainKHR swapChain;
@@ -84,13 +84,11 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         0, 1, 2, 2, 3, 0
     };
 
-    public VulkanContext Context => context; 
+    public VulkanWindowContext Context => context; 
+    
+    IVulkanContext IVulkanWindowRenderApi.Context => context;
 
-    public VulkanWindowRenderApi()
-    {
-    }
-
-    public VulkanWindowRenderApi(VulkanContext context)
+    public VulkanWindowRenderApi(VulkanWindowContext context)
     {
         this.context = context;
     }
@@ -111,7 +109,11 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
         this.framebufferSize = framebufferSize;
 
-        context = new();
+        if (context == null)
+        {
+            context = new VulkanWindowContext();
+        }
+
         context.Initialize(vkContext);
 
         Console.WriteLine($"Selected GPU: {context.GpuInfo.Name}");
@@ -590,7 +592,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
     private unsafe void CreateSwapChain()
     {
-        var swapChainSupport = SetupUtility.QuerySwapChainSupport(context.PhysicalDevice, context.Surface!.Value, context.KhrSurface!);
+        var swapChainSupport = SetupUtility.QuerySwapChainSupport(context.PhysicalDevice, context.Surface, context.KhrSurface!);
 
         var surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.Formats);
         var presentMode = ChoosePresentMode(swapChainSupport.PresentModes);
@@ -603,7 +605,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         SwapchainCreateInfoKHR creatInfo = new()
         {
             SType = StructureType.SwapchainCreateInfoKhr,
-            Surface = context.Surface!.Value,
+            Surface = context.Surface,
 
             MinImageCount = imageCount,
             ImageFormat = surfaceFormat.Format,
@@ -729,16 +731,6 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
         context.Vk!.CmdCopyBuffer(commandBuffer.CommandBuffer, srcBuffer.VkBuffer, dstBuffer.VkBuffer, 1, copyRegion);
     }
-
-    public IntPtr LogicalDeviceHandle => context.LogicalDevice.Device.Handle;
-    public IntPtr PhysicalDeviceHandle => context.PhysicalDevice.Handle;
-    public IntPtr InstanceHandle => context.Instance.Handle;
-    public IntPtr GraphicsQueueHandle => context.GraphicsQueue.Handle;
-    public uint GraphicsQueueFamilyIndex => context.GraphicsQueueFamilyIndex; 
+    
     public IVkTexture RenderTexture => texture;
-
-    public IntPtr GetProcedureAddress(string name, IntPtr instance, IntPtr device)
-    {
-        return context.Vk!.GetInstanceProcAddr(context.Instance, name);
-    }
 }

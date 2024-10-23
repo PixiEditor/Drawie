@@ -87,7 +87,7 @@ public static class SetupUtility
         return details;
     }
 
-    public static QueueFamilyIndices FindQueueFamilies(VulkanContext context)
+    public static QueueFamilyIndices FindQueueFamilies(VulkanWindowContext context)
     {
         return FindQueueFamilies(context.Vk!, context.PhysicalDevice, context.KhrSurface, context.Surface);
     }

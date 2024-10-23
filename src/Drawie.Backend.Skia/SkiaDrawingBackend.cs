@@ -98,14 +98,12 @@ namespace Drawie.Skia
         
         public void Setup(IRenderApi renderApi)
         {
-            // skia doesn't support webgpu :(
-            
             if(renderApi is not IVulkanRenderApi vulkanRenderApi)
             {
                 throw new UnsupportedRenderApiException(renderApi);
             }
             
-            SetGraphicsContext(vulkanRenderApi);
+            SetGraphicsContext(vulkanRenderApi.VulkanContext);
             
             SurfaceImplementation.GrContext = GraphicsContext;
         }
@@ -140,18 +138,16 @@ namespace Drawie.Skia
             throw new RenderApiNotInitializedException();
         }
         
-        private void SetGraphicsContext(IVulkanRenderApi vulkanRenderApi)
+        private void SetGraphicsContext(IVulkanContext vulkanContext)
         {
-            var windowRenderApi = vulkanRenderApi.WindowRenderApis.First();
-            
             var vkBackendContext = new GRVkBackendContext()
             {
-                VkDevice = windowRenderApi.LogicalDeviceHandle,
-                VkInstance = windowRenderApi.InstanceHandle,
-                VkPhysicalDevice = windowRenderApi.PhysicalDeviceHandle,
-                VkQueue = windowRenderApi.GraphicsQueueHandle,
-                GraphicsQueueIndex = windowRenderApi.GraphicsQueueFamilyIndex,
-                GetProcedureAddress = windowRenderApi.GetProcedureAddress,
+                VkDevice = vulkanContext.LogicalDeviceHandle,
+                VkInstance = vulkanContext.InstanceHandle,
+                VkPhysicalDevice = vulkanContext.PhysicalDeviceHandle,
+                VkQueue = vulkanContext.GraphicsQueueHandle,
+                GraphicsQueueIndex = vulkanContext.GraphicsQueueFamilyIndex,
+                GetProcedureAddress = vulkanContext.GetProcedureAddress,
             };
             
             GraphicsContext = GRContext.CreateVulkan(vkBackendContext);

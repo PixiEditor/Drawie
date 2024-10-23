@@ -2,7 +2,7 @@
 
 public interface IVulkanContextInfo
 {
-    public string[] GetRequiredExtensions();
+    public string[] GetInstanceExtensions();
     public ulong GetSurfaceHandle(IntPtr instanceHandle);
     public bool HasSurface { get; }
 }

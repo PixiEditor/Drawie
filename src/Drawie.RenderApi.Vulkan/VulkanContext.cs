@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using Drawie.RenderApi.Vulkan.ContextObjects;
 using Drawie.RenderApi.Vulkan.Exceptions;
+using Drawie.RenderApi.Vulkan.Extensions;
 using Drawie.RenderApi.Vulkan.Helpers;
 using Silk.NET.Core;
 using Silk.NET.Core.Native;
@@ -11,9 +12,9 @@ using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace Drawie.RenderApi.Vulkan;
 
-public class VulkanContext : IDisposable
+public abstract class VulkanContext : IDisposable, IVulkanContext
 {
-    public Vk? Vk { get; private set; }
+    public Vk? Vk { get; protected set; }
 
     public Instance Instance
     {
@@ -22,59 +23,42 @@ public class VulkanContext : IDisposable
     }
 
     public bool EnableValidationLayers { get; set; } = true;
-    public PhysicalDevice PhysicalDevice { get; private set; }
+    public PhysicalDevice PhysicalDevice { get; protected set; }
 
-    public VulkanDevice LogicalDevice { get; private set; }
+    public VulkanDevice LogicalDevice { get; protected set; }
 
     public Queue GraphicsQueue { get; set; }
-    public Queue PresentQueue { get; set; }
 
     public uint GraphicsQueueFamilyIndex { get; set; }
-    
-    public SurfaceKHR? Surface => surface;
-    public KhrSurface? KhrSurface => khrSurface;
 
     public GpuInfo GpuInfo { get; set; }
 
     private Instance instance;
 
-    private readonly string[] validationLayers =
+    protected List<string> validationLayers = new List<string>();
+
+    protected List<string> deviceExtensions = new List<string>();
+
+    protected ExtDebugUtils extDebugUtils;
+    protected DebugUtilsMessengerEXT debugMessenger;
+
+    IntPtr IVulkanContext.LogicalDeviceHandle => LogicalDevice.Device.Handle;
+    IntPtr IVulkanContext.PhysicalDeviceHandle => PhysicalDevice.Handle;
+    IntPtr IVulkanContext.InstanceHandle => Instance.Handle;
+    IntPtr IVulkanContext.GraphicsQueueHandle => GraphicsQueue.Handle;
+
+    public IntPtr GetProcedureAddress(string name, IntPtr instance, IntPtr device)
     {
-        "VK_LAYER_KHRONOS_validation"
-    };
-
-    private readonly string[] deviceExtensions =
-    {
-        KhrSwapchain.ExtensionName
-    };
-
-    private ExtDebugUtils extDebugUtils;
-    private DebugUtilsMessengerEXT debugMessenger;
-
-    private KhrSurface? khrSurface;
-    private SurfaceKHR? surface;
+        return Vk!.GetInstanceProcAddr(Instance, name);
+    }
 
     public VulkanContext()
     {
     }
 
-    public void Initialize(IVulkanContextInfo contextInfo)
-    {
-        Vk = Vk.GetApi();
-        SetupInstance(contextInfo);
-        SetupDebugMessenger();
+    public abstract void Initialize(IVulkanContextInfo contextInfo);
 
-        if (contextInfo.HasSurface)
-        {
-            CreateSurface(contextInfo);
-        }
-
-        GpuInfo = PickPhysicalDevice();
-
-        CreateLogicalDevice();
-    }
-
-    private unsafe void SetupInstance(IVulkanContextInfo contextInfo)
+    protected unsafe void SetupInstance(IVulkanContextInfo contextInfo)
     {
         ThrowIfValidationLayersNotSupported();
 
@@ -101,8 +85,8 @@ public class VulkanContext : IDisposable
 
         if (EnableValidationLayers)
         {
-            createInfo.EnabledLayerCount = (uint)validationLayers.Length;
-            createInfo.PpEnabledLayerNames = (byte**)SilkMarshal.StringArrayToPtr(validationLayers);
+            createInfo.EnabledLayerCount = (uint)validationLayers.Count;
+            createInfo.PpEnabledLayerNames = (byte**)SilkMarshal.StringArrayToPtr(validationLayers.ToArray());
 
             DebugUtilsMessengerCreateInfoEXT debugCreateInfo = new();
             PopulateDebugMessengerCreateInfo(ref debugCreateInfo);
@@ -125,7 +109,7 @@ public class VulkanContext : IDisposable
     }
 
 
-    private unsafe void SetupDebugMessenger()
+    protected unsafe void SetupDebugMessenger()
     {
         if (!EnableValidationLayers) return;
 
@@ -139,7 +123,7 @@ public class VulkanContext : IDisposable
             throw new VulkanException("failed to set up debug messenger!");
     }
 
-    private unsafe GpuInfo PickPhysicalDevice()
+    protected unsafe GpuInfo PickPhysicalDevice()
     {
         var devices = Vk!.GetPhysicalDevices(Instance);
         foreach (var device in devices)
@@ -163,109 +147,13 @@ public class VulkanContext : IDisposable
         return new GpuInfo("Unknown");
     }
 
-    private unsafe void CreateLogicalDevice()
-    {
-        var indices = SetupUtility.FindQueueFamilies(Vk!, PhysicalDevice, khrSurface, surface);
+    protected abstract void CreateLogicalDevice();
 
-        var uniqueQueueFamilies = new[] { indices.GraphicsFamily!.Value };
-        if (indices.PresentFamily != null && indices.PresentFamily != indices.GraphicsFamily)
-        {
-            uniqueQueueFamilies = uniqueQueueFamilies.Append(indices.PresentFamily!.Value).ToArray();
-        }
-
-        uniqueQueueFamilies = uniqueQueueFamilies.Distinct().ToArray();
-
-        using var mem = GlobalMemory.Allocate(uniqueQueueFamilies.Length * sizeof(DeviceQueueCreateInfo));
-        var queueCreateInfos = (DeviceQueueCreateInfo*)Unsafe.AsPointer(ref mem.GetPinnableReference());
-
-        var queuePriority = 1.0f;
-        for (var i = 0; i < uniqueQueueFamilies.Length; i++)
-            queueCreateInfos[i] = new DeviceQueueCreateInfo
-            {
-                SType = StructureType.DeviceQueueCreateInfo,
-                QueueFamilyIndex = uniqueQueueFamilies[i],
-                QueueCount = 1,
-                PQueuePriorities = &queuePriority
-            };
-
-        PhysicalDeviceFeatures deviceFeatures = new()
-        {
-            SamplerAnisotropy = false
-        };
-
-        DeviceCreateInfo createInfo = new()
-        {
-            SType = StructureType.DeviceCreateInfo,
-            QueueCreateInfoCount = (uint)uniqueQueueFamilies.Length,
-            PQueueCreateInfos = queueCreateInfos,
-
-            PEnabledFeatures = &deviceFeatures,
-
-            EnabledExtensionCount = (uint)deviceExtensions.Length,
-            PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions)
-        };
-
-        if (EnableValidationLayers)
-        {
-            createInfo.EnabledLayerCount = (uint)validationLayers.Length;
-            createInfo.PpEnabledLayerNames = (byte**)SilkMarshal.StringArrayToPtr(validationLayers);
-        }
-        else
-        {
-            createInfo.EnabledLayerCount = 0;
-        }
-
-        Device logicalDevice = default;
-        
-        if (Vk!.CreateDevice(PhysicalDevice, in createInfo, null, out logicalDevice) != Result.Success)
-            throw new VulkanException("Failed to create logical device.");
-        
-        LogicalDevice = new VulkanDevice(Vk, logicalDevice);
-
-        Vk!.GetDeviceQueue(LogicalDevice.Device, indices.GraphicsFamily!.Value, 0, out var graphicsQueue);
-        GraphicsQueue = graphicsQueue;
-        if (indices.GraphicsFamily == indices.PresentFamily)
-        {
-            PresentQueue = graphicsQueue;
-        }
-        else
-        {
-            Vk!.GetDeviceQueue(logicalDevice, indices.PresentFamily!.Value, 0, out var presentQueue);
-            PresentQueue = presentQueue;
-        }
-
-        if (EnableValidationLayers) SilkMarshal.Free((nint)createInfo.PpEnabledLayerNames);
-    }
-
-    private unsafe void CreateSurface(IVulkanContextInfo vkContext)
-    {
-        if (!Vk!.TryGetInstanceExtension(instance, out khrSurface))
-            throw new NotSupportedException("KHR_surface extension not found.");
-
-        surface = new VkNonDispatchableHandle(vkContext.GetSurfaceHandle(instance.Handle)).ToSurface();
-    }
-
-    private bool IsDeviceSuitable(PhysicalDevice device)
-    {
-        var indices = SetupUtility.FindQueueFamilies(Vk!, device, khrSurface, surface);
-
-        var extensionsSupported = CheckDeviceExtensionSupport(device);
-
-        var swapChainAdequate = true;
-        if (extensionsSupported && khrSurface != null && surface != null)
-        {
-            var swapChainSupport = SetupUtility.QuerySwapChainSupport(device, surface.Value, khrSurface);
-            swapChainAdequate = swapChainSupport.Formats.Any() && swapChainSupport.PresentModes.Any();
-        }
-
-        var features = Vk!.GetPhysicalDeviceFeatures(device);
-
-        return indices.IsComplete && extensionsSupported && swapChainAdequate;
-    }
+    protected abstract bool IsDeviceSuitable(PhysicalDevice device);
 
     private unsafe string[] GetExtensions(IVulkanContextInfo contextInfo)
     {
-        string[] contextExtensions = contextInfo.GetRequiredExtensions();
+        string[] contextExtensions = contextInfo.GetInstanceExtensions();
         if (EnableValidationLayers)
         {
             return contextExtensions.Append(ExtDebugUtils.ExtensionName).ToArray();
@@ -311,7 +199,7 @@ public class VulkanContext : IDisposable
         return validationLayers.All(availableLayerNames.Contains);
     }
 
-    private unsafe bool CheckDeviceExtensionSupport(PhysicalDevice device)
+    protected unsafe bool CheckDeviceExtensionSupport(PhysicalDevice device)
     {
         uint extensionCount = 0;
         Vk!.EnumerateDeviceExtensionProperties(device, (byte*)null, ref extensionCount, null);
@@ -335,16 +223,41 @@ public class VulkanContext : IDisposable
         return Vk.False;
     }
 
-
-    public unsafe void Dispose()
+    protected bool TryAddValidationLayer(string layer)
     {
-        LogicalDevice.Dispose();
-        if (EnableValidationLayers)
+        if (IsLayerAvailable(layer))
         {
-            extDebugUtils?.DestroyDebugUtilsMessenger(Instance, debugMessenger, null);
+            validationLayers.Add(layer);
+            return true;
         }
-        khrSurface?.DestroySurface(Instance, surface!.Value, null);
-        Vk!.DestroyInstance(Instance, null);
-        Vk!.Dispose();
+
+        return false;
     }
+
+    private unsafe bool IsLayerAvailable(string layerName)
+    {
+        uint layerPropertiesCount;
+
+        Vk!.EnumerateInstanceLayerProperties(&layerPropertiesCount, null)
+            .ThrowOnError("Failed to enumerate instance layer properties.");
+
+        var layerProperties = new LayerProperties[layerPropertiesCount];
+
+        fixed (LayerProperties* pLayerProperties = layerProperties)
+        {
+            Vk.EnumerateInstanceLayerProperties(&layerPropertiesCount, layerProperties)
+                .ThrowOnError("Failed to enumerate instance layer properties.");
+
+            for (var i = 0; i < layerPropertiesCount; i++)
+            {
+                var currentLayerName = Marshal.PtrToStringAnsi((IntPtr)pLayerProperties[i].LayerName);
+
+                if (currentLayerName == layerName) return true;
+            }
+        }
+
+        return false;
+    }
+
+    public abstract void Dispose();
 }

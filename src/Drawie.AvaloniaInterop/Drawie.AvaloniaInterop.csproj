@@ -7,6 +7,7 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <RootNamespace>Drawie.AvaloniaGraphics</RootNamespace>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,5 +17,11 @@
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.4"/>
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.1.4"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Drawie.Backend.Skia\Drawie.Backend.Skia.csproj" />
+      <ProjectReference Include="..\Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj" />
+      <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
     </ItemGroup>
 </Project>

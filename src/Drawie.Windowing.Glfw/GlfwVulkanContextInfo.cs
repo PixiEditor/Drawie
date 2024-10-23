@@ -7,7 +7,7 @@ namespace Drawie.Silk;
 
 public class GlfwVulkanContextInfo(IVkSurface WindowVkSurface) : IVulkanContextInfo
 {
-    public unsafe string[] GetRequiredExtensions()
+    public unsafe string[] GetInstanceExtensions()
     {
         var windowExtensions = WindowVkSurface.GetRequiredExtensions(out var count);
         var extensions = SilkMarshal.PtrToStringArray((nint)windowExtensions, (int)count);
