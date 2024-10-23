@@ -35,12 +35,13 @@ public class GraphicsPipelineBuilder
     }
 
     public unsafe GraphicsPipeline Create(Extent2D swapChainExtent, Format swapChainImageFormat,
+        ImageLayout finalLayout,
         ref DescriptorSetLayout descriptorSetLayout)
     {
         if (Stages.Count == 0) throw new GraphicsPipelineBuilderException("No stages were added to the pipeline.");
         if (RenderPassBuilder == null) throw new GraphicsPipelineBuilderException("No render pass was added to the pipeline.");
 
-        RenderPass renderPass = RenderPassBuilder.Create(swapChainImageFormat);
+        RenderPass renderPass = RenderPassBuilder.Create(swapChainImageFormat, finalLayout);
 
         var stages = stackalloc PipelineShaderStageCreateInfo[Stages.Count];
         for (var i = 0; i < Stages.Count; i++) stages[i] = Stages[i].Build();

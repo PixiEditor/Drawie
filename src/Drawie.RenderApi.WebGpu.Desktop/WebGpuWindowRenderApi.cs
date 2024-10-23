@@ -16,6 +16,7 @@ namespace Drawie.RenderApi.WebGpu;
 public class WebGpuWindowRenderApi : IWindowRenderApi
 {
     public event Action? FramebufferResized;
+    public ITexture RenderTexture => texture; 
 
     private WGPUInstance Instance;
     private WGPUSurface Surface;

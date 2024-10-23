@@ -1,7 +1,8 @@
 namespace Drawie.RenderApi;
 
-public interface IVkTexture
+public interface IVkTexture : ITexture
 {
+   public uint QueueFamily { get; }
    public uint ImageFormat { get; }
    public ulong ImageHandle { get; }
    public uint UsageFlags { get; }

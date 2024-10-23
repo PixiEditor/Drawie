@@ -51,8 +51,10 @@ public abstract class InteropControl : Control
         {
             var selfVisual = ElementComposition.GetElementVisual(this);
             compositor = selfVisual.Compositor;
+            
+            ICompositionGpuInterop interop = await compositor.TryGetCompositionGpuInterop();
 
-            VulkanInteropContext context = new VulkanInteropContext(compositor.TryGetCompositionGpuInterop().Result);
+            VulkanInteropContext context = new VulkanInteropContext(interop);
 
             AvaloniaInteropContextInfo contextInfo = new AvaloniaInteropContextInfo();
 

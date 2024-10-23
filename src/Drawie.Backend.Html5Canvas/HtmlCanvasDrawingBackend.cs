@@ -42,14 +42,14 @@ public class HtmlCanvasDrawingBackend : IDrawingBackend
         
     }
 
-    public DrawingSurface CreateRenderSurface(VecI size, IWindowRenderApi renderApi)
+    public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture)
     {
-        if(renderApi is IBrowserWindowRenderApi browserWindowRenderApi)
+        if(renderTexture is ICanvasTexture canvasTexture)
         {
-            HtmlCanvasObject canvasObject = new HtmlCanvasObject(browserWindowRenderApi.CanvasId, size); 
+            HtmlCanvasObject canvasObject = new HtmlCanvasObject(canvasTexture.CanvasId, size); 
             return DrawingSurface.FromNative(canvasObject);
         }
         
-        throw new ArgumentException($"Unsupported render API: {renderApi}.");
+        throw new ArgumentException($"Unsupported render API: {renderTexture}.");
     }
 }

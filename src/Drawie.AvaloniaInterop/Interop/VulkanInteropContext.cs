@@ -16,13 +16,14 @@ namespace Drawie.AvaloniaGraphics.Interop;
 
 public class VulkanInteropContext : VulkanContext
 {
-    public DescriptorPool DescriptorPool { get; private set; }
+    public DescriptorPool DescriptorPool => descriptorPool; 
     public VulkanCommandBufferPool Pool { get; private set; }
 
     private List<string> requiredDeviceExtensions = new List<string>();
 
     private ICompositionGpuInterop gpuInterop;
-    
+    private DescriptorPool descriptorPool;
+
     public VulkanInteropContext(ICompositionGpuInterop gpuInterop)
     {
         this.gpuInterop = gpuInterop;
@@ -171,34 +172,39 @@ public class VulkanInteropContext : VulkanContext
             break;
         }
     }
-    
+
     private unsafe void CreatePool()
     {
         Api!.GetDeviceQueue(LogicalDevice.Device, GraphicsQueueFamilyIndex, 0, out var queue);
         GraphicsQueue = queue;
 
-        var descriptorPoolSize = new DescriptorPoolSize
+        var poolSize = new DescriptorPoolSize()
         {
-            Type = DescriptorType.UniformBuffer, DescriptorCount = 16
+            Type = DescriptorType.CombinedImageSampler,
+            DescriptorCount = 1,
         };
-        var descriptorPoolInfo = new DescriptorPoolCreateInfo
-        {
-            SType = StructureType.DescriptorPoolCreateInfo,
-            PoolSizeCount = 1,
-            PPoolSizes = &descriptorPoolSize,
-            MaxSets = 16,
-            Flags = DescriptorPoolCreateFlags.FreeDescriptorSetBit
-        };
-                    
-        Api!.CreateDescriptorPool(LogicalDevice.Device, &descriptorPoolInfo, null, out var descriptorPool)
-            .ThrowOnError("Could not create descriptor pool");
 
-        DescriptorPool = descriptorPool;
+        fixed (DescriptorPool* descriptorPoolPtr = &descriptorPool)
+        {
+            DescriptorPoolCreateInfo poolInfo = new()
+            {
+                SType = StructureType.DescriptorPoolCreateInfo,
+                PoolSizeCount = 1,
+                PPoolSizes = &poolSize,
+                MaxSets = 1, 
+            };
+
+            Api!.CreateDescriptorPool(LogicalDevice.Device, poolInfo, null, descriptorPoolPtr)
+                .ThrowOnError("Could not create descriptor pool");
+        }
+
         Pool = new VulkanCommandBufferPool(Api, LogicalDevice.Device, queue, (uint)GraphicsQueueFamilyIndex);
     }
 
-    public override void Dispose()
+    public override unsafe void Dispose()
     {
-        throw new System.NotImplementedException();
+        Api!.DestroyDescriptorPool(LogicalDevice.Device, descriptorPool, null);
+        Api!.DestroyDevice(LogicalDevice.Device, null);
+        Api!.DestroyInstance(Instance, null);
     }
 }

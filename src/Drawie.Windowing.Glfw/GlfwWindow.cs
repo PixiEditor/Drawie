@@ -112,7 +112,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             window.FramebufferResize += WindowOnFramebufferResize;
             RenderApi.FramebufferResized += RenderApiOnFramebufferResized;
 
-            CreateRenderTarget(window.FramebufferSize.ToVecI(), RenderApi);
+            CreateRenderTarget(window.FramebufferSize.ToVecI(), RenderApi.RenderTexture);
 
             window.Render += OnRender;
             window.Render += RenderApi.Render;
@@ -129,12 +129,12 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         renderTexture = null!;
         surface = null!;
 
-        CreateRenderTarget(window!.FramebufferSize.ToVecI(), RenderApi);
+        CreateRenderTarget(window!.FramebufferSize.ToVecI(), RenderApi.RenderTexture);
     }
 
-    private void CreateRenderTarget(VecI size, IWindowRenderApi renderApi)
+    private void CreateRenderTarget(VecI size, ITexture nativeRenderTexture)
     {
-        var drawingSurface = DrawingBackendApi.Current.CreateRenderSurface(size, renderApi);
+        var drawingSurface = DrawingBackendApi.Current.CreateRenderSurface(size, nativeRenderTexture);
         renderTexture = Texture.FromExisting(drawingSurface);
     }
 

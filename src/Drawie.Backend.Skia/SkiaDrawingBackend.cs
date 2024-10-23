@@ -14,7 +14,7 @@ namespace Drawie.Skia
     public class SkiaDrawingBackend : IDrawingBackend
     {
         private IVulkanRenderApi? vulkanRenderApi;
-        
+
         public GRContext? GraphicsContext
         {
             get => _grContext;
@@ -24,13 +24,13 @@ namespace Drawie.Skia
                 {
                     throw new GrContextAlreadyInitializedException();
                 }
-                
+
                 _grContext = value;
             }
         }
-        
+
         public bool IsHardwareAccelerated => GraphicsContext != null;
-        
+
         public IRenderingDispatcher RenderingDispatcher { get; set; }
 
         public IColorImplementation ColorImplementation { get; }
@@ -54,40 +54,41 @@ namespace Drawie.Skia
         public SkiaDrawingBackend()
         {
             ColorImplementation = new SkiaColorImplementation();
-            
+
             SkiaImgDataImplementation dataImpl = new SkiaImgDataImplementation();
             ImgDataImplementation = dataImpl;
-            
+
             SkiaColorFilterImplementation colorFilterImpl = new SkiaColorFilterImplementation();
             ColorFilterImplementation = colorFilterImpl;
 
             SkiaImageFilterImplementation imageFilterImpl = new SkiaImageFilterImplementation();
             ImageFilterImplementation = imageFilterImpl;
-            
+
             SkiaShaderImplementation shader = new SkiaShaderImplementation();
             ShaderImplementation = shader;
-            
+
             SkiaPaintImplementation paintImpl = new SkiaPaintImplementation(colorFilterImpl, imageFilterImpl, shader);
             PaintImplementation = paintImpl;
-            
+
             SkiaPathImplementation pathImpl = new SkiaPathImplementation();
             PathImplementation = pathImpl;
-            
+
             MatrixImplementation = new SkiaMatrixImplementation();
-            
+
             SkiaColorSpaceImplementation colorSpaceImpl = new SkiaColorSpaceImplementation();
             ColorSpaceImplementation = colorSpaceImpl;
 
             SkiaPixmapImplementation pixmapImpl = new SkiaPixmapImplementation(colorSpaceImpl);
             PixmapImplementation = pixmapImpl;
-            
+
             SkiaImageImplementation imgImpl = new SkiaImageImplementation(dataImpl, pixmapImpl, shader);
             ImageImplementation = imgImpl;
             SkiaBitmapImplementation bitmapImpl = new SkiaBitmapImplementation(imgImpl, pixmapImpl);
             BitmapImplementation = bitmapImpl;
-            
-            SkiaCanvasImplementation canvasImpl = new SkiaCanvasImplementation(paintImpl, imgImpl, bitmapImpl, pathImpl);
-            
+
+            SkiaCanvasImplementation canvasImpl =
+                new SkiaCanvasImplementation(paintImpl, imgImpl, bitmapImpl, pathImpl);
+
             SurfaceImplementation = new SkiaSurfaceImplementation(GraphicsContext, pixmapImpl, canvasImpl, paintImpl);
 
             canvasImpl.SetSurfaceImplementation(SurfaceImplementation);
@@ -95,63 +96,63 @@ namespace Drawie.Skia
 
             CanvasImplementation = canvasImpl;
         }
-        
+
         public void Setup(IRenderApi renderApi)
         {
-            if(renderApi is not IVulkanRenderApi vulkanRenderApi)
+            if (renderApi is not IVulkanRenderApi vulkanRenderApi)
             {
                 throw new UnsupportedRenderApiException(renderApi);
             }
-            
+
             SetGraphicsContext(vulkanRenderApi.VulkanContext);
-            
+
             SurfaceImplementation.GrContext = GraphicsContext;
         }
 
-        public DrawingSurface CreateRenderSurface(VecI size, IWindowRenderApi windowRenderApi)
+        public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture)
         {
-            if (windowRenderApi is IVulkanWindowRenderApi vkRenderApi)
+            if(renderTexture is IVkTexture texture)
             {
                 var imageInfo = new GRVkImageInfo()
                 {
-                    CurrentQueueFamily = 0,
-                    Format = vkRenderApi.RenderTexture.ImageFormat,
-                    Image = vkRenderApi.RenderTexture.ImageHandle,
-                    ImageLayout = vkRenderApi.RenderTexture.Layout, 
-                    ImageTiling = vkRenderApi.RenderTexture.Tiling, 
-                    ImageUsageFlags = vkRenderApi.RenderTexture.UsageFlags, 
+                    CurrentQueueFamily = texture.QueueFamily,
+                    Format = texture.ImageFormat,
+                    Image = texture.ImageHandle,
+                    ImageLayout = texture.Layout,
+                    ImageTiling = texture.Tiling,
+                    ImageUsageFlags = texture.UsageFlags,
                     LevelCount = 1,
                     SampleCount = 1,
                     Protected = false,
-                    SharingMode = vkRenderApi.RenderTexture.TargetSharingMode, 
+                    SharingMode = texture.TargetSharingMode,
                 };
 
                 var surface = SKSurface.Create(GraphicsContext, new GRBackendRenderTarget(size.X, size.Y, 1, imageInfo),
                     GRSurfaceOrigin.TopLeft, SKColorType.Rgba8888,
                     new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
-                
-                vkRenderApi.RenderTexture.MakeReadOnly();
+
+                texture.MakeReadOnly();
 
                 return DrawingSurface.FromNative(surface);
             }
-         
-            throw new RenderApiNotInitializedException();
-        }
-        
-        private void SetGraphicsContext(IVulkanContext vulkanContext)
-        {
-            var vkBackendContext = new GRVkBackendContext()
-            {
-                VkDevice = vulkanContext.LogicalDeviceHandle,
-                VkInstance = vulkanContext.InstanceHandle,
-                VkPhysicalDevice = vulkanContext.PhysicalDeviceHandle,
-                VkQueue = vulkanContext.GraphicsQueueHandle,
-                GraphicsQueueIndex = vulkanContext.GraphicsQueueFamilyIndex,
-                GetProcedureAddress = vulkanContext.GetProcedureAddress,
-            };
             
-            GraphicsContext = GRContext.CreateVulkan(vkBackendContext);
+            throw new ArgumentException("Only Vulkan textures are supported at the moment");
         }
+
+        private void SetGraphicsContext(IVulkanContext vulkanContext)
+            {
+                var vkBackendContext = new GRVkBackendContext()
+                {
+                    VkDevice = vulkanContext.LogicalDeviceHandle,
+                    VkInstance = vulkanContext.InstanceHandle,
+                    VkPhysicalDevice = vulkanContext.PhysicalDeviceHandle,
+                    VkQueue = vulkanContext.GraphicsQueueHandle,
+                    GraphicsQueueIndex = vulkanContext.GraphicsQueueFamilyIndex,
+                    GetProcedureAddress = vulkanContext.GetProcedureAddress,
+                };
+
+                GraphicsContext = GRContext.CreateVulkan(vkBackendContext);
+            }
 
         public override string ToString()
         {

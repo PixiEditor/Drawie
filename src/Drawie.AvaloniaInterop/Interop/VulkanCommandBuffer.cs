@@ -8,6 +8,7 @@ using Silk.NET.Vulkan;
 
 public class VulkanCommandBufferPool : IDisposable
 {
+    public CommandPool CommandPool => _commandPool;
     private readonly Vk _api;
     private readonly Device _device;
     private readonly Queue _queue;

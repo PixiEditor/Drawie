@@ -54,35 +54,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
     private Fence[]? imagesInFlight;
     private int currentFrame = 0;
     public event Action? FramebufferResized;
-
-    private Vertex[] vertices = new Vertex[]
-    {
-        new()
-        {
-            Position = new Vector2D<float>(-1f, -1f), Color = new Vector3D<float>(1.0f, 0.0f, 0.0f),
-            TexCoord = new Vector2D<float>(0.0f, 0.0f)
-        },
-        new()
-        {
-            Position = new Vector2D<float>(1f, -1f), Color = new Vector3D<float>(0.0f, 1.0f, 0.0f),
-            TexCoord = new Vector2D<float>(1.0f, 0.0f)
-        },
-        new()
-        {
-            Position = new Vector2D<float>(1f, 1f), Color = new Vector3D<float>(0.0f, 0.0f, 1.0f),
-            TexCoord = new Vector2D<float>(1.0f, 1.0f)
-        },
-        new()
-        {
-            Position = new Vector2D<float>(-1f, 1f), Color = new Vector3D<float>(1.0f, 1.0f, 1.0f),
-            TexCoord = new Vector2D<float>(0.0f, 1.0f)
-        }
-    };
-
-    private ushort[] indices = new ushort[]
-    {
-        0, 1, 2, 2, 3, 0
-    };
+    ITexture IWindowRenderApi.RenderTexture => texture;
 
     public VulkanWindowContext Context => context; 
     
@@ -221,7 +193,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
     public void CreateTextureImage()
     {
         texture = new VulkanTexture(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, commandPool,
-            context.GraphicsQueue, framebufferSize);
+            context.GraphicsQueue, context.GraphicsQueueFamilyIndex, framebufferSize);
     }
 
     private unsafe void CreateDescriptorPool()
@@ -531,7 +503,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
                 graphicsPipeline.VkPipelineLayout,
                 0, 1, descriptorSets[i], 0, null);
 
-            context.Api!.CmdDrawIndexed(commandBuffers[i], (uint)indices.Length, 1, 0, 0, 0);
+            context.Api!.CmdDrawIndexed(commandBuffers[i], (uint)Primitives.Indices.Length, 1, 0, 0, 0);
 
             context.Api!.CmdEndRenderPass(commandBuffers[i]);
 
@@ -577,7 +549,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
                 /*TODO: Add some meaningful stuff*/
             });
 
-        graphicsPipeline = builder.Create(swapChainExtent, swapChainImageFormat, ref descriptorSetLayout);
+        graphicsPipeline = builder.Create(swapChainExtent, swapChainImageFormat, ImageLayout.PresentSrcKhr, ref descriptorSetLayout);
     }
 
     private unsafe void CreateImageViews()
@@ -696,11 +668,11 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
     private unsafe void CreateIndexBuffer()
     {
-        var bufferSize = (ulong)Unsafe.SizeOf<ushort>() * (ulong)indices.Length;
+        var bufferSize = (ulong)Unsafe.SizeOf<ushort>() * (ulong)Primitives.Indices.Length;
 
         using StagingBuffer stagingBuffer = new(context, bufferSize);
 
-        stagingBuffer.SetData(indices);
+        stagingBuffer.SetData(Primitives.Indices);
 
         indexBuffer = new IndexBuffer(context, bufferSize);
 
@@ -709,11 +681,11 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
     private void CreateVertexBuffer()
     {
-        var bufferSize = (ulong)Marshal.SizeOf<Vertex>() * (ulong)vertices.Length;
+        var bufferSize = (ulong)Marshal.SizeOf<Vertex>() * (ulong)Primitives.Vertices.Length;
 
         using StagingBuffer stagingBuffer = new(context, bufferSize);
 
-        stagingBuffer.SetData(vertices);
+        stagingBuffer.SetData(Primitives.Vertices);
 
         vertexBuffer = new VertexBuffer(context, bufferSize);
         CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
@@ -731,6 +703,4 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
         context.Api!.CmdCopyBuffer(commandBuffer.CommandBuffer, srcBuffer.VkBuffer, dstBuffer.VkBuffer, 1, copyRegion);
     }
-    
-    public IVkTexture RenderTexture => texture;
 }

@@ -24,17 +24,7 @@
       <ProjectReference Include="..\Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj" />
       <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="teapot.bin" />
-      <EmbeddedResource Include="teapot.bin" />
-      <None Remove="Assets\Shaders\frag.spirv" />
-      <EmbeddedResource Include="Assets\Shaders\frag.spirv">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </EmbeddedResource>
-      <None Remove="Assets\Shaders\vert.spirv" />
-      <EmbeddedResource Include="Assets\Shaders\vert.spirv">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </EmbeddedResource>
-    </ItemGroup>
+    
+    <!--Import targets-->
+    <Import Project="../Drawie.RenderApi.Vulkan/Build/compile_shaders.targets"/>
 </Project>

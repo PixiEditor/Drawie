@@ -25,6 +25,6 @@ namespace Drawie.Backend.Core.Bridge
         public IShaderImplementation ShaderImplementation { get; set; }
         public bool IsHardwareAccelerated { get; }
         public IRenderingDispatcher RenderingDispatcher { get; set; }
-        public DrawingSurface CreateRenderSurface(VecI size, IWindowRenderApi renderApi);
+        public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture);
     }
 }

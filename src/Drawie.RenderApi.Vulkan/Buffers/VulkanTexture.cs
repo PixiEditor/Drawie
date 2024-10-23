@@ -19,6 +19,7 @@ public class VulkanTexture : IDisposable, IVkTexture
     private CommandPool CommandPool { get; }
 
     private Queue GraphicsQueue { get; }
+    public uint QueueFamily { get; } = 0;
     public uint ImageFormat { get; private set; }
     public ulong ImageHandle => textureImage.Handle;
     public uint Tiling { get; }
@@ -33,13 +34,14 @@ public class VulkanTexture : IDisposable, IVkTexture
     private Sampler sampler;
     
     public unsafe VulkanTexture(Vk vk, Device logicalDevice, PhysicalDevice physicalDevice, CommandPool commandPool,
-        Queue graphicsQueue, VecI size)
+        Queue graphicsQueue, uint queueFamily, VecI size)
     {
         Vk = vk;
         LogicalDevice = logicalDevice;
         PhysicalDevice = physicalDevice;
         CommandPool = commandPool;
         GraphicsQueue = graphicsQueue;
+        QueueFamily = queueFamily;
 
         var imageSize = (ulong)size.X * (ulong)size.Y * 4;
 

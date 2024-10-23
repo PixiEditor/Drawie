@@ -12,4 +12,6 @@ public interface IWindowRenderApi
     public void Render(double deltaTime);
     
     public event Action FramebufferResized;
+   
+    public ITexture RenderTexture { get; }
 }

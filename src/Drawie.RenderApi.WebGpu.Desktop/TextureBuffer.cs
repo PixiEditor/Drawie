@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace Drawie.RenderApi.WebGpu;
 
-public class TextureBuffer : IDisposable
+public class TextureBuffer : IDisposable, ITexture
 {
     public WGPUTexture WgpuTexture { get; }
     public VecI Size { get; }

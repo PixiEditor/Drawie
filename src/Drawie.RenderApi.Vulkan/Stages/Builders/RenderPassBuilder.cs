@@ -14,7 +14,7 @@ public class RenderPassBuilder : IDisposable
         LogicalDevice = logicalDevice;
     }
 
-    public unsafe RenderPass Create(Format swapChainImageFormat)
+    public unsafe RenderPass Create(Format swapChainImageFormat, ImageLayout finalLayout)
     {
         AttachmentDescription colorAttachment = new()
         {
@@ -23,8 +23,9 @@ public class RenderPassBuilder : IDisposable
             LoadOp = AttachmentLoadOp.Clear,
             StoreOp = AttachmentStoreOp.Store,
             StencilLoadOp = AttachmentLoadOp.DontCare,
+            StencilStoreOp = AttachmentStoreOp.DontCare,
             InitialLayout = ImageLayout.Undefined,
-            FinalLayout = ImageLayout.PresentSrcKhr
+            FinalLayout = finalLayout
         };
 
         AttachmentReference colorAttachmentRef = new()
