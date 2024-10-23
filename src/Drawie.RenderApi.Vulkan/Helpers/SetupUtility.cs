@@ -5,18 +5,18 @@ namespace Drawie.RenderApi.Vulkan.Helpers;
 
 public static class SetupUtility
 {
-    public static unsafe QueueFamilyIndices FindQueueFamilies(Vk vk, PhysicalDevice device, SurfaceKHR surface,
-        KhrSurface khrSurface)
+    public static unsafe QueueFamilyIndices FindQueueFamilies(Vk vk, PhysicalDevice device, KhrSurface? presentSurface,
+        SurfaceKHR? surface)
     {
         var indices = new QueueFamilyIndices();
 
-        uint queueFamilityCount = 0;
-        vk.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilityCount, null);
+        uint queueFamilyCount = 0;
+        vk.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilyCount, null);
 
-        var queueFamilies = new QueueFamilyProperties[queueFamilityCount];
+        var queueFamilies = new QueueFamilyProperties[queueFamilyCount];
         fixed (QueueFamilyProperties* queueFamiliesPtr = queueFamilies)
         {
-            vk.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilityCount, queueFamiliesPtr);
+            vk.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilyCount, queueFamiliesPtr);
         }
 
         uint i = 0;
@@ -24,9 +24,16 @@ public static class SetupUtility
         {
             if (queueFamily.QueueFlags.HasFlag(QueueFlags.GraphicsBit)) indices.GraphicsFamily = i;
 
-            khrSurface!.GetPhysicalDeviceSurfaceSupport(device, i, surface, out var presentSupport);
-
-            if (presentSupport) indices.PresentFamily = i;
+            if (presentSurface != null && surface != null)
+            {
+                presentSurface.GetPhysicalDeviceSurfaceSupport(device, i, surface.Value, out var presentSupport);
+                if (presentSupport) indices.PresentFamily = i;
+            }
+            else
+            {
+                indices.PresentFamily =
+                    indices.GraphicsFamily; // We can more or less assume that the present family is the same as the graphics family
+            }
 
             if (indices.IsComplete) break;
 
@@ -36,7 +43,8 @@ public static class SetupUtility
         return indices;
     }
 
-    public static unsafe SwapChainSupportDetails QuerySwapChainSupport(PhysicalDevice physicalDevice, SurfaceKHR surface, KhrSurface khrSurface)
+    public static unsafe SwapChainSupportDetails QuerySwapChainSupport(PhysicalDevice physicalDevice,
+        SurfaceKHR surface, KhrSurface khrSurface)
     {
         var details = new SwapChainSupportDetails();
 
@@ -77,5 +85,10 @@ public static class SetupUtility
         }
 
         return details;
+    }
+
+    public static QueueFamilyIndices FindQueueFamilies(VulkanContext context)
+    {
+        return FindQueueFamilies(context.Vk!, context.PhysicalDevice, context.KhrSurface, context.Surface);
     }
 }

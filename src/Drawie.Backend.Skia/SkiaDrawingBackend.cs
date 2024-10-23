@@ -150,8 +150,8 @@ namespace Drawie.Skia
                 VkInstance = windowRenderApi.InstanceHandle,
                 VkPhysicalDevice = windowRenderApi.PhysicalDeviceHandle,
                 VkQueue = windowRenderApi.GraphicsQueueHandle,
-                GraphicsQueueIndex = 0,
-                GetProcedureAddress = windowRenderApi.GetProcedureAddress
+                GraphicsQueueIndex = windowRenderApi.GraphicsQueueFamilyIndex,
+                GetProcedureAddress = windowRenderApi.GetProcedureAddress,
             };
             
             GraphicsContext = GRContext.CreateVulkan(vkBackendContext);

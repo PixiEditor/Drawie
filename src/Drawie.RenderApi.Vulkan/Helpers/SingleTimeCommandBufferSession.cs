@@ -23,6 +23,11 @@ public class SingleTimeCommandBufferSession : IDisposable
         Begin();
     }
     
+    public SingleTimeCommandBufferSession(VulkanContext context, CommandPool pool) : this(context.Vk!, pool, context.LogicalDevice.Device, context.GraphicsQueue)
+    {
+    }
+        
+    
     private void Begin()
     {
         CommandBufferAllocateInfo allocInfo = new()

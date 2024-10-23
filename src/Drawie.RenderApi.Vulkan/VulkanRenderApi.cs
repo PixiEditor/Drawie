@@ -21,8 +21,7 @@ public class VulkanRenderApi : IVulkanRenderApi
         
         var existingWindowRenderApi = windowRenderApis.First() as VulkanWindowRenderApi;
         
-        windowRenderApi = new VulkanWindowRenderApi(existingWindowRenderApi.Instance, existingWindowRenderApi.LogicalDevice,
-            existingWindowRenderApi.PhysicalDevice, existingWindowRenderApi.graphicsQueue, existingWindowRenderApi.presentQueue);
+        windowRenderApi = new VulkanWindowRenderApi(existingWindowRenderApi.Context);
         
         windowRenderApis.Add(windowRenderApi);
         return windowRenderApi;

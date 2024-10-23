@@ -8,4 +8,8 @@ public class IndexBuffer : BufferObject
         : base(vk, device, physicalDevice, size, BufferUsageFlags.TransferDstBit | BufferUsageFlags.IndexBufferBit, MemoryPropertyFlags.DeviceLocalBit)
     {
     }
+
+    public IndexBuffer(VulkanContext context, ulong bufferSize) : this(context.Vk!, context.LogicalDevice.Device, context.PhysicalDevice, bufferSize)
+    {
+    } 
 }

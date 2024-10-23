@@ -19,4 +19,6 @@ public class GlfwVulkanContextInfo(IVkSurface WindowVkSurface) : IVulkanContextI
     {
         return WindowVkSurface!.Create<AllocationCallbacks>(new VkHandle(instanceHandle), null).Handle;
     }
+
+    public bool HasSurface => WindowVkSurface != null;
 }
