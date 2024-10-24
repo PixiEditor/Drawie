@@ -2,6 +2,7 @@
 using System;
 using Avalonia.Logging;
 using Avalonia.Vulkan;
+using Drawie.Interop.VulkanAvalonia;
 
 namespace Drawie.AvaloniaGraphics;
 
@@ -34,5 +35,6 @@ class Program
                     UseDebug = true
                 }
             })
+            .WithDrawie()
             .LogToTrace(LogEventLevel.Debug, "Vulkan");
 }

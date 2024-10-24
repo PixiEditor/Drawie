@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Drawie.RenderApi.Vulkan;
-
-namespace Drawie.AvaloniaGraphics.Interop;
+﻿namespace Drawie.Interop.VulkanAvalonia.Vulkan;
 
 internal class VulkanResources : IAsyncDisposable
 {

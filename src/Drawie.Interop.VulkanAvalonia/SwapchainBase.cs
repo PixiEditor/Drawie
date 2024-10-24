@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Rendering.Composition;
+using Drawie.Interop.VulkanAvalonia.Utils;
 
-namespace Drawie.AvaloniaGraphics.Interop;
+namespace Drawie.Interop.VulkanAvalonia;
 
 abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : class, ISwapchainImage
 {

@@ -1,15 +1,14 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using Drawie.RenderApi.Vulkan;
 using Drawie.RenderApi.Vulkan.Extensions;
 using Silk.NET.Vulkan;
 using Buffer = Silk.NET.Vulkan.Buffer;
 
-namespace Drawie.AvaloniaGraphics.Interop;
+namespace Drawie.Interop.VulkanAvalonia.Vulkan;
 
 static class VulkanBufferHelper
 {
-    public unsafe static void AllocateBuffer<T>(VulkanContext vk,
+    public static unsafe void AllocateBuffer<T>(VulkanContext vk,
         BufferUsageFlags bufferUsageFlags,
         out Buffer buffer, out DeviceMemory memory,
         Span<T> initialData) where T:unmanaged

@@ -22,7 +22,12 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
         private set => instance = value;
     }
 
-    public bool EnableValidationLayers { get; set; } = true;
+    public bool EnableValidationLayers { get; set; }
+#if DEBUG
+        = true;
+#else
+        = false;
+#endif
     public PhysicalDevice PhysicalDevice { get; protected set; }
 
     public VulkanDevice LogicalDevice { get; protected set; }
@@ -225,6 +230,8 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
 
     protected bool TryAddValidationLayer(string layer)
     {
+        if (!EnableValidationLayers) return false;
+
         if (IsLayerAvailable(layer))
         {
             validationLayers.Add(layer);

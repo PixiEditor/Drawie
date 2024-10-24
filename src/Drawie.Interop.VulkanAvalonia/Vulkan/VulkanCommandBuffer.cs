@@ -1,10 +1,8 @@
 ﻿using Drawie.RenderApi.Vulkan.Extensions;
-
-namespace Drawie.AvaloniaGraphics.Interop;
-
-using System;
-using System.Collections.Generic;
 using Silk.NET.Vulkan;
+using Semaphore = Silk.NET.Vulkan.Semaphore;
+
+namespace Drawie.Interop.VulkanAvalonia.Vulkan;
 
 public class VulkanCommandBufferPool : IDisposable
 {

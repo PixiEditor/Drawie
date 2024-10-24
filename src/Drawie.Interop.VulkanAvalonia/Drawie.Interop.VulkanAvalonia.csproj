@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Drawie.Backend.Core\Drawie.Backend.Core.csproj"/>
+        <ProjectReference Include="..\Drawie.Backend.Skia\Drawie.Backend.Skia.csproj"/>
+        <ProjectReference Include="..\Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj"/>
+        <ProjectReference Include="..\Drawie.RenderApi\Drawie.RenderApi.csproj"/>
+        <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Avalonia.Vulkan">
+            <HintPath>..\Drawie.AvaloniaInterop\bin\Debug\net8.0\Avalonia.Vulkan.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.1.4"/>
+    </ItemGroup>
+
+    <Import Project="../Drawie.RenderApi.Vulkan/Build/compile_shaders.targets"/>
+</Project>

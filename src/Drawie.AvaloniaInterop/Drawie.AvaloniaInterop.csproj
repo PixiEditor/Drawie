@@ -21,10 +21,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Drawie.Backend.Skia\Drawie.Backend.Skia.csproj" />
+      <ProjectReference Include="..\Drawie.Interop.VulkanAvalonia\Drawie.Interop.VulkanAvalonia.csproj" />
       <ProjectReference Include="..\Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj" />
       <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
     </ItemGroup>
     
     <!--Import targets-->
-    <Import Project="../Drawie.RenderApi.Vulkan/Build/compile_shaders.targets"/>
 </Project>

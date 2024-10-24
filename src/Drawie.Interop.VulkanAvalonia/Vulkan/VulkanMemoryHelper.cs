@@ -1,6 +1,6 @@
 ﻿using Silk.NET.Vulkan;
 
-namespace Drawie.AvaloniaGraphics.Interop;
+namespace Drawie.Interop.VulkanAvalonia.Vulkan;
 
 internal static class VulkanMemoryHelper
 {

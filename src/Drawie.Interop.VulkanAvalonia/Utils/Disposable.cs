@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-
-namespace Drawie.AvaloniaGraphics.Interop;
+﻿namespace Drawie.Interop.VulkanAvalonia.Utils;
 
 static class Disposable
 {

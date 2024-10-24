@@ -1,12 +1,11 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Avalonia.Platform;
-using Drawie.RenderApi.Vulkan;
 using Drawie.RenderApi.Vulkan.Extensions;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
+using Semaphore = Silk.NET.Vulkan.Semaphore;
 
-namespace Drawie.AvaloniaGraphics.Interop;
+namespace Drawie.Interop.VulkanAvalonia.Vulkan;
 
 public class VulkanSemaphorePair : IDisposable
 {

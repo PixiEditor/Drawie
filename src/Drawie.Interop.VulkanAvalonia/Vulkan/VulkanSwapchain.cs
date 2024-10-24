@@ -1,12 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
-using Drawie.RenderApi.Vulkan;
 using Silk.NET.Vulkan;
 
-namespace Drawie.AvaloniaGraphics.Interop;
+namespace Drawie.Interop.VulkanAvalonia.Vulkan;
 
 internal class VulkanSwapchain : SwapchainBase<VulkanSwapchainImage>
 {

@@ -1,17 +1,9 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using Avalonia;
-using Avalonia.Vulkan;
+﻿using Avalonia;
 using Drawie.Numerics;
-using Drawie.RenderApi.Vulkan;
 using Drawie.RenderApi.Vulkan.Buffers;
-using Drawie.RenderApi.Vulkan.Extensions;
-using Drawie.RenderApi.Vulkan.Stages;
-using Drawie.RenderApi.Vulkan.Stages.Builders;
-using Drawie.RenderApi.Vulkan.Structs;
 using Silk.NET.Vulkan;
 
-namespace Drawie.AvaloniaGraphics.Interop;
+namespace Drawie.Interop.VulkanAvalonia.Vulkan;
 
 public class VulkanContent : IDisposable
 {

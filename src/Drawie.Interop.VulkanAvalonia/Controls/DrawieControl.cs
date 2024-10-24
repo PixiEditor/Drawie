@@ -1,17 +1,13 @@
-﻿using System;
-using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia;
 using Avalonia.Rendering.Composition;
-using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
-using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Surfaces;
-using Drawie.Backend.Core.Surfaces.PaintImpl;
+using Drawie.Interop.VulkanAvalonia.Vulkan;
 using Drawie.Numerics;
 
-namespace Drawie.AvaloniaGraphics.Interop;
+namespace Drawie.Interop.VulkanAvalonia.Controls;
 
-public class VulkanInteropControl : InteropControl
+public abstract class DrawieControl : InteropControl
 {
     private VulkanResources resources;
     private DrawingSurface renderSurface;
@@ -22,9 +18,9 @@ public class VulkanInteropControl : InteropControl
         CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop)
     {
         resources = new VulkanResources(
-            App.InteropContext,
-            new VulkanSwapchain(App.InteropContext, interop, compositionDrawingSurface),
-            new VulkanContent(App.InteropContext));
+            DrawieInterop.VulkanInteropContext,
+            new VulkanSwapchain(DrawieInterop.VulkanInteropContext, interop, compositionDrawingSurface),
+            new VulkanContent(DrawieInterop.VulkanInteropContext));
 
         return (true, string.Empty);
     }
@@ -34,6 +30,8 @@ public class VulkanInteropControl : InteropControl
         resources?.DisposeAsync();
         resources = null;
     }
+    
+    public abstract void Draw(DrawingSurface surface);
 
     protected override void RenderFrame(PixelSize size)
     {
@@ -43,7 +41,6 @@ public class VulkanInteropControl : InteropControl
             {
                 return;
             }
-            
             
             if (renderSurface == null || lastSize != size)
             {
@@ -62,9 +59,7 @@ public class VulkanInteropControl : InteropControl
 
             using (resources.Swapchain.BeginDraw(size, out var image))
             {
-                renderSurface.Canvas.Clear(Colors.Azure);
-                using Paint paint = new Paint() { Color = Colors.Green };
-                renderSurface.Canvas.DrawRect(0, 0, 100, 100, paint);
+                Draw(renderSurface); 
                 renderSurface.Flush();
 
                 resources.Content.Render(image);

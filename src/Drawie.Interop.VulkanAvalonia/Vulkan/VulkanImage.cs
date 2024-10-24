@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Platform;
-using Drawie.RenderApi.Vulkan;
 using Drawie.RenderApi.Vulkan.Extensions;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
-using SkiaSharp;
 
-namespace Drawie.AvaloniaGraphics.Interop;
+namespace Drawie.Interop.VulkanAvalonia.Vulkan;
 
 public class VulkanImage : IDisposable
 {
