@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Vulkan;
@@ -15,7 +10,6 @@ using Drawie.RenderApi.Vulkan.Stages;
 using Drawie.RenderApi.Vulkan.Stages.Builders;
 using Drawie.RenderApi.Vulkan.Structs;
 using Silk.NET.Vulkan;
-using Buffer = System.Buffer;
 
 namespace Drawie.AvaloniaGraphics.Interop;
 
@@ -60,10 +54,12 @@ public class VulkanContent : IDisposable
 
         _previousImageSize = image.Size;
 
-        texture.TransitionLayoutTo(VulkanTexture.ColorAttachmentOptimal, VulkanTexture.ShaderReadOnlyOptimal);
 
         var commandBuffer = context.Pool.CreateCommandBuffer();
         commandBuffer.BeginRecording();
+
+        texture.TransitionLayoutTo(commandBuffer.InternalHandle, ImageLayout.ColorAttachmentOptimal,
+            ImageLayout.ShaderReadOnlyOptimal); 
 
         _colorAttachment!.TransitionLayout(commandBuffer.InternalHandle,
             ImageLayout.Undefined, AccessFlags.None,
@@ -128,6 +124,8 @@ public class VulkanContent : IDisposable
 
         api.CmdEndRenderPass(commandBufferHandle);
 
+        texture.TransitionLayoutTo(commandBuffer.InternalHandle, ImageLayout.ShaderReadOnlyOptimal,
+            ImageLayout.TransferSrcOptimal);
         _colorAttachment.TransitionLayout(commandBuffer.InternalHandle, ImageLayout.TransferSrcOptimal,
             AccessFlags.TransferReadBit);
         image.TransitionLayout(commandBuffer.InternalHandle, ImageLayout.TransferDstOptimal,
@@ -162,11 +160,14 @@ public class VulkanContent : IDisposable
             }
         };
 
-        api.CmdBlitImage(commandBuffer.InternalHandle, _colorAttachment.InternalHandle,
+        api.CmdBlitImage(commandBuffer.InternalHandle, texture.VkImage,
             ImageLayout.TransferSrcOptimal,
             image.InternalHandle, ImageLayout.TransferDstOptimal, 1, srcBlitRegion, Filter.Linear);
 
         commandBuffer.Submit();
+        
+        texture.TransitionLayoutTo((uint)ImageLayout.TransferSrcOptimal,
+            (uint)ImageLayout.ShaderReadOnlyOptimal);
     }
 
     public void CreateTextureImage(VecI size)

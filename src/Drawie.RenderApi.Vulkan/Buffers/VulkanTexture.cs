@@ -43,9 +43,9 @@ public class VulkanTexture : IDisposable, IVkTexture
         GraphicsQueue = graphicsQueue;
         QueueFamily = queueFamily;
 
-        var imageSize = (ulong)size.X * (ulong)size.Y * 4;
+        /*var imageSize = (ulong)size.X * (ulong)size.Y * 4;
 
-        /*using var stagingBuffer = new StagingBuffer(vk, logicalDevice, physicalDevice, imageSize);
+        using var stagingBuffer = new StagingBuffer(vk, logicalDevice, physicalDevice, imageSize);
 
         void* data;
         vk!.MapMemory(LogicalDevice, stagingBuffer.VkBufferMemory, 0, imageSize, 0, &data);
@@ -158,6 +158,12 @@ public class VulkanTexture : IDisposable, IVkTexture
     {
         using var commandBuffer = new SingleTimeCommandBufferSession(Vk, CommandPool, LogicalDevice, GraphicsQueue);
 
+        TransitionImageLayout(image, oldLayout, newLayout, commandBuffer.CommandBuffer);
+    }
+
+    private unsafe void TransitionImageLayout(Image image, ImageLayout oldLayout, ImageLayout newLayout,
+        CommandBuffer commandBuffer)
+    {
         var barrier = new ImageMemoryBarrier()
         {
             SType = StructureType.ImageMemoryBarrier,
@@ -216,7 +222,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             destinationStage = PipelineStageFlags.BottomOfPipeBit;
         }
 
-        Vk.CmdPipelineBarrier(commandBuffer.CommandBuffer, sourceStage, destinationStage, 0, 0, null, 0, null, 1,
+        Vk.CmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, null, 0, null, 1,
             barrier);
     }
 
@@ -255,5 +261,10 @@ public class VulkanTexture : IDisposable, IVkTexture
     public void TransitionLayoutTo(uint from, uint to)
     {
         TransitionImageLayout(textureImage, (Format)ImageFormat, (ImageLayout)from, (ImageLayout)to); 
+    }
+
+    public void TransitionLayoutTo(CommandBuffer buffer, ImageLayout from, ImageLayout to)
+    {
+        TransitionImageLayout(textureImage, from, to, buffer);
     }
 }

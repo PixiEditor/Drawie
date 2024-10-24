@@ -45,14 +45,14 @@ public class VulkanInteropControl : InteropControl
                         resources.Content.texture);
             }
 
-            resources.Content.PrepareTextureToWrite();
-            surface.Canvas.Clear(Colors.Azure);
-            using Paint paint = new Paint() { Color = Colors.Green };
-            surface.Canvas.DrawRect(0, 0, 100, 100, paint);
-            surface.Flush();
-
             using (resources.Swapchain.BeginDraw(size, out var image))
             {
+                resources.Content.PrepareTextureToWrite();
+                surface.Canvas.Clear(Colors.Azure);
+                using Paint paint = new Paint() { Color = Colors.Green };
+                surface.Canvas.DrawRect(0, 0, 100, 100, paint);
+                surface.Flush();
+                
                 resources.Content.Render(image);
             }
         }

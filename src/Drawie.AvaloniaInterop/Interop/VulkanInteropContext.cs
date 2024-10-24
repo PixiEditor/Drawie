@@ -191,7 +191,8 @@ public class VulkanInteropContext : VulkanContext
                 SType = StructureType.DescriptorPoolCreateInfo,
                 PoolSizeCount = 1,
                 PPoolSizes = &poolSize,
-                MaxSets = 1, 
+                MaxSets = 1,
+                Flags = DescriptorPoolCreateFlags.FreeDescriptorSetBit
             };
 
             Api!.CreateDescriptorPool(LogicalDevice.Device, poolInfo, null, descriptorPoolPtr)

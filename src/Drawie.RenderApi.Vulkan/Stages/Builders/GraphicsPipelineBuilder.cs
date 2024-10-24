@@ -101,8 +101,9 @@ public class GraphicsPipelineBuilder
                 RasterizerDiscardEnable = false,
                 PolygonMode = PolygonMode.Fill,
                 LineWidth = 1.0f,
-                CullMode = CullModeFlags.BackBit,
-                FrontFace = FrontFace.Clockwise,
+                CullMode = CullModeFlags.None,
+                /*CullMode = CullModeFlags.BackBit,
+                FrontFace = FrontFace.Clockwise,*/
                 DepthBiasEnable = false
             };
 
