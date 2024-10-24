@@ -9,6 +9,8 @@ namespace Drawie.Backend.Core.Surfaces
     {
         public override object Native => DrawingBackendApi.Current.SurfaceImplementation.GetNativeSurface(ObjectPointer);
         public Canvas Canvas { get; private set; }
+        public RectI DeviceClipBounds => DrawingBackendApi.Current.SurfaceImplementation.GetDeviceClipBounds(ObjectPointer);
+
         public event SurfaceChangedEventHandler? Changed;
 
         public DrawingSurface(IntPtr objPtr, Canvas canvas) : base(objPtr)
@@ -83,6 +85,11 @@ namespace Drawie.Backend.Core.Surfaces
         public static DrawingSurface FromNative(object native)
         {
             return DrawingBackendApi.Current.SurfaceImplementation.FromNative(native);
+        }
+
+        public static void Unmanage(DrawingSurface surface)
+        {
+            DrawingBackendApi.Current.SurfaceImplementation.Unmanage(surface);
         }
     }
 }

@@ -2,6 +2,7 @@
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
+using Drawie.Backend.Core.Surfaces;
 using Drawie.Numerics;
 using SkiaSharp;
 
@@ -9,9 +10,17 @@ namespace Drawie.Skia.Implementations
 {
     public class SkiaShaderImplementation : SkObjectImplementation<SKShader>, IShaderImplementation
     {
+        private SkiaBitmapImplementation bitmapImplementation;
         private Dictionary<IntPtr, SKRuntimeEffect> runtimeEffects = new();
+
         public SkiaShaderImplementation()
         {
+            
+        }
+        
+        public void SetBitmapImplementation(SkiaBitmapImplementation bitmapImplementation)
+        {
+            this.bitmapImplementation = bitmapImplementation;
         }
 
         public IntPtr CreateShader()
@@ -128,6 +137,14 @@ namespace Drawie.Skia.Implementations
             }
             
             shader.WithLocalMatrix(matrix.ToSkMatrix());
+        }
+
+        public Shader? CreateBitmap(Bitmap bitmap, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix)
+        {
+            SKBitmap skBitmap = bitmapImplementation.ManagedInstances[bitmap.ObjectPointer];
+            SKShader shader = SKShader.CreateBitmap(skBitmap, (SKShaderTileMode)tileX, (SKShaderTileMode)tileY, matrix.ToSkMatrix());
+            ManagedInstances[shader.Handle] = shader;
+            return new Shader(shader.Handle);
         }
 
         public void Dispose(IntPtr shaderObjPointer)

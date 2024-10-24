@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Shaders.Generation.Expressions;
+using Drawie.Backend.Core.Surfaces;
 using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Shaders.Generation;
@@ -13,11 +14,23 @@ public class ShaderBuilder
 
     private List<ShaderExpressionVariable> _variables = new List<ShaderExpressionVariable>();
 
-    private Dictionary<Texture, TextureSampler> _samplers = new Dictionary<Texture, TextureSampler>();
+    private Dictionary<DrawingSurface, SurfaceSampler> _samplers = new Dictionary<DrawingSurface, SurfaceSampler>();
+
+    public BuiltInFunctions Functions { get; } = new();
+
+    public ShaderBuilder(VecI resolution)
+    {
+        AddUniform("iResolution", resolution);
+    }
 
     public Shader BuildShader()
     {
         string generatedSksl = ToSkSl();
+        /*string testSksl = """
+
+
+
+                          """;*/
         return new Shader(generatedSksl, Uniforms);
     }
 
@@ -25,8 +38,12 @@ public class ShaderBuilder
     {
         StringBuilder sb = new StringBuilder();
         AppendUniforms(sb);
+
+        sb.AppendLine(Functions.BuildFunctions());
+
         sb.AppendLine("half4 main(float2 coords)");
         sb.AppendLine("{");
+        sb.AppendLine("coords = coords / iResolution;");
         sb.Append(_bodyBuilder);
         sb.AppendLine("}");
 
@@ -37,41 +54,45 @@ public class ShaderBuilder
     {
         foreach (var uniform in Uniforms)
         {
-            string layout = string.IsNullOrEmpty(uniform.Value.LayoutOf) ? string.Empty : $"layout({uniform.Value.LayoutOf}) ";
+            string layout = string.IsNullOrEmpty(uniform.Value.LayoutOf)
+                ? string.Empty
+                : $"layout({uniform.Value.LayoutOf}) ";
             sb.AppendLine($"{layout}uniform {uniform.Value.UniformName} {uniform.Value.Name};");
         }
     }
 
-    public TextureSampler AddOrGetTexture(Texture texture)
+    public SurfaceSampler AddOrGetSurface(DrawingSurface surface)
     {
-        if (_samplers.TryGetValue(texture, out var sampler))
+        if (_samplers.TryGetValue(surface, out var sampler))
         {
             return sampler;
         }
 
         string name = $"texture_{GetUniqueNameNumber()}";
-        using var snapshot = texture.DrawingSurface.Snapshot();
+        using var snapshot = surface.Snapshot();
         Uniforms[name] = new Uniform(name, snapshot.ToShader());
-        var newSampler = new TextureSampler(name);
-        _samplers[texture] = newSampler;
+        var newSampler = new SurfaceSampler(name);
+        _samplers[surface] = newSampler;
 
         return newSampler;
     }
 
-    public Half4 Sample(TextureSampler texName, Float2 pos)
+    public Half4 Sample(SurfaceSampler texName, Float2 pos)
     {
         string resultName = $"color_{GetUniqueNameNumber()}";
         Half4 result = new Half4(resultName);
         _variables.Add(result);
-        _bodyBuilder.AppendLine($"half4 {resultName} = sample({texName.VariableName}, {pos.VariableName});");
+        _bodyBuilder.AppendLine(
+            $"half4 {resultName} = sample({texName.VariableName}, {pos.VariableName} * iResolution);");
         return result;
     }
 
     public void ReturnVar(Half4 colorValue)
     {
         string alphaExpression = colorValue.A.ExpressionValue;
-        _bodyBuilder.AppendLine($"half4 premultiplied = half4({colorValue.R.ExpressionValue} * {alphaExpression}, {colorValue.G.ExpressionValue} * {alphaExpression}, {colorValue.B.ExpressionValue} * {alphaExpression}, {alphaExpression});");
-        _bodyBuilder.AppendLine($"return premultiplied;"); 
+        _bodyBuilder.AppendLine(
+            $"half4 premultiplied = half4({colorValue.R.ExpressionValue} * {alphaExpression}, {colorValue.G.ExpressionValue} * {alphaExpression}, {colorValue.B.ExpressionValue} * {alphaExpression}, {alphaExpression});");
+        _bodyBuilder.AppendLine($"return premultiplied;");
     }
 
     public void ReturnConst(Half4 colorValue)
@@ -100,7 +121,7 @@ public class ShaderBuilder
         {
             return;
         }
-        
+
         _bodyBuilder.AppendLine($"{contextPosition.VariableName} = {coordinateValue.VariableName};");
     }
 
@@ -151,19 +172,15 @@ public class ShaderBuilder
         Half4 result = new Half4(name);
         _variables.Add(result);
 
-        string rExpression = r.ExpressionValue;
-        string gExpression = g.ExpressionValue;
-        string bExpression = b.ExpressionValue;
-        string aExpression = a.ExpressionValue;
-
-        _bodyBuilder.AppendLine($"half4 {name} = half4({rExpression}, {gExpression}, {bExpression}, {aExpression});");
+        _bodyBuilder.AppendLine($"half4 {name} = {Half4.ConstructorText(r, g, b, a)};");
         return result;
     }
 
 
-    public Half4 AssignNewHalf4(Expression assignment)
+    public Half4 AssignNewHalf4(Expression assignment) => AssignNewHalf4($"color_{GetUniqueNameNumber()}", assignment);
+
+    public Half4 AssignNewHalf4(string name, Expression assignment)
     {
-        string name = $"color_{GetUniqueNameNumber()}";
         Half4 result = new Half4(name);
         _variables.Add(result);
 

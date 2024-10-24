@@ -86,6 +86,8 @@ namespace Drawie.Skia
             SkiaBitmapImplementation bitmapImpl = new SkiaBitmapImplementation(imgImpl, pixmapImpl);
             BitmapImplementation = bitmapImpl;
 
+            shader.SetBitmapImplementation(bitmapImpl);
+
             SkiaCanvasImplementation canvasImpl =
                 new SkiaCanvasImplementation(paintImpl, imgImpl, bitmapImpl, pathImpl);
 

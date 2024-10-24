@@ -1,6 +1,7 @@
 ﻿using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Bridge.Operations;
 
@@ -17,5 +18,7 @@ public interface ISurfaceImplementation
     public object GetNativeSurface(IntPtr objectPointer);
     public void Flush(DrawingSurface drawingSurface);
     public DrawingSurface FromNative(object native);
+    public RectI GetDeviceClipBounds(IntPtr drawingSurface);
+    public void Unmanage(DrawingSurface surface);
 }
 

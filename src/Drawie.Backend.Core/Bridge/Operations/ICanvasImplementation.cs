@@ -18,7 +18,7 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public void Scale(IntPtr objPtr, float sizeX, float sizeY);
         public void Translate(IntPtr objPtr, float translationX, float translationY);
         public void DrawPath(IntPtr objPtr, VectorPath path, Paint paint);
-        public void DrawPoint(IntPtr objPtr, VecI pos, Paint paint);
+        public void DrawPoint(IntPtr objPtr, VecD pos, Paint paint);
         public void DrawPoints(IntPtr objPtr, PointMode pointMode, VecF[] points, Paint paint);
         public void DrawRect(IntPtr objPtr, float x, float y, float width, float height, Paint paint);
         public void DrawCircle(IntPtr objPtr, float cx, float cy, float radius, Paint paint);
@@ -27,7 +27,7 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public void ClipRect(IntPtr objPtr, RectD rect, ClipOperation clipOperation);
         public void Clear(IntPtr objPtr);
         public void Clear(IntPtr objPtr, Color color);
-        public void DrawLine(IntPtr objPtr, VecI from, VecI to, Paint paint);
+        public void DrawLine(IntPtr objPtr, VecD from, VecD to, Paint paint);
         public void Flush(IntPtr objPtr);
         public void SetMatrix(IntPtr objPtr, Matrix3X3 finalMatrix);
         public void RestoreToCount(IntPtr objPtr, int count);
@@ -41,6 +41,11 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public object GetNativeCanvas(IntPtr objectPointer);
         public void DrawPaint(IntPtr objectPointer, Paint paint);
         public void DrawImage(IntPtr objectPointer, Image image, float x, float y, Paint paint);
-        public void DrawRoundRect(IntPtr objectPointer, float x, float y, float width, float height, float radiusX, float radiusY, Paint paint);
+        public void DrawRoundRect(IntPtr objectPointer, float x, float y, float width, float height, float radiusX,
+            float radiusY, Paint paint);
+        public int SaveLayer(IntPtr objectPtr);
+        public int SaveLayer(IntPtr objectPtr, Paint paint);
+        public int SaveLayer(IntPtr objectPtr, Paint paint, RectD bounds);
+        public Matrix3X3 GetTotalMatrix(IntPtr objectPointer);
     }
 }

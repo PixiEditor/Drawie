@@ -342,6 +342,11 @@ public struct Matrix3X3 : IEquatable<Matrix3X3>
         return DrawingBackendApi.Current.MatrixImplementation.TryInvert(this, out inverse);
     }
 
+    public Matrix3X3 Concat(Matrix3X3 second)
+    {
+        return DrawingBackendApi.Current.MatrixImplementation.Concat(in this, in second);
+    }
+    
     public static Matrix3X3 Concat(Matrix3X3 first, Matrix3X3 second)
     {
         return DrawingBackendApi.Current.MatrixImplementation.Concat(in first, in second);

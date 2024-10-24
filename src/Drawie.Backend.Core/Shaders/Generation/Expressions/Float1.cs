@@ -12,8 +12,9 @@ public class Float1(string name) : ShaderExpressionVariable<double>(name)
 
     public override Expression? OverrideExpression { get; set; }
 
-    public static implicit operator Float1(double value) => new Float1("") { ConstantValue = value };
+    public static implicit operator Float1(double value) => new("") { ConstantValue = value };
 
     public static explicit operator double(Float1 value) => value.ConstantValue;
-    
+
+    public byte AsConstantColorByte() => (byte)(Math.Clamp(ConstantValue, 0, 1) * 255);
 }

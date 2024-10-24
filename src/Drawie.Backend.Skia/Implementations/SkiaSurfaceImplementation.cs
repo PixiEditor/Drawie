@@ -2,6 +2,7 @@
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
+using Drawie.Numerics;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations
@@ -162,6 +163,17 @@ namespace Drawie.Skia.Implementations
             }
 
             return CreateDrawingSurface(skSurface);
+        }
+
+        public RectI GetDeviceClipBounds(IntPtr drawingSurface)
+        {
+            SKRectI skRectI = ManagedInstances[drawingSurface].Canvas.DeviceClipBounds;
+            return new RectI(skRectI.Left, skRectI.Top, skRectI.Width, skRectI.Height);
+        }
+
+        public void Unmanage(DrawingSurface surface)
+        {
+            ManagedInstances.TryRemove(surface.ObjectPointer, out _);
         }
     }
 }

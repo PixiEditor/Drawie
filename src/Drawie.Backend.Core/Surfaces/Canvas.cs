@@ -13,15 +13,17 @@ namespace Drawie.Backend.Core.Surfaces
     public class Canvas : NativeObject
     {
         public override object Native => DrawingBackendApi.Current.CanvasImplementation.GetNativeCanvas(ObjectPointer);
+        public Matrix3X3 TotalMatrix => DrawingBackendApi.Current.CanvasImplementation.GetTotalMatrix(ObjectPointer);
+
         public event SurfaceChangedEventHandler? Changed;
 
         public Canvas(IntPtr objPtr) : base(objPtr)
         {
         }
 
-        public void DrawPixel(VecI position, Paint drawingPaint) => DrawPixel(position.X, position.Y, drawingPaint);
+        public void DrawPixel(VecD position, Paint drawingPaint) => DrawPixel((float)position.X, (float)position.Y, drawingPaint);
 
-        public void DrawPixel(int posX, int posY, Paint drawingPaint)
+        public void DrawPixel(float posX, float posY, Paint drawingPaint)
         {
             DrawingBackendApi.Current.CanvasImplementation.DrawPixel(ObjectPointer, posX, posY, drawingPaint);
             Changed?.Invoke(new RectD(posX, posY, 1, 1));
@@ -35,9 +37,9 @@ namespace Drawie.Backend.Core.Surfaces
 
         public void DrawSurface(DrawingSurface original, float x, float y) => DrawSurface(original, x, y, null);
 
-        public void DrawSurface(DrawingSurface surfaceToDraw, VecI size, Paint paint)
+        public void DrawSurface(DrawingSurface surfaceToDraw, VecD size, Paint paint)
         {
-            DrawSurface(surfaceToDraw, size.X, size.Y, paint);
+            DrawSurface(surfaceToDraw, (float)size.X, (float)size.Y, paint);
         }
 
         public void DrawImage(Image image, float x, float y) =>
@@ -101,7 +103,7 @@ namespace Drawie.Backend.Core.Surfaces
             Changed?.Invoke(path.Bounds);
         }
 
-        public void DrawPoint(VecI pos, Paint paint)
+        public void DrawPoint(VecD pos, Paint paint)
         {
             DrawingBackendApi.Current.CanvasImplementation.DrawPoint(ObjectPointer, pos, paint);
             Changed?.Invoke(new RectD(pos.X, pos.Y, 1, 1));
@@ -125,8 +127,8 @@ namespace Drawie.Backend.Core.Surfaces
             Changed?.Invoke(new RectD(centerX - radius, centerY - radius, radius * 2, radius * 2));
         }
 
-        public void DrawCircle(VecI center, float radius, Paint paint) =>
-            DrawCircle(center.X, center.Y, radius, paint);
+        public void DrawCircle(VecD center, float radius, Paint paint) =>
+            DrawCircle((float)center.X, (float)center.Y, radius, paint);
 
         public void DrawOval(float centerX, float centerY, float radiusX, float radiusY, Paint paint)
         {
@@ -135,11 +137,13 @@ namespace Drawie.Backend.Core.Surfaces
             Changed?.Invoke(new RectD(centerX - radiusX, centerY - radiusY, radiusX * 2, radiusY * 2));
         }
 
-        public void DrawOval(VecI center, VecI radius, Paint paint) =>
-            DrawOval(center.X, center.Y, radius.X, radius.Y, paint);
+        public void DrawOval(VecD center, VecD radius, Paint paint) =>
+            DrawOval((float)center.X, (float)center.Y, (float)radius.X, (float)radius.Y, paint);
 
         public void DrawRect(RectI rect, Paint paint) => DrawRect(rect.X, rect.Y, rect.Width, rect.Height, paint);
-        public void DrawRect(RectD rect, Paint paint) => DrawRect((float)rect.X, (float)rect.Y, (float)rect.Width, (float)rect.Height, paint);
+
+        public void DrawRect(RectD rect, Paint paint) =>
+            DrawRect((float)rect.X, (float)rect.Y, (float)rect.Width, (float)rect.Height, paint);
 
         public void DrawRoundRect(float x, float y, float width, float height, float radiusX, float radiusY,
             Paint paint)
@@ -176,7 +180,7 @@ namespace Drawie.Backend.Core.Surfaces
             Changed?.Invoke(null);
         }
 
-        public void DrawLine(VecI from, VecI to, Paint paint)
+        public void DrawLine(VecD from, VecD to, Paint paint)
         {
             DrawingBackendApi.Current.CanvasImplementation.DrawLine(ObjectPointer, from, to, paint);
             Changed?.Invoke(new RectD(from, to));
@@ -228,6 +232,21 @@ namespace Drawie.Backend.Core.Surfaces
         public override void Dispose()
         {
             DrawingBackendApi.Current.CanvasImplementation.Dispose(ObjectPointer);
+        }
+
+        public int SaveLayer()
+        {
+            return DrawingBackendApi.Current.CanvasImplementation.SaveLayer(ObjectPointer);
+        }
+
+        public int SaveLayer(Paint paint)
+        {
+            return DrawingBackendApi.Current.CanvasImplementation.SaveLayer(ObjectPointer, paint);
+        }
+
+        public int SaveLayer(Paint paint, RectD bounds)
+        {
+            return DrawingBackendApi.Current.CanvasImplementation.SaveLayer(ObjectPointer, paint, bounds);
         }
     }
 }

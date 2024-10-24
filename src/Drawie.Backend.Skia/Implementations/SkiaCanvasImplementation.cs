@@ -56,28 +56,30 @@ namespace Drawie.Skia.Implementations
 
         public void DrawImage(IntPtr objPtr, Image image, float x, float y, Paint paint)
         {
-            if(!ManagedInstances.TryGetValue(objPtr, out var canvas))
+            if (!ManagedInstances.TryGetValue(objPtr, out var canvas))
             {
                 throw new ObjectDisposedException(nameof(canvas));
             }
-            
+
             if (!_paintImpl.ManagedInstances.TryGetValue(paint.ObjectPointer, out var skPaint))
             {
                 throw new ObjectDisposedException(nameof(paint));
             }
-            
-            if(!_imageImpl.ManagedInstances.TryGetValue(image.ObjectPointer, out var img))
+
+            if (!_imageImpl.ManagedInstances.TryGetValue(image.ObjectPointer, out var img))
             {
                 throw new ObjectDisposedException(nameof(image));
             }
-            
+
             canvas.DrawImage(img, x, y, skPaint);
         }
 
-        public void DrawRoundRect(IntPtr objectPointer, float x, float y, float width, float height, float radiusX, float radiusY,
+        public void DrawRoundRect(IntPtr objectPointer, float x, float y, float width, float height, float radiusX,
+            float radiusY,
             Paint paint)
         {
-            ManagedInstances[objectPointer].DrawRoundRect(x, y, width, height, radiusX, radiusY, _paintImpl[paint.ObjectPointer]);
+            ManagedInstances[objectPointer]
+                .DrawRoundRect(x, y, width, height, radiusX, radiusY, _paintImpl[paint.ObjectPointer]);
         }
 
         public int Save(IntPtr objPtr)
@@ -107,11 +109,11 @@ namespace Drawie.Skia.Implementations
                 _paintImpl[paint.ObjectPointer]);
         }
 
-        public void DrawPoint(IntPtr objPtr, VecI pos, Paint paint)
+        public void DrawPoint(IntPtr objPtr, VecD pos, Paint paint)
         {
             ManagedInstances[objPtr].DrawPoint(
-                pos.X,
-                pos.Y,
+                (float)pos.X,
+                (float)pos.Y,
                 _paintImpl[paint.ObjectPointer]);
         }
 
@@ -126,7 +128,7 @@ namespace Drawie.Skia.Implementations
         public void DrawRect(IntPtr objPtr, float x, float y, float width, float height, Paint paint)
         {
             SKPaint skPaint = _paintImpl[paint.ObjectPointer];
-            
+
             var canvas = ManagedInstances[objPtr];
             canvas.DrawRect(x, y, width, height, skPaint);
         }
@@ -165,10 +167,10 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[objPtr].Clear(color.ToSKColor());
         }
 
-        public void DrawLine(IntPtr objPtr, VecI from, VecI to, Paint paint)
+        public void DrawLine(IntPtr objPtr, VecD from, VecD to, Paint paint)
         {
             var canvas = ManagedInstances[objPtr];
-            canvas.DrawLine(from.X, from.Y, to.X, to.Y, _paintImpl[paint.ObjectPointer]);
+            canvas.DrawLine((float)from.X, (float)from.Y, (float)to.X, (float)to.Y, _paintImpl[paint.ObjectPointer]);
         }
 
         public void DrawPaint(IntPtr objectPointer, Paint paint)
@@ -228,6 +230,28 @@ namespace Drawie.Skia.Implementations
         public void DrawBitmap(IntPtr objPtr, Bitmap bitmap, float x, float y)
         {
             ManagedInstances[objPtr].DrawBitmap(_bitmapImpl[bitmap.ObjectPointer], x, y);
+        }
+
+        public int SaveLayer(IntPtr objectPointer)
+        {
+            return ManagedInstances[objectPointer].SaveLayer();
+        }
+
+        public int SaveLayer(IntPtr objectPtr, Paint? paint)
+        {
+            return ManagedInstances[objectPtr]
+                .SaveLayer(paint != null ? _paintImpl.ManagedInstances[paint.ObjectPointer] : null);
+        }
+
+        public int SaveLayer(IntPtr objectPtr, Paint paint, RectD bounds)
+        {
+            return ManagedInstances[objectPtr]
+                .SaveLayer(bounds.ToSKRect(), _paintImpl.ManagedInstances[paint.ObjectPointer]);
+        }
+
+        public Matrix3X3 GetTotalMatrix(IntPtr objectPointer)
+        {
+            return ManagedInstances[objectPointer].TotalMatrix.ToMatrix3X3();
         }
 
         public void Dispose(IntPtr objectPointer)

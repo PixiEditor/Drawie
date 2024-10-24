@@ -1,8 +1,8 @@
 ﻿namespace Drawie.Backend.Core.Shaders.Generation.Expressions;
 
-public class TextureSampler : ShaderExpressionVariable<Texture>
+public class SurfaceSampler : ShaderExpressionVariable<Texture>
 {
-    public TextureSampler(string name) : base(name)
+    public SurfaceSampler(string name) : base(name)
     {
     }
 
