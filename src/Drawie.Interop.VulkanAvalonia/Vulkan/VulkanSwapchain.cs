@@ -5,11 +5,12 @@ using Silk.NET.Vulkan;
 
 namespace Drawie.Interop.VulkanAvalonia.Vulkan;
 
-internal class VulkanSwapchain : SwapchainBase<VulkanSwapchainImage>
+public class VulkanSwapchain : SwapchainBase<VulkanSwapchainImage>
 {
     private readonly VulkanInteropContext _vk;
 
-    public VulkanSwapchain(VulkanInteropContext vk, ICompositionGpuInterop interop, CompositionDrawingSurface target) : base(
+    public VulkanSwapchain(VulkanInteropContext vk, ICompositionGpuInterop interop,
+        CompositionDrawingSurface target) : base(
         interop, target)
     {
         _vk = vk;
@@ -29,7 +30,7 @@ internal class VulkanSwapchain : SwapchainBase<VulkanSwapchainImage>
     }
 }
 
-class VulkanSwapchainImage : ISwapchainImage
+public class VulkanSwapchainImage : ISwapchainImage
 {
     private readonly VulkanInteropContext _vk;
     private readonly ICompositionGpuInterop _interop;
@@ -86,17 +87,15 @@ class VulkanSwapchainImage : ISwapchainImage
                 AcquireKey = 0,
                 DeviceMemory = _image.DeviceMemory
             });
-        else */if (_initial)
+        else */
+        if (_initial)
         {
             _initial = false;
             buffer.Submit();
         }
         else
             buffer.Submit(new[] { _semaphorePair.ImageAvailableSemaphore },
-                new[]
-                {
-                    PipelineStageFlags.AllGraphicsBit
-                });
+                new[] { PipelineStageFlags.AllGraphicsBit });
     }
 
 
@@ -116,7 +115,7 @@ class VulkanSwapchainImage : ISwapchainImage
                 });
         }
         else*/
-            buffer.Submit(null, null, new[] { _semaphorePair.RenderFinishedSemaphore });
+        buffer.Submit(null, null, new[] { _semaphorePair.RenderFinishedSemaphore });
 
         //if (!_image.IsDirectXBacked)
         {
@@ -137,7 +136,7 @@ class VulkanSwapchainImage : ISwapchainImage
         /*if (_image.IsDirectXBacked)
             _lastPresent = _target.UpdateWithKeyedMutexAsync(_importedImage, 1, 0);
         else*/
-            _lastPresent =
-                _target.UpdateWithSemaphoresAsync(_importedImage, _renderCompletedSemaphore!, _availableSemaphore!);
+        _lastPresent =
+            _target.UpdateWithSemaphoresAsync(_importedImage, _renderCompletedSemaphore!, _availableSemaphore!);
     }
 }

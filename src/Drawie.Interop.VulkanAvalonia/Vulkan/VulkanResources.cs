@@ -1,6 +1,6 @@
 ﻿namespace Drawie.Interop.VulkanAvalonia.Vulkan;
 
-internal class VulkanResources : IAsyncDisposable
+public class VulkanResources : IAsyncDisposable
 {
     public VulkanInteropContext Context { get; }
     public VulkanSwapchain Swapchain { get; }

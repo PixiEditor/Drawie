@@ -4,7 +4,7 @@ using Drawie.Interop.VulkanAvalonia.Utils;
 
 namespace Drawie.Interop.VulkanAvalonia;
 
-abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : class, ISwapchainImage
+public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : class, ISwapchainImage
 {
     protected ICompositionGpuInterop Interop { get; }
     protected CompositionDrawingSurface Target { get; }
@@ -74,7 +74,7 @@ abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : class, IS
     }
 }
 
-interface ISwapchainImage : IAsyncDisposable
+public interface ISwapchainImage : IAsyncDisposable
 {
     PixelSize Size { get; }
     Task? LastPresent { get; }

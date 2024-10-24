@@ -30,18 +30,18 @@ public abstract class DrawieControl : InteropControl
         resources?.DisposeAsync();
         resources = null;
     }
-    
+
     public abstract void Draw(DrawingSurface surface);
 
     protected override void RenderFrame(PixelSize size)
     {
         if (resources != null)
         {
-            if(size.Width == 0 || size.Height == 0)
+            if (size.Width == 0 || size.Height == 0)
             {
                 return;
             }
-            
+
             if (renderSurface == null || lastSize != size)
             {
                 resources.Content.CreateTemporalObjects(size);
@@ -52,14 +52,15 @@ public abstract class DrawieControl : InteropControl
 
                 renderSurface =
                     DrawingBackendApi.Current.CreateRenderSurface(sizeVec,
-                resources.Content.texture, SurfaceOrigin.BottomLeft);
-                
+                        resources.Content.texture, SurfaceOrigin.BottomLeft);
+
                 lastSize = size;
             }
 
             using (resources.Swapchain.BeginDraw(size, out var image))
             {
-                Draw(renderSurface); 
+                renderSurface.Canvas.Clear();
+                Draw(renderSurface);
                 renderSurface.Flush();
 
                 resources.Content.Render(image);

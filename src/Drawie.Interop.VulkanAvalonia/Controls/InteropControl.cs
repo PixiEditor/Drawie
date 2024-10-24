@@ -18,7 +18,7 @@ public abstract class InteropControl : Control
 
     private string info = string.Empty;
     private bool initialized = false;
-    
+
     public InteropControl()
     {
         update = UpdateFrame;
@@ -36,6 +36,7 @@ public abstract class InteropControl : Control
         {
             FreeGraphicsResources();
         }
+
         initialized = false;
         base.OnDetachedFromVisualTree(e);
     }
@@ -77,6 +78,12 @@ public abstract class InteropControl : Control
         }
 
         surfaceVisual.Size = new Vector(Bounds.Width, Bounds.Height);
+
+        if (double.IsNaN(surfaceVisual.Size.X) || double.IsNaN(surfaceVisual.Size.Y))
+        {
+            return;
+        }
+
         var size = PixelSize.FromSize(Bounds.Size, root.RenderScaling);
         RenderFrame(size);
     }
