@@ -82,7 +82,12 @@ public class DrawieTextureControl : DrawieControl
         }
 
         surface.Canvas.Clear(Colors.Transparent);
+        surface.Canvas.Save();
+
+        ScaleCanvas(surface.Canvas);
         surface.Canvas.DrawSurface(Texture.DrawingSurface, 0, 0);
+
+        surface.Canvas.Restore();
     }
 
     private void ScaleCanvas(Canvas canvas)

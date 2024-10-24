@@ -175,6 +175,8 @@ public class VulkanInteropContext : VulkanContext
 
     public override unsafe void Dispose()
     {
+        Pool.FreeUsedCommandBuffers();
+        Pool.Dispose();
         LogicalDevice.Dispose();
         if (EnableValidationLayers)
         {
