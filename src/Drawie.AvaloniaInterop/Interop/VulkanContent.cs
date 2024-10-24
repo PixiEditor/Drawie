@@ -23,11 +23,10 @@ public class VulkanContent : IDisposable
 
     private bool isInit;
 
-    public unsafe VulkanContent(VulkanInteropContext context)
+    public VulkanContent(VulkanInteropContext context)
     {
         this.context = context;
     }
-
 
     public void Render(VulkanImage image)
     {
@@ -82,9 +81,9 @@ public class VulkanContent : IDisposable
             image.InternalHandle, ImageLayout.TransferDstOptimal, 1, srcBlitRegion, Filter.Linear);
 
         commandBuffer.Submit();
-
+        
         texture.TransitionLayoutTo((uint)ImageLayout.TransferSrcOptimal,
-            (uint)ImageLayout.ShaderReadOnlyOptimal);
+            (uint)ImageLayout.ColorAttachmentOptimal);
     }
 
     public void CreateTextureImage(VecI size)
@@ -94,7 +93,7 @@ public class VulkanContent : IDisposable
             context.GraphicsQueue, context.GraphicsQueueFamilyIndex, size);
     }
 
-    public unsafe void Dispose()
+    public void Dispose()
     {
         if (isInit)
         {
@@ -123,10 +122,5 @@ public class VulkanContent : IDisposable
 
         isInit = true;
         _previousImageSize = size;
-    }
-
-    public void PrepareTextureToWrite()
-    {
-        texture.TransitionLayoutTo(VulkanTexture.ShaderReadOnlyOptimal, VulkanTexture.ColorAttachmentOptimal);
     }
 }

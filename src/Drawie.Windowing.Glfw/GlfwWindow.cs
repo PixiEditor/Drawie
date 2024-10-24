@@ -134,7 +134,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
     private void CreateRenderTarget(VecI size, ITexture nativeRenderTexture)
     {
-        var drawingSurface = DrawingBackendApi.Current.CreateRenderSurface(size, nativeRenderTexture);
+        var drawingSurface = DrawingBackendApi.Current.CreateRenderSurface(size, nativeRenderTexture, SurfaceOrigin.TopLeft);
         renderTexture = Texture.FromExisting(drawingSurface);
     }
 

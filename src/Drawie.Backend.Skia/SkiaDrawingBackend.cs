@@ -109,7 +109,7 @@ namespace Drawie.Skia
             SurfaceImplementation.GrContext = GraphicsContext;
         }
 
-        public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture)
+        public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture, SurfaceOrigin surfaceOrigin)
         {
             if(renderTexture is IVkTexture texture)
             {
@@ -128,11 +128,9 @@ namespace Drawie.Skia
                 };
 
                 var surface = SKSurface.Create(GraphicsContext, new GRBackendRenderTarget(size.X, size.Y, 1, imageInfo),
-                    GRSurfaceOrigin.TopLeft, SKColorType.Rgba8888,
+                    (GRSurfaceOrigin)surfaceOrigin, SKColorType.Rgba8888,
                     new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
-
-                texture.MakeReadOnly();
-
+                
                 return DrawingSurface.FromNative(surface);
             }
             

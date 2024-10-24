@@ -194,6 +194,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
     {
         texture = new VulkanTexture(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, commandPool,
             context.GraphicsQueue, context.GraphicsQueueFamilyIndex, framebufferSize);
+        texture.MakeReadOnly();
     }
 
     private unsafe void CreateDescriptorPool()

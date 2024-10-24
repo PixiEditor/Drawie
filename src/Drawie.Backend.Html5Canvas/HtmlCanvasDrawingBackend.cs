@@ -42,7 +42,7 @@ public class HtmlCanvasDrawingBackend : IDrawingBackend
         
     }
 
-    public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture)
+    public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture, SurfaceOrigin origin)
     {
         if(renderTexture is ICanvasTexture canvasTexture)
         {

@@ -53,7 +53,7 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
 
     private Texture CreateRenderTexture()
     {
-        var drawingSurface = DrawingBackendApi.Current.CreateRenderSurface(UsableWindowSize, RenderApi.RenderTexture);
+        var drawingSurface = DrawingBackendApi.Current.CreateRenderSurface(UsableWindowSize, RenderApi.RenderTexture, SurfaceOrigin.TopLeft);
         return Texture.FromExisting(drawingSurface);
     }
 }
