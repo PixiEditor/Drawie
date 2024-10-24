@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
 using Drawie.Interop.VulkanAvalonia.Vulkan;
@@ -30,6 +31,15 @@ public static class AppBuilderExtensions
                 DrawingEngine drawingEngine = new DrawingEngine(renderApi, null, drawingBackend);
 
                 DrawieInterop.VulkanInteropContext = context;
+
+                if (c.Instance.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    desktop.Exit += (sender, args) =>
+                    {
+                        drawingEngine.Dispose();
+                        context.Dispose();
+                    };
+                }
 
                 drawingEngine.Run();
             }, DispatcherPriority.Loaded);

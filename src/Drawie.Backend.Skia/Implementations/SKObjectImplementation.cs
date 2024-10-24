@@ -18,5 +18,15 @@ namespace Drawie.Skia.Implementations
             get => ManagedInstances.TryGetValue(objPtr, out var instance) ? instance : throw new ObjectDisposedException(nameof(objPtr));
             set => ManagedInstances[objPtr] = value;
         }
+
+        public void DisposeAll()
+        {
+            foreach (var instance in ManagedInstances.Values)
+            {
+                instance.Dispose();
+            }
+            
+            ManagedInstances.Clear();
+        }
     }
 }

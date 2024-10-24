@@ -47,4 +47,9 @@ public class DrawingEngine
         
         DrawingBackendApi.InitializeBackend(RenderApi);
     }
+
+    public async ValueTask Dispose()
+    {
+        await DrawingBackend.DisposeAsync();
+    }
 }

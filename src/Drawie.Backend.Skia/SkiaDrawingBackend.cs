@@ -158,5 +158,28 @@ namespace Drawie.Skia
         {
             return "Skia";
         }
+
+        public async ValueTask DisposeAsync()
+        {
+            DisposeImpl<SKCanvas>(CanvasImplementation as SkiaCanvasImplementation);
+            DisposeImpl<SKPaint>(PaintImplementation as SkiaPaintImplementation);
+            DisposeImpl<SKPath>(PathImplementation as SkiaPathImplementation);
+            DisposeImpl<SKPixmap>(PixmapImplementation as SkiaPixmapImplementation);
+            DisposeImpl<SKSurface>(SurfaceImplementation);
+            
+            if (_grContext is IAsyncDisposable grContextAsyncDisposable)
+            {
+                await grContextAsyncDisposable.DisposeAsync();
+            }
+            else
+            {
+                _grContext.Dispose();
+            }
+        }
+
+        private void DisposeImpl<T>(SkObjectImplementation<T> impl) where T : SKObject
+        {
+            impl.DisposeAll();
+        }
     }
 }

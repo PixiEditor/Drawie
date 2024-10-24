@@ -6,7 +6,7 @@ using Drawie.RenderApi;
 
 namespace Drawie.Backend.Core.Bridge
 {
-    public interface IDrawingBackend
+    public interface IDrawingBackend : IAsyncDisposable
     {
         public void Setup(IRenderApi renderApi);
         public IColorImplementation ColorImplementation { get; }
