@@ -29,6 +29,7 @@ namespace Drawie.Skia
             }
         }
 
+        public IPathEffectImplementation PathEffectImplementation { get; set; }
         public bool IsHardwareAccelerated => GraphicsContext != null;
 
         public IRenderingDispatcher RenderingDispatcher { get; set; }
@@ -66,8 +67,11 @@ namespace Drawie.Skia
 
             SkiaShaderImplementation shader = new SkiaShaderImplementation();
             ShaderImplementation = shader;
+            
+            SkiaPathEffectImplementation pathEffectImpl = new SkiaPathEffectImplementation();
+            PathEffectImplementation = pathEffectImpl;
 
-            SkiaPaintImplementation paintImpl = new SkiaPaintImplementation(colorFilterImpl, imageFilterImpl, shader);
+            SkiaPaintImplementation paintImpl = new SkiaPaintImplementation(colorFilterImpl, imageFilterImpl, shader, pathEffectImpl);
             PaintImplementation = paintImpl;
 
             SkiaPathImplementation pathImpl = new SkiaPathImplementation();

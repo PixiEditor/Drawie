@@ -23,6 +23,7 @@ namespace Drawie.Backend.Core.Bridge
         public IColorFilterImplementation ColorFilterImplementation { get; }
         public IImageFilterImplementation ImageFilterImplementation { get; }
         public IShaderImplementation ShaderImplementation { get; set; }
+        public IPathEffectImplementation PathEffectImplementation { get; }
         public bool IsHardwareAccelerated { get; }
         public IRenderingDispatcher RenderingDispatcher { get; set; }
         public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture, SurfaceOrigin origin);

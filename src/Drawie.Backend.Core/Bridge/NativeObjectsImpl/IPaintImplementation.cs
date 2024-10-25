@@ -2,6 +2,7 @@
 using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
+using Drawie.Backend.Core.Surfaces.Vector;
 
 namespace Drawie.Backend.Core.Bridge.NativeObjectsImpl
 {
@@ -34,5 +35,7 @@ namespace Drawie.Backend.Core.Bridge.NativeObjectsImpl
         public object GetNativePaint(IntPtr objectPointer);
         public Shader? GetShader(Paint paint);
         public void SetShader(Paint paint, Shader shader);
+        public PathEffect GetPathEffect(Paint paint);
+        public void SetPathEffect(Paint paint, PathEffect value);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Shaders;
+using Drawie.Backend.Core.Surfaces.Vector;
 
 namespace Drawie.Backend.Core.Surfaces.PaintImpl
 {
@@ -85,6 +86,12 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
                 DrawingBackendApi.Current.PaintImplementation.SetShader(this, value);
                 shader = value;
             }
+        }
+
+        public PathEffect? PathEffect
+        {
+            get => DrawingBackendApi.Current.PaintImplementation.GetPathEffect(this);
+            set => DrawingBackendApi.Current.PaintImplementation.SetPathEffect(this, value);
         }
 
         public Paint(IntPtr objPtr) : base(objPtr)

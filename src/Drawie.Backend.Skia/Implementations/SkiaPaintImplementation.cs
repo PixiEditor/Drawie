@@ -3,6 +3,7 @@ using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
+using Drawie.Backend.Core.Surfaces.Vector;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations
@@ -12,15 +13,16 @@ namespace Drawie.Skia.Implementations
         private readonly SkiaColorFilterImplementation colorFilterImplementation;
         private readonly SkiaImageFilterImplementation imageFilterImplementation;
         private readonly SkiaShaderImplementation shaderImplementation;
+        private readonly SkiaPathEffectImplementation pathEffectImplementation;
  
-        public SkiaPaintImplementation(SkiaColorFilterImplementation colorFilterImpl, SkiaImageFilterImplementation imageFilterImpl, SkiaShaderImplementation shaderImpl)
+        public SkiaPaintImplementation(SkiaColorFilterImplementation colorFilterImpl, SkiaImageFilterImplementation imageFilterImpl, SkiaShaderImplementation shaderImpl, SkiaPathEffectImplementation pathEffectImpl)
         {
             colorFilterImplementation = colorFilterImpl;
             imageFilterImplementation = imageFilterImpl;
             shaderImplementation = shaderImpl;
+            pathEffectImplementation = pathEffectImpl;
         }
 
-        
         public IntPtr CreatePaint()
         {
             SKPaint skPaint = new SKPaint();
@@ -194,6 +196,19 @@ namespace Drawie.Skia.Implementations
             SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
             skPaint.Shader = shader == null ? null : shaderImplementation[shader.ObjectPointer];
         }
+
+        public PathEffect GetPathEffect(Paint paint)
+        {
+            SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
+            return new PathEffect(skPaint.PathEffect.Handle);
+        }
+
+        public void SetPathEffect(Paint paint, PathEffect? value)
+        {
+            SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
+            skPaint.PathEffect = value == null ? null : pathEffectImplementation[value.ObjectPointer]; 
+        }
+
 
         public object GetNativePaint(IntPtr objectPointer)
         {
