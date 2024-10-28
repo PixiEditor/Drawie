@@ -4,5 +4,5 @@ namespace DrawiEngine;
 
 public class DrawieRenderingDispatcher : IRenderingDispatcher
 {
-    public Action<Action> Invoke { get; }
+    public Action<Action> Invoke { get; } = action => action();
 }

@@ -28,7 +28,7 @@ public static class AppBuilderExtensions
 
                 VulkanRenderApi renderApi = new VulkanRenderApi(context);
                 SkiaDrawingBackend drawingBackend = new SkiaDrawingBackend();
-                DrawingEngine drawingEngine = new DrawingEngine(renderApi, null, drawingBackend);
+                DrawingEngine drawingEngine = new DrawingEngine(renderApi, null, drawingBackend, new AvaloniaRenderingDispatcher());
 
                 DrawieInterop.VulkanInteropContext = context;
 

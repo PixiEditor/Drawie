@@ -1,4 +1,5 @@
-﻿using Drawie.Backend.Core.Bridge;
+﻿using Drawie.Backend.Core;
+using Drawie.Backend.Core.Bridge;
 using Drawie.RenderApi;
 using Drawie.Windowing;
 
@@ -9,15 +10,18 @@ public class DrawingEngine
     public IRenderApi RenderApi { get; }
     public IWindowingPlatform? WindowingPlatform { get; }
     public IDrawingBackend DrawingBackend { get; }
+    
+    public IRenderingDispatcher RenderingDispatcher { get; } = new DrawieRenderingDispatcher();
 
     public DrawingEngine(IRenderApi renderApi, IWindowingPlatform? windowingPlatform,
-        IDrawingBackend drawingBackend)
+        IDrawingBackend drawingBackend, IRenderingDispatcher renderingDispatcher)
     {
         RenderApi = renderApi;
         WindowingPlatform = windowingPlatform;
         DrawingBackend = drawingBackend;
+        RenderingDispatcher = renderingDispatcher;
 
-        DrawingBackendApi.SetupBackend(DrawingBackend, new DrawieRenderingDispatcher());
+        DrawingBackendApi.SetupBackend(DrawingBackend, renderingDispatcher);
     }
 
     public void RunWithApp(DrawieApp app)
