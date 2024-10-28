@@ -152,6 +152,14 @@ namespace Drawie.Skia.Implementations
             return new VecD(point.X, point.Y);
         }
 
+        public VectorPath FromSvgPath(string svgPath)
+        {
+            SKPath skPath = SKPath.ParseSvgPathData(svgPath);
+            
+            ManagedInstances[skPath.Handle] = skPath;
+            return new VectorPath(skPath.Handle);
+        }
+
         /// <summary>
         ///     Compute the result of a logical operation on two paths.
         /// </summary>

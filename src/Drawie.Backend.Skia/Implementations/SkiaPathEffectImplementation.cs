@@ -22,11 +22,6 @@ public class SkiaPathEffectImplementation : SkObjectImplementation<SKPathEffect>
 
     public object GetNativePathEffect(IntPtr objectPointer)
     {
-        if (!ManagedInstances.TryGetValue(objectPointer, out var pathEffect))
-        {
-            return null;
-        }
-
-        return pathEffect;
+        return ManagedInstances.GetValueOrDefault(objectPointer);
     }
 }

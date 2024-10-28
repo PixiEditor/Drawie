@@ -225,5 +225,16 @@ namespace Drawie.Backend.Core.ColorsImpl
         byte a = (byte)(from.A + (to.A - from.A) * t);
         return new Color(r, g, b, a);
     }
+
+    public static Color FromArgb(byte a, byte r, byte g, byte b)
+    {
+        return new Color(r, g, b, a);
+    }
+
+    public static Color FromRgb(byte r, byte g, byte b)
+    {
+        return new Color(r, g, b);
+    }
+    
   }
 }

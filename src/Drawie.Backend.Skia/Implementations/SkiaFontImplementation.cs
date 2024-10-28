@@ -55,6 +55,13 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         throw new InvalidOperationException("Native font object not found");
     }
 
+    public Font CreateDefault(float fontSize)
+    {
+        SKFont font = new(SKTypeface.Default, fontSize);
+        ManagedInstances[font.Handle] = font;
+        return new Font(font.Handle); 
+    }
+
     public void Dispose(IntPtr objectPointer)
     {
         if (ManagedInstances.TryRemove(objectPointer, out SKFont font))

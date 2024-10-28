@@ -5,7 +5,6 @@ namespace Drawie.Backend.Core.Surfaces.Vector;
 public class PathEffect : NativeObject
 {
     public override object Native => DrawingBackendApi.Current.PathEffectImplementation.GetNativePathEffect(ObjectPointer);
-    
     public PathEffect(IntPtr objPtr) : base(objPtr)
     {
     }

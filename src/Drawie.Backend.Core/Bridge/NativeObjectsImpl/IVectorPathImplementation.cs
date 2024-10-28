@@ -38,4 +38,5 @@ public interface IVectorPathImplementation
     public void AddPath(VectorPath vectorPath, VectorPath path, AddPathMode mode);
     public object GetNativePath(IntPtr objectPointer);
     public VecD GetLastPoint(VectorPath vectorPath);
+    public VectorPath FromSvgPath(string svgPath);
 }

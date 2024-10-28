@@ -244,7 +244,13 @@ namespace Drawie.Skia.Implementations
         {
             SKFont skFont = _fontImpl[font.ObjectPointer];
             ManagedInstances[objPtr].DrawText(text, x, y, skFont, _paintImpl[paint.ObjectPointer]);
-        } 
+        }
+
+        public void DrawText(IntPtr objectPointer, string text, float x, float y, TextAlign align, Font font, Paint paint)
+        {
+            SKFont skFont = _fontImpl[font.ObjectPointer];
+            ManagedInstances[objectPointer].DrawText(text, x, y, (SKTextAlign)align, skFont, _paintImpl[paint.ObjectPointer]);
+        }
 
         public int SaveLayer(IntPtr objectPointer)
         {
@@ -266,6 +272,11 @@ namespace Drawie.Skia.Implementations
         public Matrix3X3 GetTotalMatrix(IntPtr objectPointer)
         {
             return ManagedInstances[objectPointer].TotalMatrix.ToMatrix3X3();
+        }
+
+        public void RotateDegrees(IntPtr objectPointer, float degrees)
+        {
+            ManagedInstances[objectPointer].RotateDegrees(degrees);
         }
 
         public void Dispose(IntPtr objectPointer)

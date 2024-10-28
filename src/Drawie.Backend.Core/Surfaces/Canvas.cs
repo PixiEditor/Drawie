@@ -166,6 +166,11 @@ namespace Drawie.Backend.Core.Surfaces
             Changed?.Invoke(null);
         }
 
+        public void DrawText(string text, VecD position, TextAlign align, Font font, Paint paint)
+        {
+            DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X, (float)position.Y, align, font, paint);
+        }
+
         public void ClipPath(VectorPath clipPath) => ClipPath(clipPath, ClipOperation.Intersect);
 
         public void ClipPath(VectorPath clipPath, ClipOperation clipOperation) =>
@@ -260,6 +265,11 @@ namespace Drawie.Backend.Core.Surfaces
         public int SaveLayer(Paint paint, RectD bounds)
         {
             return DrawingBackendApi.Current.CanvasImplementation.SaveLayer(ObjectPointer, paint, bounds);
+        }
+
+        public void RotateDegrees(float degrees)
+        {
+            DrawingBackendApi.Current.CanvasImplementation.RotateDegrees(ObjectPointer, degrees);
         }
     }
 }

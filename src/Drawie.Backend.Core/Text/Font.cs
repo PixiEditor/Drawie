@@ -31,4 +31,9 @@ public class Font : NativeObject
     {
         return DrawingBackendApi.Current.FontImplementation.MeasureText(ObjectPointer, text);
     }
+
+    public static Font CreateDefault(float fontSize = 12f)
+    {
+        return DrawingBackendApi.Current.FontImplementation.CreateDefault(fontSize);
+    }
 }

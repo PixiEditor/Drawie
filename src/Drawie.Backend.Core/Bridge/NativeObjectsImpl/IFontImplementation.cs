@@ -10,4 +10,5 @@ public interface IFontImplementation
     public double GetFontSize(IntPtr objectPointer);
     public void SetFontSize(IntPtr objectPointer, double value);
     public double MeasureText(IntPtr objectPointer, string text);
+    public Font CreateDefault(float fontSize);
 }

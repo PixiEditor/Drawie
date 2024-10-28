@@ -56,6 +56,11 @@ public class VectorPath : NativeObject
         get => DrawingBackendApi.Current.PathImplementation.GetLastPoint(this);
     }
 
+    public static VectorPath FromSvgPath(string svgPath)
+    {
+        return DrawingBackendApi.Current.PathImplementation.FromSvgPath(svgPath);
+    }
+
     public VectorPath(IntPtr nativePointer) : base(nativePointer)
     {
     }
