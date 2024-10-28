@@ -26,6 +26,7 @@ namespace Drawie.Backend.Core.Bridge
         public IPathEffectImplementation PathEffectImplementation { get; }
         public bool IsHardwareAccelerated { get; }
         public IRenderingDispatcher RenderingDispatcher { get; set; }
+        public IFontImplementation FontImplementation { get; }
         public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture, SurfaceOrigin origin);
     }
 }

@@ -4,6 +4,7 @@ using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Surfaces.Vector;
+using Drawie.Backend.Core.Text;
 using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Bridge.Operations
@@ -43,6 +44,8 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public void DrawImage(IntPtr objectPointer, Image image, float x, float y, Paint paint);
         public void DrawRoundRect(IntPtr objectPointer, float x, float y, float width, float height, float radiusX,
             float radiusY, Paint paint);
+        public void DrawText(IntPtr objectPointer, string text, float x, float y, Paint paint);
+        public void DrawText(IntPtr objectPointer, string text, float x, float y, Font font, Paint paint);
         public int SaveLayer(IntPtr objectPtr);
         public int SaveLayer(IntPtr objectPtr, Paint paint);
         public int SaveLayer(IntPtr objectPtr, Paint paint, RectD bounds);

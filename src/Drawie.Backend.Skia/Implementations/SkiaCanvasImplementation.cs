@@ -5,6 +5,7 @@ using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Surfaces.Vector;
+using Drawie.Backend.Core.Text;
 using Drawie.Numerics;
 using SkiaSharp;
 
@@ -17,15 +18,17 @@ namespace Drawie.Skia.Implementations
         private readonly SkObjectImplementation<SKImage> _imageImpl;
         private readonly SkObjectImplementation<SKBitmap> _bitmapImpl;
         private readonly SkObjectImplementation<SKPath> _pathImpl;
+        private readonly SkObjectImplementation<SKFont> _fontImpl;
 
         public SkiaCanvasImplementation(SkObjectImplementation<SKPaint> paintImpl,
             SkObjectImplementation<SKImage> imageImpl, SkObjectImplementation<SKBitmap> bitmapImpl,
-            SkObjectImplementation<SKPath> pathImpl)
+            SkObjectImplementation<SKPath> pathImpl, SkObjectImplementation<SKFont> fontImpl)
         {
             _paintImpl = paintImpl;
             _imageImpl = imageImpl;
             _bitmapImpl = bitmapImpl;
             _pathImpl = pathImpl;
+            _fontImpl = fontImpl;
         }
 
         public void SetSurfaceImplementation(SkiaSurfaceImplementation surfaceImpl)
@@ -231,6 +234,17 @@ namespace Drawie.Skia.Implementations
         {
             ManagedInstances[objPtr].DrawBitmap(_bitmapImpl[bitmap.ObjectPointer], x, y);
         }
+
+        public void DrawText(IntPtr objPtr, string text, float x, float y, Paint paint)
+        {
+            ManagedInstances[objPtr].DrawText(text, x, y, _paintImpl[paint.ObjectPointer]);
+        }
+        
+        public void DrawText(IntPtr objPtr, string text, float x, float y, Font font, Paint paint)
+        {
+            SKFont skFont = _fontImpl[font.ObjectPointer];
+            ManagedInstances[objPtr].DrawText(text, x, y, skFont, _paintImpl[paint.ObjectPointer]);
+        } 
 
         public int SaveLayer(IntPtr objectPointer)
         {

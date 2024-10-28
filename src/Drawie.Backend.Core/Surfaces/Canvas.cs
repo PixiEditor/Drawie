@@ -4,6 +4,7 @@ using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Surfaces.Vector;
+using Drawie.Backend.Core.Text;
 using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Surfaces
@@ -151,6 +152,18 @@ namespace Drawie.Backend.Core.Surfaces
             DrawingBackendApi.Current.CanvasImplementation.DrawRoundRect(ObjectPointer, x, y, width, height, radiusX,
                 radiusY, paint);
             Changed?.Invoke(new RectD(x, y, width, height));
+        }
+        
+        public void DrawText(string text, VecD position, Paint paint)
+        {
+            DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X, (float)position.Y, paint);
+            Changed?.Invoke(null);
+        }
+        
+        public void DrawText(string text, VecD position, Font font, Paint paint)
+        {
+            DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X, (float)position.Y, font, paint);
+            Changed?.Invoke(null);
         }
 
         public void ClipPath(VectorPath clipPath) => ClipPath(clipPath, ClipOperation.Intersect);
