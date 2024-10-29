@@ -28,7 +28,8 @@ public static class AppBuilderExtensions
 
                 VulkanRenderApi renderApi = new VulkanRenderApi(context);
                 SkiaDrawingBackend drawingBackend = new SkiaDrawingBackend();
-                DrawingEngine drawingEngine = new DrawingEngine(renderApi, null, drawingBackend, new AvaloniaRenderingDispatcher());
+                DrawingEngine drawingEngine =
+                    new DrawingEngine(renderApi, null, drawingBackend, new AvaloniaRenderingDispatcher());
 
                 DrawieInterop.VulkanInteropContext = context;
 
@@ -36,8 +37,20 @@ public static class AppBuilderExtensions
                 {
                     desktop.Exit += (sender, args) =>
                     {
-                        drawingEngine.Dispose();
-                        context.Dispose();
+                        var mainWindow = (sender as IClassicDesktopStyleApplicationLifetime).MainWindow;
+                        if (!mainWindow.IsLoaded)
+                        {
+                            drawingEngine.Dispose();
+                            context.Dispose();
+                        }
+                        else
+                        {
+                            mainWindow.Unloaded += (o, eventArgs) =>
+                            {
+                                drawingEngine.Dispose();
+                                context.Dispose();
+                            };
+                        }
                     };
                 }
 
