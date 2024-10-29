@@ -28,6 +28,8 @@ public abstract class DrawieControl : InteropControl
     protected override void FreeGraphicsResources()
     {
         resources?.DisposeAsync();
+        renderSurface?.Dispose();
+        renderSurface = null;
         resources = null;
     }
 
