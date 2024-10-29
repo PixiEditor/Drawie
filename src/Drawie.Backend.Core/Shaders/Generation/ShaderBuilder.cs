@@ -83,7 +83,7 @@ public class ShaderBuilder
         Half4 result = new Half4(resultName);
         _variables.Add(result);
         _bodyBuilder.AppendLine(
-            $"half4 {resultName} = sample({texName.VariableName}, {pos.VariableName} * iResolution);");
+            $"half4 {resultName} = {texName.VariableName}.eval({pos.VariableName} * iResolution);");
         return result;
     }
 
