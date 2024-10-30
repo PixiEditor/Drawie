@@ -10,6 +10,7 @@ namespace Drawie.Backend.Core.Surfaces
         public override object Native => DrawingBackendApi.Current.SurfaceImplementation.GetNativeSurface(ObjectPointer);
         public Canvas Canvas { get; private set; }
         public RectI DeviceClipBounds => DrawingBackendApi.Current.SurfaceImplementation.GetDeviceClipBounds(ObjectPointer);
+        public RectD LocalClipBounds => DrawingBackendApi.Current.SurfaceImplementation.GetLocalClipBounds(ObjectPointer); 
 
         public event SurfaceChangedEventHandler? Changed;
 

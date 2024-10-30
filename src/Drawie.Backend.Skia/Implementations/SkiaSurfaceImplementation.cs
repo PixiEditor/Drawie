@@ -175,5 +175,11 @@ namespace Drawie.Skia.Implementations
         {
             ManagedInstances.TryRemove(surface.ObjectPointer, out _);
         }
+
+        public RectD GetLocalClipBounds(IntPtr objectPointer)
+        {
+            SKRect skRect = ManagedInstances[objectPointer].Canvas.LocalClipBounds;
+            return new RectD(skRect.Left, skRect.Top, skRect.Width, skRect.Height);
+        }
     }
 }
