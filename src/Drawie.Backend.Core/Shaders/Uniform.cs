@@ -52,7 +52,7 @@ public struct Uniform
         FloatArrayValue = new float[] { color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f };
         ShaderValue = default;
         DataType = UniformValueType.FloatArray;
-        //LayoutOf = "color"; TODO: Doesn't work with SkiaSharp 2.8x, check with 3.0 when it releases
+        LayoutOf = "color"; 
         UniformName = "half4";
     }
 
