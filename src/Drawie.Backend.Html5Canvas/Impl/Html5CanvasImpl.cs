@@ -5,6 +5,7 @@ using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Surfaces.Vector;
+using Drawie.Backend.Core.Text;
 using Drawie.Html5Canvas.Extensions;
 using Drawie.Html5Canvas.Objects;
 using Drawie.Numerics;
@@ -53,7 +54,7 @@ public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplemen
         throw new NotImplementedException();
     }
 
-    public void DrawPoint(IntPtr objPtr, VecI pos, Paint paint)
+    public void DrawPoint(IntPtr objPtr, VecD pos, Paint paint)
     {
         throw new NotImplementedException();
     }
@@ -118,7 +119,7 @@ public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplemen
         canvasObject.Context.DrawFillRect(0, 0, canvasObject.Size.X, canvasObject.Size.Y);
     }
 
-    public void DrawLine(IntPtr objPtr, VecI from, VecI to, Paint paint)
+    public void DrawLine(IntPtr objPtr, VecD from, VecD to, Paint paint)
     {
         throw new NotImplementedException();
     }
@@ -190,6 +191,46 @@ public class Html5CanvasImpl : HtmlObjectImpl<HtmlCanvasObject>, ICanvasImplemen
 
     public void DrawRoundRect(IntPtr objectPointer, float x, float y, float width, float height, float radiusX, float radiusY,
         Paint paint)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void DrawText(IntPtr objectPointer, string text, float x, float y, Paint paint)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void DrawText(IntPtr objectPointer, string text, float x, float y, Font font, Paint paint)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void DrawText(IntPtr objectPointer, string text, float x, float y, TextAlign align, Font font, Paint paint)
+    {
+        throw new NotImplementedException();
+    }
+
+    public int SaveLayer(IntPtr objectPtr)
+    {
+        throw new NotImplementedException();
+    }
+
+    public int SaveLayer(IntPtr objectPtr, Paint paint)
+    {
+        throw new NotImplementedException();
+    }
+
+    public int SaveLayer(IntPtr objectPtr, Paint paint, RectD bounds)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Matrix3X3 GetTotalMatrix(IntPtr objectPointer)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void RotateDegrees(IntPtr objectPointer, float degrees)
     {
         throw new NotImplementedException();
     }

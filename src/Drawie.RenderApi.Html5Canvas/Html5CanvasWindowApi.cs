@@ -7,7 +7,7 @@ public class Html5CanvasWindowApi : IBrowserWindowRenderApi
 {
     private HtmlCanvas canvasObject;
     public event Action? FramebufferResized;
-    public ITexture RenderTexture { get; }
+    public ITexture RenderTexture => canvasObject; 
 
     public string CanvasId { get; private set; }
     

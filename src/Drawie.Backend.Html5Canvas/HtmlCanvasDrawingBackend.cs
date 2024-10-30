@@ -26,6 +26,7 @@ public class HtmlCanvasDrawingBackend : IDrawingBackend
     public IColorFilterImplementation ColorFilterImplementation { get; }
     public IImageFilterImplementation ImageFilterImplementation { get; }
     public IShaderImplementation ShaderImplementation { get; set; }
+    public IPathEffectImplementation PathEffectImplementation { get; }
     public bool IsHardwareAccelerated { get; } = true;
     public IRenderingDispatcher RenderingDispatcher { get; set; }
     
@@ -42,6 +43,8 @@ public class HtmlCanvasDrawingBackend : IDrawingBackend
         
     }
 
+    public IFontImplementation FontImplementation { get; }
+
     public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture, SurfaceOrigin origin)
     {
         if(renderTexture is ICanvasTexture canvasTexture)
@@ -51,5 +54,10 @@ public class HtmlCanvasDrawingBackend : IDrawingBackend
         }
         
         throw new ArgumentException($"Unsupported render API: {renderTexture}.");
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        return ValueTask.CompletedTask;
     }
 }

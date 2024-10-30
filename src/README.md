@@ -14,4 +14,4 @@ Built-in set of modules makes DRAWIE a complete GPU accelerated drawing engine w
 - [x] Vulkan Renderer
 - [ ] Compute Shaders API
 - [ ] Web support
-- [ ] Avalonia plug-in graphics
+- [x] Avalonia plug-in graphics

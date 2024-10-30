@@ -4,6 +4,7 @@ using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Html5Canvas.Objects;
+using Drawie.Numerics;
 
 namespace Drawie.Html5Canvas.Impl;
 
@@ -78,7 +79,22 @@ public class Html5CanvasSurface : ISurfaceImplementation
         
         return CreateDrawingSurface(canvasObject); 
     }
-    
+
+    public RectI GetDeviceClipBounds(IntPtr drawingSurface)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Unmanage(DrawingSurface surface)
+    {
+        throw new NotImplementedException();
+    }
+
+    public RectD GetLocalClipBounds(IntPtr objectPointer)
+    {
+        throw new NotImplementedException();
+    }
+
     private DrawingSurface CreateDrawingSurface(HtmlCanvasObject canvasObject)
     {
         canvasImpl.ManagedObjects.TryAdd(canvasObject.Handle, canvasObject);

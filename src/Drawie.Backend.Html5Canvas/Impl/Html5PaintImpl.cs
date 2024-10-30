@@ -4,6 +4,7 @@ using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
+using Drawie.Backend.Core.Surfaces.Vector;
 using Drawie.Html5Canvas.Objects;
 
 namespace Drawie.Html5Canvas.Impl;
@@ -136,6 +137,16 @@ public class Html5PaintImpl : HtmlObjectImpl<PaintObject>, IPaintImplementation
     }
 
     public void SetShader(Paint paint, Shader shader)
+    {
+        throw new NotImplementedException();
+    }
+
+    public PathEffect GetPathEffect(Paint paint)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void SetPathEffect(Paint paint, PathEffect value)
     {
         throw new NotImplementedException();
     }
