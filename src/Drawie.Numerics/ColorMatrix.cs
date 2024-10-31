@@ -147,6 +147,15 @@ public record struct ColorMatrix
 
     public static ColorMatrix WeightedWavelengthGrayscale { get; } = WeightedGrayscale(0.299f, 0.587f, 0.114f, 0);
 
+    public static ColorMatrix WeightedWavelengthAlphaGrayscale { get; } = new ColorMatrix(
+        // Set red, green, and blue channels to 0 (we're only interested in the alpha channel)
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        // Calculate alpha based on luminance (0.299*R + 0.587*G + 0.114*B)
+        0.299f, 0.587f, 0.114f, 0, 0
+    );
+    
     /// <summary>
     /// The rgb values become grayscale according to the weights image. Alpha becomes zero <br/>
     /// (r, g, b, a) => (rgb: r * rWeight + g * gWeight + b * bWeight + a * aWeight, 0)
