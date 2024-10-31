@@ -6,7 +6,8 @@
         <MakeDir Directories="$(OutputPath)shaders" />
     </Target>
   
-  <UsingTask TaskName="CompileShadersTask" AssemblyFile="$(SolutionDir)SpirvCompiler/bin/$(Configuration)/SpirvCompiler.dll"/>
+  <UsingTask TaskName="CompileShadersTask"
+             AssemblyFile="$(ProjectDir)../SpirvCompiler/bin/$(Configuration)/SpirvCompiler.dll"/>
 
     <!--run glslc command Shaders into output dir to /shaders/-->
     
