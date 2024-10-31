@@ -7,6 +7,7 @@
     </Target>
   
   <UsingTask TaskName="CompileShadersTask"
+             TaskFactory="TaskHostFactory"
              AssemblyFile="$(ProjectDir)../SpirvCompiler/bin/$(Configuration)/SpirvCompiler.dll"/>
 
     <!--run glslc command Shaders into output dir to /shaders/-->
