@@ -32,7 +32,7 @@ public class CompileShadersTask : Task
         string vertexShaderPath = Path.Combine(ShadersPath, "basic.vert");
         string fragmentShaderPath = Path.Combine(ShadersPath, "basic.frag");
 
-        using Compiler compiler = new();
+        Compiler compiler = new();
         using Result res = compiler.Compile(vertexShaderPath, ShaderKind.VertexShader);
         if (res.Status != Status.Success)
         {
@@ -56,6 +56,8 @@ public class CompileShadersTask : Task
 
         File.WriteAllBytes(outputVertexPath, vertexShaderBytes);
         File.WriteAllBytes(outputFragmentPath, fragmentShaderBytes);
+        
+        compiler.Dispose();
         
         Log.LogMessage(MessageImportance.High, "Shaders compiled successfully.");
 
