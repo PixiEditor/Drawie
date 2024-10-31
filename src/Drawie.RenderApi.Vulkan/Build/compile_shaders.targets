@@ -5,11 +5,12 @@
     <Target Name="CreateDir" AfterTargets="Build">
         <MakeDir Directories="$(OutputPath)shaders" />
     </Target>
+  
+  <UsingTask TaskName="CompileShadersTask" AssemblyFile="$(SolutionDir)SpirvCompiler/bin/$(Configuration)/SpirvCompiler.dll"/>
 
     <!--run glslc command Shaders into output dir to /shaders/-->
     
     <Target Name="CompileShaders" AfterTargets="CreateDir">
-        <Exec Command="glslc -o $(OutputPath)shaders/vert.spv $(MSBuildThisFileDirectory)/../Shaders/basic.vert" />
-        <Exec Command="glslc -o $(OutputPath)shaders/frag.spv $(MSBuildThisFileDirectory)/../Shaders/basic.frag" />
+        <CompileShadersTask ShadersPath="$(MSBuildThisFileDirectory)../Shaders/" OutputPath="$(OutputPath)shaders/"/>
     </Target>
 </Project>

@@ -17,12 +17,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Drawie.Numerics\Drawie.Numerics.csproj" />
       <ProjectReference Include="..\Drawie.RenderApi\Drawie.RenderApi.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Silk.NET.Maths">
-        <HintPath>..\..\..\..\.nuget\packages\silk.net.maths\2.21.0\lib\net5.0\Silk.NET.Maths.dll</HintPath>
-      </Reference>
+      <ProjectReference Include="..\SpirvCompiler\SpirvCompiler.csproj" ReferenceOutputAssembly="false"/>
     </ItemGroup>
     
     <!--TODO: Copy to actual final dir-->
