@@ -5,7 +5,7 @@ namespace Drawie.JSInterop;
 public partial class JSRuntime
 {
     [JSImport("canvas.openContext", "main.js")]
-    public static partial int OpenCanvasContext(string canvasId);
+    public static partial int OpenCanvasContext(string canvasId, string contextType = "2d");
     
     [JSImport("canvas.clearRect", "main.js")]
     public static partial void ClearCanvasRect(int contextHandle, double x, double y, double width, double height);

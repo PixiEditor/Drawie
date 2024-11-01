@@ -7,11 +7,9 @@ namespace SpirvCompiler;
 
 public class CompileShadersTask : Task
 {
-    [Required]
-    public string ShadersPath { get; set; } = string.Empty;
+    [Required] public string ShadersPath { get; set; } = string.Empty;
 
-    [Required] 
-    public string OutputPath { get; set; } = string.Empty;
+    [Required] public string OutputPath { get; set; } = string.Empty;
 
     public override bool Execute()
     {
@@ -56,7 +54,7 @@ public class CompileShadersTask : Task
 
         File.WriteAllBytes(outputVertexPath, vertexShaderBytes);
         File.WriteAllBytes(outputFragmentPath, fragmentShaderBytes);
-        
+
         Log.LogMessage(MessageImportance.High, "Shaders compiled successfully.");
 
         return true;

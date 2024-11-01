@@ -1,6 +1,5 @@
 ﻿namespace Drawie.RenderApi;
 
-public interface IBrowserWindowRenderApi : IWindowRenderApi
+public interface IBrowserRenderApi : IRenderApi
 {
-    public string CanvasId { get; }
 }

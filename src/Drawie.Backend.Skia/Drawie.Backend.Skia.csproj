@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp" Version="3.0.0-preview.4.1" />
+    <PackageReference Include="SkiaSharp" Version="3.0.0-preview.5.4" />
+    <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="3.0.0-preview.5.4" />
   </ItemGroup>
 
   <ItemGroup>

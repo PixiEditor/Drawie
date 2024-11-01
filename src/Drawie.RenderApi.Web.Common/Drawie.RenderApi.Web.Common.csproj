@@ -8,7 +8,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Drawie.JSInterop\Drawie.JSInterop.csproj" />
-      <ProjectReference Include="..\Drawie.RenderApi.Web.Common\Drawie.RenderApi.Web.Common.csproj" />
       <ProjectReference Include="..\Drawie.RenderApi\Drawie.RenderApi.csproj" />
     </ItemGroup>
 

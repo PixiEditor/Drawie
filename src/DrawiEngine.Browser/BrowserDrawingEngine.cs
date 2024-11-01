@@ -1,5 +1,7 @@
 ﻿using Drawie.Html5Canvas;
 using Drawie.RenderApi.Html5Canvas;
+using Drawie.RenderApi.WebGl;
+using Drawie.Skia;
 using Drawie.Windowing.Browser;
 
 namespace DrawiEngine.Browser;
@@ -8,7 +10,7 @@ public static class BrowserDrawingEngine
 {
      public static DrawingEngine CreateDefaultBrowser()
      {
-          Html5CanvasRenderApi renderApi = new Html5CanvasRenderApi();
-          return new DrawingEngine(renderApi, new BrowserWindowingPlatform(renderApi), new HtmlCanvasDrawingBackend(), new DrawieRenderingDispatcher());
+         WebGlRenderApi renderApi = new WebGlRenderApi();
+         return new DrawingEngine(renderApi, new BrowserWindowingPlatform(renderApi), new SkiaDrawingBackend(), new DrawieRenderingDispatcher());
      }
 }
