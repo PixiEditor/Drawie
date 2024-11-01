@@ -14,6 +14,7 @@ public class WebGlContext : IWebGlContext
     
     public IntPtr GetGlInterface(string name)
     {
-        return JSInterop.JSRuntime.GetProcAddress(name);
+        return (IntPtr)1;
+        //return JSInterop.JSRuntime.GetProcAddress(name);
     }
 }

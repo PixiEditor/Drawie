@@ -165,6 +165,13 @@ namespace Drawie.Skia
             }
             else if (renderTexture is ICanvasTexture canvasTexture)
             {
+                /*GRBackendRenderTarget target = new GRBackendRenderTarget(size.X, size.Y, 0, 0,
+                    new GRGlFramebufferInfo());
+                var surface = SKSurface.Create(GraphicsContext, target, (GRSurfaceOrigin)surfaceOrigin,
+                    SKColorType.Srgba8888);*/
+
+                var surface = SKSurface.Create(GraphicsContext, false, new SKImageInfo(size.X, size.Y));
+                return DrawingSurface.FromNative(surface);
             }
 
             throw new ArgumentException("Unsupported texture type.");

@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices.JavaScript;
+﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.JavaScript;
 
 namespace Drawie.JSInterop;
 
@@ -38,20 +39,24 @@ public partial class JSRuntime
     public static partial void Clear(int gl, int bits);
 
     [JSImport("webgl.vertexAttribPointer", "main.js")]
-    public static partial void VertexAttribPointer(int gl, int index, int size, int type, bool normalized, int stride, int offset);
+    public static partial void VertexAttribPointer(int gl, int index, int size, int type, bool normalized, int stride,
+        int offset);
 
     [JSImport("webgl.enableVertexAttribArray", "main.js")]
     public static partial void EnableVertexAttribArray(int gl, int index);
 
     [JSImport("webgl.useProgram", "main.js")]
     public static partial void UseProgram(int gl, int program);
-    
+
     [JSImport("webgl.drawArrays", "main.js")]
     public static partial void DrawArrays(int gl, int mode, int first, int count);
 
     [JSImport("webgl.getAttribLocation", "main.js")]
     public static partial int GetAttribLocation(int gl, int program, string name);
 
-    [JSImport("webgl.getProcAddress", "main.js")]
-    public static partial IntPtr GetProcAddress(string name);
+    [DllImport("libSkiaSharp", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void InterceptGLObject();
+
+    [JSImport("webgl.openSkiaContext", "main.js")]
+    public static partial int OpenSkiaContext(string canvasObjectId);
 }

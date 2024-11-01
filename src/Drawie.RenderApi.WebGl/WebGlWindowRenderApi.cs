@@ -35,14 +35,15 @@ public class WebGlWindowRenderApi : IWindowRenderApi
 
     public void CreateInstance(object contextObject, VecI framebufferSize)
     {
+        JSRuntime.InterceptGLObject();
         canvasObject = JSRuntime.CreateElement<HtmlCanvas>();
         CanvasId = canvasObject.Id;
         canvasObject.SetAttribute("width", framebufferSize.X.ToString());
         canvasObject.SetAttribute("height", framebufferSize.Y.ToString());
 
-        gl = JSRuntime.OpenCanvasContext(CanvasId, "webgl");
+        gl = JSRuntime.OpenSkiaContext(canvasObject.Id);
 
-        var vertexShader = LoadShader(gl, vertexSource, WebGlShaderType.Vertex);
+        /*var vertexShader = LoadShader(gl, vertexSource, WebGlShaderType.Vertex);
         var fragmentShader = LoadShader(gl, fragSource, WebGlShaderType.Fragment);
 
         program = InitProgram(gl, vertexShader, fragmentShader);
@@ -51,7 +52,7 @@ public class WebGlWindowRenderApi : IWindowRenderApi
         
         vertexPosAttrib = JSRuntime.GetAttribLocation(gl, program, "position");
         
-        Render(0);
+        Render(0);*/
     }
 
     public void DestroyInstance()

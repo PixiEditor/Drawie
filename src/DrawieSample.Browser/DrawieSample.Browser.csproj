@@ -1,8 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk.WebAssembly">
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <IsBrowserProject>true</IsBrowserProject>
+      <TargetFramework>net8.0-browser</TargetFramework>
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <IsBrowserProject>true</IsBrowserProject>
+      <EmccExtraLDFlags>$(EmccExtraLDFlags) --js-library="$(MSBuildThisFileDirectory)\SkiaSharpGLInterop.js"</EmccExtraLDFlags>
+      <PublishTrimmed>true</PublishTrimmed>
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <WasmBuildNative>true</WasmBuildNative>
     </PropertyGroup>
     
     <ItemGroup>
@@ -10,4 +14,5 @@
       <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
       <ProjectReference Include="..\DrawieSample\DrawieSample.csproj" />
     </ItemGroup>
+ 
 </Project>

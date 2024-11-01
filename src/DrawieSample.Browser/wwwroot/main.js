@@ -158,9 +158,28 @@ setModuleImports('main.js', {
             const program = programHandles[programId];
             return gl.getAttribLocation(program, name);
         },
-        getProcAddress: (name) => {
-            return WebGL2RenderingContext.prototype[name];
-        },
+        openSkiaContext: (canvasId) => {
+            const contextAttributes = {
+                alpha: 1,
+                depth: 1,
+                stencil: 8,
+                antialias: 1,
+                premultipliedAlpha: 1,
+                preserveDrawingBuffer: 0,
+                preferLowPowerToHighPerformance: 0,
+                failIfMajorPerformanceCaveat: 0,
+                majorVersion: 2,
+                minorVersion: 0,
+                enableExtensionsByDefault: 1,
+                explicitSwapControl: 0,
+                renderViaOffscreenBackBuffer: 0,
+            };
+
+            const canvas = document.getElementById(canvasId);
+            const handle = globalThis.SkiaSharpGL.createContext(canvas, contextAttributes);
+            globalThis.SkiaSharpGL.makeContextCurrent(handle);
+            return handle;
+        }
     },
     window: {
         innerWidth: () => window.innerWidth,
