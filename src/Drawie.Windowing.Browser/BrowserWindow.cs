@@ -42,7 +42,7 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
         RenderApi.PrepareTextureToWrite();
         renderTexture.DrawingSurface?.Canvas.Clear();
         Render?.Invoke(renderTexture, dt);
-        //renderTexture.DrawingSurface?.Flush();
+        renderTexture.DrawingSurface?.Flush();
         
         BrowserInterop.RequestAnimationFrame(OnRender);
     }
@@ -53,7 +53,7 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
 
     private Texture CreateRenderTexture()
     {
-        var drawingSurface = DrawingBackendApi.Current.CreateRenderSurface(UsableWindowSize, RenderApi.RenderTexture, SurfaceOrigin.TopLeft);
+        var drawingSurface = DrawingBackendApi.Current.CreateRenderSurface(UsableWindowSize, RenderApi.RenderTexture, SurfaceOrigin.BottomLeft);
         return Texture.FromExisting(drawingSurface);
     }
 }

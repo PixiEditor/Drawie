@@ -8,6 +8,7 @@ using Drawie.RenderApi;
 using Drawie.Skia.Exceptions;
 using Drawie.Skia.Implementations;
 using SkiaSharp;
+using ArgumentException = System.ArgumentException;
 
 namespace Drawie.Skia
 {
@@ -163,14 +164,13 @@ namespace Drawie.Skia
 
                 return DrawingSurface.FromNative(surface);
             }
-            else if (renderTexture is ICanvasTexture canvasTexture)
+            else if (renderTexture is IWebGlTexture wglTexture)
             {
-                /*GRBackendRenderTarget target = new GRBackendRenderTarget(size.X, size.Y, 0, 0,
-                    new GRGlFramebufferInfo());
-                var surface = SKSurface.Create(GraphicsContext, target, (GRSurfaceOrigin)surfaceOrigin,
-                    SKColorType.Srgba8888);*/
+                GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 0, 0,
+                    new GRGlFramebufferInfo(wglTexture.TextureId, SKColorType.Rgba8888.ToGlSizedFormat()));
+                var surface = SKSurface.Create(GraphicsContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
+                    SKColorType.Rgba8888);
 
-                var surface = SKSurface.Create(GraphicsContext, false, new SKImageInfo(size.X, size.Y));
                 return DrawingSurface.FromNative(surface);
             }
 

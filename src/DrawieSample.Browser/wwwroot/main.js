@@ -15,6 +15,12 @@ let programHandles = {};
 let bufferHandleIds = 0;
 let bufferHandles = {};
 
+let textureHandleIds = 0;
+let textureHandles = {};
+
+let uniformLocationHandleIds = 0;
+let uniformLocationHandles = {};
+
 const {setModuleImports, getAssemblyExports, getConfig} = await dotnet
     .withDiagnosticTracing(false)
     .withApplicationArgumentsFromQuery()
@@ -177,9 +183,59 @@ setModuleImports('main.js', {
 
             const canvas = document.getElementById(canvasId);
             const handle = globalThis.SkiaSharpGL.createContext(canvas, contextAttributes);
-            globalThis.SkiaSharpGL.makeContextCurrent(handle);
+            canvasContextHandleIds = handle;
+            canvasContextHandles[handle] = globalThis.SkiaSharpGL.getContext(handle).GLctx;
             return handle;
-        }
+        },
+        makeContextCurrent: (handle) => {
+            globalThis.SkiaSharpGL.makeContextCurrent(handle);
+        },
+        createTexture: (glHandle) => {
+            const gl = canvasContextHandles[glHandle];
+            const texture = gl.createTexture();
+            textureHandleIds++;
+            textureHandles[textureHandleIds] = texture;
+            return textureHandleIds;
+        },
+        bindTexture: (glHandle, target, textureId) => {
+            const gl = canvasContextHandles[glHandle];
+            const texture = textureHandles[textureId];
+            gl.bindTexture(target, texture);
+        },
+        texImage2D: (glHandle, target, level, internalformat, width, height, border, format, type, offset) => {
+            const gl = canvasContextHandles[glHandle];
+            gl.texImage2D(target, level, internalformat, width, height, border, format, type, null);
+        },
+        texParameteri: (glHandle, target, pname, param) => {
+            const gl = canvasContextHandles[glHandle];
+            gl.texParameteri(target, pname, param);
+        },
+        activeTexture: (glHandle, textureUnit) => {
+            const gl = canvasContextHandles[glHandle];
+            gl.activeTexture(gl.TEXTURE0 + textureUnit);
+        },
+        uniform1i: (glHandle, location, value) => {
+            const gl = canvasContextHandles[glHandle];
+            
+            const uniformLocation = uniformLocationHandles[location];
+            gl.uniform1i(uniformLocation, value);
+        },
+        getUniformLocation: (glHandle, programId, name) => {
+            const gl = canvasContextHandles[glHandle];
+            const program = programHandles[programId];
+            const location = gl.getUniformLocation(program, name);
+            
+            uniformLocationHandleIds++;
+            uniformLocationHandles[uniformLocationHandleIds] = location;
+            return uniformLocationHandleIds;
+        },
+        deleteTexture: (glHandle, textureId) => {
+            const gl = canvasContextHandles[glHandle];
+            const texture = textureHandles[textureId];
+            gl.deleteTexture(texture);
+            
+            delete textureHandles[textureId];
+        },
     },
     window: {
         innerWidth: () => window.innerWidth,

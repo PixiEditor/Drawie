@@ -5,7 +5,6 @@
       <IsBrowserProject>true</IsBrowserProject>
       <EmccExtraLDFlags>$(EmccExtraLDFlags) --js-library="$(MSBuildThisFileDirectory)\SkiaSharpGLInterop.js"</EmccExtraLDFlags>
       <PublishTrimmed>true</PublishTrimmed>
-      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
       <WasmBuildNative>true</WasmBuildNative>
     </PropertyGroup>
     

@@ -59,4 +59,33 @@ public partial class JSRuntime
 
     [JSImport("webgl.openSkiaContext", "main.js")]
     public static partial int OpenSkiaContext(string canvasObjectId);
+    
+    [JSImport("webgl.makeContextCurrent", "main.js")]
+    public static partial void MakeContextCurrent(int contextHandle);
+
+    [JSImport("webgl.createTexture", "main.js")]
+    public static partial int CreateTexture(int handle);
+
+    [JSImport("webgl.bindTexture", "main.js")]
+    public static partial void BindTexture(int handle, int type, int textureId);
+
+    [JSImport("webgl.texImage2D", "main.js")]
+    public static partial void TexImage2D(int handle, int type, int level, int format, int width, int height,
+        int border, int srcFormat, int srcType,
+        int offset);
+
+    [JSImport("webgl.texParameteri", "main.js")]
+    public static partial void TexParameteri(int handle, int type, int pName, int wrapping);
+
+    [JSImport("webgl.activeTexture", "main.js")]
+    public static partial void ActiveTexture(int gl, int index);
+
+    [JSImport("webgl.uniform1i", "main.js")]
+    public static partial void Uniform1i(int gl, int location, int value);
+
+    [JSImport("webgl.getUniformLocation", "main.js")]
+    public static partial int GetUniformLocation(int gl, int program, string name);
+
+    [JSImport("webgl.deleteTexture", "main.js")]
+    public static partial void DeleteTexture(int gl, int textureId);
 }
