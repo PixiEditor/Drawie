@@ -5,6 +5,7 @@ namespace Drawie.Windowing.Browser;
 
 public partial class BrowserInterop
 {
+    private static bool subscribedWindowResize = false;
     private static event Action<double> OnRender;
 
     static BrowserInterop()
@@ -31,7 +32,7 @@ public partial class BrowserInterop
 
     public static void RequestAnimationFrame(Action<double> onRender)
     {
-        OnRender += onRender; 
+        OnRender += onRender;
         JSRuntime.RequestAnimationFrame();
     }
 
@@ -39,5 +40,16 @@ public partial class BrowserInterop
     {
         OnRender?.Invoke(obj);
         OnRender = null;
+    }
+
+    public static void SubscribeWindowResize(Action<int, int> onWindowResize)
+    {
+        if (!subscribedWindowResize)
+        {
+            JSRuntime.SubscribeWindowResize();
+            subscribedWindowResize = true;
+        }
+        
+        JSRuntime.WindowResizedEvent += onWindowResize;
     }
 }

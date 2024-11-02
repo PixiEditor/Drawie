@@ -14,7 +14,10 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
         set => BrowserInterop.SetTitle(value);
     }
 
-    public VecI Size { get; set; }
+    public VecI Size
+    {
+        get => UsableWindowSize;
+    }
 
     public VecI UsableWindowSize => BrowserInterop.GetWindowSize();
     
@@ -25,16 +28,24 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
     public event Action<Texture, double>? Render;
 
     private Texture renderTexture;
-
+    
     public void Initialize()
     {
         RenderApi.CreateInstance(null, UsableWindowSize);
+        RenderApi.FramebufferResized += FramebufferResized;
+    }
+
+    private void FramebufferResized()
+    {
+        renderTexture?.Dispose();
+        renderTexture = CreateRenderTexture();
     }
 
     public void Show()
     {
         renderTexture = CreateRenderTexture();
         BrowserInterop.RequestAnimationFrame(OnRender);
+        BrowserInterop.SubscribeWindowResize(OnWindowResized);
     }
 
     private void OnRender(double dt)
@@ -43,12 +54,16 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
         renderTexture.DrawingSurface?.Canvas.Clear();
         Render?.Invoke(renderTexture, dt);
         renderTexture.DrawingSurface?.Flush();
-        
-        BrowserInterop.RequestAnimationFrame(OnRender);
     }
 
     public void Close()
     {
+    }
+    
+    private void OnWindowResized(int width, int height)
+    {
+        RenderApi?.UpdateFramebufferSize(width, height);
+        BrowserInterop.RequestAnimationFrame(OnRender);
     }
 
     private Texture CreateRenderTexture()

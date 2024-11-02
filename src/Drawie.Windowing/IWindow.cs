@@ -8,7 +8,7 @@ namespace Drawie.Windowing;
 public interface IWindow
 {
     public string Name { get; set; }
-    public VecI Size { get; set; } 
+    public VecI Size { get; } 
     
     public IWindowRenderApi RenderApi { get; set; }
     

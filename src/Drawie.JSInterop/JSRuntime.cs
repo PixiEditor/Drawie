@@ -7,6 +7,7 @@ public partial class JSRuntime
     private static int nextId = 0;
     
     public static event Action<double> OnAnimationFrameCalled;
+    public static event Action<int, int> WindowResizedEvent;
 
     [JSImport("interop.invokeJs", "main.js")]
     public static partial void InvokeJs(string js);
@@ -23,10 +24,19 @@ public partial class JSRuntime
     [JSImport("window.requestAnimationFrame", "main.js")]
     public static partial int RequestAnimationFrame();
     
+    [JSImport("window.subscribeWindowResize", "main.js")]
+    public static partial void SubscribeWindowResize();
+    
     [JSExport]
     internal static void OnAnimationFrame(double dt)
     {
         OnAnimationFrameCalled?.Invoke(dt);
+    }
+    
+    [JSExport]
+    internal static void WindowResized(int width, int height)
+    {
+        WindowResizedEvent?.Invoke(width, height);
     }
 
     public static T CreateElement<T>() where T : HtmlObject, new()

@@ -241,6 +241,7 @@ setModuleImports('main.js', {
         innerWidth: () => window.innerWidth,
         innerHeight: () => window.innerHeight,
         requestAnimationFrame: () => invokeRequestAnimationFrame(),
+        subscribeWindowResize: () => window.addEventListener('resize', invokeWindowResize)
     }
 });
 
@@ -253,6 +254,10 @@ function invokeRequestAnimationFrame() {
     });
 
     return requestId;
+}
+
+function invokeWindowResize() {
+    exports.Drawie.JSInterop.JSRuntime.WindowResized(window.innerWidth, window.innerHeight);
 }
 
 const config = getConfig();
