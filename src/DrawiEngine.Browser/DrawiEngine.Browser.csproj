@@ -7,9 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Drawie.Backend.Html5Canvas\Drawie.Backend.Html5Canvas.csproj" />
       <ProjectReference Include="..\Drawie.Backend.Skia\Drawie.Backend.Skia.csproj" />
-      <ProjectReference Include="..\Drawie.RenderApi.Html5Canvas\Drawie.RenderApi.Html5Canvas.csproj" />
       <ProjectReference Include="..\Drawie.RenderApi.WebGl\Drawie.RenderApi.WebGl.csproj" />
       <ProjectReference Include="..\Drawie.Windowing.Browser\Drawie.Windowing.Browser.csproj" />
       <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />

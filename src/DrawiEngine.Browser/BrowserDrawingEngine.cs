@@ -1,6 +1,4 @@
-﻿using Drawie.Html5Canvas;
-using Drawie.RenderApi.Html5Canvas;
-using Drawie.RenderApi.WebGl;
+﻿using Drawie.RenderApi.WebGl;
 using Drawie.Skia;
 using Drawie.Windowing.Browser;
 
