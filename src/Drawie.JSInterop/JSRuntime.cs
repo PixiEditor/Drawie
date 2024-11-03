@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices.JavaScript;
+﻿using System.Reflection;
+using System.Runtime.InteropServices.JavaScript;
 
 namespace Drawie.JSInterop;
 
@@ -9,22 +10,22 @@ public partial class JSRuntime
     public static event Action<double> OnAnimationFrameCalled;
     public static event Action<int, int> WindowResizedEvent;
 
-    [JSImport("interop.invokeJs", "main.js")]
+    [JSImport("interop.invokeJs", "drawie.js")]
     public static partial void InvokeJs(string js);
 
-    [JSImport("window.document.title", "main.js")]
+    [JSImport("window.document.title", "drawie.js")]
     public static partial string GetTitle();
 
-    [JSImport("window.innerWidth", "main.js")]
+    [JSImport("window.innerWidth", "drawie.js")]
     public static partial int GetWindowWidth();
 
-    [JSImport("window.innerHeight", "main.js")]
+    [JSImport("window.innerHeight", "drawie.js")]
     public static partial int GetWindowHeight();
 
-    [JSImport("window.requestAnimationFrame", "main.js")]
+    [JSImport("window.requestAnimationFrame", "drawie.js")]
     public static partial int RequestAnimationFrame();
     
-    [JSImport("window.subscribeWindowResize", "main.js")]
+    [JSImport("window.subscribeWindowResize", "drawie.js")]
     public static partial void SubscribeWindowResize();
     
     [JSExport]
