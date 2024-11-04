@@ -64,9 +64,13 @@ namespace Drawie.Skia.Implementations
                 throw new ObjectDisposedException(nameof(canvas));
             }
 
-            if (!_paintImpl.ManagedInstances.TryGetValue(paint.ObjectPointer, out var skPaint))
+            SKPaint? skPaint = null;
+            if (paint != null)
             {
-                throw new ObjectDisposedException(nameof(paint));
+                if (!_paintImpl.ManagedInstances.TryGetValue(paint.ObjectPointer, out skPaint))
+                {
+                    throw new ObjectDisposedException(nameof(paint));
+                }
             }
 
             if (!_imageImpl.ManagedInstances.TryGetValue(image.ObjectPointer, out var img))
