@@ -40,6 +40,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
         {
             font.Size = (float)value;
+            return;
         }
         
         throw new InvalidOperationException("Native font object not found");
@@ -60,6 +61,21 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         SKFont font = new(SKTypeface.Default, fontSize);
         ManagedInstances[font.Handle] = font;
         return new Font(font.Handle); 
+    }
+
+    public Font? FromFamilyName(string familyName)
+    {
+        SKTypeface typeface = SKTypeface.FromFamilyName(familyName);
+        if (typeface == null)
+        {
+            return null;
+        }
+        
+        ManagedTypefaces[typeface.Handle] = typeface;
+
+        SKFont font = new(typeface);
+        ManagedInstances[font.Handle] = font;
+        return new Font(font.Handle);
     }
 
     public void Dispose(IntPtr objectPointer)

@@ -36,4 +36,9 @@ public class Font : NativeObject
     {
         return DrawingBackendApi.Current.FontImplementation.CreateDefault(fontSize);
     }
+
+    public static Font? FromFamilyName(string familyName)
+    {
+        return DrawingBackendApi.Current.FontImplementation.FromFamilyName(familyName);
+    }
 }
