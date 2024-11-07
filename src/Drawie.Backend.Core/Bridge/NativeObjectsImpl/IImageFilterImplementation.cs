@@ -13,4 +13,5 @@ public interface IImageFilterImplementation
     object GetNativeImageFilter(IntPtr objPtr);
     
     void DisposeObject(IntPtr objPtr);
+    public IntPtr CreateBlur(float sigmaX, float sigmaY);
 }

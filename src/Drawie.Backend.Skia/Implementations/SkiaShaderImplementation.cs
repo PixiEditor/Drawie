@@ -15,9 +15,8 @@ namespace Drawie.Skia.Implementations
 
         public SkiaShaderImplementation()
         {
-            
         }
-        
+
         public void SetBitmapImplementation(SkiaBitmapImplementation bitmapImplementation)
         {
             this.bitmapImplementation = bitmapImplementation;
@@ -35,17 +34,17 @@ namespace Drawie.Skia.Implementations
             SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(sksl, out errors);
             if (string.IsNullOrEmpty(errors))
             {
-                SKRuntimeEffectUniforms effectUniforms = UniformsToSkUniforms(uniforms, effect); 
+                SKRuntimeEffectUniforms effectUniforms = UniformsToSkUniforms(uniforms, effect);
                 SKRuntimeEffectChildren effectChildren = UniformsToSkChildren(uniforms, effect);
                 SKShader shader = effect.ToShader(effectUniforms, effectChildren);
                 ManagedInstances[shader.Handle] = shader;
                 runtimeEffects[shader.Handle] = effect;
                 return new Shader(shader.Handle);
             }
-            
+
             return null;
         }
-        
+
         public Shader? CreateFromSksl(string sksl, bool isOpaque, out string errors)
         {
             SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(sksl, out errors);
@@ -55,23 +54,37 @@ namespace Drawie.Skia.Implementations
                 ManagedInstances[shader.Handle] = shader;
                 return new Shader(shader.Handle);
             }
-            
+
             return null;
         }
-        
+
         public Shader CreateLinearGradient(VecI p1, VecI p2, Color[] colors)
         {
             SKShader shader = SKShader.CreateLinearGradient(
-                new SKPoint(p1.X, p1.Y), 
+                new SKPoint(p1.X, p1.Y),
                 new SKPoint(p2.X, p2.Y),
                 CastUtility.UnsafeArrayCast<Color, SKColor>(colors),
-                null, 
+                null,
                 SKShaderTileMode.Clamp);
             ManagedInstances[shader.Handle] = shader;
             return new Shader(shader.Handle);
         }
+        
+        public Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos, ShaderTileMode tileMode)
+        {
+            SKShader shader = SKShader.CreateRadialGradient(
+                new SKPoint((float)center.X, (float)center.Y),
+                radius,
+                CastUtility.UnsafeArrayCast<Color, SKColor>(colors),
+                colorPos,
+                (SKShaderTileMode)tileMode);
+            ManagedInstances[shader.Handle] = shader;
+            
+            return new Shader(shader.Handle);
+        }
 
-        public Shader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)
+        public Shader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves,
+            float seed)
         {
             SKShader shader = SKShader.CreatePerlinNoiseTurbulence(
                 baseFrequencyX,
@@ -82,12 +95,12 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[shader.Handle] = shader;
             return new Shader(shader.Handle);
         }
-        
+
         public Shader CreatePerlinFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)
         {
-            if(baseFrequencyX <= 0 || baseFrequencyY <= 0)
+            if (baseFrequencyX <= 0 || baseFrequencyY <= 0)
                 throw new ArgumentException("Base frequency must be greater than 0");
-            
+
             SKShader shader = SKShader.CreatePerlinNoiseFractalNoise(
                 baseFrequencyX,
                 baseFrequencyY,
@@ -100,32 +113,33 @@ namespace Drawie.Skia.Implementations
 
         public object GetNativeShader(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer]; 
+            return ManagedInstances[objectPointer];
         }
 
         public Shader WithUpdatedUniforms(IntPtr objectPointer, Uniforms uniforms)
         {
             if (!ManagedInstances.TryGetValue(objectPointer, out var shader))
             {
-                 throw new InvalidOperationException("Shader does not exist");
+                throw new InvalidOperationException("Shader does not exist");
             }
+
             if (!runtimeEffects.TryGetValue(objectPointer, out var effect))
             {
                 throw new InvalidOperationException("Shader is not a runtime effect shader");
             }
-            
+
             // TODO: Don't reupload shaders if they are the same
             SKRuntimeEffectUniforms effectUniforms = UniformsToSkUniforms(uniforms, effect);
             SKRuntimeEffectChildren effectChildren = UniformsToSkChildren(uniforms, effect);
-            
+
             shader.Dispose();
             ManagedInstances.TryRemove(objectPointer, out _);
             runtimeEffects.Remove(objectPointer);
-            
+
             var newShader = effect.ToShader(effectUniforms, effectChildren);
             ManagedInstances[newShader.Handle] = newShader;
             runtimeEffects[newShader.Handle] = effect;
-            
+
             return new Shader(newShader.Handle);
         }
 
@@ -135,14 +149,15 @@ namespace Drawie.Skia.Implementations
             {
                 throw new InvalidOperationException("Shader does not exist");
             }
-            
+
             shader.WithLocalMatrix(matrix.ToSkMatrix());
         }
 
         public Shader? CreateBitmap(Bitmap bitmap, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix)
         {
             SKBitmap skBitmap = bitmapImplementation.ManagedInstances[bitmap.ObjectPointer];
-            SKShader shader = SKShader.CreateBitmap(skBitmap, (SKShaderTileMode)tileX, (SKShaderTileMode)tileY, matrix.ToSkMatrix());
+            SKShader shader = SKShader.CreateBitmap(skBitmap, (SKShaderTileMode)tileX, (SKShaderTileMode)tileY,
+                matrix.ToSkMatrix());
             ManagedInstances[shader.Handle] = shader;
             return new Shader(shader.Handle);
         }
@@ -153,7 +168,7 @@ namespace Drawie.Skia.Implementations
             shader.Dispose();
             ManagedInstances.TryRemove(shaderObjPointer, out _);
         }
-        
+
         private SKRuntimeEffectUniforms UniformsToSkUniforms(Uniforms uniforms, SKRuntimeEffect effect)
         {
             SKRuntimeEffectUniforms skUniforms = new SKRuntimeEffectUniforms(effect);
@@ -171,7 +186,7 @@ namespace Drawie.Skia.Implementations
 
             return skUniforms;
         }
-        
+
         private SKRuntimeEffectChildren UniformsToSkChildren(Uniforms uniforms, SKRuntimeEffect effect)
         {
             SKRuntimeEffectChildren skChildren = new SKRuntimeEffectChildren(effect);

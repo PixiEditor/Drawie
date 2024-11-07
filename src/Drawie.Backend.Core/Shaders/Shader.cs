@@ -10,19 +10,20 @@ namespace Drawie.Backend.Core.Shaders;
 public class Shader : NativeObject
 {
     public override object Native => DrawingBackendApi.Current.ShaderImplementation.GetNativeShader(ObjectPointer);
-    
+
     public Shader(IntPtr objPtr) : base(objPtr)
     {
     }
 
-    public Shader(string sksl, Uniforms uniforms) : base(DrawingBackendApi.Current.ShaderImplementation.CreateFromSksl(sksl, false, uniforms, out string errors)?.ObjectPointer ?? IntPtr.Zero)
+    public Shader(string sksl, Uniforms uniforms) : base(DrawingBackendApi.Current.ShaderImplementation
+        .CreateFromSksl(sksl, false, uniforms, out string errors)?.ObjectPointer ?? IntPtr.Zero)
     {
         if (!string.IsNullOrEmpty(errors))
         {
             throw new ShaderCompilationException(errors, sksl);
         }
     }
-    
+
     /// <summary>
     ///     Creates updated version of shader with new uniforms. THIS FUNCTION DISPOSES OLD SHADER.
     /// </summary>
@@ -35,7 +36,7 @@ public class Shader : NativeObject
 
     public static Shader? CreateFromSksl(string sksl, bool isOpaque, out string errors)
     {
-       return DrawingBackendApi.Current.ShaderImplementation.CreateFromSksl(sksl, isOpaque, out errors);
+        return DrawingBackendApi.Current.ShaderImplementation.CreateFromSksl(sksl, isOpaque, out errors);
     }
 
     public override void Dispose()
@@ -48,14 +49,25 @@ public class Shader : NativeObject
         return DrawingBackendApi.Current.ShaderImplementation.CreateLinearGradient(p1, p2, colors);
     }
 
-    public static Shader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)
+    public static Shader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves,
+        float seed)
     {
-        return DrawingBackendApi.Current.ShaderImplementation.CreatePerlinNoiseTurbulence(baseFrequencyX, baseFrequencyY, numOctaves, seed);
+        return DrawingBackendApi.Current.ShaderImplementation.CreatePerlinNoiseTurbulence(baseFrequencyX,
+            baseFrequencyY, numOctaves, seed);
     }
 
-    public static Shader CreatePerlinFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)
+    public static Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
+        ShaderTileMode tileMode)
     {
-        return DrawingBackendApi.Current.ShaderImplementation.CreatePerlinFractalNoise(baseFrequencyX, baseFrequencyY, numOctaves, seed);
+        return DrawingBackendApi.Current.ShaderImplementation.CreateRadialGradient(center, radius, colors, colorPos,
+            tileMode);
+    }
+
+    public static Shader CreatePerlinFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves,
+        float seed)
+    {
+        return DrawingBackendApi.Current.ShaderImplementation.CreatePerlinFractalNoise(baseFrequencyX, baseFrequencyY,
+            numOctaves, seed);
     }
 
     public void SetLocalMatrix(Matrix3X3 matrix)

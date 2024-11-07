@@ -43,4 +43,9 @@ public class ImageFilter : NativeObject
     {
         DrawingBackendApi.Current.ImageFilterImplementation.DisposeObject(ObjectPointer);
     }
+
+    public static ImageFilter CreateBlur(float sigmaX, float sigmaY)
+    {
+        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateBlur(sigmaX, sigmaY));
+    }
 }

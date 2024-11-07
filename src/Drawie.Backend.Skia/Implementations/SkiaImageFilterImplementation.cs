@@ -35,5 +35,11 @@ namespace Drawie.Skia.Implementations
         }
 
         public object GetNativeImageFilter(IntPtr objPtr) => ManagedInstances[objPtr];
+        public IntPtr CreateBlur(float sigmaX, float sigmaY)
+        {
+            var skImageFilter = SKImageFilter.CreateBlur(sigmaX, sigmaY);
+            ManagedInstances[skImageFilter.Handle] = skImageFilter;
+            return skImageFilter.Handle;
+        }
     }
 }
