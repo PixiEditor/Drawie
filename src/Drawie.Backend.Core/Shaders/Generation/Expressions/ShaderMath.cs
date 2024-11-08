@@ -41,9 +41,34 @@ public static class ShaderMath
     {
         return new Expression($"tan({x.ExpressionValue})");
     }
+
+    public static Expression GreaterThan(Expression a, Expression b)
+    {
+        return new Expression($"float({a.ExpressionValue} > {b.ExpressionValue})");
+    }
+
+    public static Expression GreaterThanOrEqual(Expression a, Expression b)
+    {
+        return new Expression($"float({a.ExpressionValue} >= {b.ExpressionValue})");
+    }
+
+    public static Expression LessThan(Expression a, Expression b)
+    {
+        return new Expression($"float({a.ExpressionValue} < {b.ExpressionValue})");
+    }
+
+    public static Expression LessThanOrEqual(Expression a, Expression b)
+    {
+        return new Expression($"float({a.ExpressionValue} <= {b.ExpressionValue})");
+    }
     
     public static Expression Lerp(ShaderExpressionVariable a, ShaderExpressionVariable b, ShaderExpressionVariable t)
     {
         return new Expression($"mix({a.VarOrConst()}, {b.VarOrConst()}, {t.VarOrConst()})"); 
+    }
+
+    public static Expression Compare(ShaderExpressionVariable a, ShaderExpressionVariable b, ShaderExpressionVariable t)
+    {
+        return new Expression($"float(abs({a.VarOrConst()} - {b.VarOrConst()}) < {t.VarOrConst()})");
     }
 }
