@@ -633,8 +633,7 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
     private SurfaceFormatKHR ChooseSwapSurfaceFormat(IReadOnlyList<SurfaceFormatKHR> availableFormats)
     {
         foreach (var availableFormat in availableFormats)
-            if (availableFormat.Format == Format.R8G8B8A8Srgb &&
-                availableFormat.ColorSpace == ColorSpaceKHR.SpaceSrgbNonlinearKhr)
+            if (availableFormat is { Format: Format.R8G8B8A8Unorm, ColorSpace: ColorSpaceKHR.SpaceSrgbNonlinearKhr })
                 return availableFormat;
 
         return availableFormats[0];
