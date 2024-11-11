@@ -12,6 +12,10 @@
     <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="3.118.0-preview.1.2" />
   </ItemGroup>
 
+  <ItemGroup Condition="$([MSBuild]::IsOsPlatform('Linux'))">
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.118.0-preview.1.2" />
+  </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\Drawie.Backend.Core\Drawie.Backend.Core.csproj" />
     <ProjectReference Include="..\Drawie.Numerics\Drawie.Numerics.csproj" />
