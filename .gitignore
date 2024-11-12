@@ -3,3 +3,4 @@ bin/
 .idea/
 *.user
 src/Drawie.sln.DotSettings.user
+.DS_Store

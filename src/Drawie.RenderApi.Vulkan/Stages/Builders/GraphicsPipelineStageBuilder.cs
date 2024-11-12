@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Silk.NET.Core.Native;
@@ -36,7 +37,8 @@ public class GraphicsPipelineStageBuilder : IDisposable
             throw new GraphicsPipelineBuilderException("Stage was already created");
         }
         
-        var code = File.ReadAllBytes(ShaderPath);
+        string absolutePath = Assembly.GetExecutingAssembly().Location;
+        var code = File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(absolutePath)!, ShaderPath));
         shaderModule = CreateShaderModule(code);
 
         PipelineShaderStageCreateInfo stageCreateInfo = new()
