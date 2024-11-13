@@ -26,12 +26,15 @@ public class Texture : IDisposable, ICloneable
     public Texture(VecI size)
     {
         Size = size;
-        DrawingSurface =
-            Surfaces.DrawingSurface.Create(
-                new ImageInfo(Size.X, Size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb())
-                {
-                    GpuBacked = true
-                });
+        DrawingBackendApi.Current.RenderingDispatcher.Invoke(
+            () =>
+                DrawingSurface =
+                    DrawingSurface.Create(
+                        new ImageInfo(Size.X, Size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb())
+                        {
+                            GpuBacked = true
+                        })
+        );
 
         DrawingSurface.Changed += DrawingSurfaceOnChanged;
     }
