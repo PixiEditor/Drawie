@@ -115,6 +115,10 @@ namespace Drawie.Skia
             {
                 SetupVulkan(vulkanRenderApi.VulkanContext);
             }
+            else if (renderApi is IOpenGlRenderApi openGlRenderApi)
+            {
+                SetupOpenGl(openGlRenderApi.OpenGlContext);
+            }
             else if (renderApi is IWebGlRenderApi webGlRenderApi)
             {
                 SetupWebGl(webGlRenderApi.WebGlContext);
@@ -123,6 +127,13 @@ namespace Drawie.Skia
             {
                 throw new UnsupportedRenderApiException(renderApi);
             }
+        }
+        
+        private void SetupOpenGl(IOpenGlContext openGlContext)
+        {
+            GRGlInterface glInterface = GRGlInterface.CreateOpenGl(openGlContext.GetGlInterface);
+            GraphicsContext = GRContext.CreateGl(glInterface);
+            SurfaceImplementation.GrContext = GraphicsContext;
         }
 
         private void SetupWebGl(IWebGlContext webGlContext)
@@ -164,10 +175,17 @@ namespace Drawie.Skia
 
                 return DrawingSurface.FromNative(surface);
             }
-            else if (renderTexture is IWebGlTexture wglTexture)
+            else if (renderTexture is IWebGlTexture wglTexture || renderTexture is IOpenGlTexture oglTexture)
             {
+                uint textureId = renderTexture switch
+                {
+                    IWebGlTexture wgl => wgl.TextureId,
+                    IOpenGlTexture ogl => ogl.TextureId,
+                    _ => throw new ArgumentException("Unsupported texture type.")
+                };
+                
                 GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 0, 0,
-                    new GRGlFramebufferInfo(wglTexture.TextureId, SKColorType.Rgba8888.ToGlSizedFormat()));
+                    new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
                 var surface = SKSurface.Create(GraphicsContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
                     SKColorType.Rgba8888);
 

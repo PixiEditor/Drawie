@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Drawie.RenderApi.OpenGL\Drawie.RenderApi.OpenGl.csproj" />
       <ProjectReference Include="..\Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj" />
       <ProjectReference Include="..\Drawie.Windowing.Glfw\Drawie.Windowing.Glfw.csproj" />
       <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />

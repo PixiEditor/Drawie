@@ -53,7 +53,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         {
             Title = name,
             Size = size.ToVector2DInt(),
-            API = renderApi is IVulkanWindowRenderApi ? GraphicsAPI.DefaultVulkan : GraphicsAPI.Default 
+            API = renderApi is IVulkanWindowRenderApi ? GraphicsAPI.DefaultVulkan : GraphicsAPI.Default
         });
 
         RenderApi = renderApi;
@@ -62,7 +62,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     public void Initialize()
     {
         if (initialized) return;
-        
+
         window.Initialize();
 
         InitInput();
@@ -73,15 +73,19 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             {
                 throw new Exception("Vulkan surface is null");
             }
-            
+
             GlfwVulkanContextInfo info = new GlfwVulkanContextInfo(window.VkSurface!);
             RenderApi.CreateInstance(info, window.Size.ToVecI());
+        }
+        else if (RenderApi is IOpenGlWindowRenderApi)
+        {
+            RenderApi.CreateInstance(window.GLContext, window.Size.ToVecI());
         }
         else
         {
             RenderApi.CreateInstance(window.Native, window.Size.ToVecI());
         }
-        
+
         initialized = true;
     }
 
@@ -93,7 +97,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         {
             var key = input.Keyboards[i];
             var keyboard = new GlfwKeyboard(key);
-            
+
             keyboards[i] = keyboard;
         }
 
@@ -108,7 +112,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             {
                 Initialize();
             }
-            
+
             window.FramebufferResize += WindowOnFramebufferResize;
             RenderApi.FramebufferResized += RenderApiOnFramebufferResized;
 
@@ -134,7 +138,8 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
     private void CreateRenderTarget(VecI size, ITexture nativeRenderTexture)
     {
-        var drawingSurface = DrawingBackendApi.Current.CreateRenderSurface(size, nativeRenderTexture, SurfaceOrigin.TopLeft);
+        var drawingSurface =
+            DrawingBackendApi.Current.CreateRenderSurface(size, nativeRenderTexture, SurfaceOrigin.TopLeft);
         renderTexture = Texture.FromExisting(drawingSurface);
     }
 
