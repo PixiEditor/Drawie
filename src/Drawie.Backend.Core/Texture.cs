@@ -47,6 +47,7 @@ public class Texture : IDisposable, ICloneable
     internal Texture(DrawingSurface drawingSurface)
     {
         DrawingSurface = drawingSurface;
+        Size = drawingSurface.DeviceClipBounds.Size;
         DrawingSurface.Changed += DrawingSurfaceOnChanged;
     }
 

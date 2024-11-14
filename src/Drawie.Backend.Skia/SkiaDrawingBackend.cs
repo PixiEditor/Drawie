@@ -128,7 +128,7 @@ namespace Drawie.Skia
                 throw new UnsupportedRenderApiException(renderApi);
             }
         }
-        
+
         private void SetupOpenGl(IOpenGlContext openGlContext)
         {
             GRGlInterface glInterface = GRGlInterface.CreateOpenGl(openGlContext.GetGlInterface);
@@ -175,7 +175,7 @@ namespace Drawie.Skia
 
                 return DrawingSurface.FromNative(surface);
             }
-            else if (renderTexture is IWebGlTexture wglTexture || renderTexture is IOpenGlTexture oglTexture)
+            else if (renderTexture is IWebGlTexture or IOpenGlTexture)
             {
                 uint textureId = renderTexture switch
                 {
@@ -183,9 +183,10 @@ namespace Drawie.Skia
                     IOpenGlTexture ogl => ogl.TextureId,
                     _ => throw new ArgumentException("Unsupported texture type.")
                 };
-                
+
                 GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 0, 0,
-                    new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
+                new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
+
                 var surface = SKSurface.Create(GraphicsContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
                     SKColorType.Rgba8888);
 

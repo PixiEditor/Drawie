@@ -26,7 +26,7 @@ public class DrawieSampleApp : DrawieApp
         window.Render += (targetTexture, deltaTime) =>
         {
             targetTexture.DrawingSurface.Canvas.Clear(Colors.LightCoral);
-            targetTexture.DrawingSurface.Canvas.DrawRect(0, 0, 100, 100, paint);
+            targetTexture.DrawingSurface.Canvas.DrawRect(0, 0, 200, 200, paint);
         };
     }
 }

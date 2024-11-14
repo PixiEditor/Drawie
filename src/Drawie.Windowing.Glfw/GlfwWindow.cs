@@ -4,6 +4,7 @@ using Drawie.Numerics;
 using Drawie.RenderApi;
 using Drawie.Silk.Extensions;
 using Drawie.Silk.Input;
+using Drawie.Skia;
 using Drawie.Windowing.Input;
 using Silk.NET.Input;
 using Silk.NET.Maths;
