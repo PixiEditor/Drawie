@@ -1,7 +1,7 @@
 ﻿using Avalonia.Vulkan;
 using Drawie.RenderApi;
 
-namespace Drawie.Interop.VulkanAvalonia;
+namespace Drawie.Interop.Avalonia.Vulkan;
 
 public class AvaloniaInteropContextInfo : IVulkanContextInfo
 {

@@ -3,7 +3,7 @@ using Drawie.Numerics;
 using Drawie.RenderApi.Vulkan.Buffers;
 using Silk.NET.Vulkan;
 
-namespace Drawie.Interop.VulkanAvalonia.Vulkan;
+namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
 public class VulkanContent : IDisposable
 {

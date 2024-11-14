@@ -21,7 +21,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Drawie.Backend.Skia\Drawie.Backend.Skia.csproj" />
-      <ProjectReference Include="..\Drawie.Interop.VulkanAvalonia\Drawie.Interop.VulkanAvalonia.csproj" />
+      <ProjectReference Include="..\Drawie.Interop.Avalonia.Vulkan\Drawie.Interop.Avalonia.Vulkan.csproj" />
+      <ProjectReference Include="..\Drawie.Interop.Avalonia\Drawie.Interop.Avalonia.csproj" />
       <ProjectReference Include="..\Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj" />
       <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
     </ItemGroup>

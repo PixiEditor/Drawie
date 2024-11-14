@@ -2,10 +2,11 @@
 using Avalonia.Rendering.Composition;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Surfaces;
-using Drawie.Interop.VulkanAvalonia.Vulkan;
+using Drawie.Interop.Avalonia.Core.Controls;
+using Drawie.Interop.Avalonia.Vulkan.Vk;
 using Drawie.Numerics;
 
-namespace Drawie.Interop.VulkanAvalonia.Controls;
+namespace Drawie.Interop.Avalonia.Vulkan.Controls;
 
 public abstract class DrawieControl : InteropControl
 {

@@ -1,7 +1,7 @@
 ﻿using Avalonia.Threading;
 using Drawie.Backend.Core;
 
-namespace Drawie.Interop.VulkanAvalonia;
+namespace Drawie.Interop.Avalonia.Core;
 
 public class AvaloniaRenderingDispatcher : IRenderingDispatcher
 {

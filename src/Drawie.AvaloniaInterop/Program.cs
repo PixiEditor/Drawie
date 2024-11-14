@@ -2,6 +2,7 @@
 using System;
 using Avalonia.Logging;
 using Avalonia.Vulkan;
+using Drawie.Interop.Avalonia.Vulkan;
 using Drawie.Interop.VulkanAvalonia;
 
 namespace Drawie.AvaloniaGraphics;

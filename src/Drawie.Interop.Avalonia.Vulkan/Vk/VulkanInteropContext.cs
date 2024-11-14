@@ -9,7 +9,7 @@ using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 
-namespace Drawie.Interop.VulkanAvalonia.Vulkan;
+namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
 public class VulkanInteropContext : VulkanContext
 {
@@ -27,7 +27,7 @@ public class VulkanInteropContext : VulkanContext
 
     public override void Initialize(IVulkanContextInfo contextInfo)
     {
-        Api = Vk.GetApi();
+        Api = Silk.NET.Vulkan.Vk.GetApi();
 
         TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
 

@@ -1,4 +1,4 @@
-﻿namespace Drawie.Interop.VulkanAvalonia.Vulkan;
+﻿namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
 public class VulkanResources : IAsyncDisposable
 {

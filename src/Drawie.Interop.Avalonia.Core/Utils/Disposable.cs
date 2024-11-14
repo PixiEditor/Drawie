@@ -1,4 +1,4 @@
-﻿namespace Drawie.Interop.VulkanAvalonia.Utils;
+﻿namespace Drawie.Interop.Avalonia.Core.Utils;
 
 static class Disposable
 {

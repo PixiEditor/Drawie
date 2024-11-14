@@ -1,9 +1,10 @@
 ﻿using Avalonia;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
+using Drawie.Interop.Avalonia.Core;
 using Silk.NET.Vulkan;
 
-namespace Drawie.Interop.VulkanAvalonia.Vulkan;
+namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
 public class VulkanSwapchain : SwapchainBase<VulkanSwapchainImage>
 {

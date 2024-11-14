@@ -4,7 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Rendering.Composition;
 using Avalonia.VisualTree;
 
-namespace Drawie.Interop.VulkanAvalonia.Controls;
+namespace Drawie.Interop.Avalonia.Core.Controls;
 
 public abstract class InteropControl : Control
 {

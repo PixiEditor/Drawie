@@ -1,10 +1,10 @@
 ﻿using Silk.NET.Vulkan;
 
-namespace Drawie.Interop.VulkanAvalonia.Vulkan;
+namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
 internal static class VulkanMemoryHelper
 {
-    internal static int FindSuitableMemoryTypeIndex(Vk api, PhysicalDevice physicalDevice, uint memoryTypeBits,
+    internal static int FindSuitableMemoryTypeIndex(Silk.NET.Vulkan.Vk api, PhysicalDevice physicalDevice, uint memoryTypeBits,
         MemoryPropertyFlags flags)
     {
         api.GetPhysicalDeviceMemoryProperties(physicalDevice, out var properties);
@@ -20,7 +20,7 @@ internal static class VulkanMemoryHelper
     }
 
     internal static unsafe void TransitionLayout(
-        Vk api,
+        Silk.NET.Vulkan.Vk api,
         CommandBuffer commandBuffer,
         Image image,
         ImageLayout sourceLayout,
@@ -38,8 +38,8 @@ internal static class VulkanMemoryHelper
             DstAccessMask = destinationAccessMask,
             OldLayout = sourceLayout,
             NewLayout = destinationLayout,
-            SrcQueueFamilyIndex = Vk.QueueFamilyIgnored,
-            DstQueueFamilyIndex = Vk.QueueFamilyIgnored,
+            SrcQueueFamilyIndex = Silk.NET.Vulkan.Vk.QueueFamilyIgnored,
+            DstQueueFamilyIndex = Silk.NET.Vulkan.Vk.QueueFamilyIgnored,
             Image = image,
             SubresourceRange = subresourceRange
         };

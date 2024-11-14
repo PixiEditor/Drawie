@@ -4,7 +4,7 @@ using Drawie.Backend.Core;
 using Drawie.Backend.Core.Surfaces;
 using Colors = Drawie.Backend.Core.ColorsImpl.Colors;
 
-namespace Drawie.Interop.VulkanAvalonia.Controls;
+namespace Drawie.Interop.Avalonia.Vulkan.Controls;
 
 public class DrawieTextureControl : DrawieControl
 {

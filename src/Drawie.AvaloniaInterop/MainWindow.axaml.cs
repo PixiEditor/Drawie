@@ -3,7 +3,7 @@ using Avalonia.Interactivity;
 using Drawie.Backend.Core;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
-using Drawie.Interop.VulkanAvalonia.Controls;
+using Drawie.Interop.Avalonia.Vulkan.Controls;
 using Drawie.Numerics;
 
 namespace Drawie.AvaloniaGraphics;

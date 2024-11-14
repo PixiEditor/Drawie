@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Drawie.Interop.Avalonia.Core</RootNamespace>
+    </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)"/>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Drawie.Backend.Core\Drawie.Backend.Core.csproj" />
+  </ItemGroup>
+</Project>

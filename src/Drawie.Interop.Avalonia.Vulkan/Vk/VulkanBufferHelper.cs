@@ -4,7 +4,7 @@ using Drawie.RenderApi.Vulkan.Extensions;
 using Silk.NET.Vulkan;
 using Buffer = Silk.NET.Vulkan.Buffer;
 
-namespace Drawie.Interop.VulkanAvalonia.Vulkan;
+namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
 static class VulkanBufferHelper
 {
@@ -62,7 +62,7 @@ static class VulkanBufferHelper
 
     }
 
-    private static int FindSuitableMemoryTypeIndex(Vk api, PhysicalDevice physicalDevice, uint memoryTypeBits,
+    private static int FindSuitableMemoryTypeIndex(Silk.NET.Vulkan.Vk api, PhysicalDevice physicalDevice, uint memoryTypeBits,
         MemoryPropertyFlags flags)
     {
         api.GetPhysicalDeviceMemoryProperties(physicalDevice, out var properties);

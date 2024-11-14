@@ -5,7 +5,7 @@ using Drawie.RenderApi.Vulkan.Extensions;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 
-namespace Drawie.Interop.VulkanAvalonia.Vulkan;
+namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
 public class VulkanImage : IDisposable
 {
@@ -31,7 +31,7 @@ public class VulkanImage : IDisposable
         public ulong MemoryHandle => _imageMemory.Handle;
         public DeviceMemory DeviceMemory => _imageMemory;
         public uint MipLevels { get; }
-        public Vk Api { get; }
+        public Silk.NET.Vulkan.Vk Api { get; }
         public PixelSize Size { get; }
         public ulong MemorySize { get; }
         public uint CurrentLayout => (uint) _currentLayout;

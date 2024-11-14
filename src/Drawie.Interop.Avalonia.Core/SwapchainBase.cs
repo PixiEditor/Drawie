@@ -1,8 +1,8 @@
 ﻿using Avalonia;
 using Avalonia.Rendering.Composition;
-using Drawie.Interop.VulkanAvalonia.Utils;
+using Drawie.Interop.Avalonia.Core.Utils;
 
-namespace Drawie.Interop.VulkanAvalonia;
+namespace Drawie.Interop.Avalonia.Core;
 
 public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : class, ISwapchainImage
 {
