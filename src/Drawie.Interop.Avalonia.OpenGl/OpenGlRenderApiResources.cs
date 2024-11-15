@@ -34,6 +34,7 @@ public class OpenGlRenderApiResources : RenderApiResources
     public override async ValueTask DisposeAsync()
     {
         await Swapchain.DisposeAsync();
+        renderTexture?.Dispose();
     }
 
     public override void CreateTemporalObjects(PixelSize size)
@@ -43,8 +44,6 @@ public class OpenGlRenderApiResources : RenderApiResources
         using var ctx = Context.MakeCurrent();
         GL gl = GL.GetApi(Context.GlInterface.GetProcAddress);
         renderTexture = new OpenGlTexture(gl, size.Width, size.Height);
-
-        Context.GlInterface.Flush();
     }
 
     public override void Render(PixelSize size, Action renderAction)
@@ -63,7 +62,7 @@ public class OpenGlRenderApiResources : RenderApiResources
         }
 
         Context.GlInterface.Flush();
-
+        
         renderAction();
     }
 }
