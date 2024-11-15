@@ -4,7 +4,7 @@ using Drawie.Backend.Core;
 using Drawie.Backend.Core.Surfaces;
 using Colors = Drawie.Backend.Core.ColorsImpl.Colors;
 
-namespace Drawie.Interop.Avalonia.Vulkan.Controls;
+namespace Drawie.Interop.Avalonia.Core.Controls;
 
 public class DrawieTextureControl : DrawieControl
 {
@@ -31,6 +31,7 @@ public class DrawieTextureControl : DrawieControl
     static DrawieTextureControl()
     {
         AffectsRender<DrawieTextureControl>(TextureProperty, StretchProperty);
+        AffectsMeasure<DrawieTextureControl>(TextureProperty, StretchProperty);
     }
 
     /// <summary>

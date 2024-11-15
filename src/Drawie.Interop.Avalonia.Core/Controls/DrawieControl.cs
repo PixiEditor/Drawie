@@ -2,15 +2,13 @@
 using Avalonia.Rendering.Composition;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Surfaces;
-using Drawie.Interop.Avalonia.Core.Controls;
-using Drawie.Interop.Avalonia.Vulkan.Vk;
 using Drawie.Numerics;
 
-namespace Drawie.Interop.Avalonia.Vulkan.Controls;
+namespace Drawie.Interop.Avalonia.Core.Controls;
 
 public abstract class DrawieControl : InteropControl
 {
-    private VulkanResources resources;
+    private RenderApiResources resources;
     private DrawingSurface renderSurface;
 
     private PixelSize lastSize = PixelSize.Empty;
@@ -18,10 +16,7 @@ public abstract class DrawieControl : InteropControl
     protected override (bool success, string info) InitializeGraphicsResources(Compositor targetCompositor,
         CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop)
     {
-        resources = new VulkanResources(
-            DrawieInterop.VulkanInteropContext,
-            new VulkanSwapchain(DrawieInterop.VulkanInteropContext, interop, compositionDrawingSurface),
-            new VulkanContent(DrawieInterop.VulkanInteropContext));
+        resources = IDrawieInteropContext.Current.CreateResources(compositionDrawingSurface, interop);
 
         return (true, string.Empty);
     }
@@ -47,7 +42,7 @@ public abstract class DrawieControl : InteropControl
 
             if (renderSurface == null || lastSize != size)
             {
-                resources.Content.CreateTemporalObjects(size);
+                resources.CreateTemporalObjects(size);
 
                 VecI sizeVec = new VecI(size.Width, size.Height);
 
@@ -55,19 +50,17 @@ public abstract class DrawieControl : InteropControl
 
                 renderSurface =
                     DrawingBackendApi.Current.CreateRenderSurface(sizeVec,
-                        resources.Content.texture, SurfaceOrigin.BottomLeft);
+                        resources.Texture, SurfaceOrigin.BottomLeft);
 
                 lastSize = size;
             }
 
-            using (resources.Swapchain.BeginDraw(size, out var image))
+            resources.Render(size, () =>
             {
                 renderSurface.Canvas.Clear();
                 Draw(renderSurface);
                 renderSurface.Flush();
-
-                resources.Content.Render(image);
-            }
+            });
         }
     }
 }

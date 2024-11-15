@@ -4,12 +4,16 @@ using Avalonia.OpenGL;
 using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
 using Drawie.Interop.Avalonia.Core;
+using Drawie.Interop.Avalonia.OpenGl;
 using Drawie.Interop.Avalonia.Vulkan;
 using Drawie.Interop.Avalonia.Vulkan.Vk;
 using Drawie.RenderApi;
+using Drawie.RenderApi.OpenGL;
 using Drawie.RenderApi.Vulkan;
 using Drawie.Skia;
 using DrawiEngine;
+using Silk.NET.Core.Contexts;
+using Silk.NET.OpenGL;
 
 namespace Drawie.Interop.VulkanAvalonia;
 
@@ -29,12 +33,20 @@ public static class AppBuilderExtensions
                         .TryGetRenderInterfaceFeature(typeof(IOpenGlTextureSharingRenderInterfaceContextFeature))
                         .Result;
 
-                    bool isOpenGl = openglFeature != null;
+                    IOpenGlTextureSharingRenderInterfaceContextFeature? sharingFeature = null;
+                    bool isOpenGl = openglFeature is IOpenGlTextureSharingRenderInterfaceContextFeature;
+                    sharingFeature = openglFeature as IOpenGlTextureSharingRenderInterfaceContextFeature;
 
                     IRenderApi renderApi = null;
+                    IDisposable? disposableContext = null;
                     if (isOpenGl)
                     {
-                        //renderApi = new OpenGLRenderApi();
+                        var ctx = sharingFeature!.CreateSharedContext();
+                        OpenGlInteropContext context = new OpenGlInteropContext(ctx);
+                        
+                        renderApi = new OpenGlRenderApi(context);
+                        
+                        IDrawieInteropContext.SetCurrent(context);
                     }
                     else
                     {
@@ -44,13 +56,15 @@ public static class AppBuilderExtensions
                         context.Initialize(contextInfo);
 
                         renderApi = new VulkanRenderApi(context);
+                        DrawieInterop.VulkanInteropContext = context;
+                        IDrawieInteropContext.SetCurrent(context);
+                        disposableContext = context;
                     }
 
                     SkiaDrawingBackend drawingBackend = new SkiaDrawingBackend();
                     DrawingEngine drawingEngine =
                         new DrawingEngine(renderApi, null, drawingBackend, new AvaloniaRenderingDispatcher());
 
-                    DrawieInterop.VulkanInteropContext = context;
 
                     if (c.Instance.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                     {
@@ -60,14 +74,14 @@ public static class AppBuilderExtensions
                             if (!mainWindow.IsLoaded)
                             {
                                 drawingEngine.Dispose();
-                                context.Dispose();
+                                disposableContext?.Dispose();
                             }
                             else
                             {
                                 mainWindow.Unloaded += (o, eventArgs) =>
                                 {
                                     drawingEngine.Dispose();
-                                    context.Dispose();
+                                    disposableContext?.Dispose();
                                 };
                             }
                         };

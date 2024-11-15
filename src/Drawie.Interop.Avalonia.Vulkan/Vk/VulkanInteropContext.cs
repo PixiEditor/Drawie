@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
+using Drawie.Interop.Avalonia.Core;
 using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan;
 using Drawie.RenderApi.Vulkan.ContextObjects;
@@ -11,7 +12,7 @@ using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
-public class VulkanInteropContext : VulkanContext
+public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
 {
     public VulkanCommandBufferPool Pool { get; private set; }
 
@@ -185,5 +186,10 @@ public class VulkanInteropContext : VulkanContext
 
         Api!.DestroyInstance(Instance, null);
         Api!.Dispose();
+    }
+
+    public RenderApiResources CreateResources(CompositionDrawingSurface surface, ICompositionGpuInterop interop)
+    {
+        return new VulkanResources(surface, interop);
     }
 }

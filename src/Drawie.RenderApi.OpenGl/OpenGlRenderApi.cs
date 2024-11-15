@@ -20,7 +20,17 @@ public class OpenGlRenderApi : IOpenGlRenderApi
     }
 
 
-    private OpenGlContext? context;
+    private IOpenGlContext? context;
+
+    public OpenGlRenderApi()
+    {
+        
+    }
+    
+    public OpenGlRenderApi(IOpenGlContext context)
+    {
+        this.context = context;
+    }
 
     public IWindowRenderApi CreateWindowRenderApi()
     {
