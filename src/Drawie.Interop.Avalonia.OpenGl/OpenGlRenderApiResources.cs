@@ -10,7 +10,7 @@ namespace Drawie.Interop.Avalonia.OpenGl;
 
 public class OpenGlRenderApiResources : RenderApiResources
 {
-    public override ITexture Texture => fboTexture; 
+    public override ITexture Texture => fboTexture;
 
     private int fbo;
     internal OpenGlSwapchain Swapchain { get; }
@@ -39,12 +39,11 @@ public class OpenGlRenderApiResources : RenderApiResources
 
     public override void CreateTemporalObjects(PixelSize size)
     {
-        
     }
 
     public override void Render(PixelSize size, Action renderAction)
     {
-        using var ctx = Context.MakeCurrent();
+        var ctx = Context.MakeCurrent();
 
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, fbo);
 
