@@ -10,13 +10,13 @@ namespace Drawie.Interop.Avalonia.OpenGl;
 
 public class OpenGlRenderApiResources : RenderApiResources
 {
-    public override ITexture Texture => renderTexture;
+    public override ITexture Texture => fboTexture; 
 
     private int fbo;
     internal OpenGlSwapchain Swapchain { get; }
     internal IGlContext Context => OpenGlInteropContext.Current.Context;
 
-    private OpenGlTexture renderTexture;
+    private OpenGlTexture fboTexture;
 
     public OpenGlRenderApiResources(CompositionDrawingSurface surface, ICompositionGpuInterop gpuInterop) : base(
         surface, gpuInterop)
@@ -29,21 +29,17 @@ public class OpenGlRenderApiResources : RenderApiResources
 
         using var ctx = Context.MakeCurrent();
         fbo = Context.GlInterface.GenFramebuffer();
+        fboTexture = new OpenGlTexture((uint)fbo, GL.GetApi(Context.GlInterface.GetProcAddress));
     }
 
     public override async ValueTask DisposeAsync()
     {
         await Swapchain.DisposeAsync();
-        renderTexture?.Dispose();
     }
 
     public override void CreateTemporalObjects(PixelSize size)
     {
-        renderTexture?.Dispose();
-
-        using var ctx = Context.MakeCurrent();
-        GL gl = GL.GetApi(Context.GlInterface.GetProcAddress);
-        renderTexture = new OpenGlTexture(gl, size.Width, size.Height);
+        
     }
 
     public override void Render(PixelSize size, Action renderAction)
@@ -62,7 +58,7 @@ public class OpenGlRenderApiResources : RenderApiResources
         }
 
         Context.GlInterface.Flush();
-        
+
         renderAction();
     }
 }
