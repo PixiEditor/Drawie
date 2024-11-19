@@ -1,4 +1,5 @@
-﻿using Drawie.Backend.Core.Bridge;
+﻿using System.Collections.ObjectModel;
+using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Numerics;
@@ -57,7 +58,7 @@ public class VectorPath : NativeObject
         get => DrawingBackendApi.Current.PathImplementation.GetLastPoint(this);
     }
 
-    public VecF[] Points
+    public IReadOnlyList<VecF> Points
     {
         get => DrawingBackendApi.Current.PathImplementation.GetPoints(ObjectPointer);
     }

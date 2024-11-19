@@ -10,8 +10,8 @@ public class PathIterator : NativeObject
     }
 
     public override object Native => DrawingBackendApi.Current.PathImplementation.GetNativeIterator(ObjectPointer);
-    
-    
+
+    public bool IsCloseContour => DrawingBackendApi.Current.PathImplementation.IsCloseContour(ObjectPointer);
 
     public override void Dispose()
     {

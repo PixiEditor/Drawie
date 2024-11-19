@@ -43,4 +43,5 @@ public interface IVectorPathImplementation
     public PathIterator CreateIterator(IntPtr objectPointer, bool forceClose);
     public void DisposeIterator(IntPtr objectPointer);
     public object GetNativeIterator(IntPtr objectPointer);
+    public bool IsCloseContour(IntPtr objectPointer);
 }

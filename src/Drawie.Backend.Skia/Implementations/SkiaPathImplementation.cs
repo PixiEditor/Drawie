@@ -172,7 +172,7 @@ namespace Drawie.Skia.Implementations
         public PathIterator CreateIterator(IntPtr objectPointer, bool forceClose)
         {
             SKPath.Iterator iterator = ManagedInstances[objectPointer].CreateIterator(forceClose);
-            managedIterators[objectPointer] = iterator;
+            managedIterators[iterator.Handle] = iterator;
             return new PathIterator(iterator.Handle);
         }
 
@@ -185,6 +185,11 @@ namespace Drawie.Skia.Implementations
         public object GetNativeIterator(IntPtr objectPointer)
         {
             return managedIterators[objectPointer];
+        }
+
+        public bool IsCloseContour(IntPtr objectPointer)
+        {
+            return managedIterators[objectPointer].IsCloseContour();
         }
 
         /// <summary>
