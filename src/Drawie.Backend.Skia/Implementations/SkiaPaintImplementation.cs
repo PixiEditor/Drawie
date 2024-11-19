@@ -121,6 +121,18 @@ namespace Drawie.Skia.Implementations
             SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
             return (PaintStyle)skPaint.Style;
         }
+        
+        public StrokeJoin GetStrokeJoin(Paint paint)
+        {
+            SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
+            return (StrokeJoin)skPaint.StrokeJoin;
+        }
+        
+        public void SetStrokeJoin(Paint paint, StrokeJoin value)
+        {
+            SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
+            skPaint.StrokeJoin = (SKStrokeJoin)value;
+        }
 
         public void SetStyle(Paint paint, PaintStyle value)
         {
@@ -209,6 +221,17 @@ namespace Drawie.Skia.Implementations
             skPaint.PathEffect = value == null ? null : pathEffectImplementation[value.ObjectPointer]; 
         }
 
+        public float GetStrokeMiter(Paint paint)
+        {
+            SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
+            return skPaint.StrokeMiter;
+        }
+
+        public void SetStrokeMiter(Paint paint, float value)
+        {
+            SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
+            skPaint.StrokeMiter = value;
+        }
 
         public object GetNativePaint(IntPtr objectPointer)
         {

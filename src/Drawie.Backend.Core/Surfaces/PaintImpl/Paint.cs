@@ -28,6 +28,18 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             set => DrawingBackendApi.Current.PaintImplementation.SetBlendMode(this, value);
         }
         
+        public float StrokeMiter
+        {
+            get => DrawingBackendApi.Current.PaintImplementation.GetStrokeMiter(this);
+            set => DrawingBackendApi.Current.PaintImplementation.SetStrokeMiter(this, value);
+        }
+        
+        public StrokeJoin StrokeJoin
+        {
+            get => DrawingBackendApi.Current.PaintImplementation.GetStrokeJoin(this);
+            set => DrawingBackendApi.Current.PaintImplementation.SetStrokeJoin(this, value);
+        }
+        
         public FilterQuality FilterQuality 
         {
             get => DrawingBackendApi.Current.PaintImplementation.GetFilterQuality(this);

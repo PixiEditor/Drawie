@@ -37,5 +37,9 @@ namespace Drawie.Backend.Core.Bridge.NativeObjectsImpl
         public void SetShader(Paint paint, Shader shader);
         public PathEffect GetPathEffect(Paint paint);
         public void SetPathEffect(Paint paint, PathEffect value);
+        public float GetStrokeMiter(Paint paint);
+        public void SetStrokeMiter(Paint paint, float value);
+        public StrokeJoin GetStrokeJoin(Paint paint);
+        public void SetStrokeJoin(Paint paint, StrokeJoin value);
     }
 }
