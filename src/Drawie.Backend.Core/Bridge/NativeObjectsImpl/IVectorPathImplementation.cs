@@ -1,5 +1,5 @@
 ﻿using Drawie.Backend.Core.Numerics;
-using Drawie.Backend.Core.Surfaces.Vector;
+using Drawie.Backend.Core.Vector;
 using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Bridge.NativeObjectsImpl;
@@ -37,6 +37,10 @@ public interface IVectorPathImplementation
     public bool Contains(VectorPath vectorPath, float x, float y);
     public void AddPath(VectorPath vectorPath, VectorPath path, AddPathMode mode);
     public object GetNativePath(IntPtr objectPointer);
-    public VecD GetLastPoint(VectorPath vectorPath);
+    public VecF[] GetPoints(IntPtr objectPointer);
+    public VecF GetLastPoint(VectorPath vectorPath);
     public VectorPath FromSvgPath(string svgPath);
+    public PathIterator CreateIterator(IntPtr objectPointer, bool forceClose);
+    public void DisposeIterator(IntPtr objectPointer);
+    public object GetNativeIterator(IntPtr objectPointer);
 }

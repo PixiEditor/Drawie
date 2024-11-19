@@ -1,6 +1,6 @@
 ﻿using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 using Drawie.Backend.Core.Numerics;
-using Drawie.Backend.Core.Surfaces.Vector;
+using Drawie.Backend.Core.Vector;
 using Drawie.Numerics;
 using SkiaSharp;
 
@@ -8,6 +8,8 @@ namespace Drawie.Skia.Implementations
 {
     public class SkiaPathImplementation : SkObjectImplementation<SKPath>, IVectorPathImplementation
     {
+        private Dictionary<IntPtr, SKPath.Iterator> managedIterators = new Dictionary<IntPtr, SKPath.Iterator>();
+
         public PathFillType GetFillType(VectorPath path)
         {
             return (PathFillType)ManagedInstances[path.ObjectPointer].FillType;
@@ -135,10 +137,11 @@ namespace Drawie.Skia.Implementations
         {
             ManagedInstances[vectorPath.ObjectPointer].AddOval(borders.ToSkRect());
         }
-        
+
         public void AddPath(VectorPath vectorPath, VectorPath other, AddPathMode mode)
         {
-            ManagedInstances[vectorPath.ObjectPointer].AddPath(ManagedInstances[other.ObjectPointer], (SKPathAddMode)mode);
+            ManagedInstances[vectorPath.ObjectPointer]
+                .AddPath(ManagedInstances[other.ObjectPointer], (SKPathAddMode)mode);
         }
 
         public object GetNativePath(IntPtr objectPointer)
@@ -146,18 +149,42 @@ namespace Drawie.Skia.Implementations
             return ManagedInstances[objectPointer];
         }
 
-        public VecD GetLastPoint(VectorPath vectorPath)
+        public VecF GetLastPoint(VectorPath vectorPath)
         {
             SKPoint point = ManagedInstances[vectorPath.ObjectPointer].LastPoint;
-            return new VecD(point.X, point.Y);
+            return new VecF(point.X, point.Y);
         }
 
         public VectorPath FromSvgPath(string svgPath)
         {
             SKPath skPath = SKPath.ParseSvgPathData(svgPath);
-            
+
             ManagedInstances[skPath.Handle] = skPath;
             return new VectorPath(skPath.Handle);
+        }
+        
+        public VecF[] GetPoints(IntPtr objectPointer)
+        {
+            SKPoint[] points = ManagedInstances[objectPointer].Points;
+            return CastUtility.UnsafeArrayCast<SKPoint, VecF>(points);
+        }
+
+        public PathIterator CreateIterator(IntPtr objectPointer, bool forceClose)
+        {
+            SKPath.Iterator iterator = ManagedInstances[objectPointer].CreateIterator(forceClose);
+            managedIterators[objectPointer] = iterator;
+            return new PathIterator(iterator.Handle);
+        }
+
+        public void DisposeIterator(IntPtr objectPointer)
+        {
+            managedIterators[objectPointer].Dispose();
+            managedIterators.Remove(objectPointer);
+        }
+
+        public object GetNativeIterator(IntPtr objectPointer)
+        {
+            return managedIterators[objectPointer];
         }
 
         /// <summary>
@@ -169,7 +196,8 @@ namespace Drawie.Skia.Implementations
         /// <returns>Returns the resulting path if the operation was successful, otherwise null.h</returns>
         public VectorPath Op(VectorPath vectorPath, VectorPath ellipsePath, VectorPathOp pathOp)
         {
-            SKPath skPath = ManagedInstances[vectorPath.ObjectPointer].Op(ManagedInstances[ellipsePath.ObjectPointer], (SKPathOp)pathOp);
+            SKPath skPath = ManagedInstances[vectorPath.ObjectPointer]
+                .Op(ManagedInstances[ellipsePath.ObjectPointer], (SKPathOp)pathOp);
             ManagedInstances[skPath.Handle] = skPath;
             return new VectorPath(skPath.Handle);
         }

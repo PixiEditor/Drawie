@@ -1,4 +1,4 @@
-﻿namespace Drawie.Backend.Core.Surfaces;
+﻿namespace Drawie.Backend.Core;
 
 public abstract class NativeObject : IDisposable
 {

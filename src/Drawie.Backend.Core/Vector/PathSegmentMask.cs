@@ -1,4 +1,4 @@
-﻿namespace Drawie.Backend.Core.Surfaces.Vector;
+﻿namespace Drawie.Backend.Core.Vector;
 
 [Flags]
 public enum PathSegmentMask

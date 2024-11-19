@@ -1,4 +1,4 @@
-﻿namespace Drawie.Backend.Core.Surfaces.Vector;
+﻿namespace Drawie.Backend.Core.Vector;
 
 /// <summary>Convexity for paths.</summary>
 public enum PathConvexity

@@ -1,8 +1,9 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Numerics;
+using Drawie.Backend.Core.Surfaces;
 using Drawie.Numerics;
 
-namespace Drawie.Backend.Core.Surfaces.Vector;
+namespace Drawie.Backend.Core.Vector;
 
 /// <summary>An interface for native compound geometric path implementations.</summary>
 /// <remarks>A path encapsulates compound (multiple contour) geometric paths consisting of straight line segments, quadratic curves, and cubic curves.</remarks>
@@ -16,7 +17,7 @@ public class VectorPath : NativeObject
         set => DrawingBackendApi.Current.PathImplementation.SetFillType(this, value);
     }
 
-    public PathConvexity Convexity 
+    public PathConvexity Convexity
     {
         get => DrawingBackendApi.Current.PathImplementation.GetConvexity(this);
     }
@@ -51,9 +52,14 @@ public class VectorPath : NativeObject
     
     public bool IsDisposed { get; private set; }
 
-    public VecD LastPoint
+    public VecF LastPoint
     {
         get => DrawingBackendApi.Current.PathImplementation.GetLastPoint(this);
+    }
+
+    public VecF[] Points
+    {
+        get => DrawingBackendApi.Current.PathImplementation.GetPoints(ObjectPointer);
     }
 
     public static VectorPath FromSvgPath(string svgPath)
@@ -160,6 +166,11 @@ public class VectorPath : NativeObject
     public VectorPath Simplify()
     {
         return DrawingBackendApi.Current.PathImplementation.Simplify(this);
+    }
+
+    public PathIterator CreateIterator(bool forceClose)
+    {
+        return DrawingBackendApi.Current.PathImplementation.CreateIterator(ObjectPointer, forceClose);
     }
 }
 

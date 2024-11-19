@@ -1,4 +1,4 @@
-﻿namespace Drawie.Backend.Core.Surfaces.Vector;
+﻿namespace Drawie.Backend.Core.Vector;
 
 /// <summary>Possible path fill type values.</summary>
 public enum PathFillType

@@ -1,4 +1,4 @@
-﻿namespace Drawie.Backend.Core.Surfaces.Vector;
+﻿namespace Drawie.Backend.Core.Vector;
 
 /// <summary>The logical operations that can be performed when combining two paths using <see cref="VectorPath.Op(VectorPath, VectorPathOp)" />.</summary>
 public enum VectorPathOp

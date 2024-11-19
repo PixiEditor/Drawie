@@ -2,7 +2,7 @@
 using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
-using Drawie.Backend.Core.Surfaces.Vector;
+using Drawie.Backend.Core.Vector;
 
 namespace Drawie.Backend.Core.Bridge.NativeObjectsImpl
 {

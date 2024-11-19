@@ -1,6 +1,7 @@
 ﻿using Drawie.Backend.Core.Bridge;
+using Drawie.Backend.Core.Surfaces;
 
-namespace Drawie.Backend.Core.Surfaces.Vector;
+namespace Drawie.Backend.Core.Vector;
 
 public class PathEffect : NativeObject
 {
