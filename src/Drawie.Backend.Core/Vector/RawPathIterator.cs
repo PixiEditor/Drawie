@@ -5,27 +5,25 @@ using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Vector;
 
-public class PathIterator : NativeObject, IEnumerator<(PathVerb verb, VecF[] points)>
+public class RawPathIterator : NativeObject, IEnumerator<(PathVerb verb, VecF[] points)>
 {
-    public PathIterator(IntPtr objPtr) : base(objPtr)
+    public RawPathIterator(IntPtr objPtr) : base(objPtr)
     {
     }
 
     private PathVerb currentVerb;
     private VecF[] iteratorPoints;
 
-    public override object Native => DrawingBackendApi.Current.PathImplementation.GetNativeIterator(ObjectPointer);
-
-    public bool IsCloseContour => DrawingBackendApi.Current.PathImplementation.IsCloseContour(ObjectPointer);
+    public override object Native => DrawingBackendApi.Current.PathImplementation.GetNativeRawIterator(ObjectPointer);
 
     public PathVerb Next(VecF[] points)
     {
-        return DrawingBackendApi.Current.PathImplementation.IteratorNextVerb(ObjectPointer, points);
+        return DrawingBackendApi.Current.PathImplementation.RawIteratorNextVerb(ObjectPointer, points);
     }
 
     public override void Dispose()
     {
-        DrawingBackendApi.Current.PathImplementation.DisposeIterator(ObjectPointer);
+        DrawingBackendApi.Current.PathImplementation.DisposeRawIterator(ObjectPointer);
     }
 
     bool IEnumerator.MoveNext()

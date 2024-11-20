@@ -10,6 +10,11 @@ namespace Drawie.Skia.Implementations
     {
         private Dictionary<IntPtr, SKPath.Iterator> managedIterators = new Dictionary<IntPtr, SKPath.Iterator>();
 
+        private Dictionary<IntPtr, SKPath.RawIterator> managedRawIterators =
+            new Dictionary<IntPtr, SKPath.RawIterator>();
+
+        private SKPoint[] intermediatePoints = new SKPoint[4];
+
         public PathFillType GetFillType(VectorPath path)
         {
             return (PathFillType)ManagedInstances[path.ObjectPointer].FillType;
@@ -133,6 +138,11 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[vectorPath.ObjectPointer].ArcTo(oval.ToSkRect(), startAngle, sweepAngle, forceMoveTo);
         }
 
+        public void ConicTo(VectorPath vectorPath, VecF mid, VecF end, float weight)
+        {
+            ManagedInstances[vectorPath.ObjectPointer].ConicTo(mid.ToSkPoint(), end.ToSkPoint(), weight);
+        }
+
         public void AddOval(VectorPath vectorPath, RectI borders)
         {
             ManagedInstances[vectorPath.ObjectPointer].AddOval(borders.ToSkRect());
@@ -162,7 +172,7 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[skPath.Handle] = skPath;
             return new VectorPath(skPath.Handle);
         }
-        
+
         public VecF[] GetPoints(IntPtr objectPointer)
         {
             SKPoint[] points = ManagedInstances[objectPointer].Points;
@@ -190,6 +200,48 @@ namespace Drawie.Skia.Implementations
         public bool IsCloseContour(IntPtr objectPointer)
         {
             return managedIterators[objectPointer].IsCloseContour();
+        }
+
+        public PathVerb IteratorNextVerb(IntPtr objectPointer, VecF[] points)
+        {
+            // TODO: maybe there is a way to unsafely cast the array directly
+            var next = (PathVerb)managedIterators[objectPointer].Next(intermediatePoints);
+            for (int i = 0; i < points.Length; i++)
+            {
+                points[i] = new VecF(intermediatePoints[i].X, intermediatePoints[i].Y);
+            }
+
+            return next;
+        }
+
+        public RawPathIterator CreateRawIterator(IntPtr objectPointer)
+        {
+            SKPath.RawIterator iterator = ManagedInstances[objectPointer].CreateRawIterator();
+            managedRawIterators[iterator.Handle] = iterator;
+            return new RawPathIterator(iterator.Handle);
+        }
+
+        public PathVerb RawIteratorNextVerb(IntPtr objectPointer, VecF[] points)
+        {
+            SKPath.RawIterator iterator = managedRawIterators[objectPointer];
+            var next = (PathVerb)iterator.Next(intermediatePoints);
+            for (int i = 0; i < points.Length; i++)
+            {
+                points[i] = new VecF(intermediatePoints[i].X, intermediatePoints[i].Y);
+            }
+
+            return next;
+        }
+
+        public void DisposeRawIterator(IntPtr objectPointer)
+        {
+            managedRawIterators[objectPointer].Dispose();
+            managedRawIterators.Remove(objectPointer);
+        }
+
+        public object GetNativeRawIterator(IntPtr objectPointer)
+        {
+            return managedRawIterators[objectPointer];
         }
 
         /// <summary>

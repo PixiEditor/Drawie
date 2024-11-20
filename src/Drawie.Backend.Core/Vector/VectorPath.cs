@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections;
+using System.Collections.ObjectModel;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
@@ -8,7 +9,7 @@ namespace Drawie.Backend.Core.Vector;
 
 /// <summary>An interface for native compound geometric path implementations.</summary>
 /// <remarks>A path encapsulates compound (multiple contour) geometric paths consisting of straight line segments, quadratic curves, and cubic curves.</remarks>
-public class VectorPath : NativeObject
+public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] points)>
 {
     public override object Native => DrawingBackendApi.Current.PathImplementation.GetNativePath(ObjectPointer);
 
@@ -132,6 +133,13 @@ public class VectorPath : NativeObject
         Changed?.Invoke(this);
     }
 
+    public void ConicTo(VecF mid, VecF vecF, float weight)
+    {
+        DrawingBackendApi.Current.PathImplementation.ConicTo(this, mid, vecF, weight);
+        Changed?.Invoke(this);
+    }
+
+
     public void AddOval(RectI borders)
     {
         DrawingBackendApi.Current.PathImplementation.AddOval(this, borders);
@@ -189,6 +197,21 @@ public class VectorPath : NativeObject
     public PathIterator CreateIterator(bool forceClose)
     {
         return DrawingBackendApi.Current.PathImplementation.CreateIterator(ObjectPointer, forceClose);
+    }
+
+    public RawPathIterator CreateRawIterator()
+    {
+        return DrawingBackendApi.Current.PathImplementation.CreateRawIterator(ObjectPointer);
+    }
+
+    public IEnumerator<(PathVerb verb, VecF[] points)> GetEnumerator()
+    {
+        return CreateIterator(false);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }
 

@@ -28,6 +28,7 @@ public interface IVectorPathImplementation
     public void LineTo(VectorPath vectorPath, VecF vecF);
     public void QuadTo(VectorPath vectorPath, VecF mid, VecF vecF);
     public void CubicTo(VectorPath vectorPath, VecF mid1, VecF mid2, VecF vecF);
+    public void ConicTo(VectorPath vectorPath, VecF mid, VecF end, float weight);
     public void ArcTo(VectorPath vectorPath, RectI oval, int startAngle, int sweepAngle, bool forceMoveTo);
     public void AddOval(VectorPath vectorPath, RectI borders);
     public VectorPath Op(VectorPath vectorPath, VectorPath ellipsePath, VectorPathOp pathOp);
@@ -44,4 +45,9 @@ public interface IVectorPathImplementation
     public void DisposeIterator(IntPtr objectPointer);
     public object GetNativeIterator(IntPtr objectPointer);
     public bool IsCloseContour(IntPtr objectPointer);
+    public PathVerb IteratorNextVerb(IntPtr objectPointer, VecF[] points);
+    public RawPathIterator CreateRawIterator(IntPtr objectPointer);
+    public PathVerb RawIteratorNextVerb(IntPtr objectPointer, VecF[] points);
+    public void DisposeRawIterator(IntPtr objectPointer);
+    public object GetNativeRawIterator(IntPtr objectPointer);
 }
