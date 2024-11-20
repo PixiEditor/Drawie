@@ -43,14 +43,14 @@ public class VectorPath : NativeObject
 
     /// <summary>Gets the number of points on the path.</summary>
     public int PointCount => DrawingBackendApi.Current.PathImplementation.GetPointCount(this);
-    
+
     /// <summary>Gets the "tight" bounds of the path. the control points of curves are excluded.</summary>
     /// <value>The tight bounds of the path.</value>
     public RectD TightBounds => DrawingBackendApi.Current.PathImplementation.GetTightBounds(this);
 
     public bool IsEmpty => VerbCount == 0;
     public RectD Bounds => DrawingBackendApi.Current.PathImplementation.GetBounds(this);
-    
+
     public bool IsDisposed { get; private set; }
 
     public VecF LastPoint
@@ -62,6 +62,8 @@ public class VectorPath : NativeObject
     {
         get => DrawingBackendApi.Current.PathImplementation.GetPoints(ObjectPointer);
     }
+
+    public event Action<VectorPath>? Changed;
 
     public static VectorPath FromSvgPath(string svgPath)
     {
@@ -79,10 +81,14 @@ public class VectorPath : NativeObject
     public VectorPath(VectorPath other) : base(DrawingBackendApi.Current.PathImplementation.Clone(other))
     {
     }
-    
+
     /// <param name="matrix">The matrix to use for transformation.</param>
     /// <summary>Applies a transformation matrix to the all the elements in the path.</summary>
-    public void Transform(Matrix3X3 matrix) => DrawingBackendApi.Current.PathImplementation.Transform(this, matrix);
+    public void Transform(Matrix3X3 matrix)
+    {
+        DrawingBackendApi.Current.PathImplementation.Transform(this, matrix);
+        Changed?.Invoke(this);
+    }
 
     public override void Dispose()
     {
@@ -93,36 +99,43 @@ public class VectorPath : NativeObject
     public void Reset()
     {
         DrawingBackendApi.Current.PathImplementation.Reset(this);
+        Changed?.Invoke(this);
     }
 
     public void MoveTo(VecF vecF)
     {
         DrawingBackendApi.Current.PathImplementation.MoveTo(this, vecF);
+        Changed?.Invoke(this);
     }
 
     public void LineTo(VecF vecF)
     {
         DrawingBackendApi.Current.PathImplementation.LineTo(this, vecF);
+        Changed?.Invoke(this);
     }
 
     public void QuadTo(VecF mid, VecF vecF)
     {
         DrawingBackendApi.Current.PathImplementation.QuadTo(this, mid, vecF);
+        Changed?.Invoke(this);
     }
 
     public void CubicTo(VecF mid1, VecF mid2, VecF vecF)
     {
         DrawingBackendApi.Current.PathImplementation.CubicTo(this, mid1, mid2, vecF);
+        Changed?.Invoke(this);
     }
 
     public void ArcTo(RectI oval, int startAngle, int sweepAngle, bool forceMoveTo)
     {
         DrawingBackendApi.Current.PathImplementation.ArcTo(this, oval, startAngle, sweepAngle, forceMoveTo);
+        Changed?.Invoke(this);
     }
 
     public void AddOval(RectI borders)
     {
         DrawingBackendApi.Current.PathImplementation.AddOval(this, borders);
+        Changed?.Invoke(this);
     }
 
     /// <summary>
@@ -134,6 +147,7 @@ public class VectorPath : NativeObject
     public VectorPath Op(VectorPath other, VectorPathOp pathOp)
     {
         return DrawingBackendApi.Current.PathImplementation.Op(this, other, pathOp);
+        Changed?.Invoke(this);
     }
 
     /// <summary>
@@ -142,6 +156,7 @@ public class VectorPath : NativeObject
     public void Close()
     {
         DrawingBackendApi.Current.PathImplementation.Close(this);
+        Changed?.Invoke(this);
     }
 
     public string ToSvgPathData()
@@ -152,11 +167,13 @@ public class VectorPath : NativeObject
     public void AddRect(RectI rect, PathDirection direction = PathDirection.Clockwise)
     {
         DrawingBackendApi.Current.PathImplementation.AddRect(this, rect, direction);
+        Changed?.Invoke(this);
     }
 
     public void AddPath(VectorPath path, AddPathMode mode)
     {
         DrawingBackendApi.Current.PathImplementation.AddPath(this, path, mode);
+        Changed?.Invoke(this);
     }
 
     public bool Contains(float x, float y)
