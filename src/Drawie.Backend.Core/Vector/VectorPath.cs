@@ -64,6 +64,15 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
         get => DrawingBackendApi.Current.PathImplementation.GetPoints(ObjectPointer);
     }
 
+    public bool IsClosed
+    {
+        get
+        {
+            using var iterator = CreateIterator(false);
+            return iterator.IsCloseContour;
+        }
+    }
+
     public event Action<VectorPath>? Changed;
 
     public static VectorPath FromSvgPath(string svgPath)
@@ -206,7 +215,7 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
 
     public IEnumerator<(PathVerb verb, VecF[] points)> GetEnumerator()
     {
-        return CreateIterator(false);
+        return CreateRawIterator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
