@@ -50,4 +50,5 @@ public interface IVectorPathImplementation
     public PathVerb RawIteratorNextVerb(IntPtr objectPointer, VecF[] points);
     public void DisposeRawIterator(IntPtr objectPointer);
     public object GetNativeRawIterator(IntPtr objectPointer);
+    public void Offset(VectorPath vectorPath, VecD delta);
 }

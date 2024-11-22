@@ -244,6 +244,11 @@ namespace Drawie.Skia.Implementations
             return managedRawIterators[objectPointer];
         }
 
+        public void Offset(VectorPath vectorPath, VecD delta)
+        {
+            ManagedInstances[vectorPath.ObjectPointer].Offset((float)delta.X, (float)delta.Y);
+        }
+
         /// <summary>
         ///     Compute the result of a logical operation on two paths.
         /// </summary>

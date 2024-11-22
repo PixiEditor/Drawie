@@ -187,6 +187,12 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
         Changed?.Invoke(this);
     }
 
+    public void Offset(VecD delta)
+    {
+        DrawingBackendApi.Current.PathImplementation.Offset(this, delta);
+        Changed?.Invoke(this);
+    }
+    
     public void AddPath(VectorPath path, AddPathMode mode)
     {
         DrawingBackendApi.Current.PathImplementation.AddPath(this, path, mode);
@@ -202,6 +208,7 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
     {
         return DrawingBackendApi.Current.PathImplementation.Simplify(this);
     }
+
 
     public PathIterator CreateIterator(bool forceClose)
     {
