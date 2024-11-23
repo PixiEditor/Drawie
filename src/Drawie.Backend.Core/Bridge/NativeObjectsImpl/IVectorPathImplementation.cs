@@ -26,8 +26,8 @@ public interface IVectorPathImplementation
     public void AddRect(VectorPath path, RectI rect, PathDirection direction);
     public void MoveTo(VectorPath vectorPath, VecF vecF);
     public void LineTo(VectorPath vectorPath, VecF vecF);
-    public void QuadTo(VectorPath vectorPath, VecF mid, VecF vecF);
-    public void CubicTo(VectorPath vectorPath, VecF mid1, VecF mid2, VecF vecF);
+    public void QuadTo(VectorPath vectorPath, VecF control, VecF point);
+    public void CubicTo(VectorPath vectorPath, VecF mid1, VecF mid2, VecF point);
     public void ConicTo(VectorPath vectorPath, VecF mid, VecF end, float weight);
     public void ArcTo(VectorPath vectorPath, RectI oval, int startAngle, int sweepAngle, bool forceMoveTo);
     public void AddOval(VectorPath vectorPath, RectI borders);

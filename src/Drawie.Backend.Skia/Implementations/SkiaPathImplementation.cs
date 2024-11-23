@@ -123,14 +123,14 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[vectorPath.ObjectPointer].LineTo(vecF.ToSkPoint());
         }
 
-        public void QuadTo(VectorPath vectorPath, VecF mid, VecF vecF)
+        public void QuadTo(VectorPath vectorPath, VecF control, VecF point)
         {
-            ManagedInstances[vectorPath.ObjectPointer].QuadTo(mid.ToSkPoint(), vecF.ToSkPoint());
+            ManagedInstances[vectorPath.ObjectPointer].QuadTo(control.ToSkPoint(), point.ToSkPoint());
         }
 
-        public void CubicTo(VectorPath vectorPath, VecF mid1, VecF mid2, VecF vecF)
+        public void CubicTo(VectorPath vectorPath, VecF mid1, VecF mid2, VecF point)
         {
-            ManagedInstances[vectorPath.ObjectPointer].CubicTo(mid1.ToSkPoint(), mid2.ToSkPoint(), vecF.ToSkPoint());
+            ManagedInstances[vectorPath.ObjectPointer].CubicTo(mid1.ToSkPoint(), mid2.ToSkPoint(), point.ToSkPoint());
         }
 
         public void ArcTo(VectorPath vectorPath, RectI oval, int startAngle, int sweepAngle, bool forceMoveTo)
