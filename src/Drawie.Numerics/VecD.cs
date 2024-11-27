@@ -280,4 +280,24 @@ public struct VecD : IEquatable<VecD>, IComparable<VecD>
         double dY = Math.Abs(Y - other.Y);
         return dX < axisEpsilon && dY < axisEpsilon;
     }
+
+    public byte[] ToByteArray()
+    {
+        byte[] bytes = new byte[16];
+        BitConverter.GetBytes(this.X).CopyTo(bytes, 0);
+        BitConverter.GetBytes(this.Y).CopyTo(bytes, 8);
+        return bytes;
+    }
+
+    public static VecD FromBytes(byte[]? bytes)
+    {
+        if (bytes is null || bytes.Length < 16)
+        {
+            return new VecD(-1, -1);
+        }
+
+        double x = BitConverter.ToDouble(bytes, 0);
+        double y = BitConverter.ToDouble(bytes, 8);
+        return new VecD(x, y);
+    }
 }
