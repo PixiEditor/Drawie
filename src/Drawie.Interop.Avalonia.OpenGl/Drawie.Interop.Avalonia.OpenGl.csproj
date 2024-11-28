@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -15,7 +15,7 @@
 
     <ItemGroup>
       <Reference Include="Avalonia.OpenGL">
-        <HintPath>..\Drawie.AvaloniaInterop\bin\Debug\net9.0\Avalonia.OpenGL.dll</HintPath>
+        <HintPath>..\Drawie.AvaloniaInterop\bin\Debug\net8.0\Avalonia.OpenGL.dll</HintPath>
       </Reference>
     </ItemGroup>
 
