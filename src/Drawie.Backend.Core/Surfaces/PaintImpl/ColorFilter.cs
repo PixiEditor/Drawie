@@ -29,6 +29,11 @@ public class ColorFilter : NativeObject
 
         return filter;
     }
+    
+    public static ColorFilter CreateLumaColor()
+    {
+        return new ColorFilter(DrawingBackendApi.Current.ColorFilterImplementation.CreateLumaColor());
+    }
 
     /// <summary>Creates a new color filter that transforms a color by a 4x5 (row-major) matrix.</summary>
     /// <returns>Returns the new <see cref="T:Drawie.Backend.Core.Surface.PaintImpl.ColorFilter" />.</returns>

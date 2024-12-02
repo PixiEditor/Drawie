@@ -11,4 +11,5 @@ public interface IColorFilterImplementation
     public IntPtr CreateCompose(ColorFilter outer, ColorFilter inner);
     public void Dispose(ColorFilter colorFilter);
     public object GetNativeColorFilter(IntPtr objectPointer);
+    public IntPtr CreateLumaColor();
 }

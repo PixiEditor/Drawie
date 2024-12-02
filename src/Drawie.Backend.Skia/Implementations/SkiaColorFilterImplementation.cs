@@ -46,5 +46,13 @@ namespace Drawie.Skia.Implementations
         {
             return ManagedInstances[objectPointer];
         }
+
+        public IntPtr CreateLumaColor()
+        {
+            var skColorFilter = SKColorFilter.CreateLumaColor();
+            ManagedInstances[skColorFilter.Handle] = skColorFilter;
+
+            return skColorFilter.Handle;
+        }
     }
 }
