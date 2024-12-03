@@ -17,7 +17,8 @@ public class ShaderBuilder
     private Dictionary<DrawingSurface, SurfaceSampler> _samplers = new Dictionary<DrawingSurface, SurfaceSampler>();
 
     public BuiltInFunctions Functions { get; } = new();
-
+    
+    
     public ShaderBuilder(VecI resolution)
     {
         AddUniform("iResolution", resolution);
@@ -72,13 +73,13 @@ public class ShaderBuilder
         return newSampler;
     }
 
-    public Half4 Sample(SurfaceSampler texName, Float2 pos)
+    public Half4 Sample(SurfaceSampler texName, Expression pos)
     {
         string resultName = $"color_{GetUniqueNameNumber()}";
         Half4 result = new Half4(resultName);
         _variables.Add(result);
         _bodyBuilder.AppendLine(
-            $"half4 {resultName} = {texName.VariableName}.eval({pos.VariableName} * iResolution);");
+            $"half4 {resultName} = {texName.VariableName}.eval({pos.ExpressionValue} * iResolution);");
         return result;
     }
 
