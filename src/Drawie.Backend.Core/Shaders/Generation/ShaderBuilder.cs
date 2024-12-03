@@ -26,11 +26,6 @@ public class ShaderBuilder
     public Shader BuildShader()
     {
         string generatedSksl = ToSkSl();
-        /*string testSksl = """
-
-
-
-                          """;*/
         return new Shader(generatedSksl, Uniforms);
     }
 

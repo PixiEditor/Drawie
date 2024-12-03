@@ -9,17 +9,17 @@ public static class ShaderMath
     
     public static Expression Subtract(ShaderExpressionVariable a, ShaderExpressionVariable b)
     {
-        return new Expression($"{a.VarOrConst()} - {b.VarOrConst()}");
+        return new Expression($"{a.ExpressionValue} - {b.ExpressionValue}");
     }
     
     public static Expression Multiply(ShaderExpressionVariable a, ShaderExpressionVariable b)
     {
-        return new Expression($"{a.VarOrConst()} * {b.VarOrConst()}");
+        return new Expression($"{a.ExpressionValue} * {b.ExpressionValue}");
     }
     
     public static Expression Divide(ShaderExpressionVariable a, ShaderExpressionVariable b)
     {
-        return new Expression($"{a.VarOrConst()} / {b.VarOrConst()}");
+        return new Expression($"{a.ExpressionValue} / {b.ExpressionValue}");
     }
 
     public static Expression Clamp(Expression value, Expression min, Expression max)
@@ -44,6 +44,6 @@ public static class ShaderMath
     
     public static Expression Lerp(ShaderExpressionVariable a, ShaderExpressionVariable b, ShaderExpressionVariable t)
     {
-        return new Expression($"mix({a.VarOrConst()}, {b.VarOrConst()}, {t.VarOrConst()})"); 
+        return new Expression($"mix({a.ExpressionValue}, {b.ExpressionValue}, {t.ExpressionValue})"); 
     }
 }

@@ -2,9 +2,13 @@
 
 namespace Drawie.Backend.Core.Shaders.Generation.Expressions;
 
-public class Half4(string name) : ShaderExpressionVariable<Color>(name)
+public class Half4(string name) : ShaderExpressionVariable<Color>(name), IMultiValueVariable
 {
     private Expression? _overrideExpression;
+    private Expression? _rOverrideExpression;
+    private Expression? _gOverrideExpression;
+    private Expression? _bOverrideExpression;
+    private Expression? _aOverrideExpression;
 
     public override string ConstantValueString =>
         $"half4({ConstantValue.R}, {ConstantValue.G}, {ConstantValue.B}, {ConstantValue.A})";
@@ -12,25 +16,25 @@ public class Half4(string name) : ShaderExpressionVariable<Color>(name)
     public Float1 R =>
         new Half4Float1Accessor(this, 'r')
         {
-            ConstantValue = ConstantValue.R, OverrideExpression = _overrideExpression
+            ConstantValue = ConstantValue.R, OverrideExpression = _rOverrideExpression
         };
 
     public Float1 G =>
         new Half4Float1Accessor(this, 'g')
         {
-            ConstantValue = ConstantValue.G, OverrideExpression = _overrideExpression
+            ConstantValue = ConstantValue.G, OverrideExpression = _gOverrideExpression
         };
 
     public Float1 B =>
         new Half4Float1Accessor(this, 'b')
         {
-            ConstantValue = ConstantValue.B, OverrideExpression = _overrideExpression
+            ConstantValue = ConstantValue.B, OverrideExpression = _bOverrideExpression
         };
 
     public Float1 A =>
         new Half4Float1Accessor(this, 'a')
         {
-            ConstantValue = ConstantValue.A, OverrideExpression = _overrideExpression
+            ConstantValue = ConstantValue.A, OverrideExpression = _aOverrideExpression
         };
 
     public static implicit operator Half4(Color value) => new("") { ConstantValue = value };
@@ -55,6 +59,32 @@ public class Half4(string name) : ShaderExpressionVariable<Color>(name)
             3 => A,
             _ => throw new IndexOutOfRangeException()
         };
+    }
+
+    public void OverrideExpressionAt(int index, Expression? expression)
+    {
+        switch (index)
+        {
+            case 0:
+                _rOverrideExpression = expression;
+                break;
+            case 1:
+                _gOverrideExpression = expression;
+                break;
+            case 2:
+                _bOverrideExpression = expression;
+                break;
+            case 3:
+                _aOverrideExpression = expression;
+                break;
+            default:
+                throw new IndexOutOfRangeException();
+        }
+    }
+
+    public int GetValuesCount()
+    {
+        return 4;
     }
 
     public static string ConstructorText(Expression r, Expression g, Expression b, Expression a) =>

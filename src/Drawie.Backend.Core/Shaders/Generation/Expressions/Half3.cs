@@ -5,24 +5,28 @@ namespace Drawie.Backend.Core.Shaders.Generation.Expressions;
 public class Half3(string name) : ShaderExpressionVariable<Vec3D>(name), IMultiValueVariable
 {
     private Expression? _overrideExpression;
+    private Expression? _rOverrideExpression;
+    private Expression? _gOverrideExpression;
+    private Expression? _bOverrideExpression;
+    
     public override string ConstantValueString => $"half3({ConstantValue.X}, {ConstantValue.Y}, {ConstantValue.Z})";
 
     public Float1 R =>
         new Half3Float1Accessor(this, 'r')
         {
-            ConstantValue = ConstantValue.X, OverrideExpression = _overrideExpression
+            ConstantValue = ConstantValue.X, OverrideExpression = _rOverrideExpression
         };
 
     public Float1 G =>
         new Half3Float1Accessor(this, 'g')
         {
-            ConstantValue = ConstantValue.X, OverrideExpression = _overrideExpression
+            ConstantValue = ConstantValue.X, OverrideExpression = _gOverrideExpression
         };
 
     public Float1 B =>
         new Half3Float1Accessor(this, 'b')
         {
-            ConstantValue = ConstantValue.Z, OverrideExpression = _overrideExpression
+            ConstantValue = ConstantValue.Z, OverrideExpression = _bOverrideExpression
         };
 
     public override Expression? OverrideExpression
@@ -43,6 +47,29 @@ public class Half3(string name) : ShaderExpressionVariable<Vec3D>(name), IMultiV
             2 => B,
             _ => throw new IndexOutOfRangeException()
         };
+    }
+
+    public void OverrideExpressionAt(int index, Expression? expression)
+    {
+        switch (index)
+        {
+            case 0:
+                _rOverrideExpression = expression;
+                break;
+            case 1:
+                _gOverrideExpression = expression;
+                break;
+            case 2:
+                _bOverrideExpression = expression;
+                break;
+            default:
+                throw new IndexOutOfRangeException();
+        }
+    }
+
+    public int GetValuesCount()
+    {
+        return 3;
     }
 
     public static string ConstructorText(Expression r, Expression g, Expression b) =>
