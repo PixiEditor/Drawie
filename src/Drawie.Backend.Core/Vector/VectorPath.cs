@@ -136,7 +136,7 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
         Changed?.Invoke(this);
     }
 
-    public void ArcTo(RectI oval, int startAngle, int sweepAngle, bool forceMoveTo)
+    public void ArcTo(RectD oval, int startAngle, int sweepAngle, bool forceMoveTo)
     {
         DrawingBackendApi.Current.PathImplementation.ArcTo(this, oval, startAngle, sweepAngle, forceMoveTo);
         Changed?.Invoke(this);
@@ -148,8 +148,7 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
         Changed?.Invoke(this);
     }
 
-
-    public void AddOval(RectI borders)
+    public void AddOval(RectD borders)
     {
         DrawingBackendApi.Current.PathImplementation.AddOval(this, borders);
         Changed?.Invoke(this);

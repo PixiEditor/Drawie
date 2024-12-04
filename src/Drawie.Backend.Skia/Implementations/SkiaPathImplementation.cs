@@ -133,7 +133,7 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[vectorPath.ObjectPointer].CubicTo(mid1.ToSkPoint(), mid2.ToSkPoint(), point.ToSkPoint());
         }
 
-        public void ArcTo(VectorPath vectorPath, RectI oval, int startAngle, int sweepAngle, bool forceMoveTo)
+        public void ArcTo(VectorPath vectorPath, RectD oval, int startAngle, int sweepAngle, bool forceMoveTo)
         {
             ManagedInstances[vectorPath.ObjectPointer].ArcTo(oval.ToSkRect(), startAngle, sweepAngle, forceMoveTo);
         }
@@ -143,7 +143,7 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[vectorPath.ObjectPointer].ConicTo(mid.ToSkPoint(), end.ToSkPoint(), weight);
         }
 
-        public void AddOval(VectorPath vectorPath, RectI borders)
+        public void AddOval(VectorPath vectorPath, RectD borders)
         {
             ManagedInstances[vectorPath.ObjectPointer].AddOval(borders.ToSkRect());
         }
