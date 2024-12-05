@@ -84,7 +84,7 @@ public abstract class InteropControl : Control
             return;
         }
 
-        var size = PixelSize.FromSize(Bounds.Size, root.RenderScaling);
+        var size = new PixelSize((int)Bounds.Width, (int)Bounds.Height);
         RenderFrame(size);
     }
 
