@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp" Version="3.118.0-preview.1.2" />
-    <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="3.118.0-preview.1.2" />
+    <PackageReference Include="SkiaSharp" Version="3.116.0" />
+    <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="3.116.0" />
   </ItemGroup>
 
   <ItemGroup Condition="$([MSBuild]::IsOsPlatform('Linux'))">
