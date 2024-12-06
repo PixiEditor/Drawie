@@ -12,7 +12,8 @@ public class OpenGlRenderApi : IOpenGlRenderApi
         {
             if (context == null)
             {
-                context = new OpenGlContext(s => windowRenderApis[0].Context.TryGetProcAddress(s, out IntPtr ptr) ? ptr : IntPtr.Zero);
+                context = new OpenGlContext(s =>
+                    windowRenderApis[0].Context.TryGetProcAddress(s, out IntPtr ptr) ? ptr : IntPtr.Zero);
             }
 
             return context;
@@ -24,9 +25,8 @@ public class OpenGlRenderApi : IOpenGlRenderApi
 
     public OpenGlRenderApi()
     {
-        
     }
-    
+
     public OpenGlRenderApi(IOpenGlContext context)
     {
         this.context = context;

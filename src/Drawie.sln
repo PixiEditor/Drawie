@@ -63,6 +63,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.Interop.Avalonia", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.Interop.Avalonia.OpenGl", "Drawie.Interop.Avalonia.OpenGl\Drawie.Interop.Avalonia.OpenGl.csproj", "{EF944C77-D86B-4D6B-B88E-FE06131C70D7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawie.Tests", "Drawie.Tests\Drawie.Tests.csproj", "{5222843B-3E7F-4AF9-9394-4BDBC2D2ABD6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -168,6 +170,10 @@ Global
 		{EF944C77-D86B-4D6B-B88E-FE06131C70D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF944C77-D86B-4D6B-B88E-FE06131C70D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF944C77-D86B-4D6B-B88E-FE06131C70D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5222843B-3E7F-4AF9-9394-4BDBC2D2ABD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5222843B-3E7F-4AF9-9394-4BDBC2D2ABD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5222843B-3E7F-4AF9-9394-4BDBC2D2ABD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5222843B-3E7F-4AF9-9394-4BDBC2D2ABD6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{645AF54D-D58F-492E-A2A9-12F86EA8C00A} = {239DB1B4-E66F-444A-87DA-B19775F40974}

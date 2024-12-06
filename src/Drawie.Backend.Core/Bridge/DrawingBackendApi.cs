@@ -12,21 +12,22 @@ namespace Drawie.Backend.Core.Bridge
             get
             {
                 if (_current == null)
-                    throw new NullReferenceException("Either drawing backend was not yet initialized or reference was somehow lost.");
+                    throw new NullReferenceException(
+                        "Either drawing backend was not yet initialized or reference was somehow lost.");
 
                 return _current;
             }
         }
-        
+
         public static bool HasBackend => _current != null;
-        
+
         public static void SetupBackend(IDrawingBackend backend, IRenderingDispatcher dispatcher)
         {
             if (_current != null)
             {
                 throw new InitializationDuplicateException("Drawing backend was already initialized.");
             }
-            
+
             _current = backend;
             _current.RenderingDispatcher = dispatcher;
         }
