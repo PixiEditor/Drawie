@@ -180,7 +180,7 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
         return DrawingBackendApi.Current.PathImplementation.ToSvgPathData(this);
     }
 
-    public void AddRect(RectI rect, PathDirection direction = PathDirection.Clockwise)
+    public void AddRect(RectD rect, PathDirection direction = PathDirection.Clockwise)
     {
         DrawingBackendApi.Current.PathImplementation.AddRect(this, rect, direction);
         Changed?.Invoke(this);

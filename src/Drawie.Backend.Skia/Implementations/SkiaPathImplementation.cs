@@ -108,7 +108,7 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[vectorPath.ObjectPointer].Reset();
         }
 
-        public void AddRect(VectorPath path, RectI rect, PathDirection direction)
+        public void AddRect(VectorPath path, RectD rect, PathDirection direction)
         {
             ManagedInstances[path.ObjectPointer].AddRect(rect.ToSkRect(), (SKPathDirection)direction);
         }
