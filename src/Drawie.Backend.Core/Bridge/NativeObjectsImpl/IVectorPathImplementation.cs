@@ -51,4 +51,6 @@ public interface IVectorPathImplementation
     public void DisposeRawIterator(IntPtr objectPointer);
     public object GetNativeRawIterator(IntPtr objectPointer);
     public void Offset(VectorPath vectorPath, VecD delta);
+    public float GetConicWeight(IntPtr objectPointer);
+    public float GetRawConicWeight(IntPtr objectPointer);
 }

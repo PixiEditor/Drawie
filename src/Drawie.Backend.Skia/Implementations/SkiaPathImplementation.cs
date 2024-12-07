@@ -202,6 +202,16 @@ namespace Drawie.Skia.Implementations
             return managedIterators[objectPointer].IsCloseContour();
         }
 
+        public float GetConicWeight(IntPtr objectPointer)
+        {
+            return managedIterators[objectPointer].ConicWeight();
+        }
+
+        public float GetRawConicWeight(IntPtr objectPointer)
+        {
+            return managedRawIterators[objectPointer].ConicWeight();
+        }
+
         public PathVerb IteratorNextVerb(IntPtr objectPointer, VecF[] points)
         {
             // TODO: maybe there is a way to unsafely cast the array directly

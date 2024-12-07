@@ -5,7 +5,7 @@ using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Vector;
 
-public class PathIterator : NativeObject, IEnumerator<(PathVerb verb, VecF[] points)>
+public class PathIterator : NativeObject, IEnumerator<(PathVerb verb, VecF[] points, float conicWeight)>
 {
     public PathIterator(IntPtr objPtr) : base(objPtr)
     {
@@ -13,6 +13,7 @@ public class PathIterator : NativeObject, IEnumerator<(PathVerb verb, VecF[] poi
 
     private PathVerb currentVerb;
     private VecF[] iteratorPoints;
+    private float currentConicWeight;
 
     public override object Native => DrawingBackendApi.Current.PathImplementation.GetNativeIterator(ObjectPointer);
 
@@ -21,6 +22,11 @@ public class PathIterator : NativeObject, IEnumerator<(PathVerb verb, VecF[] poi
     public PathVerb Next(VecF[] points)
     {
         return DrawingBackendApi.Current.PathImplementation.IteratorNextVerb(ObjectPointer, points);
+    }
+    
+    public float GetConicWeight()
+    {
+        return DrawingBackendApi.Current.PathImplementation.GetConicWeight(ObjectPointer);
     }
 
     public override void Dispose()
@@ -32,6 +38,7 @@ public class PathIterator : NativeObject, IEnumerator<(PathVerb verb, VecF[] poi
     {
         iteratorPoints = new VecF[4];
         currentVerb = Next(iteratorPoints);
+        currentConicWeight = GetConicWeight();
         bool done = currentVerb == PathVerb.Done;
         return !done;
     }
@@ -41,7 +48,7 @@ public class PathIterator : NativeObject, IEnumerator<(PathVerb verb, VecF[] poi
         throw new ArgumentException("Path Iterators can't be reused");
     }
 
-    (PathVerb verb, VecF[] points) IEnumerator<(PathVerb verb, VecF[] points)>.Current => (currentVerb, iteratorPoints);
+    (PathVerb verb, VecF[] points, float conicWeight) IEnumerator<(PathVerb verb, VecF[] points, float conicWeight)>.Current => (currentVerb, iteratorPoints, currentConicWeight);
 
     object? IEnumerator.Current => (currentVerb, iteratorPoints);
 }
