@@ -14,6 +14,7 @@ public class RawPathIterator : NativeObject, IEnumerator<(PathVerb verb, VecF[] 
     private PathVerb currentVerb;
     private float currentConicWeight;
     private VecF[] iteratorPoints;
+    private bool wasDone;
 
     public override object Native => DrawingBackendApi.Current.PathImplementation.GetNativeRawIterator(ObjectPointer);
 
@@ -34,11 +35,14 @@ public class RawPathIterator : NativeObject, IEnumerator<(PathVerb verb, VecF[] 
 
     bool IEnumerator.MoveNext()
     {
+        if (wasDone) return false;
+
         iteratorPoints = new VecF[4];
         currentVerb = Next(iteratorPoints);
         currentConicWeight = GetConicWeight();
         bool done = currentVerb == PathVerb.Done;
-        return !done;
+        wasDone = done;
+        return true;
     }
 
     void IEnumerator.Reset()
