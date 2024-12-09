@@ -215,6 +215,7 @@ namespace Drawie.Skia.Implementations
         public PathVerb IteratorNextVerb(IntPtr objectPointer, VecF[] points)
         {
             // TODO: maybe there is a way to unsafely cast the array directly
+            ResetIntermediatePoints();
             var next = (PathVerb)managedIterators[objectPointer].Next(intermediatePoints);
             for (int i = 0; i < points.Length; i++)
             {
@@ -234,6 +235,7 @@ namespace Drawie.Skia.Implementations
         public PathVerb RawIteratorNextVerb(IntPtr objectPointer, VecF[] points)
         {
             SKPath.RawIterator iterator = managedRawIterators[objectPointer];
+            ResetIntermediatePoints();
             var next = (PathVerb)iterator.Next(intermediatePoints);
             for (int i = 0; i < points.Length; i++)
             {
@@ -294,6 +296,14 @@ namespace Drawie.Skia.Implementations
         public bool Contains(VectorPath vectorPath, float x, float y)
         {
             return ManagedInstances[vectorPath.ObjectPointer].Contains(x, y);
+        }
+        
+        private void ResetIntermediatePoints()
+        {
+            for (int i = 0; i < intermediatePoints.Length; i++)
+            {
+                intermediatePoints[i] = new SKPoint();
+            }
         }
     }
 }
