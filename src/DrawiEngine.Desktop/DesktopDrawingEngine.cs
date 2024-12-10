@@ -9,7 +9,7 @@ public static class DesktopDrawingEngine
 {
     public static DrawingEngine CreateDefaultDesktop()
     {
-        OpenGlRenderApi renderApi = new OpenGlRenderApi();
+        VulkanRenderApi renderApi = new VulkanRenderApi();
         return new DrawingEngine(renderApi, new GlfwWindowingPlatform(renderApi), new SkiaDrawingBackend(), new DrawieRenderingDispatcher());
     }
 }

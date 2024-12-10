@@ -23,17 +23,21 @@ public class Texture : IDisposable, ICloneable
     private Paint nearestNeighborReplacingPaint =
         new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
 
-    public Texture(VecI size)
+    public Texture(VecI size) 
+        : this(new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgbLinear()) { GpuBacked = true })
     {
-        Size = size;
+    }
+
+    public Texture(ImageInfo imageInfo)
+    {
+        Size = new VecI(imageInfo.Width, imageInfo.Height);
+        if (!imageInfo.GpuBacked)
+            throw new ArgumentException("Textures are GPU backed, add GpuBacked = true or use Surface for CPU backed surfaces.");
+
         DrawingBackendApi.Current.RenderingDispatcher.Invoke(
             () =>
                 DrawingSurface =
-                    DrawingSurface.Create(
-                        new ImageInfo(Size.X, Size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb())
-                        {
-                            GpuBacked = true
-                        })
+                    DrawingSurface.Create(imageInfo)
         );
 
         DrawingSurface.Changed += DrawingSurfaceOnChanged;

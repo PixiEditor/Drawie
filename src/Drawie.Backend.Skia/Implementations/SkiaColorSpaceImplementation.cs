@@ -7,10 +7,12 @@ namespace Drawie.Skia.Implementations
     public class SkiaColorSpaceImplementation : SkObjectImplementation<SKColorSpace>, IColorSpaceImplementation
     {
         private readonly IntPtr _srgbPointer;
+        private readonly IntPtr _srgbLinearPointer;
         
         public SkiaColorSpaceImplementation()
         {
             _srgbPointer = SKColorSpace.CreateSrgb().Handle;
+            _srgbLinearPointer = SKColorSpace.CreateSrgbLinear().Handle;
         }
         
         public ColorSpace CreateSrgb()
@@ -30,6 +32,8 @@ namespace Drawie.Skia.Implementations
         public void Dispose(IntPtr objectPointer)
         {
             if (objectPointer == _srgbPointer) return;
+            if (objectPointer == _srgbLinearPointer) return;
+            
             ManagedInstances[objectPointer].Dispose();
             ManagedInstances.TryRemove(objectPointer, out _);
         }

@@ -19,7 +19,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     public bool IsDisposed => disposed;
 
     private static ImageInfo DefaultImageInfo =>
-        new(0, 0, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb());
+        new(0, 0, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgbLinear());
 
     public event SurfaceChangedEventHandler? Changed;
 

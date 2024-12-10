@@ -184,7 +184,7 @@ namespace Drawie.Skia
                     _ => throw new ArgumentException("Unsupported texture type.")
                 };
 
-                GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 0, 0,
+                GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
                 new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
 
                 var surface = SKSurface.Create(GraphicsContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
