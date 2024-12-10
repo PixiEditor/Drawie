@@ -20,6 +20,13 @@ namespace Drawie.Skia.Implementations
             return new ColorSpace(skColorSpace.Handle);
         }
 
+        public ColorSpace CreateSrgbLinear()
+        {
+            SKColorSpace skColorSpace = SKColorSpace.CreateSrgbLinear();
+            ManagedInstances[skColorSpace.Handle] = skColorSpace;
+            return new ColorSpace(skColorSpace.Handle);
+        }
+
         public void Dispose(IntPtr objectPointer)
         {
             if (objectPointer == _srgbPointer) return;

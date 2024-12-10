@@ -15,20 +15,23 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     public DrawingSurface DrawingSurface { get; }
     public int BytesPerPixel { get; }
     public VecI Size { get; }
-    
+
     public bool IsDisposed => disposed;
 
-    private static ImageInfo DefaultImageInfo => new(0, 0, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb());
+    private static ImageInfo DefaultImageInfo =>
+        new(0, 0, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb());
 
     public event SurfaceChangedEventHandler? Changed;
 
     private Paint drawingPaint = new Paint() { BlendMode = BlendMode.Src };
-    private Paint nearestNeighborReplacingPaint = new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
+
+    private Paint nearestNeighborReplacingPaint =
+        new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
 
     private Surface(ImageInfo info)
     {
         var size = info.Size;
-        
+
         if (size.X < 1 || size.Y < 1)
             throw new ArgumentException("Width and height must be >=1");
 
@@ -143,7 +146,8 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     {
         using Image image = DrawingSurface.Snapshot();
         Surface newSurface = new(newSize);
-        newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y), nearestNeighborReplacingPaint);
+        newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y),
+            nearestNeighborReplacingPaint);
         return newSurface;
     }
 
@@ -183,17 +187,21 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
             if ((ptr[i] & 0x1111_0000_0000_0000) != 0 && (ptr[i] & 0x1111_0000_0000_0000) != 0x8000_0000_0000_0000)
                 return false;
         }
+
         return true;
     }
 
 #if DEBUG
     public void SaveToDesktop(string filename = "savedSurface.png")
     {
-        using var final = DrawingSurface.Create(new ImageInfo(Size.X, Size.Y, ColorType.Rgba8888, AlphaType.Premul, ColorSpace.CreateSrgb()));
+        using var final = DrawingSurface.Create(new ImageInfo(Size.X, Size.Y, ColorType.Rgba8888, AlphaType.Premul,
+            ColorSpace.CreateSrgb()));
         final.Canvas.DrawSurface(DrawingSurface, 0, 0);
         using (var snapshot = final.Snapshot())
         {
-            using var stream = File.Create(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), filename));
+            using var stream =
+                File.Create(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+                    filename));
             using var png = snapshot.Encode();
             png.SaveTo(stream);
         }
@@ -216,7 +224,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
         Unsafe.InitBlockUnaligned((byte*)buffer, 0, (uint)byteC);
         return buffer;
     }
-    
+
     public void Dispose()
     {
         if (disposed)
@@ -248,7 +256,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
 
     public Pixmap PeekPixels()
     {
-        return DrawingSurface.PeekPixels(); 
+        return DrawingSurface.PeekPixels();
     }
 
     public object Clone()
