@@ -22,26 +22,26 @@ namespace Drawie.Skia
 
         public static SKMatrix ToSkMatrix(this Matrix3X3 matrix)
         {
-            return new SKMatrix(matrix.ScaleX, matrix.SkewX, matrix.TransX, matrix.SkewY, 
+            return new SKMatrix(matrix.ScaleX, matrix.SkewX, matrix.TransX, matrix.SkewY,
                 matrix.ScaleY, matrix.TransY, matrix.Persp0, matrix.Persp1, matrix.Persp2);
         }
-        
+
         public static Matrix3X3 ToMatrix3X3(this SKMatrix matrix)
         {
-            return new Matrix3X3(matrix.ScaleX, matrix.SkewX, matrix.TransX, matrix.SkewY, 
+            return new Matrix3X3(matrix.ScaleX, matrix.SkewX, matrix.TransX, matrix.SkewY,
                 matrix.ScaleY, matrix.TransY, matrix.Persp0, matrix.Persp1, matrix.Persp2);
         }
-        
+
         public static SKPoint ToSkPoint(this VecF vector)
         {
             return new SKPoint(vector.X, vector.Y);
         }
-        
+
         public static SKRect ToSkRect(this RectD rect)
         {
             return new SKRect((float)rect.Left, (float)rect.Top, (float)rect.Right, (float)rect.Bottom);
         }
-        
+
         public static SKRect ToSkRect(this RectI rect)
         {
             return new SKRect(rect.Left, rect.Top, rect.Right, rect.Bottom);
@@ -51,12 +51,22 @@ namespace Drawie.Skia
         {
             return new SKRectI(rect.Left, rect.Top, rect.Right, rect.Bottom);
         }
-        
+
         public static SKImageInfo ToSkImageInfo(this ImageInfo info)
         {
-            return new SKImageInfo(info.Width, info.Height, (SKColorType)info.ColorType, (SKAlphaType)info.AlphaType);
+            SKColorSpace? colorSpace = null;
+
+            if (info.ColorSpace != null)
+            {
+                colorSpace =
+                    (SKColorSpace)DrawingBackendApi.Current.ColorSpaceImplementation.GetNativeColorSpace(info.ColorSpace
+                        .ObjectPointer);
+            }
+
+            return new SKImageInfo(info.Width, info.Height, (SKColorType)info.ColorType, (SKAlphaType)info.AlphaType,
+                colorSpace);
         }
-        
+
         public static Color ToBackendColor(this SKColor color)
         {
             return new Color(color.Red, color.Green, color.Blue, color.Alpha);
