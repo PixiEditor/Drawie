@@ -69,8 +69,9 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[shader.Handle] = shader;
             return new Shader(shader.Handle);
         }
-        
-        public Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos, ShaderTileMode tileMode)
+
+        public Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
+            ShaderTileMode tileMode)
         {
             SKShader shader = SKShader.CreateRadialGradient(
                 new SKPoint((float)center.X, (float)center.Y),
@@ -79,7 +80,7 @@ namespace Drawie.Skia.Implementations
                 colorPos,
                 (SKShaderTileMode)tileMode);
             ManagedInstances[shader.Handle] = shader;
-            
+
             return new Shader(shader.Handle);
         }
 

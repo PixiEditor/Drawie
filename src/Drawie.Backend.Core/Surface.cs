@@ -45,19 +45,13 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     public static Surface ForDisplay(VecI size)
     {
         return new Surface(
-            new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb())
-            {
-                GpuBacked = true
-            });
+            new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb()));
     }
 
     public static Surface ForProcessing(VecI size)
     {
         return new Surface(
-            new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgbLinear())
-            {
-                GpuBacked = true
-            });
+            new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgbLinear()));
     }
 
     public Surface(VecI size) : this(DefaultImageInfo.WithSize(size))

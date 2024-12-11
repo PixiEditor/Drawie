@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Rendering.Composition;
+using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Numerics;
@@ -9,9 +10,16 @@ namespace Drawie.Interop.Avalonia.Core.Controls;
 public abstract class DrawieControl : InteropControl
 {
     private RenderApiResources resources;
-    private DrawingSurface renderSurface;
+    private DrawingSurface framebuffer;
+    private Texture intermediateSurface;
 
     private PixelSize lastSize = PixelSize.Empty;
+
+    /// <summary>
+    ///     If true, intermediate surface will be used to render the frame. This is useful when dealing with non srgb surfaces.
+    /// Enabling this will create display-optimized surface and use it for rendering, then draw it to the frame buffer.
+    /// </summary>
+    protected bool UseIntermediateSurface { get; set; } = true;
 
     protected override (bool success, string info) InitializeGraphicsResources(Compositor targetCompositor,
         CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop)
@@ -24,8 +32,11 @@ public abstract class DrawieControl : InteropControl
     protected override void FreeGraphicsResources()
     {
         resources?.DisposeAsync();
-        renderSurface?.Dispose();
-        renderSurface = null;
+        framebuffer?.Dispose();
+        intermediateSurface?.Dispose();
+
+        intermediateSurface = null;
+        framebuffer = null;
         resources = null;
     }
 
@@ -40,26 +51,43 @@ public abstract class DrawieControl : InteropControl
                 return;
             }
 
-            if (renderSurface == null || lastSize != size)
+            if (framebuffer == null || lastSize != size)
             {
                 resources.CreateTemporalObjects(size);
 
                 VecI sizeVec = new VecI(size.Width, size.Height);
 
-                renderSurface?.Dispose();
+                framebuffer?.Dispose();
 
-                renderSurface =
+                framebuffer =
                     DrawingBackendApi.Current.CreateRenderSurface(sizeVec,
                         resources.Texture, SurfaceOrigin.BottomLeft);
+
+                if (UseIntermediateSurface)
+                {
+                    intermediateSurface?.Dispose();
+                    intermediateSurface = Texture.ForDisplay(sizeVec);
+                }
 
                 lastSize = size;
             }
 
             resources.Render(size, () =>
             {
-                renderSurface.Canvas.Clear();
-                Draw(renderSurface);
-                renderSurface.Flush();
+                framebuffer.Canvas.Clear();
+                intermediateSurface?.DrawingSurface.Canvas.Clear();
+
+                if (!UseIntermediateSurface)
+                {
+                    Draw(framebuffer);
+                }
+                else
+                {
+                    Draw(intermediateSurface.DrawingSurface);
+                    framebuffer.Canvas.DrawSurface(intermediateSurface.DrawingSurface, 0, 0);
+                }
+
+                framebuffer.Flush();
             });
         }
     }

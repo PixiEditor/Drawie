@@ -7,10 +7,16 @@ namespace Drawie.Backend.Core.Surfaces
 {
     public class DrawingSurface : NativeObject, IPixelsMap
     {
-        public override object Native => DrawingBackendApi.Current.SurfaceImplementation.GetNativeSurface(ObjectPointer);
+        public override object Native =>
+            DrawingBackendApi.Current.SurfaceImplementation.GetNativeSurface(ObjectPointer);
+
         public Canvas Canvas { get; private set; }
-        public RectI DeviceClipBounds => DrawingBackendApi.Current.SurfaceImplementation.GetDeviceClipBounds(ObjectPointer);
-        public RectD LocalClipBounds => DrawingBackendApi.Current.SurfaceImplementation.GetLocalClipBounds(ObjectPointer); 
+
+        public RectI DeviceClipBounds =>
+            DrawingBackendApi.Current.SurfaceImplementation.GetDeviceClipBounds(ObjectPointer);
+
+        public RectD LocalClipBounds =>
+            DrawingBackendApi.Current.SurfaceImplementation.GetLocalClipBounds(ObjectPointer);
 
         public event SurfaceChangedEventHandler? Changed;
 
@@ -24,7 +30,7 @@ namespace Drawie.Backend.Core.Surfaces
         {
             return DrawingBackendApi.Current.SurfaceImplementation.Create(imageInfo);
         }
-        
+
         public void Draw(Canvas drawingSurfaceCanvas, int x, int y, Paint drawingPaint)
         {
             DrawingBackendApi.Current.SurfaceImplementation.Draw(this, drawingSurfaceCanvas, x, y, drawingPaint);
@@ -45,12 +51,13 @@ namespace Drawie.Backend.Core.Surfaces
         {
             return DrawingBackendApi.Current.SurfaceImplementation.PeekPixels(this);
         }
-        
+
         public bool ReadPixels(ImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
         {
-            return DrawingBackendApi.Current.SurfaceImplementation.ReadPixels(this, dstInfo, dstPixels, dstRowBytes, srcX, srcY);
+            return DrawingBackendApi.Current.SurfaceImplementation.ReadPixels(this, dstInfo, dstPixels, dstRowBytes,
+                srcX, srcY);
         }
-        
+
         public static DrawingSurface Create(ImageInfo imageInfo)
         {
             return DrawingBackendApi.Current.SurfaceImplementation.Create(imageInfo);
@@ -60,7 +67,7 @@ namespace Drawie.Backend.Core.Surfaces
         {
             return DrawingBackendApi.Current.SurfaceImplementation.Create(imageInfo, pixels, rowBytes);
         }
-        
+
         public static DrawingSurface Create(ImageInfo imageInfo, IntPtr pixelBuffer)
         {
             return DrawingBackendApi.Current.SurfaceImplementation.Create(imageInfo, pixelBuffer);
