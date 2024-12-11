@@ -8,4 +8,5 @@ public interface IColorSpaceImplementation
     public ColorSpace CreateSrgbLinear();
     public void Dispose(IntPtr objectPointer);
     public object GetNativeColorSpace(IntPtr objectPointer);
+    public bool IsSrgb(IntPtr objectPointer);
 }

@@ -8,13 +8,13 @@ namespace Drawie.Skia.Implementations
     {
         private readonly IntPtr _srgbPointer;
         private readonly IntPtr _srgbLinearPointer;
-        
+
         public SkiaColorSpaceImplementation()
         {
             _srgbPointer = SKColorSpace.CreateSrgb().Handle;
             _srgbLinearPointer = SKColorSpace.CreateSrgbLinear().Handle;
         }
-        
+
         public ColorSpace CreateSrgb()
         {
             SKColorSpace skColorSpace = SKColorSpace.CreateSrgb();
@@ -33,7 +33,7 @@ namespace Drawie.Skia.Implementations
         {
             if (objectPointer == _srgbPointer) return;
             if (objectPointer == _srgbLinearPointer) return;
-            
+
             ManagedInstances[objectPointer].Dispose();
             ManagedInstances.TryRemove(objectPointer, out _);
         }
@@ -41,6 +41,13 @@ namespace Drawie.Skia.Implementations
         public object GetNativeColorSpace(IntPtr objectPointer)
         {
             return ManagedInstances[objectPointer];
+        }
+
+        public bool IsSrgb(IntPtr objectPointer)
+        {
+            ManagedInstances.TryGetValue(objectPointer, out SKColorSpace skColorSpace);
+
+            return skColorSpace?.IsSrgb ?? false;
         }
     }
 }

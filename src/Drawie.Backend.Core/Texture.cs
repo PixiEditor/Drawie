@@ -34,7 +34,7 @@ public class Texture : IDisposable, ICloneable
     public static Texture ForDisplay(VecI size)
     {
         return new Texture(
-            new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb())
+            new ImageInfo(size.X, size.Y, ColorType.Rgba8888, AlphaType.Premul, ColorSpace.CreateSrgb())
             {
                 GpuBacked = true
             });
@@ -44,6 +44,15 @@ public class Texture : IDisposable, ICloneable
     {
         return new Texture(
             new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgbLinear())
+            {
+                GpuBacked = true
+            });
+    }
+
+    public static Texture ForProcessing(VecI size, ColorSpace colorSpace)
+    {
+        return new Texture(
+            new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, colorSpace)
             {
                 GpuBacked = true
             });
@@ -75,11 +84,6 @@ public class Texture : IDisposable, ICloneable
         DrawingSurface = drawingSurface;
         Size = drawingSurface.DeviceClipBounds.Size;
         DrawingSurface.Changed += DrawingSurfaceOnChanged;
-    }
-
-    ~Texture()
-    {
-        DrawingSurface.Changed -= DrawingSurfaceOnChanged;
     }
 
     public object Clone()

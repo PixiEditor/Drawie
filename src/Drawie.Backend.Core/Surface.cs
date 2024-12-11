@@ -28,7 +28,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     private Paint nearestNeighborReplacingPaint =
         new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
 
-    private Surface(ImageInfo info)
+    public Surface(ImageInfo info)
     {
         var size = info.Size;
 
@@ -45,7 +45,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     public static Surface ForDisplay(VecI size)
     {
         return new Surface(
-            new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb()));
+            new ImageInfo(size.X, size.Y, ColorType.Rgba8888, AlphaType.Premul, ColorSpace.CreateSrgb()));
     }
 
     public static Surface ForProcessing(VecI size)

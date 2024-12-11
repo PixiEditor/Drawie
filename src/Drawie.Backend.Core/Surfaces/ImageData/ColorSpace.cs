@@ -7,6 +7,8 @@ public class ColorSpace : NativeObject
     public override object Native =>
         DrawingBackendApi.Current.ColorSpaceImplementation.GetNativeColorSpace(ObjectPointer);
 
+    public bool IsSrgb => DrawingBackendApi.Current.ColorSpaceImplementation.IsSrgb(ObjectPointer);
+
     public ColorSpace(IntPtr objPtr) : base(objPtr)
     {
     }
