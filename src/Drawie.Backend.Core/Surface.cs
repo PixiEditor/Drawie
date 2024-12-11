@@ -19,7 +19,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     public bool IsDisposed => disposed;
 
     private static ImageInfo DefaultImageInfo =>
-        new(0, 0, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgbLinear());
+        new(0, 0, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb());
 
     public event SurfaceChangedEventHandler? Changed;
 
@@ -40,6 +40,24 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
         BytesPerPixel = info.BytesPerPixel;
         PixelBuffer = CreateBuffer(size.X, size.Y, BytesPerPixel);
         DrawingSurface = CreateDrawingSurface(info);
+    }
+
+    public static Surface ForDisplay(VecI size)
+    {
+        return new Surface(
+            new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb())
+            {
+                GpuBacked = true
+            });
+    }
+
+    public static Surface ForProcessing(VecI size)
+    {
+        return new Surface(
+            new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgbLinear())
+            {
+                GpuBacked = true
+            });
     }
 
     public Surface(VecI size) : this(DefaultImageInfo.WithSize(size))
