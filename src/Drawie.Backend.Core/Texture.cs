@@ -16,6 +16,8 @@ public class Texture : IDisposable, ICloneable
 
     public bool IsDisposed { get; private set; }
     public bool IsHardwareAccelerated { get; } = DrawingBackendApi.Current.IsHardwareAccelerated;
+    
+    public ColorSpace ColorSpace { get; }
 
     private bool pixmapUpToDate;
     private Pixmap pixmap;
@@ -65,6 +67,8 @@ public class Texture : IDisposable, ICloneable
             throw new ArgumentException(
                 "Textures are GPU backed, add GpuBacked = true or use Surface for CPU backed surfaces.");
 
+        ColorSpace = imageInfo.ColorSpace;
+        
         DrawingBackendApi.Current.RenderingDispatcher.Invoke(
             () =>
                 DrawingSurface =
