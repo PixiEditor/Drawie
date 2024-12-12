@@ -20,15 +20,22 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
     }
 
     public VecI UsableWindowSize => BrowserInterop.GetWindowSize();
-    
+
     public IWindowRenderApi RenderApi { get; set; } = windowRenderApi;
 
     public InputController InputController => throw new NotImplementedException();
+
+    public bool ShowOnTop
+    {
+        get => false;
+        set { }
+    }
+
     public event Action<double>? Update;
     public event Action<Texture, double>? Render;
 
     private Texture renderTexture;
-    
+
     public void Initialize()
     {
         RenderApi.CreateInstance(null, UsableWindowSize);
@@ -59,7 +66,7 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
     public void Close()
     {
     }
-    
+
     private void OnWindowResized(int width, int height)
     {
         RenderApi?.UpdateFramebufferSize(width, height);
@@ -68,7 +75,9 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
 
     private Texture CreateRenderTexture()
     {
-        var drawingSurface = DrawingBackendApi.Current.CreateRenderSurface(UsableWindowSize, RenderApi.RenderTexture, SurfaceOrigin.BottomLeft);
+        var drawingSurface =
+            DrawingBackendApi.Current.CreateRenderSurface(UsableWindowSize, RenderApi.RenderTexture,
+                SurfaceOrigin.BottomLeft);
         return Texture.FromExisting(drawingSurface);
     }
 }
