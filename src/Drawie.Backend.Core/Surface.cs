@@ -28,6 +28,8 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     private Paint nearestNeighborReplacingPaint =
         new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
 
+    public ImageInfo ImageInfo { get; }
+
     public Surface(ImageInfo info)
     {
         var size = info.Size;
@@ -40,6 +42,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
         BytesPerPixel = info.BytesPerPixel;
         PixelBuffer = CreateBuffer(size.X, size.Y, BytesPerPixel);
         DrawingSurface = CreateDrawingSurface(info);
+        ImageInfo = info;
     }
 
     public static Surface ForDisplay(VecI size)
@@ -58,7 +61,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     {
     }
 
-    public Surface(Surface original) : this(original.Size)
+    public Surface(Surface original) : this(original.ImageInfo)
     {
         DrawingSurface.Canvas.DrawSurface(original.DrawingSurface, 0, 0);
     }
