@@ -13,7 +13,8 @@ public interface IWindow
     public IWindowRenderApi RenderApi { get; set; }
     
     public InputController InputController { get; }
-    
+    public bool ShowOnTop { get; set; }
+
     public event Action<double> Update;
     public event Action<Texture, double> Render;
     

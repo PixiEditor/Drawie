@@ -40,6 +40,15 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     public IWindowRenderApi RenderApi { get; set; }
 
     public InputController InputController { get; private set; }
+
+    public bool ShowOnTop
+    {
+        get => window?.TopMost ?? false;
+        set
+        {
+            if (window != null) window.TopMost = value;
+        }
+    }
     public event Action<double> Update;
     public event Action<Texture, double> Render;
 
