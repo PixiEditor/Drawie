@@ -6,6 +6,8 @@
 /// </summary>
 public struct VecF : IEquatable<VecF>
 {
+    public static VecF Zero = new VecF(0, 0);
+
     /// <summary>Represents a new instance of the <see cref="VecF" /> class with member data left uninitialized.</summary>
     public static readonly VecF Empty;
 

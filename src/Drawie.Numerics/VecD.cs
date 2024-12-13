@@ -300,4 +300,15 @@ public struct VecD : IEquatable<VecD>, IComparable<VecD>
         double y = BitConverter.ToDouble(bytes, 8);
         return new VecD(x, y);
     }
+
+    /// <param name="vecD">The first point.</param>
+    /// <param name="other">The second point.</param>
+    /// <summary>Calculate the Euclidean distance between two points.</summary>
+    /// <returns>Returns the Euclidean distance between two points.</returns>
+    public static double Distance(VecD vecD, VecD other)
+    {
+        var num1 = vecD.X - other.X;
+        var num2 = vecD.Y - other.Y;
+        return Math.Sqrt((num1 * num1) + (num2 * num2));
+    }
 }
