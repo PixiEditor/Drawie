@@ -68,8 +68,19 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
     {
         get
         {
-            using var iterator = CreateIterator(false);
-            return iterator.IsCloseContour;
+            bool closed = true;
+
+            foreach (var verb in this)
+            {
+                if (verb.verb == PathVerb.Done)
+                {
+                    break;
+                }
+
+                closed = verb.verb == PathVerb.Close;
+            }
+
+            return closed;
         }
     }
 
