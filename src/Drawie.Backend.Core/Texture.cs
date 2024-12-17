@@ -16,7 +16,7 @@ public class Texture : IDisposable, ICloneable
 
     public bool IsDisposed { get; private set; }
     public bool IsHardwareAccelerated { get; } = DrawingBackendApi.Current.IsHardwareAccelerated;
-    
+
     public ColorSpace ColorSpace { get; }
 
     private bool pixmapUpToDate;
@@ -54,10 +54,7 @@ public class Texture : IDisposable, ICloneable
     public static Texture ForProcessing(VecI size, ColorSpace colorSpace)
     {
         return new Texture(
-            new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, colorSpace)
-            {
-                GpuBacked = true
-            });
+            new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, colorSpace) { GpuBacked = true });
     }
 
     public Texture(ImageInfo imageInfo)
@@ -68,7 +65,7 @@ public class Texture : IDisposable, ICloneable
                 "Textures are GPU backed, add GpuBacked = true or use Surface for CPU backed surfaces.");
 
         ColorSpace = imageInfo.ColorSpace;
-        
+
         DrawingBackendApi.Current.RenderingDispatcher.Invoke(
             () =>
                 DrawingSurface =
@@ -200,6 +197,15 @@ public class Texture : IDisposable, ICloneable
     }
 
     public Texture ResizeNearestNeighbor(VecI newSize)
+    {
+        using Image image = DrawingSurface.Snapshot();
+        Texture newSurface = new(newSize);
+        newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y),
+            nearestNeighborReplacingPaint);
+        return newSurface;
+    }
+
+    public Texture Resize(VecI newSize, ResizeMethod highQuality)
     {
         using Image image = DrawingSurface.Snapshot();
         Texture newSurface = new(newSize);
