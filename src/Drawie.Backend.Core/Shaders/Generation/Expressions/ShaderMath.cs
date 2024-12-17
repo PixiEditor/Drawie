@@ -71,4 +71,37 @@ public static class ShaderMath
     {
         return new Expression($"float(abs({a.VarOrConst()} - {b.VarOrConst()}) < {t.VarOrConst()})");
     }
+
+    public static Expression Power(ShaderExpressionVariable a, ShaderExpressionVariable b)
+    {
+        return new Expression($"pow({a.VarOrConst()}, {b.VarOrConst()})");
+    }
+
+    public static Expression Log(ShaderExpressionVariable a, ShaderExpressionVariable b)
+    {
+        var baseConstant = Convert.ToDouble(b.GetConstant());
+
+        return Math.Abs(baseConstant - 2) < 0.00000001 ?
+            new Expression($"log2({a.VarOrConst()}, {b.VarOrConst()})") :
+            new Expression($"log({a.VarOrConst()}) / log({b.VarOrConst()})");
+    }
+
+    public static Expression LogE(ShaderExpressionVariable a)
+    {
+        return new Expression($"log({a.VarOrConst()})");
+    }
+
+    public static Expression Root(ShaderExpressionVariable a, ShaderExpressionVariable b)
+    {
+        var baseConstant = Convert.ToDouble(b.GetConstant());
+
+        return Math.Abs(baseConstant - 2) < 0.00000001 ?
+            new Expression($"sqrt({a.VarOrConst()})") :
+            new Expression($"pow({a.VarOrConst()}, 1.0 / {b.VarOrConst()})");
+    }
+
+    public static Expression InverseRoot(ShaderExpressionVariable a, ShaderExpressionVariable b)
+    {
+        return new Expression($"1 / {Root(a, b).ExpressionValue}");
+    }
 }
