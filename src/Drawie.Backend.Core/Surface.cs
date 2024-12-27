@@ -176,13 +176,28 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     }
 
     /// <summary>
+    /// Gets a pixel from the surface. Color will be in surface's color space! If you want to get a pixel in sRGB space, use GetSrgbPixel.
     /// Consider getting a pixmap from SkiaSurface.PeekPixels().GetPixels() and writing into it's buffer for bulk pixel get/set. Don't forget to dispose the pixmap afterwards.
     /// </summary>
-    public unsafe Color GetPixel(VecI pos)
+    public unsafe Color GetRawPixel(VecI pos)
     {
         Half* ptr = (Half*)(PixelBuffer + (pos.X + pos.Y * Size.X) * BytesPerPixel);
         float a = (float)ptr[3];
         return (Color)new ColorF((float)ptr[0] / a, (float)ptr[1] / a, (float)ptr[2] / a, (float)ptr[3]);
+    }
+
+    /// <summary>
+    /// Consider getting a pixmap from SkiaSurface.PeekPixels().GetPixels() and writing into it's buffer for bulk pixel get/set. Don't forget to dispose the pixmap afterwards.
+    /// </summary>
+    public unsafe Color GetSrgbPixel(VecI pos)
+    {
+        Half* ptr = (Half*)(PixelBuffer + (pos.X + pos.Y * Size.X) * BytesPerPixel);
+        float a = (float)ptr[3];
+        Color color = (Color)new ColorF((float)ptr[0] / a, (float)ptr[1] / a, (float)ptr[2] / a, (float)ptr[3]);
+        if(ImageInfo.ColorSpace is { IsSrgb: false })
+            return color.TransformColor(ColorSpace.CreateSrgb().GetTransformFunction().Invert());
+        
+        return color;
     }
 
     public void SetPixel(VecI pos, Color color)

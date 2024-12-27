@@ -279,7 +279,7 @@ namespace Drawie.Backend.Core.ColorsImpl
             float b = this.B / 255f;
             float a = this.A / 255f;
 
-            return (Color)new ColorF(func.Transform(r), func.Transform(g), func.Transform(b), func.Transform(a));
+            return (Color)new ColorF(func.Transform(r), func.Transform(g), func.Transform(b), a);
         }
     }
 }
