@@ -178,14 +178,14 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     /// <summary>
     /// Consider getting a pixmap from SkiaSurface.PeekPixels().GetPixels() and writing into it's buffer for bulk pixel get/set. Don't forget to dispose the pixmap afterwards.
     /// </summary>
-    public unsafe Color GetSRGBPixel(VecI pos)
+    public unsafe Color GetPixel(VecI pos)
     {
         Half* ptr = (Half*)(PixelBuffer + (pos.X + pos.Y * Size.X) * BytesPerPixel);
         float a = (float)ptr[3];
         return (Color)new ColorF((float)ptr[0] / a, (float)ptr[1] / a, (float)ptr[2] / a, (float)ptr[3]);
     }
 
-    public void SetSRGBPixel(VecI pos, Color color)
+    public void SetPixel(VecI pos, Color color)
     {
         drawingPaint.Color = color;
         DrawingSurface.Canvas.DrawPixel(pos.X, pos.Y, drawingPaint);

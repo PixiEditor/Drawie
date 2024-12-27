@@ -1,4 +1,5 @@
 ﻿using Drawie.Backend.Core.Bridge;
+using Drawie.Backend.Core.Numerics;
 
 namespace Drawie.Backend.Core.Surfaces.ImageData;
 
@@ -17,10 +18,16 @@ public class ColorSpace : NativeObject
     {
         return DrawingBackendApi.Current.ColorSpaceImplementation.CreateSrgb();
     }
-    
+
     public static ColorSpace CreateSrgbLinear()
     {
         return DrawingBackendApi.Current.ColorSpaceImplementation.CreateSrgbLinear();
+    }
+
+
+    public ColorSpaceTransformFn GetTransformFunction()
+    {
+        return DrawingBackendApi.Current.ColorSpaceImplementation.GetTransformFunction(ObjectPointer);
     }
 
     public override void Dispose()

@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using Drawie.Backend.Core.Numerics;
+using Drawie.Backend.Core.Surfaces.ImageData;
 
 namespace Drawie.Backend.Core.ColorsImpl
 {
@@ -268,6 +270,16 @@ namespace Drawie.Backend.Core.ColorsImpl
         public static Color FromHex(string input)
         {
             return TryParse(input, out var color) ? color : Empty;
+        }
+
+        public Color TransformColor(ColorSpaceTransformFn func)
+        {
+            float r = this.R / 255f;
+            float g = this.G / 255f;
+            float b = this.B / 255f;
+            float a = this.A / 255f;
+
+            return (Color)new ColorF(func.Transform(r), func.Transform(g), func.Transform(b), func.Transform(a));
         }
     }
 }
