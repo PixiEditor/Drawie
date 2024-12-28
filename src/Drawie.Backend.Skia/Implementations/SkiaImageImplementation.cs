@@ -148,6 +148,13 @@ namespace Drawie.Skia.Implementations
             shaderImpl.ManagedInstances[shader.Handle] = shader;
             return new Shader(shader.Handle);
         }
+        
+        public Shader ToRawShader(IntPtr objectPointer)
+        {
+            var shader = ManagedInstances[objectPointer].ToRawShader();
+            shaderImpl.ManagedInstances[shader.Handle] = shader;
+            return new Shader(shader.Handle);
+        }
 
         public object GetNativeImage(IntPtr objectPointer)
         {

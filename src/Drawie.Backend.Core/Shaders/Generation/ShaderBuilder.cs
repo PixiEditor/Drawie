@@ -17,8 +17,8 @@ public class ShaderBuilder
     private Dictionary<DrawingSurface, SurfaceSampler> _samplers = new Dictionary<DrawingSurface, SurfaceSampler>();
 
     public BuiltInFunctions Functions { get; } = new();
-    
-    
+
+
     public ShaderBuilder(VecI resolution)
     {
         AddUniform("iResolution", resolution);
@@ -57,17 +57,18 @@ public class ShaderBuilder
         }
     }
 
-    public SurfaceSampler AddOrGetSurface(DrawingSurface surface)
+    public SurfaceSampler AddOrGetSurface(DrawingSurface surface, ColorSampleMode sampleMode)
     {
-        if (_samplers.TryGetValue(surface, out var sampler))
+        if (_samplers.TryGetValue(surface, out var sampler) && sampler.SampleMode == sampleMode)
         {
             return sampler;
         }
 
         string name = $"texture_{GetUniqueNameNumber()}";
         using var snapshot = surface.Snapshot();
-        Uniforms[name] = new Uniform(name, snapshot.ToShader());
-        var newSampler = new SurfaceSampler(name);
+        Uniforms[name] = new Uniform(name,
+            sampleMode == ColorSampleMode.ColorManaged ? snapshot.ToShader() : snapshot.ToRawShader());
+        var newSampler = new SurfaceSampler(name, sampleMode);
         _samplers[surface] = newSampler;
 
         return newSampler;
@@ -200,4 +201,10 @@ public class ShaderBuilder
     {
         return (_variables.Count + Uniforms.Count + 1).ToString();
     }
+}
+
+public enum ColorSampleMode
+{
+    ColorManaged,
+    Raw
 }

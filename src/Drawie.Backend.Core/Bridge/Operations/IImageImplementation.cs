@@ -23,5 +23,6 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public Pixmap PeekPixels(IntPtr objectPointer);
         public ImageInfo GetImageInfo(IntPtr objectPointer);
         public Shader ToShader(IntPtr objectPointer);
+        public Shader ToRawShader(IntPtr objectPointer);
     }
 }

@@ -76,5 +76,10 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
         {
             return DrawingBackendApi.Current.ImageImplementation.ToShader(ObjectPointer);
         }
+        
+        public Shader ToRawShader()
+        {
+            return DrawingBackendApi.Current.ImageImplementation.ToRawShader(ObjectPointer);
+        }
     }
 }
