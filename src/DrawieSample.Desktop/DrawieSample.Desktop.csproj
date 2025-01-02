@@ -13,7 +13,4 @@
     <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
     <ProjectReference Include="..\DrawieSample\DrawieSample.csproj" />
   </ItemGroup>
-  
-  <Import Project="..\Drawie.RenderApi.Vulkan\Build\compile_shaders.targets" />
-  
 </Project>

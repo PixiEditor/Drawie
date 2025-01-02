@@ -10,12 +10,12 @@ public class GraphicsPipelineStageBuilder : IDisposable
 {
     public Vk Vk { get; set; }
     public Device LogicalDevice { get; set; }
-    
+
     public GraphicsPipelineStageType Type { get; set; }
     public string ShaderPath { get; set; }
 
     public string EntryName { get; set; } = "main";
-    
+
     private PipelineShaderStageCreateInfo createdStage;
     private ShaderModule shaderModule;
     private bool created;
@@ -36,9 +36,20 @@ public class GraphicsPipelineStageBuilder : IDisposable
         {
             throw new GraphicsPipelineBuilderException("Stage was already created");
         }
-        
-        string absolutePath = Assembly.GetExecutingAssembly().Location;
-        var code = File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(absolutePath)!, ShaderPath));
+
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ShaderPath);
+        if (stream == null)
+        {
+            throw new GraphicsPipelineBuilderException("Shader file not found");
+        }
+
+        byte[] code = new byte[stream.Length];
+        var read = stream.Read(code, 0, code.Length);
+        if (read != code.Length)
+        {
+            throw new GraphicsPipelineBuilderException("Failed to read shader file");
+        }
+
         shaderModule = CreateShaderModule(code);
 
         PipelineShaderStageCreateInfo stageCreateInfo = new()
@@ -50,14 +61,13 @@ public class GraphicsPipelineStageBuilder : IDisposable
                 GraphicsPipelineStageType.Fragment => ShaderStageFlags.FragmentBit,
                 _ => throw new GraphicsPipelineBuilderException("Invalid stage type")
             },
-            
             Module = shaderModule,
             PName = (byte*)Marshal.StringToHGlobalAnsi(EntryName)
         };
-        
+
         createdStage = stageCreateInfo;
         created = true;
-        
+
         return stageCreateInfo;
     }
 
@@ -83,8 +93,7 @@ public class GraphicsPipelineStageBuilder : IDisposable
     {
         ShaderModuleCreateInfo createInfo = new()
         {
-            SType = StructureType.ShaderModuleCreateInfo,
-            CodeSize = (nuint)code.Length
+            SType = StructureType.ShaderModuleCreateInfo, CodeSize = (nuint)code.Length
         };
 
         ShaderModule module;

@@ -543,8 +543,8 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         GraphicsPipelineBuilder builder = new(context.Api!, context.LogicalDevice.Device);
 
         builder
-            .AddStage(stage => stage.OfType(GraphicsPipelineStageType.Vertex).WithShader("shaders/vert.spv"))
-            .AddStage(stage => stage.OfType(GraphicsPipelineStageType.Fragment).WithShader("shaders/frag.spv"))
+            .AddStage(stage => stage.OfType(GraphicsPipelineStageType.Vertex).WithShader("Drawie.RenderApi.Vulkan.Shaders.vert.spv"))
+            .AddStage(stage => stage.OfType(GraphicsPipelineStageType.Fragment).WithShader("Drawie.RenderApi.Vulkan.Shaders.frag.spv"))
             .WithRenderPass(renderPass =>
             {
                 /*TODO: Add some meaningful stuff*/

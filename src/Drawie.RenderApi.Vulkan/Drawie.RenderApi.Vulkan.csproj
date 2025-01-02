@@ -17,10 +17,12 @@
     <ItemGroup>
       <ProjectReference Include="..\Drawie.Numerics\Drawie.Numerics.csproj" />
       <ProjectReference Include="..\Drawie.RenderApi\Drawie.RenderApi.csproj" />
-      <ProjectReference Include="..\SpirvCompiler\SpirvCompiler.csproj" ReferenceOutputAssembly="false"/>
     </ItemGroup>
-    
-    <!--TODO: Copy to actual final dir-->
-    <Import Project="Build\compile_shaders.targets" />
-    
+
+    <ItemGroup>
+      <None Remove="Shaders\frag.spv" />
+      <EmbeddedResource Include="Shaders\frag.spv" />
+      <None Remove="Shaders\vert.spv" />
+      <EmbeddedResource Include="Shaders\vert.spv" />
+    </ItemGroup>
 </Project>

@@ -26,6 +26,4 @@
       <ProjectReference Include="..\Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj" />
       <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
     </ItemGroup>
-    
-    <!--Import targets-->
 </Project>
