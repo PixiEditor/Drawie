@@ -13,8 +13,6 @@ public class VulkanContent : IDisposable
 
     public VulkanTexture texture;
 
-    private bool isInit;
-
     public VulkanContent(VulkanInteropContext context)
     {
         this.context = context;
@@ -29,7 +27,6 @@ public class VulkanContent : IDisposable
 
         _previousImageSize = image.Size;
 
-
         var commandBuffer = context.Pool.CreateCommandBuffer();
         commandBuffer.BeginRecording();
 
@@ -41,30 +38,24 @@ public class VulkanContent : IDisposable
 
         var srcBlitRegion = new ImageBlit
         {
-            SrcOffsets = new ImageBlit.SrcOffsetsBuffer
-            {
-                Element0 = new Offset3D(0, 0, 0),
-                Element1 = new Offset3D(image.Size.Width, image.Size.Height, 1),
-            },
+            SrcOffsets =
+                new ImageBlit.SrcOffsetsBuffer
+                {
+                    Element0 = new Offset3D(0, 0, 0),
+                    Element1 = new Offset3D(image.Size.Width, image.Size.Height, 1),
+                },
             DstOffsets = new ImageBlit.DstOffsetsBuffer
             {
-                Element0 = new Offset3D(0, 0, 0),
-                Element1 = new Offset3D(image.Size.Width, image.Size.Height, 1),
+                Element0 = new Offset3D(0, 0, 0), Element1 = new Offset3D(image.Size.Width, image.Size.Height, 1),
             },
             SrcSubresource =
                 new ImageSubresourceLayers
                 {
-                    AspectMask = ImageAspectFlags.ColorBit,
-                    BaseArrayLayer = 0,
-                    LayerCount = 1,
-                    MipLevel = 0
+                    AspectMask = ImageAspectFlags.ColorBit, BaseArrayLayer = 0, LayerCount = 1, MipLevel = 0
                 },
             DstSubresource = new ImageSubresourceLayers
             {
-                AspectMask = ImageAspectFlags.ColorBit,
-                BaseArrayLayer = 0,
-                LayerCount = 1,
-                MipLevel = 0
+                AspectMask = ImageAspectFlags.ColorBit, BaseArrayLayer = 0, LayerCount = 1, MipLevel = 0
             }
         };
 
@@ -73,7 +64,7 @@ public class VulkanContent : IDisposable
             image.InternalHandle, ImageLayout.TransferDstOptimal, 1, srcBlitRegion, Filter.Linear);
 
         commandBuffer.Submit();
-        
+
         texture.TransitionLayoutTo((uint)ImageLayout.TransferSrcOptimal,
             (uint)ImageLayout.ColorAttachmentOptimal);
     }
@@ -87,24 +78,16 @@ public class VulkanContent : IDisposable
 
     public void Dispose()
     {
-        if (isInit)
-        {
-            DestroyTemporalObjects();
-        }
-
-        isInit = false;
+        DestroyTemporalObjects();
     }
 
-    public unsafe void DestroyTemporalObjects()
+    public void DestroyTemporalObjects()
     {
-        if (isInit)
-        {
-            texture.Dispose();
-            _previousImageSize = PixelSize.Empty;
-        }
+        texture?.Dispose();
+        _previousImageSize = PixelSize.Empty;
     }
 
-    public unsafe void CreateTemporalObjects(PixelSize size)
+    public void CreateTemporalObjects(PixelSize size)
     {
         DestroyTemporalObjects();
 
@@ -112,7 +95,6 @@ public class VulkanContent : IDisposable
 
         CreateTextureImage(vecSize);
 
-        isInit = true;
         _previousImageSize = size;
     }
 }

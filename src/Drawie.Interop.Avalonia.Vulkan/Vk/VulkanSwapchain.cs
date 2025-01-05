@@ -57,18 +57,18 @@ public class VulkanSwapchainImage : ISwapchainImage
 
     public async ValueTask DisposeAsync()
     {
-        _semaphorePair.Dispose();
-        _image.Dispose();
-        
         // Below sometimes got stuck and resources never had a chance to be disposed
-        /*if (LastPresent != null)
+        if (LastPresent != null)
             await LastPresent;
         if (_importedImage != null)
             await _importedImage.DisposeAsync();
         if (_availableSemaphore != null)
             await _availableSemaphore.DisposeAsync();
         if (_renderCompletedSemaphore != null)
-            await _renderCompletedSemaphore.DisposeAsync();*/
+            await _renderCompletedSemaphore.DisposeAsync();
+
+        _semaphorePair.Dispose();
+        _image.Dispose();
     }
 
     public PixelSize Size { get; }
