@@ -46,6 +46,12 @@ public abstract class InteropControl : Control
         try
         {
             var selfVisual = ElementComposition.GetElementVisual(this);
+
+            if (selfVisual?.Compositor == null)
+            {
+                return;
+            }
+
             compositor = selfVisual.Compositor;
 
             surface = compositor.CreateDrawingSurface();
