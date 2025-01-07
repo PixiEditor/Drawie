@@ -191,12 +191,15 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     /// </summary>
     public unsafe Color GetSrgbPixel(VecI pos)
     {
+        if (pos.X < 0 || pos.Y < 0 || pos.X >= Size.X || pos.Y >= Size.Y)
+            return Colors.Transparent;
+
         Half* ptr = (Half*)(PixelBuffer + (pos.X + pos.Y * Size.X) * BytesPerPixel);
         float a = (float)ptr[3];
         Color color = (Color)new ColorF((float)ptr[0] / a, (float)ptr[1] / a, (float)ptr[2] / a, (float)ptr[3]);
-        if(ImageInfo.ColorSpace is { IsSrgb: false })
+        if (ImageInfo.ColorSpace is { IsSrgb: false })
             return color.TransformColor(ColorSpace.CreateSrgb().GetTransformFunction().Invert());
-        
+
         return color;
     }
 
