@@ -150,4 +150,14 @@ public static class ShaderMath
     {
         return new Expression($"max({a.VarOrConst()}, {b.VarOrConst()})");
     }
+
+    public static Expression Step(ShaderExpressionVariable a, ShaderExpressionVariable b)
+    {
+        return new Expression($"step({a.VarOrConst()}, {b.VarOrConst()})");
+    }
+    
+    public static Expression SmoothStep(ShaderExpressionVariable a, ShaderExpressionVariable b, ShaderExpressionVariable c)
+    {
+        return new Expression($"smoothstep({a.VarOrConst()}, {b.VarOrConst()}, {c.VarOrConst()})");
+    }
 }
