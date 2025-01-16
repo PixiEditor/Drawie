@@ -26,7 +26,6 @@ public class OpenGlInteropContext : IOpenGlContext, IDrawieInteropContext
 
     public IntPtr GetGlInterface(string name)
     {
-        Context.MakeCurrent();
         return Context.GlInterface.GetProcAddress(name);
     }
 

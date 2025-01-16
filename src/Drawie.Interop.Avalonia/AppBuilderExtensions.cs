@@ -39,13 +39,15 @@ public static class AppBuilderExtensions
 
                     IRenderApi renderApi = null;
                     IDisposable? disposableContext = null;
+                    IDisposable ?ctxDisposablePostRun = null;
                     if (isOpenGl)
                     {
                         var ctx = sharingFeature!.CreateSharedContext();
                         OpenGlInteropContext context = new OpenGlInteropContext(ctx);
-                        
+                        ctxDisposablePostRun = ctx.MakeCurrent();
+
                         renderApi = new OpenGlRenderApi(context);
-                        
+
                         IDrawieInteropContext.SetCurrent(context);
                     }
                     else
@@ -88,6 +90,7 @@ public static class AppBuilderExtensions
                     }
 
                     drawingEngine.Run();
+                    ctxDisposablePostRun?.Dispose();
                 }, DispatcherPriority.Loaded);
         });
 

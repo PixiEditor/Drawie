@@ -32,14 +32,14 @@ public class OpenGlRenderApiResources : RenderApiResources
         Context = sharingFeature.CreateSharedContext();
         Swapchain = new OpenGlSwapchain(Context, gpuInterop, surface, sharingFeature);
 
+        globalContext = OpenGlInteropContext.Current.Context;
+
         using (Context.MakeCurrent())
         {
             fbo = Context.GlInterface.GenFramebuffer();
         }
 
         fboTexture = new OpenGlTexture((uint)fbo, null);
-
-        globalContext = OpenGlInteropContext.Current.Context;
     }
 
     public override async ValueTask DisposeAsync()
@@ -67,7 +67,8 @@ public class OpenGlRenderApiResources : RenderApiResources
         {
             Context.GlInterface.FramebufferTexture2D((int)GLEnum.Framebuffer, (int)GLEnum.ColorAttachment0,
                 (int)GLEnum.Texture2D, (int)texture.TextureId, 0);
-            if (Context.GlInterface.CheckFramebufferStatus((int)GLEnum.Framebuffer) != (int)GLEnum.FramebufferComplete)
+            if (Context.GlInterface.CheckFramebufferStatus((int)GLEnum.Framebuffer) !=
+                (int)GLEnum.FramebufferComplete)
             {
                 throw new Exception("Framebuffer is not complete");
             }
