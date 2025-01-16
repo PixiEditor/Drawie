@@ -25,7 +25,7 @@ public class OpenGlRenderApiResources : RenderApiResources
             surface.Compositor.TryGetRenderInterfaceFeature(typeof(IOpenGlTextureSharingRenderInterfaceContextFeature))
                     .Result
                 as IOpenGlTextureSharingRenderInterfaceContextFeature;
-        Swapchain = new OpenGlSwapchain(OpenGlInteropContext.Current.Context, gpuInterop, surface, sharingFeature);
+        Swapchain = new OpenGlSwapchain(Context, gpuInterop, surface, sharingFeature);
 
         using var ctx = Context.MakeCurrent();
         fbo = Context.GlInterface.GenFramebuffer();
@@ -44,13 +44,12 @@ public class OpenGlRenderApiResources : RenderApiResources
 
     public override void Render(PixelSize size, Action renderAction)
     {
+        renderAction();
+        var ctx = Context.MakeCurrent();
+        Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, fbo);
+        
         using (Swapchain.BeginDraw(size, out var texture))
         {
-            renderAction();
-
-            var ctx = Context.MakeCurrent();
-            Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, fbo);
-
             Context.GlInterface.FramebufferTexture2D((int)GLEnum.Framebuffer, (int)GLEnum.ColorAttachment0,
                 (int)GLEnum.Texture2D, (int)texture.TextureId, 0);
             if (Context.GlInterface.CheckFramebufferStatus((int)GLEnum.Framebuffer) != (int)GLEnum.FramebufferComplete)
