@@ -35,6 +35,7 @@ public class OpenGlRenderApiResources : RenderApiResources
     public override async ValueTask DisposeAsync()
     {
         await Swapchain.DisposeAsync();
+        Surface.Dispose();
     }
 
     public override void CreateTemporalObjects(PixelSize size)
@@ -43,21 +44,21 @@ public class OpenGlRenderApiResources : RenderApiResources
 
     public override void Render(PixelSize size, Action renderAction)
     {
-        var ctx = Context.MakeCurrent();
-
-        Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, fbo);
-
-        using var _ = Swapchain.BeginDraw(size, out var texture);
-
-        Context.GlInterface.FramebufferTexture2D((int)GLEnum.Framebuffer, (int)GLEnum.ColorAttachment0,
-            (int)GLEnum.Texture2D, (int)texture.TextureId, 0);
-        if (Context.GlInterface.CheckFramebufferStatus((int)GLEnum.Framebuffer) != (int)GLEnum.FramebufferComplete)
+        using (Swapchain.BeginDraw(size, out var texture))
         {
-            throw new Exception("Framebuffer is not complete");
+            renderAction();
+
+            var ctx = Context.MakeCurrent();
+            Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, fbo);
+
+            Context.GlInterface.FramebufferTexture2D((int)GLEnum.Framebuffer, (int)GLEnum.ColorAttachment0,
+                (int)GLEnum.Texture2D, (int)texture.TextureId, 0);
+            if (Context.GlInterface.CheckFramebufferStatus((int)GLEnum.Framebuffer) != (int)GLEnum.FramebufferComplete)
+            {
+                throw new Exception("Framebuffer is not complete");
+            }
+
+            Context.GlInterface.Flush();
         }
-
-        Context.GlInterface.Flush();
-
-        renderAction();
     }
 }
