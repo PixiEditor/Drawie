@@ -35,7 +35,6 @@ public class OpenGlRenderApiResources : RenderApiResources
     public override async ValueTask DisposeAsync()
     {
         await Swapchain.DisposeAsync();
-        Surface.Dispose();
     }
 
     public override void CreateTemporalObjects(PixelSize size)
