@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.OpenGL;
 using Avalonia.Rendering.Composition;
+using Drawie.Backend.Core.Bridge;
 using Drawie.Interop.Avalonia.Core;
 using Drawie.RenderApi;
 using Drawie.RenderApi.OpenGL;
@@ -14,7 +15,9 @@ public class OpenGlRenderApiResources : RenderApiResources
 
     private int fbo;
     internal OpenGlSwapchain Swapchain { get; }
-    internal IGlContext Context => OpenGlInteropContext.Current.Context;
+    internal IGlContext Context { get; }
+
+    private IGlContext globalContext;
 
     private OpenGlTexture fboTexture;
 
@@ -25,16 +28,30 @@ public class OpenGlRenderApiResources : RenderApiResources
             surface.Compositor.TryGetRenderInterfaceFeature(typeof(IOpenGlTextureSharingRenderInterfaceContextFeature))
                     .Result
                 as IOpenGlTextureSharingRenderInterfaceContextFeature;
+
+        Context = sharingFeature.CreateSharedContext();
         Swapchain = new OpenGlSwapchain(Context, gpuInterop, surface, sharingFeature);
 
-        Context.MakeCurrent();
-        fbo = Context.GlInterface.GenFramebuffer();
+        using (Context.MakeCurrent())
+        {
+            fbo = Context.GlInterface.GenFramebuffer();
+        }
+
         fboTexture = new OpenGlTexture((uint)fbo, null);
+
+        globalContext = OpenGlInteropContext.Current.Context;
     }
 
     public override async ValueTask DisposeAsync()
     {
         await Swapchain.DisposeAsync();
+        if (fbo != 0)
+        {
+            using (Context.MakeCurrent())
+            {
+                Context.GlInterface.DeleteFramebuffer(fbo);
+            }
+        }
     }
 
     public override void CreateTemporalObjects(PixelSize size)
@@ -44,10 +61,8 @@ public class OpenGlRenderApiResources : RenderApiResources
     public override void Render(PixelSize size, Action renderAction)
     {
         var ctx = Context.MakeCurrent();
-        Context.GlInterface.Finish();
 
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, fbo);
-
         using (Swapchain.BeginDraw(size, out var texture))
         {
             Context.GlInterface.FramebufferTexture2D((int)GLEnum.Framebuffer, (int)GLEnum.ColorAttachment0,
@@ -57,15 +72,14 @@ public class OpenGlRenderApiResources : RenderApiResources
                 throw new Exception("Framebuffer is not complete");
             }
 
-            ctx.Dispose();
-
+            globalContext.MakeCurrent();
             renderAction();
 
-            Context.MakeCurrent();
+            ctx = Context.MakeCurrent();
             Context.GlInterface.Flush();
-            Context.GlInterface.Finish();
         }
 
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, 0);
+        ctx.Dispose();
     }
 }
