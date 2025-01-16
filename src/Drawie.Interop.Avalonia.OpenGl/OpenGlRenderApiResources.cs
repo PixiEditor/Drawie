@@ -27,9 +27,9 @@ public class OpenGlRenderApiResources : RenderApiResources
                 as IOpenGlTextureSharingRenderInterfaceContextFeature;
         Swapchain = new OpenGlSwapchain(Context, gpuInterop, surface, sharingFeature);
 
-        using var ctx = Context.MakeCurrent();
+        Context.MakeCurrent();
         fbo = Context.GlInterface.GenFramebuffer();
-        fboTexture = new OpenGlTexture((uint)fbo, GL.GetApi(Context.GlInterface.GetProcAddress));
+        fboTexture = new OpenGlTexture((uint)fbo, null);
     }
 
     public override async ValueTask DisposeAsync()
@@ -44,10 +44,11 @@ public class OpenGlRenderApiResources : RenderApiResources
 
     public override void Render(PixelSize size, Action renderAction)
     {
-        renderAction();
         var ctx = Context.MakeCurrent();
+        Context.GlInterface.Finish();
+
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, fbo);
-        
+
         using (Swapchain.BeginDraw(size, out var texture))
         {
             Context.GlInterface.FramebufferTexture2D((int)GLEnum.Framebuffer, (int)GLEnum.ColorAttachment0,
@@ -57,7 +58,15 @@ public class OpenGlRenderApiResources : RenderApiResources
                 throw new Exception("Framebuffer is not complete");
             }
 
+            ctx.Dispose();
+
+            renderAction();
+
+            Context.MakeCurrent();
             Context.GlInterface.Flush();
+            Context.GlInterface.Finish();
         }
+
+        Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, 0);
     }
 }
