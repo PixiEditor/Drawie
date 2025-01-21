@@ -9,6 +9,7 @@ public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : cl
     protected ICompositionGpuInterop Interop { get; }
     protected CompositionDrawingSurface Target { get; }
     private readonly List<TImage> _pendingImages = new();
+    private bool isDisposed;
 
     public SwapchainBase(ICompositionGpuInterop interop, CompositionDrawingSurface target)
     {
@@ -23,6 +24,9 @@ public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : cl
 
     TImage? CleanupAndFindNextImage(PixelSize size)
     {
+        if (isDisposed)
+            return null;
+
         TImage? firstFound = null;
         var foundMultiple = false;
 
@@ -55,6 +59,12 @@ public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : cl
 
     protected IDisposable BeginDrawCore(PixelSize size, out TImage image)
     {
+        if (isDisposed)
+        {
+            image = null;
+            return Disposable.Create(() => { });
+        }
+
         var img = CleanupAndFindNextImage(size) ?? CreateImage(size);
 
         img.BeginDraw();
@@ -62,6 +72,9 @@ public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : cl
         image = img;
         return Disposable.Create(() =>
         {
+            if (isDisposed)
+                return;
+
             img.Present();
             _pendingImages.Add(img);
         });
@@ -69,8 +82,12 @@ public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : cl
 
     public async ValueTask DisposeAsync()
     {
-        foreach (var img in _pendingImages)
+        isDisposed = true;
+        for (var i = 0; i < _pendingImages.Count; i++)
+        {
+            var img = _pendingImages[i];
             await img.DisposeAsync();
+        }
     }
 }
 

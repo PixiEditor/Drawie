@@ -29,14 +29,16 @@ public abstract class DrawieControl : InteropControl
         return (true, string.Empty);
     }
 
-    protected override void FreeGraphicsResources()
+    protected override async Task FreeGraphicsResources()
     {
-        resources?.DisposeAsync();
-        framebuffer?.Dispose();
         intermediateSurface?.Dispose();
-
         intermediateSurface = null;
+
+        framebuffer?.Dispose();
         framebuffer = null;
+
+        resources?.DisposeAsync();
+
         resources = null;
     }
 

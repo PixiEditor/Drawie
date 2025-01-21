@@ -30,11 +30,11 @@ public abstract class InteropControl : Control
         InitializeComposition();
     }
 
-    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    protected override async void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         if (initialized)
         {
-            FreeGraphicsResources();
+            await FreeGraphicsResources();
         }
 
         initialized = false;
@@ -128,6 +128,6 @@ public abstract class InteropControl : Control
     protected abstract (bool success, string info) InitializeGraphicsResources(Compositor targetCompositor,
         CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop);
 
-    protected abstract void FreeGraphicsResources();
+    protected abstract Task FreeGraphicsResources();
     protected abstract void RenderFrame(PixelSize size);
 }
