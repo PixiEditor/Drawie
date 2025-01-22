@@ -16,10 +16,13 @@ public class OpenGlRenderApiResources : RenderApiResources
     private int fbo;
     internal OpenGlSwapchain Swapchain { get; }
     internal IGlContext Context { get; }
+    public override bool IsDisposed => isDisposed;
 
     private IGlContext globalContext;
 
     private OpenGlTexture fboTexture;
+
+    private bool isDisposed;
 
     public OpenGlRenderApiResources(CompositionDrawingSurface surface, ICompositionGpuInterop gpuInterop) : base(
         surface, gpuInterop)
@@ -44,6 +47,10 @@ public class OpenGlRenderApiResources : RenderApiResources
 
     public override async ValueTask DisposeAsync()
     {
+        if (isDisposed)
+            return;
+
+        isDisposed = true;
         await Swapchain.DisposeAsync();
         if (fbo != 0)
         {
@@ -60,6 +67,9 @@ public class OpenGlRenderApiResources : RenderApiResources
 
     public override void Render(PixelSize size, Action renderAction)
     {
+        if (isDisposed)
+            return;
+
         var ctx = Context.MakeCurrent();
 
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, fbo);

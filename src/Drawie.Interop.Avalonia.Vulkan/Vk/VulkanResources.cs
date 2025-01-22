@@ -10,6 +10,8 @@ public class VulkanResources : RenderApiResources
     public VulkanInteropContext Context { get; }
     public VulkanSwapchain Swapchain { get; }
     public override ITexture Texture => Content.texture;
+
+    public override bool IsDisposed => isDisposed;
     public VulkanContent Content { get; }
 
     private bool isDisposed;
@@ -24,6 +26,9 @@ public class VulkanResources : RenderApiResources
 
     public override async ValueTask DisposeAsync()
     {
+        if (isDisposed)
+            return;
+
         isDisposed = true;
         Context.Pool.FreeUsedCommandBuffers();
         Content.Dispose();
