@@ -1,4 +1,6 @@
-﻿namespace Drawie.Numerics;
+﻿using Drawie.Numerics.Helpers;
+
+namespace Drawie.Numerics;
 public struct RectD : IEquatable<RectD>
 {
     public static RectD Empty { get; } = new RectD();
@@ -161,23 +163,7 @@ public struct RectD : IEquatable<RectD>
         if (points.Length == 0)
             return null;
 
-        double minX, minY, maxX, maxY;
-        minY = double.MaxValue;
-        minX = double.MaxValue;
-        maxY = double.MinValue;
-        maxX = double.MinValue;
-
-        foreach (VecF point in points)
-        {
-            if (point.X < minX)
-                minX = point.X;
-            if (point.X > maxX)
-                maxX = point.X;
-            if (point.Y < minY)
-                minY = point.Y;
-            if (point.Y > maxY)
-                maxY = point.Y;
-        }
+        var (minX, maxX, minY, maxY) = points.GetMinMax();
 
         return FromTwoPoints(new VecD(minX, minY), new VecD(maxX, maxY));
     }
