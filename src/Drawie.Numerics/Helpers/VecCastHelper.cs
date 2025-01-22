@@ -9,48 +9,25 @@ public static class VecCastHelper
 {
     public static VecF[] ToVecFArray(this IEnumerable<VecD> source)
     {
-        if (source is List<VecD> sourceList)
-        {
-            var target = new VecF[sourceList.Count];
+        var sourceSpan = VecSpanHelper.GetSimplestSpanFromEnumerable(source);
+        var target = new VecF[sourceSpan.Length];
 
-            CastToVecFSpan(CollectionsMarshal.AsSpan(sourceList), target);
+        var sourceDoubles = sourceSpan.GetComponentSpan();
+        var destDoubles = VecSpanHelper.GetComponentSpan(target);
 
-            return target;
-        }
-        else
-        {
-            var sourceArray = source as VecD[] ?? source.ToArray();
-            var target = new VecF[sourceArray.Length];
+        CastToVecFloatSpan(sourceDoubles, destDoubles);
 
-            CastToVecFSpan(sourceArray, target);
-
-            return target;
-        }
+        return target;
     }
 
-    public static unsafe void CastToVecFSpan(ReadOnlySpan<VecD> source, Span<VecF> target)
-    {
-        fixed (VecD* sourcePtr = source)
-        {
-            fixed (VecF* targetPtr = target)
-            {
-                // VecD is made of 2 float64 components => source.Length * 2
-                var floatSource = new ReadOnlySpan<double>(sourcePtr, source.Length * 2);
-                var floatTarget = new Span<float>(targetPtr, target.Length * 2);
-
-                CastToVecFloatSpan(floatSource, (double*)sourcePtr, floatTarget);
-            }
-        }
-    }
-
-    private static unsafe void CastToVecFloatSpan(ReadOnlySpan<double> source, double* sourcePointer, Span<float> target)
+    private static void CastToVecFloatSpan(ReadOnlySpan<double> source, Span<float> target)
     {
         if (Avx.IsSupported && source.Length >= 4)
         {
             var i = 0;
             for (; i < source.Length - 2; i += 4)
             {
-                var other = Avx.LoadVector256(sourcePointer + i);
+                var other = Vector256.Create(source.Slice(i, 4));
                 var result = Avx.ConvertToVector128Single(other);
 
                 result.CopyTo(target.Slice(i, 4));
@@ -58,7 +35,7 @@ public static class VecCastHelper
 
             for (; i < source.Length; i += 2)
             {
-                var other = Sse2.LoadVector128(sourcePointer + i);
+                var other = Vector128.Create(source.Slice(i, 2));
                 var result = Sse2.ConvertToVector128Single(other);
 
                 result.AsVector2().CopyTo(target.Slice(i, 2));
@@ -68,7 +45,7 @@ public static class VecCastHelper
         {
             for (var i = 0; i < target.Length; i += 2)
             {
-                var other = Sse2.LoadVector128(sourcePointer + i);
+                var other = Vector128.Create(source.Slice(i, 2));
                 var result = Sse2.ConvertToVector128Single(other);
 
                 result.AsVector2().CopyTo(target.Slice(i, 2));

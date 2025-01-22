@@ -10,12 +10,22 @@ public static class VecSpanHelper
         {
             return CollectionsMarshal.AsSpan(sourceList);
         }
-        else
-        {
-            var sourceArray = source as VecF[] ?? source.ToArray();
 
-            return sourceArray;
+        var sourceArray = source as VecF[] ?? source.ToArray();
+
+        return sourceArray;
+    }
+
+    public static Span<VecD> GetSimplestSpanFromEnumerable(IEnumerable<VecD> source)
+    {
+        if (source is List<VecD> sourceList)
+        {
+            return CollectionsMarshal.AsSpan(sourceList);
         }
+
+        var sourceArray = source as VecD[] ?? source.ToArray();
+
+        return sourceArray;
     }
 
     public static Span<float> GetComponentSpan(this Span<VecF> source) => MemoryMarshal.Cast<VecF, float>(source);
