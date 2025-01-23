@@ -18,13 +18,15 @@ public static class VecMinMaxHelper
         {
             if (Vector512.IsHardwareAccelerated)
             {
+                const int byteSize = 256 / 8 / sizeof(float);
+
                 var minVec = Vector512.Create(float.MaxValue);
                 var maxVec = Vector512.Create(float.MinValue);
 
                 int i;
-                for (i = 0; i <= floatSpan.Length - 16; i += 16)
+                for (i = 0; i <= floatSpan.Length - byteSize; i += byteSize)
                 {
-                    var xVec = Vector512.Create(floatSpan.Slice(i, 16));
+                    var xVec = Vector512.Create(floatSpan.Slice(i, byteSize));
 
                     minVec = Vector512.Min(minVec, xVec);
                     maxVec = Vector512.Max(maxVec, xVec);
@@ -34,7 +36,7 @@ public static class VecMinMaxHelper
                 var maxX = maxVec[0];
                 var minY = minVec[1];
                 var maxY = maxVec[1];
-                for (var j = 2; j < 16; j += 2)
+                for (var j = 2; j < byteSize; j += 2)
                 {
                     minX = Math.Min(minX, minVec[j]);
                     maxX = Math.Max(maxX, maxVec[j]);
@@ -58,13 +60,15 @@ public static class VecMinMaxHelper
 
             if (Vector256.IsHardwareAccelerated)
             {
+                const int byteSize = 256 / 8 / sizeof(float);
+
                 var minVec = Vector256.Create(float.MaxValue);
                 var maxVec = Vector256.Create(float.MinValue);
 
                 int i;
-                for (i = 0; i <= floatSpan.Length - 16; i += 16)
+                for (i = 0; i <= floatSpan.Length - byteSize; i += byteSize)
                 {
-                    var xVec = Vector256.Create(floatSpan.Slice(i, 16));
+                    var xVec = Vector256.Create(floatSpan.Slice(i, byteSize));
 
                     minVec = Vector256.Min(minVec, xVec);
                     maxVec = Vector256.Max(maxVec, xVec);
@@ -74,7 +78,7 @@ public static class VecMinMaxHelper
                 var maxX = maxVec[0];
                 var minY = minVec[1];
                 var maxY = maxVec[1];
-                for (var j = 2; j < 16; j += 2)
+                for (var j = 2; j < byteSize; j += 2)
                 {
                     minX = Math.Min(minX, minVec[j]);
                     maxX = Math.Max(maxX, maxVec[j]);
