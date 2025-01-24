@@ -154,6 +154,12 @@ namespace Drawie.Skia.Implementations
                 .AddPath(ManagedInstances[other.ObjectPointer], (SKPathAddMode)mode);
         }
 
+        public void AddPath(VectorPath vectorPath, VectorPath other, Matrix3X3 matrixToOther, AddPathMode mode)
+        {
+            ManagedInstances[vectorPath.ObjectPointer]
+                .AddPath(ManagedInstances[other.ObjectPointer], matrixToOther.ToSkMatrix(), (SKPathAddMode)mode);
+        }
+
         public object GetNativePath(IntPtr objectPointer)
         {
             return ManagedInstances[objectPointer];
@@ -297,7 +303,7 @@ namespace Drawie.Skia.Implementations
         {
             return ManagedInstances[vectorPath.ObjectPointer].Contains(x, y);
         }
-        
+
         private void ResetIntermediatePoints()
         {
             for (int i = 0; i < intermediatePoints.Length; i++)
