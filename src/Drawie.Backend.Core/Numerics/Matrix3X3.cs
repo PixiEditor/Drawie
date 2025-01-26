@@ -361,6 +361,11 @@ public struct Matrix3X3 : IEquatable<Matrix3X3>
     {
         return DrawingBackendApi.Current.MatrixImplementation.MapPoint(this, p0, p1);
     }
+    
+    public VecD MapVector(float x, float y)
+    {
+        return DrawingBackendApi.Current.MatrixImplementation.MapVector(this, x, y);
+    }
 
     private static void SetSinCos(ref Matrix3X3 matrix, float sin, float cos)
     {
