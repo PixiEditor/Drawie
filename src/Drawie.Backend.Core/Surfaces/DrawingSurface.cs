@@ -18,7 +18,11 @@ namespace Drawie.Backend.Core.Surfaces
         public RectD LocalClipBounds =>
             DrawingBackendApi.Current.SurfaceImplementation.GetLocalClipBounds(ObjectPointer);
 
+        public bool IsDisposed => isDisposed || Canvas.IsDisposed;
+
         public event SurfaceChangedEventHandler? Changed;
+
+        private bool isDisposed;
 
         public DrawingSurface(IntPtr objPtr, Canvas canvas) : base(objPtr)
         {
@@ -75,6 +79,7 @@ namespace Drawie.Backend.Core.Surfaces
 
         public override void Dispose()
         {
+            isDisposed = true;
             Canvas.Changed -= OnCanvasChanged;
             Canvas.Dispose(); // TODO: make sure this is correct
             DrawingBackendApi.Current.SurfaceImplementation.Dispose(this);

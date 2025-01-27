@@ -14,13 +14,15 @@ public class Texture : IDisposable, ICloneable
 
     public event SurfaceChangedEventHandler? Changed;
 
-    public bool IsDisposed { get; private set; }
+    public bool IsDisposed => isDisposed || DrawingSurface.IsDisposed;
     public bool IsHardwareAccelerated { get; } = DrawingBackendApi.Current.IsHardwareAccelerated;
 
     public ColorSpace ColorSpace { get; }
 
     private bool pixmapUpToDate;
     private Pixmap pixmap;
+    
+    private bool isDisposed;
 
     private Paint nearestNeighborReplacingPaint =
         new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
@@ -235,10 +237,10 @@ public class Texture : IDisposable, ICloneable
 
     public void Dispose()
     {
-        if (IsDisposed)
+        if (isDisposed)
             return;
 
-        IsDisposed = true;
+        isDisposed = true;
         DrawingSurface.Changed -= DrawingSurfaceOnChanged;
         DrawingSurface.Dispose();
         pixmap?.Dispose();
