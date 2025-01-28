@@ -277,5 +277,12 @@ namespace Drawie.Backend.Core.Surfaces
         {
             DrawingBackendApi.Current.CanvasImplementation.RotateDegrees(ObjectPointer, degrees);
         }
+
+        public void DrawTextOnPath(VectorPath path, string text, VecD position, Font font, Paint paint)
+        {
+            DrawingBackendApi.Current.CanvasImplementation.DrawTextOnPath(ObjectPointer, path, text, (float)position.X,
+                (float)position.Y, font, paint);
+            Changed?.Invoke(null);
+        }
     }
 }

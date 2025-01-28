@@ -283,6 +283,18 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[objectPointer].RotateDegrees(degrees);
         }
 
+        public void DrawTextOnPath(IntPtr objectPointer, VectorPath path, string text, float positionX, float positionY, Font font,
+            Paint paint)
+        {
+            ManagedInstances[objectPointer].DrawTextOnPath(
+                text,
+                _pathImpl[path.ObjectPointer],
+                0,
+                0,
+                _fontImpl[font.ObjectPointer],
+                _paintImpl[paint.ObjectPointer]);
+        }
+
         public void Dispose(IntPtr objectPointer)
         {
             ManagedInstances[objectPointer].Dispose();

@@ -1,5 +1,6 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Surfaces;
+using Drawie.Backend.Core.Vector;
 
 namespace Drawie.Backend.Core.Text;
 
@@ -11,7 +12,7 @@ public class Font : NativeObject
 
     public override object Native => DrawingBackendApi.Current.FontImplementation.GetNative(ObjectPointer);
 
-    public double FontSize
+    public double Size
     {
         get => DrawingBackendApi.Current.FontImplementation.GetFontSize(ObjectPointer);
         set => DrawingBackendApi.Current.FontImplementation.SetFontSize(ObjectPointer, value);
@@ -30,6 +31,11 @@ public class Font : NativeObject
     public double MeasureText(string text)
     {
         return DrawingBackendApi.Current.FontImplementation.MeasureText(ObjectPointer, text);
+    }
+
+    public VectorPath GetTextPath(string text)
+    {
+        return DrawingBackendApi.Current.FontImplementation.GetTextPath(ObjectPointer, text);
     }
 
     public static Font CreateDefault(float fontSize = 12f)

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 using Drawie.Backend.Core.Text;
+using Drawie.Backend.Core.Vector;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations;
@@ -9,10 +10,29 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 {
     private readonly ConcurrentDictionary<IntPtr, SKTypeface> ManagedTypefaces = new();
 
+    private readonly SkiaPathImplementation pathImplementation;
+
+    public SkiaFontImplementation(SkiaPathImplementation pathImplementation)
+    {
+        this.pathImplementation = pathImplementation;
+    }
+
     public object GetNative(IntPtr objectPointer)
     {
         ManagedInstances.TryGetValue(objectPointer, out SKFont? font);
         return font;
+    }
+
+    public VectorPath GetTextPath(IntPtr objectPointer, string text)
+    {
+        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        {
+            var path = font.GetTextPath(text);
+            pathImplementation.ManagedInstances[path.Handle] = path;
+            return new VectorPath(path.Handle);
+        }
+
+        throw new InvalidOperationException("Native font object not found");
     }
 
     public Font FromStream(Stream stream, float fontSize = 12f, float scaleX = 1f, float skewY = 0f)
@@ -31,7 +51,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         {
             return font.Size;
         }
-        
+
         throw new InvalidOperationException("Native font object not found");
     }
 
@@ -42,7 +62,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
             font.Size = (float)value;
             return;
         }
-        
+
         throw new InvalidOperationException("Native font object not found");
     }
 
@@ -52,7 +72,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         {
             return font.MeasureText(text);
         }
-        
+
         throw new InvalidOperationException("Native font object not found");
     }
 
@@ -60,7 +80,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
     {
         SKFont font = new(SKTypeface.Default, fontSize);
         ManagedInstances[font.Handle] = font;
-        return new Font(font.Handle); 
+        return new Font(font.Handle);
     }
 
     public Font? FromFamilyName(string familyName)
@@ -70,7 +90,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         {
             return null;
         }
-        
+
         ManagedTypefaces[typeface.Handle] = typeface;
 
         SKFont font = new(typeface);
