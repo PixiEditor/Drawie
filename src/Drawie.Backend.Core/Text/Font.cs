@@ -39,7 +39,7 @@ public class Font : NativeObject
     {
         return DrawingBackendApi.Current.FontImplementation.MeasureText(ObjectPointer, text, out rectD, paint);
     }
-    
+
     public int BreakText(string text, double maxWidth, out float measuredWidth)
     {
         return DrawingBackendApi.Current.FontImplementation.BreakText(ObjectPointer, text, maxWidth, out measuredWidth);
@@ -58,5 +58,20 @@ public class Font : NativeObject
     public static Font? FromFamilyName(string familyName)
     {
         return DrawingBackendApi.Current.FontImplementation.FromFamilyName(familyName);
+    }
+
+    public static Font? FromFontFamily(FontFamilyName familyName)
+    {
+        if (familyName.FontUri != null)
+        {
+            bool isFile = familyName.FontUri.IsFile;
+            if (isFile)
+            {
+                using var stream = File.OpenRead(familyName.FontUri.LocalPath);
+                return FromStream(stream);
+            }
+        }
+
+        return DrawingBackendApi.Current.FontImplementation.FromFamilyName(familyName.Name);
     }
 }
