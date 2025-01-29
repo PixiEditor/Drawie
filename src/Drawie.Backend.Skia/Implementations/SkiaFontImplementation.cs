@@ -1,7 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
+using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Text;
 using Drawie.Backend.Core.Vector;
+using Drawie.Numerics;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations;
@@ -71,6 +73,19 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
         {
             return font.MeasureText(text);
+        }
+
+        throw new InvalidOperationException("Native font object not found");
+    }
+
+    public double MeasureText(IntPtr objectPointer, string text, out RectD bounds, Paint? paint = null)
+    {
+        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        {
+            SKPaint? skPaint = (SKPaint)paint?.Native;
+            double measurement = font.MeasureText(text, out SKRect skBounds, skPaint);
+            bounds = new RectD(skBounds.Left, skBounds.Top, skBounds.Width, skBounds.Height);
+            return measurement;
         }
 
         throw new InvalidOperationException("Native font object not found");

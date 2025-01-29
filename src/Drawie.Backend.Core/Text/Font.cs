@@ -1,6 +1,8 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Surfaces;
+using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Vector;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Text;
 
@@ -31,6 +33,11 @@ public class Font : NativeObject
     public double MeasureText(string text)
     {
         return DrawingBackendApi.Current.FontImplementation.MeasureText(ObjectPointer, text);
+    }
+
+    public double MeasureText(string text, out RectD rectD, Paint? paint = null)
+    {
+        return DrawingBackendApi.Current.FontImplementation.MeasureText(ObjectPointer, text, out rectD, paint);
     }
 
     public VectorPath GetTextPath(string text)

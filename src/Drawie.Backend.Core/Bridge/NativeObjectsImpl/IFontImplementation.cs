@@ -1,5 +1,7 @@
-﻿using Drawie.Backend.Core.Text;
+﻿using Drawie.Backend.Core.Surfaces.PaintImpl;
+using Drawie.Backend.Core.Text;
 using Drawie.Backend.Core.Vector;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 
@@ -14,4 +16,5 @@ public interface IFontImplementation
     public Font CreateDefault(float fontSize);
     public Font? FromFamilyName(string familyName);
     public VectorPath GetTextPath(IntPtr objectPointer, string text);
+    public double MeasureText(IntPtr objectPointer, string text, out RectD bounds, Paint? paint = null);
 }
