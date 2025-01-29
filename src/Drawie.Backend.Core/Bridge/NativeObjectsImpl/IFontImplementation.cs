@@ -17,4 +17,5 @@ public interface IFontImplementation
     public Font? FromFamilyName(string familyName);
     public VectorPath GetTextPath(IntPtr objectPointer, string text);
     public double MeasureText(IntPtr objectPointer, string text, out RectD bounds, Paint? paint = null);
+    public int BreakText(IntPtr objectPointer, string text, double maxWidth, out float measuredWidth);
 }

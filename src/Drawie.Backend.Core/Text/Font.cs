@@ -39,6 +39,11 @@ public class Font : NativeObject
     {
         return DrawingBackendApi.Current.FontImplementation.MeasureText(ObjectPointer, text, out rectD, paint);
     }
+    
+    public int BreakText(string text, double maxWidth, out float measuredWidth)
+    {
+        return DrawingBackendApi.Current.FontImplementation.BreakText(ObjectPointer, text, maxWidth, out measuredWidth);
+    }
 
     public VectorPath GetTextPath(string text)
     {
