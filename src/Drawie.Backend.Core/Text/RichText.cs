@@ -8,6 +8,7 @@ namespace Drawie.Backend.Core.Text;
 
 public class RichText
 {
+    public const double PtToPx = 1.3333333333333333;
     public string RawText { get; set; }
 
     public string FormattedText { get; }
@@ -18,6 +19,7 @@ public class RichText
     public float StrokeWidth { get; set; }
     public Color StrokeColor { get; set; }
     public double MaxWidth { get; set; } = double.MaxValue;
+    public double? Spacing { get; set; }
 
     public RichText(string text, double maxWidth = double.MaxValue)
     {
@@ -41,9 +43,11 @@ public class RichText
         }
         else
         {
-            VecD linePosition = position;
-            foreach (var line in Lines)
+            for (var i = 0; i < Lines.Length; i++)
             {
+                var line = Lines[i];
+
+                VecD linePosition = position + GetLineOffset(i, font);
                 bool hasStroke = StrokeWidth > 0;
                 bool hasFill = Fill && FillColor.A > 0;
                 bool strokeAndFillEqual = StrokeColor == FillColor;
@@ -73,19 +77,6 @@ public class RichText
                         PaintLine(canvas, line, linePosition, font, paint);
                     }
                 }
-
-                paint.Style = PaintStyle.StrokeAndFill; // for measurements
-                paint.StrokeWidth = 0;
-
-                if (string.IsNullOrEmpty(line))
-                {
-                    linePosition.Y += font.Size;
-                    continue;
-                }
-
-                font.MeasureText(line, out RectD bounds, paint);
-
-                linePosition.Y += bounds.Height;
             }
         }
     }
@@ -110,7 +101,6 @@ public class RichText
         {
             if (string.IsNullOrEmpty(line))
             {
-                height += font.Size;
                 continue;
             }
 
@@ -130,10 +120,9 @@ public class RichText
             {
                 x = bounds.X;
             }
-
-            height += bounds.Height;
         }
 
+        height = GetLineOffset(Lines.Length, font).Y;
         return new RectD(x, y, width, height);
     }
 
@@ -148,7 +137,7 @@ public class RichText
         for (int i = 0; i < Lines.Length; i++)
         {
             var line = Lines[i];
-            VecD lineOffset = GetLineOffset(i, font, measurementPaint);
+            VecD lineOffset = GetLineOffset(i, font);
             VecF[] lineGlyphPositions = font.GetGlyphPositions(line);
             for (int j = 0; j < line.Length; j++)
             {
@@ -192,22 +181,9 @@ public class RichText
         return glyphWidths;
     }
 
-    private VecD GetLineOffset(int lineIndex, Font font, Paint measurementPaint)
+    private VecD GetLineOffset(int lineIndex, Font font)
     {
-        double y = 0;
-        for (int i = 0; i < lineIndex; i++)
-        {
-            if (string.IsNullOrEmpty(Lines[i]))
-            {
-                y += font.Size;
-            }
-            else
-            {
-                font.MeasureText(Lines[i], out RectD bounds, measurementPaint);
-                y += bounds.Height;
-            }
-        }
-
-        return new VecD(0, y);
+        double lineHeight = Spacing ?? font.Size * PtToPx;
+        return new VecD(0, lineIndex * lineHeight);
     }
 }
