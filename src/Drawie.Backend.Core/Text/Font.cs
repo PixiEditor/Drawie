@@ -84,4 +84,9 @@ public class Font : NativeObject
     {
         return DrawingBackendApi.Current.FontImplementation.GetGlyphWidths(ObjectPointer, text);
     }
+
+    public float[] GetGlyphWidths(string text, Paint paint)
+    {
+        return DrawingBackendApi.Current.FontImplementation.GetGlyphWidths(ObjectPointer, text, paint);
+    }
 }

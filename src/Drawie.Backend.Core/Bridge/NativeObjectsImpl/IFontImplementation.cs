@@ -20,4 +20,5 @@ public interface IFontImplementation
     public int BreakText(IntPtr objectPointer, string text, double maxWidth, out float measuredWidth);
     public VecF[] GetGlyphPositions(IntPtr objectPointer, string text);
     public float[] GetGlyphWidths(IntPtr objectPointer, string text);
+    public float[] GetGlyphWidths(IntPtr objectPointer, string text, Paint paint);
 }

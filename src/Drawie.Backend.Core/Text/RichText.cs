@@ -21,10 +21,16 @@ public class RichText
 
     public RichText(string text, double maxWidth = double.MaxValue)
     {
+        if (text == null)
+        {
+            text = string.Empty;
+        }
+
         RawText = text;
         MaxWidth = maxWidth;
-        FormattedText = text.Replace(Environment.NewLine, " ");
-        Lines = text.Split(Environment.NewLine);
+
+        FormattedText = text.Replace('\n', ' ');
+        Lines = text.Split('\n');
     }
 
     public void Paint(Canvas canvas, VecD position, Font font, Paint paint, VectorPath? onPath)
@@ -71,6 +77,12 @@ public class RichText
                 paint.Style = PaintStyle.StrokeAndFill; // for measurements
                 paint.StrokeWidth = 0;
 
+                if (string.IsNullOrEmpty(line))
+                {
+                    linePosition.Y += font.Size;
+                    continue;
+                }
+
                 font.MeasureText(line, out RectD bounds, paint);
 
                 linePosition.Y += bounds.Height;
@@ -96,6 +108,12 @@ public class RichText
 
         foreach (var line in Lines)
         {
+            if (string.IsNullOrEmpty(line))
+            {
+                height += font.Size;
+                continue;
+            }
+
             font.MeasureText(line, out RectD bounds, measurementPaint);
 
             if (bounds.Width > width)
@@ -117,5 +135,79 @@ public class RichText
         }
 
         return new RectD(x, y, width, height);
+    }
+
+    public VecF[] GetGlyphPositions(Font font)
+    {
+        var glyphPositions = new VecF[RawText.Replace("\n", string.Empty).Length + Lines.Length];
+        using Paint measurementPaint = new Paint();
+        measurementPaint.Style = PaintStyle.StrokeAndFill;
+        measurementPaint.StrokeWidth = StrokeWidth;
+
+        int startingIndex = 0;
+        for (int i = 0; i < Lines.Length; i++)
+        {
+            var line = Lines[i];
+            VecD lineOffset = GetLineOffset(i, font, measurementPaint);
+            VecF[] lineGlyphPositions = font.GetGlyphPositions(line);
+            for (int j = 0; j < line.Length; j++)
+            {
+                glyphPositions[startingIndex + j] = lineGlyphPositions[j] + lineOffset;
+            }
+
+            if (line.Length == 0)
+            {
+                glyphPositions[startingIndex] = new VecF(0, (float)lineOffset.Y);
+                startingIndex++;
+                continue;
+            }
+
+            float lastGlyphWidth = font.GetGlyphWidths(line[^1].ToString(), measurementPaint).FirstOrDefault();
+            glyphPositions[startingIndex + line.Length] =
+                new VecF(glyphPositions[startingIndex + line.Length - 1].X + lastGlyphWidth, (float)lineOffset.Y);
+
+            startingIndex += line.Length + 1;
+        }
+
+        return glyphPositions;
+    }
+
+    public float[] GetGlyphWidths(Font font)
+    {
+        using Paint measurementPaint = new Paint();
+        measurementPaint.Style = PaintStyle.StrokeAndFill;
+        measurementPaint.StrokeWidth = StrokeWidth;
+
+        var glyphWidths = new float[RawText.Replace("\n", string.Empty).Length];
+        for (int i = 0; i < Lines.Length; i++)
+        {
+            var line = Lines[i];
+            float[] lineGlyphWidths = font.GetGlyphWidths(line, measurementPaint);
+            for (int j = 0; j < line.Length; j++)
+            {
+                glyphWidths[i + j] = lineGlyphWidths[j];
+            }
+        }
+
+        return glyphWidths;
+    }
+
+    private VecD GetLineOffset(int lineIndex, Font font, Paint measurementPaint)
+    {
+        double y = 0;
+        for (int i = 0; i < lineIndex; i++)
+        {
+            if (string.IsNullOrEmpty(Lines[i]))
+            {
+                y += font.Size;
+            }
+            else
+            {
+                font.MeasureText(Lines[i], out RectD bounds, measurementPaint);
+                y += bounds.Height;
+            }
+        }
+
+        return new VecD(0, y);
     }
 }
