@@ -101,6 +101,28 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         throw new InvalidOperationException("Native font object not found");
     }
 
+    public VecF[] GetGlyphPositions(IntPtr objectPointer, string text)
+    {
+        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        {
+            SKPoint[] skPoints = font.GetGlyphPositions(text);
+            return CastUtility.UnsafeArrayCast<SKPoint, VecF>(skPoints);
+        }
+
+        throw new InvalidOperationException("Native font object not found");
+    }
+
+    public float[] GetGlyphWidths(IntPtr objectPointer, string text)
+    {
+        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        {
+            float[] widths = font.GetGlyphWidths(text);
+            return widths;
+        }
+
+        throw new InvalidOperationException("Native font object not found");
+    }
+
     public Font CreateDefault(float fontSize)
     {
         SKFont font = new(SKTypeface.Default, fontSize);

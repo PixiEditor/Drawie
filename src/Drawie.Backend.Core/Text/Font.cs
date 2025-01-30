@@ -74,4 +74,14 @@ public class Font : NativeObject
 
         return DrawingBackendApi.Current.FontImplementation.FromFamilyName(familyName.Name);
     }
+
+    public VecF[] GetGlyphPositions(string text)
+    {
+        return DrawingBackendApi.Current.FontImplementation.GetGlyphPositions(ObjectPointer, text);
+    }
+
+    public float[] GetGlyphWidths(string text)
+    {
+        return DrawingBackendApi.Current.FontImplementation.GetGlyphWidths(ObjectPointer, text);
+    }
 }

@@ -18,4 +18,6 @@ public interface IFontImplementation
     public VectorPath GetTextPath(IntPtr objectPointer, string text);
     public double MeasureText(IntPtr objectPointer, string text, out RectD bounds, Paint? paint = null);
     public int BreakText(IntPtr objectPointer, string text, double maxWidth, out float measuredWidth);
+    public VecF[] GetGlyphPositions(IntPtr objectPointer, string text);
+    public float[] GetGlyphWidths(IntPtr objectPointer, string text);
 }
