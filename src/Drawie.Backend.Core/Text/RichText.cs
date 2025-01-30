@@ -17,10 +17,12 @@ public class RichText
     public Color FillColor { get; set; }
     public float StrokeWidth { get; set; }
     public Color StrokeColor { get; set; }
+    public double MaxWidth { get; set; } = double.MaxValue;
 
-    public RichText(string text)
+    public RichText(string text, double maxWidth = double.MaxValue)
     {
         RawText = text;
+        MaxWidth = maxWidth;
         FormattedText = text.Replace(Environment.NewLine, " ");
         Lines = text.Split(Environment.NewLine);
     }
