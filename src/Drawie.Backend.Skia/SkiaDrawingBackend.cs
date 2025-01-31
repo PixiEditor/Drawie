@@ -95,7 +95,7 @@ namespace Drawie.Skia
 
             shader.SetBitmapImplementation(bitmapImpl);
 
-            SkiaFontImplementation fontImpl = new SkiaFontImplementation();
+            SkiaFontImplementation fontImpl = new SkiaFontImplementation(pathImpl);
             FontImplementation = fontImpl;
 
             SkiaCanvasImplementation canvasImpl =

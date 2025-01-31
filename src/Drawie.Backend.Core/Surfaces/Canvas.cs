@@ -15,6 +15,7 @@ namespace Drawie.Backend.Core.Surfaces
     {
         public override object Native => DrawingBackendApi.Current.CanvasImplementation.GetNativeCanvas(ObjectPointer);
         public Matrix3X3 TotalMatrix => DrawingBackendApi.Current.CanvasImplementation.GetTotalMatrix(ObjectPointer);
+        public bool IsDisposed { get; private set; }
 
         public event SurfaceChangedEventHandler? Changed;
 
@@ -22,7 +23,8 @@ namespace Drawie.Backend.Core.Surfaces
         {
         }
 
-        public void DrawPixel(VecD position, Paint drawingPaint) => DrawPixel((float)position.X, (float)position.Y, drawingPaint);
+        public void DrawPixel(VecD position, Paint drawingPaint) =>
+            DrawPixel((float)position.X, (float)position.Y, drawingPaint);
 
         public void DrawPixel(float posX, float posY, Paint drawingPaint)
         {
@@ -153,22 +155,25 @@ namespace Drawie.Backend.Core.Surfaces
                 radiusY, paint);
             Changed?.Invoke(new RectD(x, y, width, height));
         }
-        
+
         public void DrawText(string text, VecD position, Paint paint)
         {
-            DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X, (float)position.Y, paint);
+            DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
+                (float)position.Y, paint);
             Changed?.Invoke(null);
         }
-        
+
         public void DrawText(string text, VecD position, Font font, Paint paint)
         {
-            DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X, (float)position.Y, font, paint);
+            DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
+                (float)position.Y, font, paint);
             Changed?.Invoke(null);
         }
 
         public void DrawText(string text, VecD position, TextAlign align, Font font, Paint paint)
         {
-            DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X, (float)position.Y, align, font, paint);
+            DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
+                (float)position.Y, align, font, paint);
         }
 
         public void ClipPath(VectorPath clipPath) => ClipPath(clipPath, ClipOperation.Intersect);
@@ -249,6 +254,7 @@ namespace Drawie.Backend.Core.Surfaces
 
         public override void Dispose()
         {
+            IsDisposed = true;
             DrawingBackendApi.Current.CanvasImplementation.Dispose(ObjectPointer);
         }
 
@@ -270,6 +276,13 @@ namespace Drawie.Backend.Core.Surfaces
         public void RotateDegrees(float degrees)
         {
             DrawingBackendApi.Current.CanvasImplementation.RotateDegrees(ObjectPointer, degrees);
+        }
+
+        public void DrawTextOnPath(VectorPath path, string text, VecD position, Font font, Paint paint)
+        {
+            DrawingBackendApi.Current.CanvasImplementation.DrawTextOnPath(ObjectPointer, path, text, (float)position.X,
+                (float)position.Y, font, paint);
+            Changed?.Invoke(null);
         }
     }
 }

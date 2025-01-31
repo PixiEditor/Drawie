@@ -37,6 +37,7 @@ public interface IVectorPathImplementation
     public string ToSvgPathData(VectorPath vectorPath);
     public bool Contains(VectorPath vectorPath, float x, float y);
     public void AddPath(VectorPath vectorPath, VectorPath path, AddPathMode mode);
+    public void AddPath(VectorPath vectorPath, VectorPath other, Matrix3X3 matrixToOther, AddPathMode mode);
     public object GetNativePath(IntPtr objectPointer);
     public VecF[] GetPoints(IntPtr objectPointer);
     public VecF GetLastPoint(VectorPath vectorPath);

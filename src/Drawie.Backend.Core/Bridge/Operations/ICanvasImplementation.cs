@@ -51,6 +51,7 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public int SaveLayer(IntPtr objectPtr, Paint paint);
         public int SaveLayer(IntPtr objectPtr, Paint paint, RectD bounds);
         public Matrix3X3 GetTotalMatrix(IntPtr objectPointer);
-        public void RotateDegrees(IntPtr objectPointer, float degrees); 
+        public void RotateDegrees(IntPtr objectPointer, float degrees);
+        public void DrawTextOnPath(IntPtr objectPointer, VectorPath path, string text, float positionX, float positionY, Font font, Paint paint);
     }
 }

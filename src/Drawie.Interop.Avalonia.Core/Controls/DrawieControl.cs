@@ -46,7 +46,7 @@ public abstract class DrawieControl : InteropControl
 
     protected override void RenderFrame(PixelSize size)
     {
-        if (resources != null)
+        if (resources is { IsDisposed: false })
         {
             if (size.Width == 0 || size.Height == 0)
             {

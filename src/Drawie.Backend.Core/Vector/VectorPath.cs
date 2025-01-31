@@ -209,6 +209,12 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
         Changed?.Invoke(this);
     }
 
+    public void AddPath(VectorPath other, Matrix3X3 matrixToOther, AddPathMode mode)
+    {
+        DrawingBackendApi.Current.PathImplementation.AddPath(this, other, matrixToOther, mode);
+        Changed?.Invoke(this);
+    }
+
     public bool Contains(float x, float y)
     {
         return DrawingBackendApi.Current.PathImplementation.Contains(this, x, y);

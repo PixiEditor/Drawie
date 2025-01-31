@@ -8,8 +8,10 @@ public abstract class RenderApiResources : IAsyncDisposable
 {
     public CompositionDrawingSurface Surface { get; }
     public ICompositionGpuInterop GpuInterop { get; }
-    
+
     public abstract ITexture Texture { get; }
+
+    public abstract bool IsDisposed { get; }
 
     public RenderApiResources(CompositionDrawingSurface surface, ICompositionGpuInterop gpuInterop)
     {
