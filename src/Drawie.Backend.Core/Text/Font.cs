@@ -34,8 +34,13 @@ public class Font : NativeObject
         set => DrawingBackendApi.Current.FontImplementation.SetEdging(ObjectPointer, value);
     }
 
+    public bool IsDisposed { get; private set; }
+
     public override void Dispose()
     {
+        if(IsDisposed) return;
+        
+        IsDisposed = true;
         DrawingBackendApi.Current.FontImplementation.Dispose(ObjectPointer);
     }
 
