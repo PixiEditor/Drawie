@@ -1,4 +1,5 @@
-﻿using System.Runtime.Intrinsics;
+﻿using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 
 namespace Drawie.Numerics.Helpers;
 
@@ -7,6 +8,11 @@ public static class VecMinMaxHelper
     public static (float minX, float maxX, float minY, float maxY) GetMinMax(this IEnumerable<VecF> source)
     {
         var span = VecSpanHelper.GetSimplestSpanFromEnumerable(source);
+
+        if (span == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
 
         return MinMaxFromVecFloatSpan(span.GetComponentSpan());
     }
@@ -19,15 +25,16 @@ public static class VecMinMaxHelper
             if (Vector512.IsHardwareAccelerated)
             {
                 const int byteSize = 512 / 8 / sizeof(float);
+                int i = 0;
 
                 var minVec = Vector512.Create(float.MaxValue);
                 var maxVec = Vector512.Create(float.MinValue);
 
-                int i;
-                for (i = 0; i <= floatSpan.Length - byteSize; i += byteSize)
-                {
-                    var xVec = Vector512.Create(floatSpan.Slice(i, byteSize));
+                ref float start = ref MemoryMarshal.GetReference(floatSpan);
 
+                for (; i <= floatSpan.Length - byteSize; i += byteSize)
+                {
+                    var xVec = Vector512.LoadUnsafe(ref start, (nuint)i);
                     minVec = Vector512.Min(minVec, xVec);
                     maxVec = Vector512.Max(maxVec, xVec);
                 }
@@ -44,11 +51,10 @@ public static class VecMinMaxHelper
                     maxY = Math.Max(maxY, maxVec[j + 1]);
                 }
 
-                // Handle the remaining elements (if any) using scalar operations
                 for (; i < floatSpan.Length; i += 2)
                 {
-                    var x = floatSpan[i];
-                    var y = floatSpan[i + 1];
+                    float x = floatSpan[i];
+                    float y = floatSpan[i + 1];
                     minX = Math.Min(minX, x);
                     maxX = Math.Max(maxX, x);
                     minY = Math.Min(minY, y);
@@ -61,15 +67,16 @@ public static class VecMinMaxHelper
             if (Vector256.IsHardwareAccelerated)
             {
                 const int byteSize = 256 / 8 / sizeof(float);
+                int i = 0;
 
                 var minVec = Vector256.Create(float.MaxValue);
                 var maxVec = Vector256.Create(float.MinValue);
 
-                int i;
-                for (i = 0; i <= floatSpan.Length - byteSize; i += byteSize)
-                {
-                    var xVec = Vector256.Create(floatSpan.Slice(i, byteSize));
+                ref float start = ref MemoryMarshal.GetReference(floatSpan);
 
+                for (; i <= floatSpan.Length - byteSize; i += byteSize)
+                {
+                    var xVec = Vector256.LoadUnsafe(ref start, (nuint)i);
                     minVec = Vector256.Min(minVec, xVec);
                     maxVec = Vector256.Max(maxVec, xVec);
                 }
@@ -86,11 +93,10 @@ public static class VecMinMaxHelper
                     maxY = Math.Max(maxY, maxVec[j + 1]);
                 }
 
-                // Handle the remaining elements (if any) using scalar operations
                 for (; i < floatSpan.Length; i += 2)
                 {
-                    var x = floatSpan[i];
-                    var y = floatSpan[i + 1];
+                    float x = floatSpan[i];
+                    float y = floatSpan[i + 1];
                     minX = Math.Min(minX, x);
                     maxX = Math.Max(maxX, x);
                     minY = Math.Min(minY, y);
