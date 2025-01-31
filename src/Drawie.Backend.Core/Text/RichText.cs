@@ -186,4 +186,47 @@ public class RichText
         double lineHeight = Spacing ?? font.Size * PtToPx;
         return new VecD(0, lineIndex * lineHeight);
     }
+
+    public int IndexOnLine(int cursorPosition, out int lineIndex)
+    {
+        int index = 0;
+        lineIndex = 0;
+        for (int i = 0; i < Lines.Length; i++)
+        {
+            var line = Lines[i];
+            if (cursorPosition <= index + line.Length)
+            {
+                lineIndex = i;
+                return cursorPosition - index;
+            }
+
+            index += line.Length + 1;
+        }
+
+        return cursorPosition;
+    }
+
+    public int GetIndexOnLine(int line, int index)
+    {
+        int currentIndex = 0;
+        int lineZeroIndex = 0;
+        for (int i = 0; i <= line; i++)
+        {
+            lineZeroIndex = currentIndex;
+            currentIndex += Lines[i].Length + 1;
+        }
+
+        return Math.Clamp(lineZeroIndex + index, lineZeroIndex, lineZeroIndex + Lines[line].Length);
+    }
+
+    public (int lineStart, int lineEnd) GetLineStartEnd(int lineIndex)
+    {
+        int currentIndex = 0;
+        for (int i = 0; i < lineIndex; i++)
+        {
+            currentIndex += Lines[i].Length + 1;
+        }
+
+        return (currentIndex, currentIndex + Lines[lineIndex].Length + 1);
+    }
 }
