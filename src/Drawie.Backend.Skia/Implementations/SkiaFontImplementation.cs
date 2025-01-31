@@ -134,6 +134,48 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         throw new InvalidOperationException("Native font object not found");
     }
 
+    public bool GetSubPixel(IntPtr objectPointer)
+    {
+        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        {
+            return font.Subpixel;
+        }
+
+        throw new InvalidOperationException("Native font object not found");
+    }
+
+    public void SetSubPixel(IntPtr objectPointer, bool value)
+    {
+        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        {
+            font.Subpixel = value;
+            return;
+        }
+
+        throw new InvalidOperationException("Native font object not found");
+    }
+
+    public FontEdging GetEdging(IntPtr objectPointer)
+    {
+        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        {
+            return (FontEdging)font.Edging;
+        }
+
+        throw new InvalidOperationException("Native font object not found");
+    }
+
+    public void SetEdging(IntPtr objectPointer, FontEdging fontEdging)
+    {
+        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        {
+            font.Edging = (SKFontEdging)fontEdging;
+            return;
+        }
+
+        throw new InvalidOperationException("Native font object not found");
+    }
+
     public Font CreateDefault(float fontSize)
     {
         SKFont font = new(SKTypeface.Default, fontSize);

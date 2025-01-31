@@ -21,4 +21,8 @@ public interface IFontImplementation
     public VecF[] GetGlyphPositions(IntPtr objectPointer, string text);
     public float[] GetGlyphWidths(IntPtr objectPointer, string text);
     public float[] GetGlyphWidths(IntPtr objectPointer, string text, Paint paint);
+    public bool GetSubPixel(IntPtr objectPointer);
+    public void SetSubPixel(IntPtr objectPointer, bool value);
+    public FontEdging GetEdging(IntPtr objectPointer);
+    public void SetEdging(IntPtr objectPointer, FontEdging value);
 }

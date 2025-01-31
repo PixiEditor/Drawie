@@ -22,6 +22,18 @@ public class Font : NativeObject
 
     public FontFamilyName Family { get; set; }
 
+    public bool SubPixel
+    {
+        get => DrawingBackendApi.Current.FontImplementation.GetSubPixel(ObjectPointer);
+        set => DrawingBackendApi.Current.FontImplementation.SetSubPixel(ObjectPointer, value);
+    }
+
+    public FontEdging Edging
+    {
+        get => DrawingBackendApi.Current.FontImplementation.GetEdging(ObjectPointer);
+        set => DrawingBackendApi.Current.FontImplementation.SetEdging(ObjectPointer, value);
+    }
+
     public override void Dispose()
     {
         DrawingBackendApi.Current.FontImplementation.Dispose(ObjectPointer);
