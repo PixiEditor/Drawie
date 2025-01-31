@@ -44,7 +44,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
         SKFont font = new(typeface, fontSize, scaleX, skewY);
         ManagedInstances[font.Handle] = font;
-        return new Font(font.Handle);
+        return new Font(font.Handle) { Family = new FontFamilyName(typeface.FamilyName) };
     }
 
     public double GetFontSize(IntPtr objectPointer)
@@ -138,7 +138,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
     {
         SKFont font = new(SKTypeface.Default, fontSize);
         ManagedInstances[font.Handle] = font;
-        return new Font(font.Handle);
+        return new Font(font.Handle) { Family = new FontFamilyName(SKTypeface.Default.FamilyName) };
     }
 
     public Font? FromFamilyName(string familyName)
@@ -153,7 +153,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
         SKFont font = new(typeface);
         ManagedInstances[font.Handle] = font;
-        return new Font(font.Handle);
+        return new Font(font.Handle) { Family = new FontFamilyName(familyName) };
     }
 
     public void Dispose(IntPtr objectPointer)

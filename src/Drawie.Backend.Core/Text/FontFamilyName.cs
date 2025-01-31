@@ -1,6 +1,6 @@
 ﻿namespace Drawie.Backend.Core.Text;
 
-public class FontFamilyName
+public struct FontFamilyName
 {
     public string Name { get; set; }
     public Uri? FontUri { get; set; }

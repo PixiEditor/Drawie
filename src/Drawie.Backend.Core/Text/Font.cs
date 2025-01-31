@@ -20,12 +20,14 @@ public class Font : NativeObject
         set => DrawingBackendApi.Current.FontImplementation.SetFontSize(ObjectPointer, value);
     }
 
+    public FontFamilyName Family { get; set; }
+
     public override void Dispose()
     {
         DrawingBackendApi.Current.FontImplementation.Dispose(ObjectPointer);
     }
 
-    public static Font FromStream(Stream stream, float fontSize = 12f, float scaleX = 1f, float skewY = 0f)
+    public static Font? FromStream(Stream stream, float fontSize = 12f, float scaleX = 1f, float skewY = 0f)
     {
         return DrawingBackendApi.Current.FontImplementation.FromStream(stream, fontSize, scaleX, skewY);
     }
@@ -67,8 +69,19 @@ public class Font : NativeObject
             bool isFile = familyName.FontUri.IsFile;
             if (isFile)
             {
+                if (!File.Exists(familyName.FontUri.LocalPath))
+                {
+                    return null;
+                }
+
                 using var stream = File.OpenRead(familyName.FontUri.LocalPath);
-                return FromStream(stream);
+                var font = FromStream(stream);
+                if (font != null)
+                {
+                    font.Family = familyName;
+                }
+
+                return font;
             }
         }
 
