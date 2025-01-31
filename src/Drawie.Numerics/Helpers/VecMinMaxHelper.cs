@@ -1,4 +1,4 @@
-using System.Runtime.Intrinsics;
+﻿using System.Runtime.Intrinsics;
 
 namespace Drawie.Numerics.Helpers;
 
@@ -18,7 +18,7 @@ public static class VecMinMaxHelper
         {
             if (Vector512.IsHardwareAccelerated)
             {
-                const int byteSize = 256 / 8 / sizeof(float);
+                const int byteSize = 512 / 8 / sizeof(float);
 
                 var minVec = Vector512.Create(float.MaxValue);
                 var maxVec = Vector512.Create(float.MinValue);
