@@ -92,13 +92,12 @@ public class RichText
         measurementPaint.Style = PaintStyle.StrokeAndFill;
         measurementPaint.StrokeWidth = StrokeWidth;
 
+        RectD? finalBounds = null;
         double height = 0;
-        double width = 0;
-        double y = 0;
-        double x = 0;
 
-        foreach (var line in Lines)
+        for (var i = 0; i < Lines.Length; i++)
         {
+            var line = Lines[i];
             if (string.IsNullOrEmpty(line))
             {
                 continue;
@@ -106,24 +105,27 @@ public class RichText
 
             font.MeasureText(line, out RectD bounds, measurementPaint);
 
-            if (bounds.Width > width)
+            if (finalBounds == null)
             {
-                width = bounds.Width;
+                finalBounds = bounds;
+            }
+            else
+            {
+                finalBounds = finalBounds.Value.Union(bounds);
             }
 
-            if (bounds.Y < y)
+            if (Lines.Length == 1)
             {
-                y = bounds.Y;
-            }
-
-            if (bounds.X < x)
-            {
-                x = bounds.X;
+                height = bounds.Height;
             }
         }
 
-        height = GetLineOffset(Lines.Length, font).Y;
-        return new RectD(x, y, width, height);
+        if (Lines.Length > 1)
+        {
+            height = GetLineOffset(Lines.Length, font).Y;
+        }
+
+        return new RectD(finalBounds.Value.X, finalBounds.Value.Y, finalBounds.Value.Width, height);
     }
 
     public VecF[] GetGlyphPositions(Font font)
@@ -174,6 +176,16 @@ public class RichText
             float[] lineGlyphWidths = font.GetGlyphWidths(line, measurementPaint);
             for (int j = 0; j < line.Length; j++)
             {
+                if (j + i >= glyphWidths.Length)
+                {
+                    break;
+                }
+
+                if (lineGlyphWidths.Length <= j)
+                {
+                    break;
+                }
+
                 glyphWidths[i + j] = lineGlyphWidths[j];
             }
         }
