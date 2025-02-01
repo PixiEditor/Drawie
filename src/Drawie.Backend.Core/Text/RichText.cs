@@ -125,6 +125,11 @@ public class RichText
             height = GetLineOffset(Lines.Length, font).Y;
         }
 
+        if (finalBounds == null)
+        {
+            return RectD.Empty;
+        }
+
         return new RectD(finalBounds.Value.X, finalBounds.Value.Y, finalBounds.Value.Width, height);
     }
 
