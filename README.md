@@ -4,7 +4,7 @@ Drawie aims to provide set of modules that allows building gpu-accelerated high-
 
 - Render Apis
     - [x] Vulkan
-    - [ ] OpenGL
+    - [x] OpenGL
     - [ ] DirectX
     - [ ] Metal
           
@@ -14,7 +14,6 @@ Drawie aims to provide set of modules that allows building gpu-accelerated high-
       
 - Drawing backend
   - [x] Skia
-  - [ ] Html5 Canvas (partially implemented)
 
  Interops: Drawing backend + Rendering
-- [x] AvaloniaUI | Vulkan
+- [x] AvaloniaUI | Vulkan | OpenGL
