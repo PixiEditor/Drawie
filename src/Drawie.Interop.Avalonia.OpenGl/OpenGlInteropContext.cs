@@ -38,8 +38,8 @@ public class OpenGlInteropContext : IOpenGlContext, IDrawieInteropContext
     public GpuDiagnostics GetGpuDiagnostics()
     {
         Dictionary<string, string> details = new Dictionary<string, string>();
-        details.Add("Extensions", string.Join(", ", Context.GlInterface.ContextInfo.Extensions));
         details.Add("Version", Context.GlInterface.ContextInfo.Version.ToString());
+        details.Add("Extensions", string.Join(", ", Context.GlInterface.ContextInfo.Extensions));
 
         return new GpuDiagnostics(
             true,
