@@ -25,4 +25,7 @@ public interface IFontImplementation
     public void SetSubPixel(IntPtr objectPointer, bool value);
     public FontEdging GetEdging(IntPtr objectPointer);
     public void SetEdging(IntPtr objectPointer, FontEdging value);
+    public int GetGlyphCount(IntPtr objectPointer);
+    public ushort[] GetGlyphs(IntPtr objectPointer, int[] codePoints);
+    public bool ContainsGlyph(IntPtr objectPointer, int codePoint);
 }

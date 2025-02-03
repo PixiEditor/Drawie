@@ -35,11 +35,12 @@ public class Font : NativeObject
     }
 
     public bool IsDisposed { get; private set; }
+    public int GlyphCount => DrawingBackendApi.Current.FontImplementation.GetGlyphCount(ObjectPointer);
 
     public override void Dispose()
     {
-        if(IsDisposed) return;
-        
+        if (IsDisposed) return;
+
         IsDisposed = true;
         DrawingBackendApi.Current.FontImplementation.Dispose(ObjectPointer);
     }
@@ -118,5 +119,15 @@ public class Font : NativeObject
     public float[] GetGlyphWidths(string text, Paint paint)
     {
         return DrawingBackendApi.Current.FontImplementation.GetGlyphWidths(ObjectPointer, text, paint);
+    }
+
+    public ushort[] GetGlyphs(int[] codePoints)
+    {
+        return DrawingBackendApi.Current.FontImplementation.GetGlyphs(ObjectPointer, codePoints);
+    }
+
+    public bool ContainsGlyph(int codePoint)
+    {
+        return DrawingBackendApi.Current.FontImplementation.ContainsGlyph(ObjectPointer, codePoint);
     }
 }
