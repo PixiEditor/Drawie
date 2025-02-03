@@ -174,31 +174,31 @@ public class RichText
         measurementPaint.Style = PaintStyle.StrokeAndFill;
         measurementPaint.StrokeWidth = StrokeWidth;
 
-        var glyphWidths = new float[RawText.Replace("\n", string.Empty).Length];
+        var glyphWidths = new float[RawText.Replace("\n", string.Empty).Length + Lines.Length];
+        int startingIndex = 0;
         for (int i = 0; i < Lines.Length; i++)
         {
             var line = Lines[i];
             float[] lineGlyphWidths = font.GetGlyphWidths(line, measurementPaint);
             for (int j = 0; j < line.Length; j++)
             {
-                if (j + i >= glyphWidths.Length)
-                {
-                    break;
-                }
-
-                if (lineGlyphWidths.Length <= j)
-                {
-                    break;
-                }
-
-                glyphWidths[i + j] = lineGlyphWidths[j];
+                glyphWidths[startingIndex + j] = lineGlyphWidths[j];
             }
+
+            if (line.Length == 0)
+            {
+                glyphWidths[startingIndex] = 0;
+                startingIndex++;
+                continue;
+            }
+
+            startingIndex += line.Length + 1;
         }
 
         return glyphWidths;
     }
 
-    private VecD GetLineOffset(int lineIndex, Font font)
+    public VecD GetLineOffset(int lineIndex, Font font)
     {
         double lineHeight = Spacing ?? font.Size * PtToPx;
         return new VecD(0, lineIndex * lineHeight);

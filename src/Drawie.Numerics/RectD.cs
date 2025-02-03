@@ -1,4 +1,5 @@
 ﻿namespace Drawie.Numerics;
+
 public struct RectD : IEquatable<RectD>
 {
     public static RectD Empty { get; } = new RectD();
@@ -14,6 +15,7 @@ public struct RectD : IEquatable<RectD>
     public double Bottom { readonly get => bottom; set => bottom = value; }
     public double X { readonly get => left; set => left = value; }
     public double Y { readonly get => top; set => top = value; }
+
     public bool HasNaNOrInfinity =>
         double.IsNaN(left) || double.IsInfinity(left) ||
         double.IsNaN(right) || double.IsInfinity(right) ||
@@ -31,6 +33,7 @@ public struct RectD : IEquatable<RectD>
             top = value.Y;
         }
     }
+
     public VecD TopLeft
     {
         readonly get => new VecD(left, top);
@@ -40,6 +43,7 @@ public struct RectD : IEquatable<RectD>
             top = value.Y;
         }
     }
+
     public VecD TopRight
     {
         readonly get => new VecD(right, top);
@@ -49,6 +53,7 @@ public struct RectD : IEquatable<RectD>
             top = value.Y;
         }
     }
+
     public VecD BottomLeft
     {
         readonly get => new VecD(left, bottom);
@@ -58,6 +63,7 @@ public struct RectD : IEquatable<RectD>
             bottom = value.Y;
         }
     }
+
     public VecD BottomRight
     {
         readonly get => new VecD(right, bottom);
@@ -67,6 +73,7 @@ public struct RectD : IEquatable<RectD>
             bottom = value.Y;
         }
     }
+
     public VecD Size
     {
         readonly get => new VecD(right - left, bottom - top);
@@ -76,11 +83,13 @@ public struct RectD : IEquatable<RectD>
             bottom = top + value.Y;
         }
     }
+
     public VecD Center { get => new VecD((left + right) / 2.0, (top + bottom) / 2.0); }
     public double Width { readonly get => right - left; set => right = left + value; }
     public double Height { readonly get => bottom - top; set => bottom = top + value; }
     public readonly bool IsZeroArea => left == right || top == bottom;
     public readonly bool IsZeroOrNegativeArea => left >= right || top >= bottom;
+
     public RectD()
     {
         left = 0d;
@@ -104,21 +113,15 @@ public struct RectD : IEquatable<RectD>
         right = x + width;
         bottom = y + height;
     }
-    
+
     public static RectD Create(VecI pos, VecI size)
     {
         return new RectD(pos.X, pos.Y, size.X, size.Y);
     }
-    
+
     public static RectD FromSides(double left, double right, double top, double bottom)
     {
-        return new RectD()
-        {
-            Left = left,
-            Right = right,
-            Top = top,
-            Bottom = bottom
-        };
+        return new RectD() { Left = left, Right = right, Top = top, Bottom = bottom };
     }
 
     public static RectD FromTwoPoints(VecD point, VecD opposite)
@@ -189,13 +192,7 @@ public struct RectD : IEquatable<RectD>
     {
         (double newLeft, double newRight) = left > right ? (right, left) : (left, right);
         (double newTop, double newBottom) = top > bottom ? (bottom, top) : (top, bottom);
-        return new RectD()
-        {
-            Left = newLeft,
-            Right = newRight,
-            Top = newTop,
-            Bottom = newBottom
-        };
+        return new RectD() { Left = newLeft, Right = newRight, Top = newTop, Bottom = newBottom };
     }
 
     public readonly RectD ReflectX(double verLineX)
@@ -209,26 +206,19 @@ public struct RectD : IEquatable<RectD>
     }
 
     public readonly RectD Offset(VecD offset) => Offset(offset.X, offset.Y);
+
     public readonly RectD Offset(double x, double y)
     {
-        return new RectD()
-        {
-            Left = left + x,
-            Right = right + x,
-            Top = top + y,
-            Bottom = bottom + y
-        };
+        return new RectD() { Left = left + x, Right = right + x, Top = top + y, Bottom = bottom + y };
     }
 
     public readonly RectD Inflate(VecD amount) => Inflate(amount.Y, amount.Y);
+
     public readonly RectD Inflate(double x, double y)
     {
         return new RectD()
         {
-            Left = left - x,
-            Right = right + x,
-            Top = top - y,
-            Bottom = bottom + y,
+            Left = left - x, Right = right + x, Top = top - y, Bottom = bottom + y,
         };
     }
 
@@ -236,10 +226,7 @@ public struct RectD : IEquatable<RectD>
     {
         return new RectD()
         {
-            Left = left - amount,
-            Right = right + amount,
-            Top = top - amount,
-            Bottom = bottom + amount,
+            Left = left - amount, Right = right + amount, Top = top - amount, Bottom = bottom + amount,
         };
     }
 
@@ -269,10 +256,7 @@ public struct RectD : IEquatable<RectD>
     {
         return new RectD()
         {
-            Left = left + delta.X,
-            Right = right + delta.X,
-            Top = top + delta.Y,
-            Bottom = bottom + delta.Y
+            Left = left + delta.X, Right = right + delta.X, Top = top + delta.Y, Bottom = bottom + delta.Y
         };
     }
 
@@ -301,10 +285,7 @@ public struct RectD : IEquatable<RectD>
     {
         return new RectD()
         {
-            Left = Math.Round(left),
-            Right = Math.Round(right),
-            Top = Math.Round(top),
-            Bottom = Math.Round(bottom)
+            Left = Math.Round(left), Right = Math.Round(right), Top = Math.Round(top), Bottom = Math.Round(bottom)
         };
     }
 
@@ -331,12 +312,14 @@ public struct RectD : IEquatable<RectD>
     }
 
     public readonly bool ContainsInclusive(VecD point) => ContainsInclusive(point.X, point.Y);
+
     public readonly bool ContainsInclusive(double x, double y)
     {
         return x >= left && x <= right && y >= top && y <= bottom;
     }
 
     public readonly bool ContainsExclusive(VecD point) => ContainsExclusive(point.X, point.Y);
+
     public readonly bool ContainsExclusive(double x, double y)
     {
         return x > left && x < right && y > top && y < bottom;
@@ -363,13 +346,7 @@ public struct RectD : IEquatable<RectD>
         if (left >= right || top >= bottom)
             return RectD.Empty;
 
-        return new RectD()
-        {
-            Left = left,
-            Right = right,
-            Top = top,
-            Bottom = bottom
-        };
+        return new RectD() { Left = left, Right = right, Top = top, Bottom = bottom };
     }
 
     public readonly RectD Union(RectD other)
@@ -383,50 +360,38 @@ public struct RectD : IEquatable<RectD>
         if (left >= right || top >= bottom)
             return RectD.Empty;
 
-        return new RectD()
-        {
-            Left = left,
-            Right = right,
-            Top = top,
-            Bottom = bottom
-        };
+        return new RectD() { Left = left, Right = right, Top = top, Bottom = bottom };
     }
 
     public static explicit operator RectI(RectD rect)
     {
         return new RectI()
         {
-            Left = (int)rect.left,
-            Right = (int)rect.right,
-            Top = (int)rect.top,
-            Bottom = (int)rect.bottom
+            Left = (int)rect.left, Right = (int)rect.right, Top = (int)rect.top, Bottom = (int)rect.bottom
         };
     }
 
     public static explicit operator RectD(RectI rect)
     {
-        return new RectD()
-        {
-            Left = rect.Left,
-            Right = rect.Right,
-            Top = rect.Top,
-            Bottom = rect.Bottom
-        };
+        return new RectD() { Left = rect.Left, Right = rect.Right, Top = rect.Top, Bottom = rect.Bottom };
     }
 
     public static bool operator ==(RectD left, RectD right)
     {
-        return left.left == right.left && left.right == right.right && left.top == right.top && left.bottom == right.bottom;
+        return left.left == right.left && left.right == right.right && left.top == right.top &&
+               left.bottom == right.bottom;
     }
 
     public static bool operator !=(RectD left, RectD right)
     {
-        return !(left.left == right.left && left.right == right.right && left.top == right.top && left.bottom == right.bottom);
+        return !(left.left == right.left && left.right == right.right && left.top == right.top &&
+                 left.bottom == right.bottom);
     }
 
     public readonly override bool Equals(object? obj)
     {
-        return obj is RectD rect && rect.left == left && rect.right == right && rect.top == top && rect.bottom == bottom;
+        return obj is RectD rect && rect.left == left && rect.right == right && rect.top == top &&
+               rect.bottom == bottom;
     }
 
     public readonly bool Equals(RectD other)
