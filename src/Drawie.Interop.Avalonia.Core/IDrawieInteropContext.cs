@@ -1,4 +1,5 @@
 ﻿using Avalonia.Rendering.Composition;
+using Drawie.Backend.Core.Debug;
 
 namespace Drawie.Interop.Avalonia.Core;
 
@@ -17,4 +18,6 @@ public interface IDrawieInteropContext
         
         Current = context;
     }
+
+    public GpuDiagnostics GetGpuDiagnostics();
 }

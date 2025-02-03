@@ -1,4 +1,5 @@
 ﻿using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Vector;
@@ -125,6 +126,11 @@ public class RichText
             height = GetLineOffset(Lines.Length, font).Y;
         }
 
+        if (finalBounds == null)
+        {
+            return RectD.Empty;
+        }
+
         return new RectD(finalBounds.Value.X, finalBounds.Value.Y, finalBounds.Value.Width, height);
     }
 
@@ -169,31 +175,31 @@ public class RichText
         measurementPaint.Style = PaintStyle.StrokeAndFill;
         measurementPaint.StrokeWidth = StrokeWidth;
 
-        var glyphWidths = new float[RawText.Replace("\n", string.Empty).Length];
+        var glyphWidths = new float[RawText.Replace("\n", string.Empty).Length + Lines.Length];
+        int startingIndex = 0;
         for (int i = 0; i < Lines.Length; i++)
         {
             var line = Lines[i];
             float[] lineGlyphWidths = font.GetGlyphWidths(line, measurementPaint);
             for (int j = 0; j < line.Length; j++)
             {
-                if (j + i >= glyphWidths.Length)
-                {
-                    break;
-                }
-
-                if (lineGlyphWidths.Length <= j)
-                {
-                    break;
-                }
-
-                glyphWidths[i + j] = lineGlyphWidths[j];
+                glyphWidths[startingIndex + j] = lineGlyphWidths[j];
             }
+
+            if (line.Length == 0)
+            {
+                glyphWidths[startingIndex] = 0;
+                startingIndex++;
+                continue;
+            }
+
+            startingIndex += line.Length + 1;
         }
 
         return glyphWidths;
     }
 
-    private VecD GetLineOffset(int lineIndex, Font font)
+    public VecD GetLineOffset(int lineIndex, Font font)
     {
         double lineHeight = Spacing ?? font.Size * PtToPx;
         return new VecD(0, lineIndex * lineHeight);
@@ -240,5 +246,19 @@ public class RichText
         }
 
         return (currentIndex, currentIndex + Lines[lineIndex].Length + 1);
+    }
+
+    public VectorPath ToPath(Font font)
+    {
+        VectorPath path = new VectorPath();
+
+        for (var i = 0; i < Lines.Length; i++)
+        {
+            var line = Lines[i];
+            Matrix3X3 matrix = Matrix3X3.CreateTranslation(0, (float)GetLineOffset(i, font).Y);
+            path.AddPath(font.GetTextPath(line), matrix, AddPathMode.Append);
+        }
+
+        return path;
     }
 }

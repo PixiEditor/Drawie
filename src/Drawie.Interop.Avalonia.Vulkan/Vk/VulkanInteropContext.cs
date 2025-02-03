@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
+using Drawie.Backend.Core.Debug;
 using Drawie.Interop.Avalonia.Core;
 using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan;
@@ -191,5 +192,18 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
     public RenderApiResources CreateResources(CompositionDrawingSurface surface, ICompositionGpuInterop interop)
     {
         return new VulkanResources(surface, interop);
+    }
+
+    public GpuDiagnostics GetGpuDiagnostics()
+    {
+        Dictionary<string, string> details = new Dictionary<string, string>();
+
+        Api.GetPhysicalDeviceProperties(PhysicalDevice, out var properties);
+
+        details.Add("Device Type", properties.DeviceType.ToString());
+        details.Add("API Version", properties.ApiVersion.ToString());
+        details.Add("Driver Version", properties.DriverVersion.ToString());
+
+        return new GpuDiagnostics(true, GpuInfo, "Vulkan", details);
     }
 }

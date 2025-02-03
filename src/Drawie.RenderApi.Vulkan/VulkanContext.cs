@@ -141,7 +141,7 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
 
                 if (deviceName == null) throw new VulkanException("Failed to get device name.");
 
-                GpuInfo gpuInfo = new(deviceName);
+                GpuInfo gpuInfo = new(deviceName, VendorById(props.VendorID));
                 PhysicalDevice = device;
                 return gpuInfo;
             }
@@ -149,7 +149,21 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
 
         if (PhysicalDevice.Handle == 0) throw new VulkanException("Failed to find a suitable Vulkan GPU.");
 
-        return new GpuInfo("Unknown");
+        return new GpuInfo("Unknown", "Unknown");
+    }
+
+    private string VendorById(uint vendorId)
+    {
+        return vendorId switch
+        {
+            0x1002 => "AMD",
+            0x1010 => "ImgTec",
+            0x10DE => "NVIDIA",
+            0x13B5 => "ARM",
+            0x5143 => "Qualcomm",
+            0x8086 => "INTEL",
+            _ => "Unknown"
+        };
     }
 
     protected abstract void CreateLogicalDevice();
