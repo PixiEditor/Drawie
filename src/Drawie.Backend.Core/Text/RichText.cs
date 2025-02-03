@@ -1,4 +1,5 @@
 ﻿using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Vector;
@@ -245,5 +246,19 @@ public class RichText
         }
 
         return (currentIndex, currentIndex + Lines[lineIndex].Length + 1);
+    }
+
+    public VectorPath ToPath(Font font)
+    {
+        VectorPath path = new VectorPath();
+
+        for (var i = 0; i < Lines.Length; i++)
+        {
+            var line = Lines[i];
+            Matrix3X3 matrix = Matrix3X3.CreateTranslation(0, (float)GetLineOffset(i, font).Y);
+            path.AddPath(font.GetTextPath(line), matrix, AddPathMode.Append);
+        }
+
+        return path;
     }
 }
