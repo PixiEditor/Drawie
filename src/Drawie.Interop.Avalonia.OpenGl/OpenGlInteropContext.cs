@@ -1,5 +1,6 @@
 ﻿using Avalonia.OpenGL;
 using Avalonia.Rendering.Composition;
+using Drawie.Backend.Core.Debug;
 using Drawie.Backend.Core.Exceptions;
 using Drawie.Interop.Avalonia.Core;
 using Drawie.RenderApi;
@@ -34,4 +35,15 @@ public class OpenGlInteropContext : IOpenGlContext, IDrawieInteropContext
         return new OpenGlRenderApiResources(surface, interop);
     }
 
+    public GpuDiagnostics GetGpuDiagnostics()
+    {
+        Dictionary<string, string> details = new Dictionary<string, string>();
+        details.Add("Extensions", string.Join(", ", Context.GlInterface.ContextInfo.Extensions));
+        details.Add("Version", Context.GlInterface.ContextInfo.Version.ToString());
+
+        return new GpuDiagnostics(
+            true,
+            new GpuInfo(Context.GlInterface.Renderer, Context.GlInterface.Vendor),
+            $"OpenGL", details);
+    }
 }
