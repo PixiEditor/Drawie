@@ -10,9 +10,9 @@ namespace Drawie.Skia.Implementations;
 
 public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImplementation
 {
-    private readonly ConcurrentDictionary<IntPtr, SKTypeface> ManagedTypefaces = new();
-
     private readonly SkiaPathImplementation pathImplementation;
+
+    private volatile int fontCounter = 0;
 
     public SkiaFontImplementation(SkiaPathImplementation pathImplementation)
     {
@@ -40,11 +40,11 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
     public Font FromStream(Stream stream, float fontSize = 12f, float scaleX = 1f, float skewY = 0f)
     {
         SKTypeface typeface = SKTypeface.FromStream(stream);
-        ManagedTypefaces[typeface.Handle] = typeface;
 
         SKFont font = new(typeface, fontSize, scaleX, skewY);
-        ManagedInstances[font.Handle] = font;
-        return new Font(font.Handle) { Family = new FontFamilyName(typeface.FamilyName) };
+        int handle = Interlocked.Increment(ref fontCounter);
+        ManagedInstances[handle] = font;
+        return new Font(handle, new FontFamilyName(typeface.FamilyName));
     }
 
     public double GetFontSize(IntPtr objectPointer)
@@ -176,6 +176,110 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         throw new InvalidOperationException("Native font object not found");
     }
 
+    public bool GetBold(IntPtr objectPointer)
+    {
+        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        {
+            return font.Typeface.IsBold || font.Embolden;
+        }
+
+        throw new InvalidOperationException("Native font object not found");
+    }
+
+    public void SetBold(IntPtr objectPointer, bool value, FontFamilyName family)
+    {
+        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        {
+            if (family.FontUri is { IsFile: true })
+            {
+                font.Embolden = value;
+            }
+            else
+            {
+                if (font.Typeface.IsBold == value)
+                {
+                    return;
+                }
+
+                if (family.FontUri is { IsFile: true } && font.Embolden == value)
+                {
+                    return;
+                }
+
+                bool italic = GetItalic(objectPointer);
+                UpdateTypeface(objectPointer, italic, value, font);
+            }
+
+            return;
+        }
+
+        throw new InvalidOperationException("Native font object not found");
+    }
+
+    public bool GetItalic(IntPtr objectPointer)
+    {
+        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        {
+            return font.Typeface.IsItalic || font.SkewX != 0;
+        }
+
+        throw new InvalidOperationException("Native font object not found");
+    }
+
+    public void SetItalic(IntPtr objectPointer, bool value, FontFamilyName family)
+    {
+        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        {
+            if (family.FontUri is { IsFile: true })
+            {
+                font.SkewX = value ? -0.25f : 0;
+            }
+            else
+            {
+                if (font.Typeface.IsItalic == value)
+                {
+                    return;
+                }
+
+                bool bold = GetBold(objectPointer);
+                UpdateTypeface(objectPointer, value, bold, font);
+            }
+
+            return;
+        }
+
+        throw new InvalidOperationException("Native font object not found");
+    }
+
+    private void UpdateTypeface(IntPtr objectPointer, bool italic, bool bold, SKFont font)
+    {
+        SKFontStyle fontStyle = SKFontStyle.Normal;
+        if (bold && italic)
+        {
+            fontStyle = SKFontStyle.BoldItalic;
+        }
+        else if (bold)
+        {
+            fontStyle = SKFontStyle.Bold;
+        }
+        else if (italic)
+        {
+            fontStyle = SKFontStyle.Italic;
+        }
+
+        SKTypeface newTypeFace = SKTypeface.FromFamilyName(font.Typeface.FamilyName, fontStyle);
+
+        SKFont newFont = new(newTypeFace, font.Size);
+        newFont.Subpixel = font.Subpixel;
+        newFont.Edging = font.Edging;
+        newFont.Embolden = font.Embolden;
+        newFont.SkewX = font.SkewX;
+
+        font.Dispose();
+
+        ManagedInstances[objectPointer] = newFont;
+    }
+
     public int GetGlyphCount(IntPtr objectPointer)
     {
         if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
@@ -209,8 +313,9 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
     public Font CreateDefault(float fontSize)
     {
         SKFont font = new(SKTypeface.Default, fontSize);
-        ManagedInstances[font.Handle] = font;
-        return new Font(font.Handle) { Family = new FontFamilyName(SKTypeface.Default.FamilyName) };
+        int handle = Interlocked.Increment(ref fontCounter);
+        ManagedInstances[handle] = font;
+        return new Font(handle, new FontFamilyName(SKTypeface.Default.FamilyName));
     }
 
     public Font? FromFamilyName(string familyName)
@@ -221,11 +326,25 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
             return null;
         }
 
-        ManagedTypefaces[typeface.Handle] = typeface;
+        SKFont font = new(typeface);
+        int handle = Interlocked.Increment(ref fontCounter);
+        ManagedInstances[handle] = font;
+        return new Font(handle, new FontFamilyName(familyName));
+    }
+
+    public Font? FromFamilyName(string familyName, FontStyleWeight weight, FontStyleWidth width, FontStyleSlant slant)
+    {
+        SKTypeface typeface = SKTypeface.FromFamilyName(familyName, (SKFontStyleWeight)weight, (SKFontStyleWidth)width,
+            (SKFontStyleSlant)slant);
+        if (typeface == null)
+        {
+            return null;
+        }
 
         SKFont font = new(typeface);
-        ManagedInstances[font.Handle] = font;
-        return new Font(font.Handle) { Family = new FontFamilyName(familyName) };
+        int handle = Interlocked.Increment(ref fontCounter);
+        ManagedInstances[handle] = font;
+        return new Font(handle, new FontFamilyName(familyName));
     }
 
     public void Dispose(IntPtr objectPointer)

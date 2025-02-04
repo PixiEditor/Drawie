@@ -8,34 +8,89 @@ namespace Drawie.Backend.Core.Text;
 
 public class Font : NativeObject
 {
-    public Font(IntPtr objPtr) : base(objPtr)
-    {
-    }
-
     public override object Native => DrawingBackendApi.Current.FontImplementation.GetNative(ObjectPointer);
 
     public double Size
     {
         get => DrawingBackendApi.Current.FontImplementation.GetFontSize(ObjectPointer);
-        set => DrawingBackendApi.Current.FontImplementation.SetFontSize(ObjectPointer, value);
+        set
+        {
+            double oldSize = Size;
+            DrawingBackendApi.Current.FontImplementation.SetFontSize(ObjectPointer, value);
+            if (oldSize != value)
+            {
+                Changed?.Invoke();
+            }
+        }
     }
 
-    public FontFamilyName Family { get; set; }
+    public FontFamilyName Family { get; private set; }
 
     public bool SubPixel
     {
         get => DrawingBackendApi.Current.FontImplementation.GetSubPixel(ObjectPointer);
-        set => DrawingBackendApi.Current.FontImplementation.SetSubPixel(ObjectPointer, value);
+        set
+        {
+            bool wasSubPixel = SubPixel;
+            DrawingBackendApi.Current.FontImplementation.SetSubPixel(ObjectPointer, value);
+            if (wasSubPixel != value)
+            {
+                Changed?.Invoke();
+            }
+        }
     }
 
     public FontEdging Edging
     {
         get => DrawingBackendApi.Current.FontImplementation.GetEdging(ObjectPointer);
-        set => DrawingBackendApi.Current.FontImplementation.SetEdging(ObjectPointer, value);
+        set
+        {
+            FontEdging oldEdging = Edging;
+            DrawingBackendApi.Current.FontImplementation.SetEdging(ObjectPointer, value);
+            if (oldEdging != value)
+            {
+                Changed?.Invoke();
+            }
+        }
     }
 
     public bool IsDisposed { get; private set; }
     public int GlyphCount => DrawingBackendApi.Current.FontImplementation.GetGlyphCount(ObjectPointer);
+
+    public bool Bold
+    {
+        get => DrawingBackendApi.Current.FontImplementation.GetBold(ObjectPointer);
+        set
+        {
+            bool wasBold = Bold;
+            DrawingBackendApi.Current.FontImplementation.SetBold(ObjectPointer, value, Family);
+            if (wasBold != value)
+            {
+                Changed?.Invoke();
+            }
+        }
+    }
+
+    public bool Italic
+    {
+        get => DrawingBackendApi.Current.FontImplementation.GetItalic(ObjectPointer);
+        set
+        {
+            bool wasItalic = Italic;
+            DrawingBackendApi.Current.FontImplementation.SetItalic(ObjectPointer, value, Family);
+            if (wasItalic != value)
+            {
+                Changed?.Invoke();
+            }
+        }
+    }
+
+    public event Action Changed;
+
+    public Font(IntPtr objPtr, FontFamilyName family) : base(objPtr)
+    {
+        Family = family;
+    }
 
     public override void Dispose()
     {

@@ -14,6 +14,7 @@ public interface IFontImplementation
     public void SetFontSize(IntPtr objectPointer, double value);
     public double MeasureText(IntPtr objectPointer, string text);
     public Font CreateDefault(float fontSize);
+    public Font? FromFamilyName(string familyName, FontStyleWeight weight, FontStyleWidth width, FontStyleSlant slant);
     public Font? FromFamilyName(string familyName);
     public VectorPath GetTextPath(IntPtr objectPointer, string text);
     public double MeasureText(IntPtr objectPointer, string text, out RectD bounds, Paint? paint = null);
@@ -25,6 +26,10 @@ public interface IFontImplementation
     public void SetSubPixel(IntPtr objectPointer, bool value);
     public FontEdging GetEdging(IntPtr objectPointer);
     public void SetEdging(IntPtr objectPointer, FontEdging value);
+    public bool GetBold(IntPtr objectPointer);
+    public void SetBold(IntPtr objectPointer, bool value, FontFamilyName family);
+    public bool GetItalic(IntPtr objectPointer);
+    public void SetItalic(IntPtr objectPointer, bool value, FontFamilyName family);
     public int GetGlyphCount(IntPtr objectPointer);
     public ushort[] GetGlyphs(IntPtr objectPointer, int[] codePoints);
     public bool ContainsGlyph(IntPtr objectPointer, int codePoint);
