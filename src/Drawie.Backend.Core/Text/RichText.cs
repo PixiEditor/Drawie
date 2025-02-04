@@ -147,7 +147,7 @@ public class RichText
             var line = Lines[i];
             VecD lineOffset = GetLineOffset(i, font);
             VecF[] lineGlyphPositions = font.GetGlyphPositions(line);
-            for (int j = 0; j < line.Length; j++)
+            for (int j = 0; j < lineGlyphPositions.Length; j++)
             {
                 glyphPositions[startingIndex + j] = lineGlyphPositions[j] + lineOffset;
             }
@@ -181,7 +181,7 @@ public class RichText
         {
             var line = Lines[i];
             float[] lineGlyphWidths = font.GetGlyphWidths(line, measurementPaint);
-            for (int j = 0; j < line.Length; j++)
+            for (int j = 0; j < lineGlyphWidths.Length; j++)
             {
                 glyphWidths[startingIndex + j] = lineGlyphWidths[j];
             }
