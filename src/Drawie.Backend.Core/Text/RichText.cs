@@ -95,6 +95,7 @@ public class RichText
 
         RectD? finalBounds = null;
         double height = 0;
+        RectD? lastBounds = null;
 
         for (var i = 0; i < Lines.Length; i++)
         {
@@ -105,6 +106,8 @@ public class RichText
             }
 
             font.MeasureText(line, out RectD bounds, measurementPaint);
+
+            lastBounds = bounds;
 
             if (finalBounds == null)
             {
@@ -123,7 +126,7 @@ public class RichText
 
         if (Lines.Length > 1)
         {
-            height = GetLineOffset(Lines.Length, font).Y;
+            height = GetLineOffset(Lines.Length - 1, font).Y + lastBounds.Value.Height;
         }
 
         if (finalBounds == null)
