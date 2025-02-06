@@ -1,4 +1,6 @@
-﻿namespace Drawie.Backend.Core.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Drawie.Backend.Core.Text;
 
 public struct FontFamilyName
 {
@@ -14,5 +16,15 @@ public struct FontFamilyName
     {
         Name = name;
         FontUri = fontUri;
+    }
+
+    public override bool Equals([NotNullWhen(true)] object? obj)
+    {
+        if (obj is FontFamilyName fontFamilyName)
+        {
+            return Name == fontFamilyName.Name && FontUri == fontFamilyName.FontUri;
+        }
+
+        return base.Equals(obj);
     }
 }
