@@ -38,9 +38,37 @@ public class RichText
 
     public void Paint(Canvas canvas, VecD position, Font font, Paint paint, VectorPath? onPath)
     {
+        bool hasStroke = StrokeWidth > 0;
+        bool hasFill = Fill && FillColor.A > 0;
+        bool strokeAndFillEqual = StrokeColor == FillColor;
+
         if (onPath != null)
         {
-            canvas.DrawTextOnPath(onPath, FormattedText, position, font, paint);
+            if (hasStroke && hasFill && strokeAndFillEqual)
+            {
+                paint.Style = PaintStyle.StrokeAndFill;
+                paint.Color = StrokeColor;
+                paint.StrokeWidth = StrokeWidth;
+
+                canvas.DrawTextOnPath(onPath, FormattedText, position, font, paint);
+            }
+            else
+            {
+                if (hasStroke)
+                {
+                    paint.Style = PaintStyle.Stroke;
+                    paint.Color = StrokeColor;
+                    paint.StrokeWidth = StrokeWidth;
+                    canvas.DrawTextOnPath(onPath, FormattedText, position, font, paint);
+                }
+
+                if (hasFill)
+                {
+                    paint.Style = PaintStyle.Fill;
+                    paint.Color = FillColor;
+                    canvas.DrawTextOnPath(onPath, FormattedText, position, font, paint);
+                }
+            }
         }
         else
         {
@@ -49,9 +77,6 @@ public class RichText
                 var line = Lines[i];
 
                 VecD linePosition = position + GetLineOffset(i, font);
-                bool hasStroke = StrokeWidth > 0;
-                bool hasFill = Fill && FillColor.A > 0;
-                bool strokeAndFillEqual = StrokeColor == FillColor;
 
                 if (hasStroke && hasFill && strokeAndFillEqual)
                 {
