@@ -39,7 +39,7 @@ public static class AppBuilderExtensions
 
                     IRenderApi renderApi = null;
                     IDisposable? disposableContext = null;
-                    IDisposable ?ctxDisposablePostRun = null;
+                    IDisposable? ctxDisposablePostRun = null;
                     if (isOpenGl)
                     {
                         var ctx = sharingFeature!.CreateSharedContext();
@@ -67,7 +67,6 @@ public static class AppBuilderExtensions
                     DrawingEngine drawingEngine =
                         new DrawingEngine(renderApi, null, drawingBackend, new AvaloniaRenderingDispatcher());
 
-
                     if (c.Instance.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                     {
                         desktop.Exit += (sender, args) =>
@@ -90,6 +89,9 @@ public static class AppBuilderExtensions
                     }
 
                     drawingEngine.Run();
+
+                    Console.WriteLine("\t- Using GPU: " +
+                                      IDrawieInteropContext.Current.GetGpuDiagnostics().ActiveGpuInfo);
                     ctxDisposablePostRun?.Dispose();
                 }, DispatcherPriority.Loaded);
         });
