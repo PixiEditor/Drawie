@@ -14,8 +14,10 @@ namespace Drawie.Skia.Implementations
         private readonly SkiaImageFilterImplementation imageFilterImplementation;
         private readonly SkiaShaderImplementation shaderImplementation;
         private readonly SkiaPathEffectImplementation pathEffectImplementation;
- 
-        public SkiaPaintImplementation(SkiaColorFilterImplementation colorFilterImpl, SkiaImageFilterImplementation imageFilterImpl, SkiaShaderImplementation shaderImpl, SkiaPathEffectImplementation pathEffectImpl)
+
+        public SkiaPaintImplementation(SkiaColorFilterImplementation colorFilterImpl,
+            SkiaImageFilterImplementation imageFilterImpl, SkiaShaderImplementation shaderImpl,
+            SkiaPathEffectImplementation pathEffectImpl)
         {
             colorFilterImplementation = colorFilterImpl;
             imageFilterImplementation = imageFilterImpl;
@@ -44,13 +46,13 @@ namespace Drawie.Skia.Implementations
                 paint.ColorFilter.Dispose();
                 colorFilterImplementation.ManagedInstances.TryRemove(paint.ColorFilter.Handle, out _);
             }
-            
+
             if (paint.ImageFilter != null)
             {
                 paint.ImageFilter.Dispose();
                 imageFilterImplementation.ManagedInstances.TryRemove(paint.ImageFilter.Handle, out _);
             }*/
-            
+
             if (paint.Shader != null)
             {
                 paint.Shader.Dispose();
@@ -121,13 +123,13 @@ namespace Drawie.Skia.Implementations
             SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
             return (PaintStyle)skPaint.Style;
         }
-        
+
         public StrokeJoin GetStrokeJoin(Paint paint)
         {
             SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
             return (StrokeJoin)skPaint.StrokeJoin;
         }
-        
+
         public void SetStrokeJoin(Paint paint, StrokeJoin value)
         {
             SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
@@ -164,10 +166,19 @@ namespace Drawie.Skia.Implementations
             skPaint.StrokeWidth = value;
         }
 
-        public ColorFilter GetColorFilter(Paint paint)
+        public ColorFilter? GetColorFilter(Paint paint)
         {
-            SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
-            return new ColorFilter(skPaint.ColorFilter.Handle);
+            if (ManagedInstances.TryGetValue(paint.ObjectPointer, out var skPaint))
+            {
+                if (skPaint.ColorFilter == null)
+                {
+                    return null;
+                }
+
+                return new ColorFilter(skPaint.ColorFilter.Handle);
+            }
+
+            return null;
         }
 
         public void SetColorFilter(Paint paint, ColorFilter? value)
@@ -176,10 +187,19 @@ namespace Drawie.Skia.Implementations
             skPaint.ColorFilter = value == null ? null : colorFilterImplementation[value.ObjectPointer];
         }
 
-        public ImageFilter GetImageFilter(Paint paint)
+        public ImageFilter? GetImageFilter(Paint paint)
         {
-            SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
-            return new ImageFilter(skPaint.ColorFilter.Handle);
+            if (ManagedInstances.TryGetValue(paint.ObjectPointer, out var skPaint))
+            {
+                if (skPaint.ImageFilter == null)
+                {
+                    return null;
+                }
+
+                return new ImageFilter(skPaint.ImageFilter.Handle);
+            }
+
+            return null;
         }
 
         public void SetImageFilter(Paint paint, ImageFilter? value)
@@ -190,19 +210,19 @@ namespace Drawie.Skia.Implementations
 
         public Shader? GetShader(Paint paint)
         {
-            if(ManagedInstances.TryGetValue(paint.ObjectPointer, out var skPaint))
+            if (ManagedInstances.TryGetValue(paint.ObjectPointer, out var skPaint))
             {
                 if (skPaint.Shader == null)
                 {
                     return null;
                 }
-                
+
                 return new Shader(skPaint.Shader.Handle);
             }
-            
+
             return null;
         }
-        
+
         public void SetShader(Paint paint, Shader? shader)
         {
             SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
@@ -218,7 +238,7 @@ namespace Drawie.Skia.Implementations
         public void SetPathEffect(Paint paint, PathEffect? value)
         {
             SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
-            skPaint.PathEffect = value == null ? null : pathEffectImplementation[value.ObjectPointer]; 
+            skPaint.PathEffect = value == null ? null : pathEffectImplementation[value.ObjectPointer];
         }
 
         public float GetStrokeMiter(Paint paint)

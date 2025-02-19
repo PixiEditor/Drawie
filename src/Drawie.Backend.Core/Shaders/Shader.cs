@@ -15,12 +15,12 @@ public class Shader : NativeObject
     {
     }
 
-    public Shader(string sksl, Uniforms uniforms) : base(DrawingBackendApi.Current.ShaderImplementation
-        .CreateFromSksl(sksl, false, uniforms, out string errors)?.ObjectPointer ?? IntPtr.Zero)
+    public Shader(string shaderCode, Uniforms uniforms) : base(DrawingBackendApi.Current.ShaderImplementation
+        .CreateFromString(shaderCode, uniforms, out string errors)?.ObjectPointer ?? IntPtr.Zero)
     {
         if (!string.IsNullOrEmpty(errors))
         {
-            throw new ShaderCompilationException(errors, sksl);
+            throw new ShaderCompilationException(errors, shaderCode);
         }
     }
 
@@ -34,9 +34,9 @@ public class Shader : NativeObject
         return DrawingBackendApi.Current.ShaderImplementation.WithUpdatedUniforms(ObjectPointer, uniforms);
     }
 
-    public static Shader? CreateFromSksl(string sksl, bool isOpaque, out string errors)
+    public static Shader? CreateFromString(string shaderCode, out string errors)
     {
-        return DrawingBackendApi.Current.ShaderImplementation.CreateFromSksl(sksl, isOpaque, out errors);
+        return DrawingBackendApi.Current.ShaderImplementation.CreateFromString(shaderCode, out errors);
     }
 
     public override void Dispose()

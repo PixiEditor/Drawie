@@ -29,9 +29,9 @@ namespace Drawie.Skia.Implementations
             return skShader.Handle;
         }
 
-        public Shader? CreateFromSksl(string sksl, bool isOpaque, Uniforms uniforms, out string errors)
+        public Shader? CreateFromString(string shaderCode, Uniforms uniforms, out string errors)
         {
-            SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(sksl, out errors);
+            SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(shaderCode, out errors);
             if (string.IsNullOrEmpty(errors))
             {
                 SKRuntimeEffectUniforms effectUniforms = UniformsToSkUniforms(uniforms, effect);
@@ -45,9 +45,9 @@ namespace Drawie.Skia.Implementations
             return null;
         }
 
-        public Shader? CreateFromSksl(string sksl, bool isOpaque, out string errors)
+        public Shader? CreateFromString(string shaderCode, out string errors)
         {
-            SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(sksl, out errors);
+            SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(shaderCode, out errors);
             if (string.IsNullOrEmpty(errors))
             {
                 SKShader shader = effect.ToShader();

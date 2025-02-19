@@ -26,10 +26,10 @@ namespace Drawie.Backend.Core.Bridge.NativeObjectsImpl
         public float GetStrokeWidth(Paint paint);
         public void SetStrokeWidth(Paint paint, float value);
         
-        public ColorFilter GetColorFilter(Paint paint);
+        public ColorFilter? GetColorFilter(Paint paint);
         public void SetColorFilter(Paint paint, ColorFilter value);
         
-        public ImageFilter GetImageFilter(Paint paint);
+        public ImageFilter? GetImageFilter(Paint paint);
         public void SetImageFilter(Paint paint, ImageFilter value);
         
         public object GetNativePaint(IntPtr objectPointer);

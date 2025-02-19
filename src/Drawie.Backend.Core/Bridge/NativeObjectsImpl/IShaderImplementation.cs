@@ -10,8 +10,8 @@ public interface IShaderImplementation
 {
     public IntPtr CreateShader();
     public void Dispose(IntPtr shaderObjPointer);
-    public Shader? CreateFromSksl(string sksl, bool isOpaque, out string errors);
-    public Shader? CreateFromSksl(string sksl, bool isOpaque, Uniforms uniforms, out string errors);
+    public Shader? CreateFromString(string shaderCode, out string errors);
+    public Shader? CreateFromString(string shaderCode, Uniforms uniforms, out string errors);
     public Shader CreateLinearGradient(VecI p1, VecI p2, Color[] colors);
 
     public Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
