@@ -39,6 +39,11 @@ public class Shader : NativeObject
         return DrawingBackendApi.Current.ShaderImplementation.CreateFromString(shaderCode, out errors);
     }
 
+    public static Shader? CreateFromString(string shaderCode, Uniforms uniforms, out string errors)
+    {
+        return DrawingBackendApi.Current.ShaderImplementation.CreateFromString(shaderCode, uniforms, out errors);
+    }
+
     public override void Dispose()
     {
         DrawingBackendApi.Current.ShaderImplementation.Dispose(ObjectPointer);

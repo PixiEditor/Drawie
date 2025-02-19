@@ -175,6 +175,11 @@ namespace Drawie.Skia.Implementations
             SKRuntimeEffectUniforms skUniforms = new SKRuntimeEffectUniforms(effect);
             foreach (var uniform in uniforms)
             {
+                if (!skUniforms.Contains(uniform.Key))
+                {
+                    continue;
+                }
+
                 if (uniform.Value.DataType == UniformValueType.Float)
                 {
                     skUniforms.Add(uniform.Value.Name, uniform.Value.FloatValue);
