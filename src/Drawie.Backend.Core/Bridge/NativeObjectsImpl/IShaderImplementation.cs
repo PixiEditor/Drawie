@@ -8,6 +8,7 @@ namespace Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 
 public interface IShaderImplementation
 {
+    public string ShaderLanguageExtension { get; }
     public IntPtr CreateShader();
     public void Dispose(IntPtr shaderObjPointer);
     public Shader? CreateFromString(string shaderCode, out string errors);
@@ -16,6 +17,7 @@ public interface IShaderImplementation
 
     public Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
         ShaderTileMode tileMode);
+
     public Shader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed);
     public Shader CreatePerlinFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed);
     public object GetNativeShader(IntPtr objectPointer);

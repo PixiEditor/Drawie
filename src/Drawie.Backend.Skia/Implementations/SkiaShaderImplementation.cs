@@ -22,6 +22,8 @@ namespace Drawie.Skia.Implementations
             this.bitmapImplementation = bitmapImplementation;
         }
 
+        public string ShaderLanguageExtension { get; } = "sksl";
+
         public IntPtr CreateShader()
         {
             SKShader skShader = SKShader.CreateEmpty();
@@ -198,6 +200,11 @@ namespace Drawie.Skia.Implementations
             SKRuntimeEffectChildren skChildren = new SKRuntimeEffectChildren(effect);
             foreach (var uniform in uniforms)
             {
+                if (!skChildren.Contains(uniform.Key))
+                {
+                    continue;
+                }
+
                 if (uniform.Value.DataType == UniformValueType.Shader)
                 {
                     skChildren.Add(uniform.Value.Name, this[uniform.Value.ShaderValue.ObjectPointer]);
