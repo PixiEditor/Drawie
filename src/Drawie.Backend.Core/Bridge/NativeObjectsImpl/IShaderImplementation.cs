@@ -24,4 +24,5 @@ public interface IShaderImplementation
     public Shader WithUpdatedUniforms(IntPtr objectPointer, Uniforms uniforms);
     public void SetLocalMatrix(IntPtr objectPointer, Matrix3X3 matrix);
     public Shader? CreateBitmap(Bitmap bitmap, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix);
+    public UniformDeclaration[] GetUniformDeclarations(string shaderCode);
 }

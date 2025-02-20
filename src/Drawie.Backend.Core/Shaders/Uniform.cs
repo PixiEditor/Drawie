@@ -24,7 +24,7 @@ public struct Uniform
         DataType = UniformValueType.Float;
         UniformName = "float";
     }
-    
+
     public Uniform(string name, VecD vector)
     {
         Name = name;
@@ -34,7 +34,7 @@ public struct Uniform
         DataType = UniformValueType.FloatArray;
         UniformName = "float2";
     }
-    
+
     public Uniform(string name, Shader value)
     {
         Name = name;
@@ -44,7 +44,7 @@ public struct Uniform
         DataType = UniformValueType.Shader;
         UniformName = "shader";
     }
-    
+
     public Uniform(string name, Color color)
     {
         Name = name;
@@ -52,7 +52,7 @@ public struct Uniform
         FloatArrayValue = new float[] { color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f };
         ShaderValue = default;
         DataType = UniformValueType.FloatArray;
-        LayoutOf = "color"; 
+        LayoutOf = "color";
         UniformName = "half4";
     }
 

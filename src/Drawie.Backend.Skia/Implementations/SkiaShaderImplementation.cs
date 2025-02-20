@@ -41,7 +41,7 @@ namespace Drawie.Skia.Implementations
                 SKShader shader = effect.ToShader(effectUniforms, effectChildren);
                 ManagedInstances[shader.Handle] = shader;
                 runtimeEffects[shader.Handle] = effect;
-                return new Shader(shader.Handle);
+                return new Shader(shader.Handle, DeclarationsFromEffect(effect));
             }
 
             return null;
@@ -59,10 +59,29 @@ namespace Drawie.Skia.Implementations
                 }
 
                 ManagedInstances[shader.Handle] = shader;
-                return new Shader(shader.Handle);
+
+                return new Shader(shader.Handle, DeclarationsFromEffect(effect));
             }
 
             return null;
+        }
+
+        private static List<UniformDeclaration> DeclarationsFromEffect(SKRuntimeEffect effect)
+        {
+            List<UniformDeclaration> declarations = new();
+            foreach (var uniform in effect.Uniforms)
+            {
+                if (uniform == null) continue;
+                declarations.Add(new UniformDeclaration(uniform, UniformValueType.Float));
+            }
+
+            foreach (var child in effect.Children)
+            {
+                if (child == null) continue;
+                declarations.Add(new UniformDeclaration(child, UniformValueType.Shader));
+            }
+
+            return declarations;
         }
 
         public Shader CreateLinearGradient(VecI p1, VecI p2, Color[] colors)
@@ -148,7 +167,7 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[newShader.Handle] = newShader;
             runtimeEffects[newShader.Handle] = effect;
 
-            return new Shader(newShader.Handle);
+            return new Shader(newShader.Handle, DeclarationsFromEffect(effect));
         }
 
         public void SetLocalMatrix(IntPtr objectPointer, Matrix3X3 matrix)
@@ -168,6 +187,17 @@ namespace Drawie.Skia.Implementations
                 matrix.ToSkMatrix());
             ManagedInstances[shader.Handle] = shader;
             return new Shader(shader.Handle);
+        }
+
+        public UniformDeclaration[]? GetUniformDeclarations(string shaderCode)
+        {
+            using SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(shaderCode, out string errors);
+            if (!string.IsNullOrEmpty(errors) || effect == null)
+            {
+                return null;
+            }
+
+            return DeclarationsFromEffect(effect).ToArray();
         }
 
         public void Dispose(IntPtr shaderObjPointer)

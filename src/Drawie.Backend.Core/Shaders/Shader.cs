@@ -11,17 +11,11 @@ public class Shader : NativeObject
 {
     public override object Native => DrawingBackendApi.Current.ShaderImplementation.GetNativeShader(ObjectPointer);
 
-    public Shader(IntPtr objPtr) : base(objPtr)
-    {
-    }
+    public IReadOnlyList<UniformDeclaration> UniformDeclarations { get; }
 
-    public Shader(string shaderCode, Uniforms uniforms) : base(DrawingBackendApi.Current.ShaderImplementation
-        .CreateFromString(shaderCode, uniforms, out string errors)?.ObjectPointer ?? IntPtr.Zero)
+    public Shader(IntPtr objPtr, List<UniformDeclaration> declarations = null) : base(objPtr)
     {
-        if (!string.IsNullOrEmpty(errors))
-        {
-            throw new ShaderCompilationException(errors, shaderCode);
-        }
+        UniformDeclarations = declarations ?? new List<UniformDeclaration>();
     }
 
     /// <summary>
@@ -34,12 +28,32 @@ public class Shader : NativeObject
         return DrawingBackendApi.Current.ShaderImplementation.WithUpdatedUniforms(ObjectPointer, uniforms);
     }
 
-    public static Shader? CreateFromString(string shaderCode, out string errors)
+    /// <summary>
+    ///    Creates shader from string. If shader has errors, exception is thrown.
+    /// </summary>
+    /// <param name="shaderCode">Code of shader</param>
+    /// <param name="uniforms">Uniforms for shader</param>
+    /// <returns>Created shader</returns>
+    /// <exception cref="ShaderCompilationException">If shader has errors.</exception>
+    public static Shader Create(string shaderCode, Uniforms uniforms)
+    {
+        var created =
+            DrawingBackendApi.Current.ShaderImplementation.CreateFromString(shaderCode, uniforms, out string errors);
+
+        if (!string.IsNullOrEmpty(errors))
+        {
+            throw new ShaderCompilationException(errors, shaderCode);
+        }
+
+        return created!;
+    }
+
+    public static Shader? Create(string shaderCode, out string errors)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateFromString(shaderCode, out errors);
     }
 
-    public static Shader? CreateFromString(string shaderCode, Uniforms uniforms, out string errors)
+    public static Shader? Create(string shaderCode, Uniforms uniforms, out string errors)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateFromString(shaderCode, uniforms, out errors);
     }
@@ -83,5 +97,10 @@ public class Shader : NativeObject
     public static Shader? CreateBitmap(Bitmap bitmap, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateBitmap(bitmap, tileX, tileY, matrix);
+    }
+
+    public static UniformDeclaration[]? GetUniformDeclarations(string shaderCode)
+    {
+        return DrawingBackendApi.Current.ShaderImplementation.GetUniformDeclarations(shaderCode);
     }
 }

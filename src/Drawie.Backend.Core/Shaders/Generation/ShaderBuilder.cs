@@ -27,7 +27,7 @@ public class ShaderBuilder
     public Shader BuildShader()
     {
         string generatedSksl = ToSkSl();
-        return new Shader(generatedSksl, Uniforms);
+        return Shader.Create(generatedSksl, Uniforms);
     }
 
     public string ToSkSl()
