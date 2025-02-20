@@ -53,6 +53,11 @@ namespace Drawie.Skia.Implementations
             if (string.IsNullOrEmpty(errors))
             {
                 SKShader shader = effect.ToShader();
+                if (shader == null)
+                {
+                    return null;
+                }
+
                 ManagedInstances[shader.Handle] = shader;
                 return new Shader(shader.Handle);
             }
