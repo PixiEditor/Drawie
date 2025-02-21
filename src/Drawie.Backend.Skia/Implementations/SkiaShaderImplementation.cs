@@ -358,7 +358,8 @@ namespace Drawie.Skia.Implementations
             }
 
             if (nameLessBlock.Contains("float2", StringComparison.InvariantCultureIgnoreCase)
-                || nameLessBlock.Contains("vec2", StringComparison.InvariantCultureIgnoreCase))
+                || nameLessBlock.Contains("vec2", StringComparison.InvariantCultureIgnoreCase)
+                || nameLessBlock.Contains("half2", StringComparison.InvariantCultureIgnoreCase))
             {
                 detectedType = UniformValueType.Vector2;
                 return true;
