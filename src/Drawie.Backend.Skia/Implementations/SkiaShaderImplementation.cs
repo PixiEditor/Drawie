@@ -367,6 +367,12 @@ namespace Drawie.Skia.Implementations
 
             string nameLessBlock = lastString.Replace(name, string.Empty);
 
+            if (nameLessBlock.Contains("color", StringComparison.InvariantCultureIgnoreCase))
+            {
+                detectedType = UniformValueType.Color;
+                return true;
+            }
+
             if (nameLessBlock.Contains("float ", StringComparison.InvariantCultureIgnoreCase))
             {
                 detectedType = UniformValueType.Float;
@@ -394,12 +400,6 @@ namespace Drawie.Skia.Implementations
                 || nameLessBlock.Contains("half4", StringComparison.InvariantCultureIgnoreCase))
             {
                 detectedType = UniformValueType.Vector4;
-                return true;
-            }
-
-            if (nameLessBlock.Contains("color", StringComparison.InvariantCultureIgnoreCase))
-            {
-                detectedType = UniformValueType.Color;
                 return true;
             }
 
