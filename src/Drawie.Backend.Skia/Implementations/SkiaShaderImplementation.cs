@@ -12,6 +12,7 @@ namespace Drawie.Skia.Implementations
     {
         private SkiaBitmapImplementation bitmapImplementation;
         private Dictionary<IntPtr, SKRuntimeEffect> runtimeEffects = new();
+        private Dictionary<IntPtr, List<UniformDeclaration>> declarations = new();
 
         public SkiaShaderImplementation()
         {
@@ -39,9 +40,11 @@ namespace Drawie.Skia.Implementations
                 SKRuntimeEffectUniforms effectUniforms = UniformsToSkUniforms(uniforms, effect);
                 SKRuntimeEffectChildren effectChildren = UniformsToSkChildren(uniforms, effect);
                 SKShader shader = effect.ToShader(effectUniforms, effectChildren);
+                var declaration = DeclarationsFromEffect(shaderCode, effect);
                 ManagedInstances[shader.Handle] = shader;
                 runtimeEffects[shader.Handle] = effect;
-                return new Shader(shader.Handle, DeclarationsFromEffect(effect));
+                declarations[shader.Handle] = declaration;
+                return new Shader(shader.Handle, declaration);
             }
 
             return null;
@@ -59,29 +62,13 @@ namespace Drawie.Skia.Implementations
                 }
 
                 ManagedInstances[shader.Handle] = shader;
+                var declaration = DeclarationsFromEffect(shaderCode, effect);
+                declarations[shader.Handle] = declaration;
 
-                return new Shader(shader.Handle, DeclarationsFromEffect(effect));
+                return new Shader(shader.Handle, declaration);
             }
 
             return null;
-        }
-
-        private static List<UniformDeclaration> DeclarationsFromEffect(SKRuntimeEffect effect)
-        {
-            List<UniformDeclaration> declarations = new();
-            foreach (var uniform in effect.Uniforms)
-            {
-                if (uniform == null) continue;
-                declarations.Add(new UniformDeclaration(uniform, UniformValueType.Float));
-            }
-
-            foreach (var child in effect.Children)
-            {
-                if (child == null) continue;
-                declarations.Add(new UniformDeclaration(child, UniformValueType.Shader));
-            }
-
-            return declarations;
         }
 
         public Shader CreateLinearGradient(VecI p1, VecI p2, Color[] colors)
@@ -162,12 +149,14 @@ namespace Drawie.Skia.Implementations
             shader.Dispose();
             ManagedInstances.TryRemove(objectPointer, out _);
             runtimeEffects.Remove(objectPointer);
+            declarations.Remove(objectPointer, out var oldDeclarations);
 
             var newShader = effect.ToShader(effectUniforms, effectChildren);
             ManagedInstances[newShader.Handle] = newShader;
             runtimeEffects[newShader.Handle] = effect;
+            declarations[newShader.Handle] = oldDeclarations;
 
-            return new Shader(newShader.Handle, DeclarationsFromEffect(effect));
+            return new Shader(newShader.Handle, oldDeclarations);
         }
 
         public void SetLocalMatrix(IntPtr objectPointer, Matrix3X3 matrix)
@@ -197,14 +186,25 @@ namespace Drawie.Skia.Implementations
                 return null;
             }
 
-            return DeclarationsFromEffect(effect).ToArray();
+            return DeclarationsFromEffect(shaderCode, effect).ToArray();
         }
 
         public void Dispose(IntPtr shaderObjPointer)
         {
-            if (!ManagedInstances.TryGetValue(shaderObjPointer, out var shader)) return;
+            ManagedInstances.TryRemove(shaderObjPointer, out var shader);
+            if (shader == null)
+            {
+                return;
+            }
+
             shader.Dispose();
-            ManagedInstances.TryRemove(shaderObjPointer, out _);
+            if (runtimeEffects.TryGetValue(shaderObjPointer, out var effect))
+            {
+                effect.Dispose();
+                runtimeEffects.Remove(shaderObjPointer);
+            }
+
+            declarations.Remove(shaderObjPointer, out var declaration);
         }
 
         private SKRuntimeEffectUniforms UniformsToSkUniforms(Uniforms uniforms, SKRuntimeEffect effect)
@@ -220,6 +220,15 @@ namespace Drawie.Skia.Implementations
                 if (uniform.Value.DataType == UniformValueType.Float)
                 {
                     skUniforms.Add(uniform.Value.Name, uniform.Value.FloatValue);
+                }
+                else if (uniform.Value.DataType == UniformValueType.Color)
+                {
+                    skUniforms.Add(uniform.Value.Name, uniform.Value.ColorValue.ToSKColor());
+                }
+                else if (uniform.Value.DataType == UniformValueType.Vector2)
+                {
+                    skUniforms.Add(uniform.Value.Name,
+                        new SKPoint((float)uniform.Value.Vector2Value.X, (float)uniform.Value.Vector2Value.Y));
                 }
                 else if (uniform.Value.DataType == UniformValueType.FloatArray)
                 {
@@ -247,6 +256,128 @@ namespace Drawie.Skia.Implementations
             }
 
             return skChildren;
+        }
+
+        private static List<UniformDeclaration> DeclarationsFromEffect(string code, SKRuntimeEffect effect)
+        {
+            List<UniformDeclaration> declarations = new();
+            foreach (var uniform in effect.Uniforms)
+            {
+                if (uniform == null) continue;
+                UniformValueType? detectedType = FindUniformType(code, uniform);
+                if (detectedType == null)
+                {
+                    continue;
+                }
+
+                declarations.Add(new UniformDeclaration(uniform, detectedType.Value));
+            }
+
+            foreach (var child in effect.Children)
+            {
+                if (child == null) continue;
+                declarations.Add(new UniformDeclaration(child, UniformValueType.Shader));
+            }
+
+            return declarations;
+        }
+
+        public static UniformValueType? FindUniformType(string code, string uniform)
+        {
+            string uniformName = uniform;
+
+            string lastString = string.Empty;
+            bool isInInlineComment = false;
+            bool isInBlockComment = false;
+
+            foreach (var codeChar in code)
+            {
+                if (isInBlockComment || isInInlineComment)
+                {
+                    if (codeChar == '*' && lastString[^1] == '/')
+                    {
+                        isInBlockComment = false;
+                        lastString = string.Empty;
+                    }
+                    else if (codeChar == '\n')
+                    {
+                        isInInlineComment = false;
+                        lastString = string.Empty;
+                    }
+
+                    continue;
+                }
+
+                if (codeChar == ';')
+                {
+                    if (lastString.Contains(uniformName) &&
+                        TryDetectType(lastString, uniformName, out var detectedType))
+                    {
+                        return detectedType.Value;
+                    }
+
+                    lastString = string.Empty;
+                }
+                else if (codeChar == '/')
+                {
+                    if (lastString.LastOrDefault() == '/')
+                    {
+                        isInInlineComment = true;
+                        lastString = string.Empty;
+                    }
+                }
+                else if (codeChar == '*' && lastString.LastOrDefault() == '/')
+                {
+                    isInBlockComment = true;
+                    lastString = string.Empty;
+                }
+                else if (!isInInlineComment && !isInBlockComment && codeChar != '\n' && codeChar != '\r' &&
+                         codeChar != '\t')
+                {
+                    lastString += codeChar;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool TryDetectType(string lastString, string name, out UniformValueType? detectedType)
+        {
+            if (!lastString.Contains("uniform ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                detectedType = null;
+                return false;
+            }
+
+            string nameLessBlock = lastString.Replace(name, string.Empty);
+
+            if (nameLessBlock.Contains("float ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                detectedType = UniformValueType.Float;
+                return true;
+            }
+
+            if (nameLessBlock.Contains("float2", StringComparison.InvariantCultureIgnoreCase)
+                || nameLessBlock.Contains("vec2", StringComparison.InvariantCultureIgnoreCase))
+            {
+                detectedType = UniformValueType.Vector2;
+                return true;
+            }
+
+            if (nameLessBlock.Contains("color", StringComparison.InvariantCultureIgnoreCase))
+            {
+                detectedType = UniformValueType.Color;
+                return true;
+            }
+
+            if (nameLessBlock.Contains("shader", StringComparison.InvariantCultureIgnoreCase))
+            {
+                detectedType = UniformValueType.Shader;
+                return true;
+            }
+
+            detectedType = UniformValueType.FloatArray;
+            return true;
         }
     }
 }
