@@ -78,7 +78,7 @@ public struct Vec3D
 
     public static Vec3D operator +(Vec3D a, Vec3D b)
     {
-        return new Vec3D(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
+        return new Vec3D(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
     }
 
     public static Vec3D operator -(Vec3D a, Vec3D b)
