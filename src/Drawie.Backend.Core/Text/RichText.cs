@@ -114,6 +114,11 @@ public class RichText
 
     public RectD MeasureBounds(Font font)
     {
+        if (font == null)
+        {
+            return RectD.Empty;
+        }
+
         using Paint measurementPaint = new Paint();
         measurementPaint.Style = PaintStyle.StrokeAndFill;
         measurementPaint.StrokeWidth = StrokeWidth;
@@ -164,7 +169,7 @@ public class RichText
 
     public VecF[] GetGlyphPositions(Font font)
     {
-        if (Lines == null || RawText == null || Lines.Length == 0)
+        if (Lines == null || RawText == null || Lines.Length == 0 || font == null)
         {
             return [];
         }
@@ -204,6 +209,11 @@ public class RichText
 
     public float[] GetGlyphWidths(Font font)
     {
+        if (font == null)
+        {
+            return [];
+        }
+
         using Paint measurementPaint = new Paint();
         measurementPaint.Style = PaintStyle.StrokeAndFill;
         measurementPaint.StrokeWidth = StrokeWidth;
@@ -234,6 +244,11 @@ public class RichText
 
     public VecD GetLineOffset(int lineIndex, Font font)
     {
+        if (font == null)
+        {
+            return VecD.Zero;
+        }
+
         double lineHeight = Spacing ?? font.Size * PtToPx;
         return new VecD(0, lineIndex * lineHeight);
     }
