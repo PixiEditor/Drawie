@@ -164,6 +164,11 @@ public class RichText
 
     public VecF[] GetGlyphPositions(Font font)
     {
+        if (Lines == null || RawText == null || Lines.Length == 0)
+        {
+            return [];
+        }
+
         var glyphPositions = new VecF[RawText.Replace("\n", string.Empty).Length + Lines.Length];
         using Paint measurementPaint = new Paint();
         measurementPaint.Style = PaintStyle.StrokeAndFill;
