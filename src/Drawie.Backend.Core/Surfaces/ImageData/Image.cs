@@ -17,14 +17,14 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
         public override object Native => DrawingBackendApi.Current.ImageImplementation.GetNativeImage(ObjectPointer);
 
         public int Width => DrawingBackendApi.Current.ImageImplementation.GetWidth(ObjectPointer);
-        
+
         public int Height => DrawingBackendApi.Current.ImageImplementation.GetHeight(ObjectPointer);
-        
+
         public ImageInfo Info => DrawingBackendApi.Current.ImageImplementation.GetImageInfo(ObjectPointer);
-        
+
         public VecI Size => new VecI(Width, Height);
         public bool IsDisposed => isDisposed;
-        
+
         private bool isDisposed;
 
         public Image(IntPtr objPtr) : base(objPtr)
@@ -33,6 +33,9 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
 
         public override void Dispose()
         {
+            if (isDisposed)
+                return;
+
             isDisposed = true;
             DrawingBackendApi.Current.ImageImplementation.DisposeImage(this);
         }
@@ -41,7 +44,7 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
         {
             return DrawingBackendApi.Current.ImageImplementation.FromEncodedData(path);
         }
-        
+
         public static Image? FromEncodedData(byte[] dataBytes)
         {
             return DrawingBackendApi.Current.ImageImplementation.FromEncodedData(dataBytes);
@@ -76,7 +79,7 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
         {
             return DrawingBackendApi.Current.ImageImplementation.ToShader(ObjectPointer);
         }
-        
+
         public Shader ToRawShader()
         {
             return DrawingBackendApi.Current.ImageImplementation.ToRawShader(ObjectPointer);

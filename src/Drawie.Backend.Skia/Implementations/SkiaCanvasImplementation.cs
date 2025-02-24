@@ -231,7 +231,7 @@ namespace Drawie.Skia.Implementations
                 _imageImpl[image.ObjectPointer],
                 sourceRect.ToSKRect(),
                 destRect.ToSKRect(),
-                _paintImpl[paint.ObjectPointer]);
+                paint == null ? null : _paintImpl[paint.ObjectPointer]);
         }
 
         public void DrawBitmap(IntPtr objPtr, Bitmap bitmap, float x, float y)
