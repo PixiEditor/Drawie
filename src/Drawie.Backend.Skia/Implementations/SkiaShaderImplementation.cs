@@ -3,6 +3,7 @@ using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
+using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Numerics;
 using SkiaSharp;
 
@@ -10,6 +11,7 @@ namespace Drawie.Skia.Implementations
 {
     public class SkiaShaderImplementation : SkObjectImplementation<SKShader>, IShaderImplementation
     {
+        public SkiaImageImplementation ImageImplementation { get; set; }
         private SkiaBitmapImplementation bitmapImplementation;
         private Dictionary<IntPtr, SKRuntimeEffect> runtimeEffects = new();
         private Dictionary<IntPtr, List<UniformDeclaration>> declarations = new();
@@ -178,6 +180,20 @@ namespace Drawie.Skia.Implementations
             return new Shader(shader.Handle);
         }
 
+        public Shader? CreateCreate(Image image, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix)
+        {
+            if (image == null)
+            {
+                return null;
+            }
+
+            SKImage target = ImageImplementation.ManagedInstances[image.ObjectPointer];
+            SKShader shader = SKShader.CreateImage(target, (SKShaderTileMode)tileX, (SKShaderTileMode)tileY,
+                matrix.ToSkMatrix());
+            ManagedInstances[shader.Handle] = shader;
+            return new Shader(shader.Handle);
+        }
+
         public UniformDeclaration[]? GetUniformDeclarations(string shaderCode)
         {
             using SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(shaderCode, out string errors);
@@ -267,7 +283,8 @@ namespace Drawie.Skia.Implementations
 
                 if (uniform.Value.DataType == UniformValueType.Shader)
                 {
-                    skChildren.Add(uniform.Value.Name, this[uniform.Value.ShaderValue.ObjectPointer]);
+                    skChildren.Add(uniform.Value.Name,
+                        uniform.Value.ShaderValue == null ? null : this[uniform.Value.ShaderValue.ObjectPointer]);
                 }
             }
 

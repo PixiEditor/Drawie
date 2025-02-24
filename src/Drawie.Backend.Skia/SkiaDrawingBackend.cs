@@ -70,6 +70,8 @@ namespace Drawie.Skia
             SkiaShaderImplementation shader = new SkiaShaderImplementation();
             ShaderImplementation = shader;
 
+            imageFilterImpl.ShaderImplementation = shader;
+
             SkiaPathEffectImplementation pathEffectImpl = new SkiaPathEffectImplementation();
             PathEffectImplementation = pathEffectImpl;
 
@@ -90,10 +92,14 @@ namespace Drawie.Skia
 
             SkiaImageImplementation imgImpl = new SkiaImageImplementation(dataImpl, pixmapImpl, shader);
             ImageImplementation = imgImpl;
+
+            imageFilterImpl.ImageImplementation = imgImpl;
+
             SkiaBitmapImplementation bitmapImpl = new SkiaBitmapImplementation(imgImpl, pixmapImpl);
             BitmapImplementation = bitmapImpl;
 
             shader.SetBitmapImplementation(bitmapImpl);
+            shader.ImageImplementation = imgImpl;
 
             SkiaFontImplementation fontImpl = new SkiaFontImplementation(pathImpl);
             FontImplementation = fontImpl;
@@ -185,7 +191,7 @@ namespace Drawie.Skia
                 };
 
                 GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
-                new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
+                    new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
 
                 var surface = SKSurface.Create(GraphicsContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
                     SKColorType.Rgba8888);

@@ -1,5 +1,7 @@
 ﻿using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
+using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
 
@@ -19,4 +21,8 @@ public interface IImageFilterImplementation
 
     public IntPtr CreateDropShadow(float dx, float dy, float sigmaX, float sigmaY, Color color,
         ImageFilter? input);
+
+    public IntPtr CreateShader(Shader shader, bool dither);
+    public IntPtr CreateImage(Image image);
+    public IntPtr CreateTile(RectD source, RectD dest, ImageFilter input);
 }

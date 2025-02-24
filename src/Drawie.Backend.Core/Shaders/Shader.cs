@@ -3,6 +3,7 @@ using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Exceptions;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
+using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Shaders;
@@ -97,6 +98,11 @@ public class Shader : NativeObject
     public static Shader? CreateBitmap(Bitmap bitmap, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateBitmap(bitmap, tileX, tileY, matrix);
+    }
+
+    public static Shader? CreateImage(Image image, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix)
+    {
+        return DrawingBackendApi.Current.ShaderImplementation.CreateCreate(image, tileX, tileY, matrix);
     }
 
     public static UniformDeclaration[]? GetUniformDeclarations(string shaderCode)

@@ -1,5 +1,7 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.Shaders;
+using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Surfaces.PaintImpl;
@@ -61,5 +63,20 @@ public class ImageFilter : NativeObject
     {
         return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateDropShadow(dx, dy, sigmaX,
             sigmaY, color, input));
+    }
+
+    public static ImageFilter CreateShader(Shader? shader, bool dither)
+    {
+        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateShader(shader, dither));
+    }
+
+    public static ImageFilter? CreateImage(Image image)
+    {
+        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateImage(image));
+    }
+
+    public static ImageFilter CreateTile(RectD source, RectD destination, ImageFilter input)
+    {
+        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateTile(source, destination, input));
     }
 }

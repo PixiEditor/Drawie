@@ -2,6 +2,7 @@
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
+using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Bridge.NativeObjectsImpl;
@@ -25,4 +26,5 @@ public interface IShaderImplementation
     public void SetLocalMatrix(IntPtr objectPointer, Matrix3X3 matrix);
     public Shader? CreateBitmap(Bitmap bitmap, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix);
     public UniformDeclaration[] GetUniformDeclarations(string shaderCode);
+    public Shader? CreateCreate(Image image, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix);
 }
