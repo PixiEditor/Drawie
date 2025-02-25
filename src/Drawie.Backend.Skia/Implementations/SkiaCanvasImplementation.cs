@@ -222,7 +222,7 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[objPtr].DrawImage(
                 _imageImpl[image.ObjectPointer],
                 destRect.ToSKRect(),
-                _paintImpl[paint.ObjectPointer]);
+                paint == null ? null : _paintImpl[paint.ObjectPointer]);
         }
 
         public void DrawImage(IntPtr obj, Image image, RectD sourceRect, RectD destRect, Paint paint)
