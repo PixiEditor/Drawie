@@ -21,7 +21,7 @@ public class Texture : IDisposable, ICloneable
 
     private bool pixmapUpToDate;
     private Pixmap pixmap;
-    
+
     private bool isDisposed;
 
     private Paint nearestNeighborReplacingPaint =
@@ -57,6 +57,18 @@ public class Texture : IDisposable, ICloneable
     {
         return new Texture(
             new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, colorSpace) { GpuBacked = true });
+    }
+
+    public static Texture ForProcessing(DrawingSurface copySizeAndMatrixFrom, ColorSpace colorSpace)
+    {
+        Texture tex = new Texture(
+            new ImageInfo(
+                copySizeAndMatrixFrom.DeviceClipBounds.Size.X + copySizeAndMatrixFrom.DeviceClipBounds.Pos.X,
+                copySizeAndMatrixFrom.DeviceClipBounds.Size.Y + copySizeAndMatrixFrom.DeviceClipBounds.Pos.Y,
+                ColorType.RgbaF16, AlphaType.Premul, colorSpace) { GpuBacked = true });
+        tex.DrawingSurface.Canvas.SetMatrix(copySizeAndMatrixFrom.Canvas.TotalMatrix);
+
+        return tex;
     }
 
     public Texture(ImageInfo imageInfo)
