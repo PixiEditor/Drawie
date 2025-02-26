@@ -4,8 +4,10 @@ namespace Drawie.Backend.Core.Numerics;
 
 public class ColorSpaceTransformFn : NativeObject
 {
+    public float[] Values { get; }
     public ColorSpaceTransformFn(IntPtr objPtr) : base(objPtr)
     {
+        Values = DrawingBackendApi.Current.ColorSpaceImplementation.GetTransformFunctionValues(ObjectPointer);
     }
 
     public override object Native =>

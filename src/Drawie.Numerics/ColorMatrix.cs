@@ -50,7 +50,7 @@ public record struct ColorMatrix
         (1, 0, 0, 0, 0),
         (0, 0, 0, 0, 0)
     );
-    
+
     /// <summary>
     /// The Green value is mapped to the Red and Blue values. The Green and Alpha values become 0. <br/><br/>
     /// 
@@ -99,7 +99,7 @@ public record struct ColorMatrix
         (0, 0, 0, 0, 0),
         (0, 0, 0, 0, 0)
     );
-    
+
     /// <summary>
     /// The green value will stay the green value <br/>
     /// (_, y, _, _) => (0, y, 0, 0)
@@ -110,7 +110,7 @@ public record struct ColorMatrix
         (0, 0, 0, 0, 0),
         (0, 0, 0, 0, 0)
     );
-    
+
     /// <summary>
     /// The blue value will stay the blue value <br/>
     /// (_, _, z, _) => (0, 0, z, 0)
@@ -155,7 +155,7 @@ public record struct ColorMatrix
         // Calculate alpha based on luminance (0.299*R + 0.587*G + 0.114*B)
         0.299f, 0.587f, 0.114f, 0, 0
     );
-    
+
     /// <summary>
     /// The rgb values become grayscale according to the weights image. Alpha becomes zero <br/>
     /// (r, g, b, a) => (rgb: r * rWeight + g * gWeight + b * bWeight + a * aWeight, 0)
@@ -173,13 +173,21 @@ public record struct ColorMatrix
     /// </summary>
     public static ColorMatrix WeightedGrayscale(Vec3D vector) =>
         WeightedGrayscale((float)vector.X, (float)vector.Y, (float)vector.Z, 0);
-    
-    public static ColorMatrix Lerp(ColorMatrix from, ColorMatrix to, float amount) => new(float.Lerp(from.M11, to.M11, amount),
-        float.Lerp(from.M12, to.M12, amount), float.Lerp(from.M13, to.M13, amount), float.Lerp(from.M14, to.M14, amount), float.Lerp(from.M15, to.M15, amount), float.Lerp(from.M21, to.M21, amount),
-        float.Lerp(from.M22, to.M22, amount), float.Lerp(from.M23, to.M23, amount), float.Lerp(from.M24, to.M24, amount), float.Lerp(from.M25, to.M25, amount), float.Lerp(from.M31, to.M31, amount),
-        float.Lerp(from.M32, to.M32, amount), float.Lerp(from.M33, to.M33, amount), float.Lerp(from.M34, to.M34, amount), float.Lerp(from.M35, to.M35, amount), float.Lerp(from.M41, to.M41, amount),
-        float.Lerp(from.M42, to.M42, amount), float.Lerp(from.M43, to.M43, amount), float.Lerp(from.M44, to.M44, amount), float.Lerp(from.M45, to.M45, amount));
-    
+
+    public static ColorMatrix Lerp(ColorMatrix from, ColorMatrix to, float amount) => new(
+        float.Lerp(from.M11, to.M11, amount),
+        float.Lerp(from.M12, to.M12, amount), float.Lerp(from.M13, to.M13, amount),
+        float.Lerp(from.M14, to.M14, amount), float.Lerp(from.M15, to.M15, amount),
+        float.Lerp(from.M21, to.M21, amount),
+        float.Lerp(from.M22, to.M22, amount), float.Lerp(from.M23, to.M23, amount),
+        float.Lerp(from.M24, to.M24, amount), float.Lerp(from.M25, to.M25, amount),
+        float.Lerp(from.M31, to.M31, amount),
+        float.Lerp(from.M32, to.M32, amount), float.Lerp(from.M33, to.M33, amount),
+        float.Lerp(from.M34, to.M34, amount), float.Lerp(from.M35, to.M35, amount),
+        float.Lerp(from.M41, to.M41, amount),
+        float.Lerp(from.M42, to.M42, amount), float.Lerp(from.M43, to.M43, amount),
+        float.Lerp(from.M44, to.M44, amount), float.Lerp(from.M45, to.M45, amount));
+
     public static ColorMatrix operator +(ColorMatrix left, ColorMatrix right) => new(left.M11 + right.M11,
         left.M12 + right.M12, left.M13 + right.M13, left.M14 + right.M14, left.M15 + right.M15, left.M21 + right.M21,
         left.M22 + right.M22, left.M23 + right.M23, left.M24 + right.M24, left.M25 + right.M25, left.M31 + right.M31,
@@ -235,8 +243,9 @@ public record struct ColorMatrix
         toConvert.M43,
         toConvert.M44,
         toConvert.M45);
-    
-    private ColorMatrix(float m11, float m12, float m13, float m14, float m15, float m21, float m22, float m23, float m24,
+
+    private ColorMatrix(float m11, float m12, float m13, float m14, float m15, float m21, float m22, float m23,
+        float m24,
         float m25, float m31, float m32, float m33, float m34, float m35, float m41, float m42, float m43, float m44,
         float m45)
     {
@@ -263,7 +272,7 @@ public record struct ColorMatrix
     }
 
     public ColorMatrix(
-        (float m11, float m12, float m13, float m14, float m15) row1, 
+        (float m11, float m12, float m13, float m14, float m15) row1,
         (float m21, float m22, float m23, float m24, float m25) row2,
         (float m31, float m32, float m33, float m34, float m35) row3,
         (float m41, float m42, float m43, float m44, float m45) row4)
@@ -279,7 +288,7 @@ public record struct ColorMatrix
         var buffer = new float[Width * Height];
 
         TryGetMembers(buffer);
-        
+
         return buffer;
     }
 
@@ -463,4 +472,32 @@ public record struct ColorMatrix
 
     public static int Width { get => 5; }
     public static int Height { get => 4; }
+
+    public float this[int index]
+    {
+        get => index switch
+        {
+            0 => M11,
+            1 => M12,
+            2 => M13,
+            3 => M14,
+            4 => M15,
+            5 => M21,
+            6 => M22,
+            7 => M23,
+            8 => M24,
+            9 => M25,
+            10 => M31,
+            11 => M32,
+            12 => M33,
+            13 => M34,
+            14 => M35,
+            15 => M41,
+            16 => M42,
+            17 => M43,
+            18 => M44,
+            19 => M45,
+            _ => throw new IndexOutOfRangeException()
+        };
+    }
 }

@@ -86,6 +86,16 @@ namespace Drawie.Skia.Implementations
             throw new InvalidOperationException("Transfer function not found");
         }
 
+        public float[] GetTransformFunctionValues(IntPtr objectPointer)
+        {
+            if (_transferFunctions.TryGetValue(objectPointer, out SKColorSpaceTransferFn transferFn))
+            {
+                return transferFn.Values;
+            }
+
+            throw new InvalidOperationException("Transfer function not found");
+        }
+
         public bool IsSrgb(IntPtr objectPointer)
         {
             ManagedInstances.TryGetValue(objectPointer, out SKColorSpace skColorSpace);

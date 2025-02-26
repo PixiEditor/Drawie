@@ -15,4 +15,5 @@ public interface IColorSpaceImplementation
     public ColorSpaceTransformFn GetTransformFunction(IntPtr colorSpacePointer);
     public float TransformNumerical(IntPtr objectPointer, float value);
     public ColorSpaceTransformFn InvertNumericalTransformFunction(IntPtr objectPointer);
+    public float[] GetTransformFunctionValues(IntPtr objectPointer);
 }
