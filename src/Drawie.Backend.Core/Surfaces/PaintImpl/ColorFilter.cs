@@ -6,15 +6,17 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl;
 
 public class ColorFilter : NativeObject
 {
-    public override object Native => DrawingBackendApi.Current.ColorFilterImplementation.GetNativeColorFilter(ObjectPointer);
+    public override object Native =>
+        DrawingBackendApi.Current.ColorFilterImplementation.GetNativeColorFilter(ObjectPointer);
+
     public ColorFilter(IntPtr objPtr) : base(objPtr)
     {
-        
     }
 
     public static ColorFilter CreateBlendMode(Color color, BlendMode blendMode)
     {
-        ColorFilter filter = new ColorFilter(DrawingBackendApi.Current.ColorFilterImplementation.CreateBlendMode(color, blendMode));
+        ColorFilter filter =
+            new ColorFilter(DrawingBackendApi.Current.ColorFilterImplementation.CreateBlendMode(color, blendMode));
         return filter;
     }
 
@@ -29,7 +31,7 @@ public class ColorFilter : NativeObject
 
         return filter;
     }
-    
+
     public static ColorFilter CreateLumaColor()
     {
         return new ColorFilter(DrawingBackendApi.Current.ColorFilterImplementation.CreateLumaColor());
@@ -54,5 +56,11 @@ public class ColorFilter : NativeObject
     public override void Dispose()
     {
         DrawingBackendApi.Current.ColorFilterImplementation.Dispose(this);
+    }
+
+    public static ColorFilter CreateHighContrast(bool grayscale, ContrastInvertMode mode, float contrastValue)
+    {
+        return new ColorFilter(
+            DrawingBackendApi.Current.ColorFilterImplementation.CreateHighContrast(grayscale, mode, contrastValue));
     }
 }

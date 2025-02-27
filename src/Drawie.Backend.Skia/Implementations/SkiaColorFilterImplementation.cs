@@ -24,6 +24,14 @@ namespace Drawie.Skia.Implementations
             return skColorFilter.Handle;
         }
 
+        public IntPtr CreateHighContrast(bool grayscale, ContrastInvertMode invert, float contrast)
+        {
+            var skColorFilter = SKColorFilter.CreateHighContrast(grayscale, (SKHighContrastConfigInvertStyle)invert, contrast);
+            ManagedInstances[skColorFilter.Handle] = skColorFilter;
+
+            return skColorFilter.Handle;
+        }
+
         public IntPtr CreateCompose(ColorFilter outer, ColorFilter inner)
         {
             var skOuter = ManagedInstances[outer.ObjectPointer];
