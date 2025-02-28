@@ -185,4 +185,16 @@ public class Font : NativeObject
     {
         return DrawingBackendApi.Current.FontImplementation.ContainsGlyph(ObjectPointer, codePoint);
     }
+
+    public override int GetHashCode()
+    {
+        HashCode hash = new();
+        hash.Add(Size);
+        hash.Add(Family);
+        hash.Add(SubPixel);
+        hash.Add(Edging);
+        hash.Add(Bold);
+        hash.Add(Italic);
+        return hash.ToHashCode();
+    }
 }
