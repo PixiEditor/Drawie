@@ -7,6 +7,7 @@ using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan;
 using Drawie.RenderApi.Vulkan.ContextObjects;
 using Drawie.RenderApi.Vulkan.Extensions;
+using DrawiEngine;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
@@ -205,5 +206,10 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
         details.Add("Driver Version", properties.DriverVersion.ToString());
 
         return new GpuDiagnostics(true, GpuInfo, "Vulkan", details);
+    }
+
+    public IDisposable EnsureContext()
+    {
+        return new EmptyDisposable();
     }
 }

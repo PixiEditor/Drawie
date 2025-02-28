@@ -46,4 +46,9 @@ public class OpenGlInteropContext : IOpenGlContext, IDrawieInteropContext
             new GpuInfo(Context.GlInterface.Renderer, Context.GlInterface.Vendor),
             $"OpenGL", details);
     }
+
+    public IDisposable EnsureContext()
+    {
+        return Context.MakeCurrent();
+    }
 }

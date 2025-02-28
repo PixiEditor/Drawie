@@ -20,4 +20,5 @@ public interface IDrawieInteropContext
     }
 
     public GpuDiagnostics GetGpuDiagnostics();
+    public IDisposable EnsureContext();
 }

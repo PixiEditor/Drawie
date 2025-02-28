@@ -91,6 +91,7 @@ public class Texture : IDisposable, ICloneable
 
     public Texture(Texture other) : this(other.Size)
     {
+        using var ctx = EnsureContext();
         DrawingSurface.Canvas.DrawSurface(other.DrawingSurface, 0, 0);
     }
 
@@ -114,6 +115,7 @@ public class Texture : IDisposable, ICloneable
 
     public static Texture Load(string path)
     {
+        using var ctx = EnsureContext();
         if (!File.Exists(path))
             throw new FileNotFoundException(null, path);
         using var image = Image.FromEncodedData(path);
@@ -128,6 +130,7 @@ public class Texture : IDisposable, ICloneable
 
     public static Texture Load(byte[] data)
     {
+        using var ctx = EnsureContext();
         using Image image = Image.FromEncodedData(data);
         Texture texture = new Texture(image.Size);
         texture.DrawingSurface.Canvas.DrawImage(image, 0, 0);
@@ -137,6 +140,7 @@ public class Texture : IDisposable, ICloneable
 
     public static Texture? Load(byte[] encoded, ColorType colorType, VecI imageSize)
     {
+        using var ctx = EnsureContext();
         using var image = Image.FromPixels(new ImageInfo(imageSize.X, imageSize.Y, colorType), encoded);
         if (image is null)
             return null;
@@ -149,6 +153,7 @@ public class Texture : IDisposable, ICloneable
 
     public Texture CreateResized(VecI newSize, ResizeMethod method)
     {
+        using var ctx = EnsureContext();
         using Image image = DrawingSurface.Snapshot();
         Texture newTexture = new(newSize);
         using Paint paint = new();
@@ -219,12 +224,15 @@ public class Texture : IDisposable, ICloneable
         return newSurface;
     }
 
-    public Texture Resize(VecI newSize, ResizeMethod highQuality)
+    public Texture Resize(VecI newSize, FilterQuality quality)
     {
+        using var ctx = EnsureContext();
         using Image image = DrawingSurface.Snapshot();
+        using Paint paint = new();
+        paint.FilterQuality = quality;
         Texture newSurface = new(newSize);
         newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y),
-            nearestNeighborReplacingPaint);
+            paint);
         return newSurface;
     }
 
@@ -263,5 +271,10 @@ public class Texture : IDisposable, ICloneable
     {
         Texture texture = new(drawingSurface);
         return texture;
+    }
+    
+    private static IDisposable EnsureContext()
+    {
+        return DrawingBackendApi.Current.RenderingDispatcher.EnsureContext();
     }
 }
