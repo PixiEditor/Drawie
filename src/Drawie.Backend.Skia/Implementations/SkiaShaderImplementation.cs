@@ -73,19 +73,53 @@ namespace Drawie.Skia.Implementations
             return null;
         }
 
-        public Shader CreateLinearGradient(VecI p1, VecI p2, Color[] colors)
+        public Shader? CreateLinearGradient(VecD p1, VecD p2, Color[] colors)
         {
             SKShader shader = SKShader.CreateLinearGradient(
-                new SKPoint(p1.X, p1.Y),
-                new SKPoint(p2.X, p2.Y),
+                new SKPoint((float)p1.X, (float)p1.Y),
+                new SKPoint((float)p2.X, (float)p2.Y),
                 CastUtility.UnsafeArrayCast<Color, SKColor>(colors),
                 null,
                 SKShaderTileMode.Clamp);
+
+            if (shader == null) return null;
+
             ManagedInstances[shader.Handle] = shader;
             return new Shader(shader.Handle);
         }
 
-        public Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
+        public Shader? CreateLinearGradient(VecD p1, VecD p2, Color[] colors, float[] offsets)
+        {
+            SKShader shader = SKShader.CreateLinearGradient(
+                new SKPoint((float)p1.X, (float)p1.Y),
+                new SKPoint((float)p2.X, (float)p2.Y),
+                CastUtility.UnsafeArrayCast<Color, SKColor>(colors),
+                offsets,
+                SKShaderTileMode.Clamp);
+
+            if (shader == null) return null;
+
+            ManagedInstances[shader.Handle] = shader;
+            return new Shader(shader.Handle);
+        }
+
+        public Shader? CreateLinearGradient(VecD p1, VecD p2, Color[] colors, float[] offsets, Matrix3X3 localMatrix)
+        {
+            SKShader shader = SKShader.CreateLinearGradient(
+                new SKPoint((float)p1.X, (float)p1.Y),
+                new SKPoint((float)p2.X, (float)p2.Y),
+                CastUtility.UnsafeArrayCast<Color, SKColor>(colors),
+                offsets,
+                SKShaderTileMode.Clamp,
+                localMatrix.ToSkMatrix());
+
+            if (shader == null) return null;
+
+            ManagedInstances[shader.Handle] = shader;
+            return new Shader(shader.Handle);
+        }
+
+        public Shader? CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
             ShaderTileMode tileMode)
         {
             SKShader shader = SKShader.CreateRadialGradient(
@@ -94,12 +128,46 @@ namespace Drawie.Skia.Implementations
                 CastUtility.UnsafeArrayCast<Color, SKColor>(colors),
                 colorPos,
                 (SKShaderTileMode)tileMode);
+            if (shader == null) return null;
+
             ManagedInstances[shader.Handle] = shader;
 
             return new Shader(shader.Handle);
         }
 
-        public Shader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves,
+        public Shader? CreateRadialGradient(VecD center, float radius, Color[] colors)
+        {
+            SKShader shader = SKShader.CreateRadialGradient(
+                new SKPoint((float)center.X, (float)center.Y),
+                radius,
+                CastUtility.UnsafeArrayCast<Color, SKColor>(colors), SKShaderTileMode.Clamp);
+
+            if (shader == null) return null;
+
+            ManagedInstances[shader.Handle] = shader;
+
+            return new Shader(shader.Handle);
+        }
+
+        public Shader? CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
+            Matrix3X3 localMatrix)
+        {
+            SKShader shader = SKShader.CreateRadialGradient(
+                new SKPoint((float)center.X, (float)center.Y),
+                radius,
+                CastUtility.UnsafeArrayCast<Color, SKColor>(colors),
+                colorPos,
+                SKShaderTileMode.Clamp,
+                localMatrix.ToSkMatrix());
+
+            if (shader == null) return null;
+
+            ManagedInstances[shader.Handle] = shader;
+
+            return new Shader(shader.Handle);
+        }
+
+        public Shader? CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves,
             float seed)
         {
             SKShader shader = SKShader.CreatePerlinNoiseTurbulence(
@@ -108,11 +176,13 @@ namespace Drawie.Skia.Implementations
                 numOctaves,
                 seed);
 
+            if (shader == null) return null;
+
             ManagedInstances[shader.Handle] = shader;
             return new Shader(shader.Handle);
         }
 
-        public Shader CreatePerlinFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)
+        public Shader? CreatePerlinFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)
         {
             if (baseFrequencyX <= 0 || baseFrequencyY <= 0)
                 throw new ArgumentException("Base frequency must be greater than 0");

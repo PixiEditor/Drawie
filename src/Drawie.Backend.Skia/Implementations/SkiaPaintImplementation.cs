@@ -53,11 +53,11 @@ namespace Drawie.Skia.Implementations
                 imageFilterImplementation.ManagedInstances.TryRemove(paint.ImageFilter.Handle, out _);
             }*/
 
-            if (paint.Shader != null)
+            /*if (paint.Shader != null)
             {
                 paint.Shader.Dispose();
                 shaderImplementation.ManagedInstances.TryRemove(paint.Shader.Handle, out _);
-            }
+            }*/
 
             paint.Dispose();
             ManagedInstances.TryRemove(paintObjPointer, out _);

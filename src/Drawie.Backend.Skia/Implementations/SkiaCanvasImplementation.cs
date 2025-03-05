@@ -295,6 +295,18 @@ namespace Drawie.Skia.Implementations
                 _paintImpl[paint.ObjectPointer]);
         }
 
+        public RectD GetLocalClipBounds(IntPtr objectPointer)
+        {
+            var clipBounds = ManagedInstances[objectPointer].LocalClipBounds;
+            return new RectD(clipBounds.Left, clipBounds.Top, clipBounds.Width, clipBounds.Height);
+        }
+
+        public RectI GetDeviceClipBounds(IntPtr objectPointer)
+        {
+            var clipBounds = ManagedInstances[objectPointer].DeviceClipBounds;
+            return new RectI(clipBounds.Left, clipBounds.Top, clipBounds.Width, clipBounds.Height);
+        }
+
         public void Dispose(IntPtr objectPointer)
         {
             ManagedInstances[objectPointer].Dispose();

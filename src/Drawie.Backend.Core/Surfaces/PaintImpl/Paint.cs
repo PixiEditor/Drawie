@@ -1,7 +1,10 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.ColorsImpl.Paintables;
+using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Vector;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Surfaces.PaintImpl
 {
@@ -13,7 +16,7 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
         private ImageFilter? imageFilter;
         private ColorFilter? colorFilter;
         private Shader? shader;
-        
+
         public override object Native => DrawingBackendApi.Current.PaintImplementation.GetNativePaint(ObjectPointer);
 
         public Color Color
@@ -27,49 +30,49 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             get => DrawingBackendApi.Current.PaintImplementation.GetBlendMode(this);
             set => DrawingBackendApi.Current.PaintImplementation.SetBlendMode(this, value);
         }
-        
+
         public float StrokeMiter
         {
             get => DrawingBackendApi.Current.PaintImplementation.GetStrokeMiter(this);
             set => DrawingBackendApi.Current.PaintImplementation.SetStrokeMiter(this, value);
         }
-        
+
         public StrokeJoin StrokeJoin
         {
             get => DrawingBackendApi.Current.PaintImplementation.GetStrokeJoin(this);
             set => DrawingBackendApi.Current.PaintImplementation.SetStrokeJoin(this, value);
         }
-        
-        public FilterQuality FilterQuality 
+
+        public FilterQuality FilterQuality
         {
             get => DrawingBackendApi.Current.PaintImplementation.GetFilterQuality(this);
             set => DrawingBackendApi.Current.PaintImplementation.SetFilterQuality(this, value);
         }
-        
-        public bool IsAntiAliased 
+
+        public bool IsAntiAliased
         {
             get => DrawingBackendApi.Current.PaintImplementation.GetIsAntiAliased(this);
             set => DrawingBackendApi.Current.PaintImplementation.SetIsAntiAliased(this, value);
         }
-        
-        public PaintStyle Style 
+
+        public PaintStyle Style
         {
             get => DrawingBackendApi.Current.PaintImplementation.GetStyle(this);
             set => DrawingBackendApi.Current.PaintImplementation.SetStyle(this, value);
         }
-        
-        public StrokeCap StrokeCap 
+
+        public StrokeCap StrokeCap
         {
             get => DrawingBackendApi.Current.PaintImplementation.GetStrokeCap(this);
             set => DrawingBackendApi.Current.PaintImplementation.SetStrokeCap(this, value);
         }
-        
-        public float StrokeWidth 
+
+        public float StrokeWidth
         {
             get => DrawingBackendApi.Current.PaintImplementation.GetStrokeWidth(this);
             set => DrawingBackendApi.Current.PaintImplementation.SetStrokeWidth(this, value);
         }
-        
+
         public ColorFilter ColorFilter
         {
             get => colorFilter ??= DrawingBackendApi.Current.PaintImplementation.GetColorFilter(this);
@@ -106,14 +109,21 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             set => DrawingBackendApi.Current.PaintImplementation.SetPathEffect(this, value);
         }
 
+        public Paintable? Paintable { get; set; }
+
         public Paint(IntPtr objPtr) : base(objPtr)
         {
         }
-        
+
         public Paint() : base(DrawingBackendApi.Current.PaintImplementation.CreatePaint())
         {
         }
-        
+
+        public void SetPaintable(Paintable paintable)
+        {
+            Paintable = paintable;
+        }
+
         public Paint Clone()
         {
             return DrawingBackendApi.Current.PaintImplementation.Clone(ObjectPointer);
@@ -122,6 +132,23 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
         public override void Dispose()
         {
             DrawingBackendApi.Current.PaintImplementation.Dispose(ObjectPointer);
+        }
+
+        public void ApplyPaintable(RectD bounds, Matrix3X3 matrix)
+        {
+            if (Paintable == null)
+            {
+                return;
+            }
+
+            if (Paintable is ColorPaintable colorPaintable)
+            {
+                Color = colorPaintable.Color;
+            }
+            else
+            {
+                Shader = Paintable.GetShader(bounds, matrix);
+            }
         }
     }
 }

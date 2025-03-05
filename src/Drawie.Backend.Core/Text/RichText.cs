@@ -1,4 +1,5 @@
 ﻿using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
@@ -16,9 +17,9 @@ public class RichText
 
     public string[] Lines { get; }
     public bool Fill { get; set; }
-    public Color FillColor { get; set; }
+    public Paintable FillPaintable { get; set; }
     public float StrokeWidth { get; set; }
-    public Color StrokeColor { get; set; }
+    public Paintable StrokePaintable { get; set; }
     public double MaxWidth { get; set; } = double.MaxValue;
     public double? Spacing { get; set; }
 
@@ -39,15 +40,15 @@ public class RichText
     public void Paint(Canvas canvas, VecD position, Font font, Paint paint, VectorPath? onPath)
     {
         bool hasStroke = StrokeWidth > 0;
-        bool hasFill = Fill && FillColor.A > 0;
-        bool strokeAndFillEqual = StrokeColor == FillColor;
+        bool hasFill = Fill && FillPaintable.AnythingVisible;
+        bool strokeAndFillEqual = StrokePaintable == FillPaintable;
 
         if (onPath != null)
         {
             if (hasStroke && hasFill && strokeAndFillEqual)
             {
                 paint.Style = PaintStyle.StrokeAndFill;
-                paint.Color = StrokeColor;
+                paint.SetPaintable(StrokePaintable);
                 paint.StrokeWidth = StrokeWidth;
 
                 canvas.DrawTextOnPath(onPath, FormattedText, position, font, paint);
@@ -57,7 +58,7 @@ public class RichText
                 if (hasStroke)
                 {
                     paint.Style = PaintStyle.Stroke;
-                    paint.Color = StrokeColor;
+                    paint.SetPaintable(StrokePaintable);
                     paint.StrokeWidth = StrokeWidth;
                     canvas.DrawTextOnPath(onPath, FormattedText, position, font, paint);
                 }
@@ -65,7 +66,7 @@ public class RichText
                 if (hasFill)
                 {
                     paint.Style = PaintStyle.Fill;
-                    paint.Color = FillColor;
+                    paint.SetPaintable(FillPaintable);
                     canvas.DrawTextOnPath(onPath, FormattedText, position, font, paint);
                 }
             }
@@ -81,7 +82,7 @@ public class RichText
                 if (hasStroke && hasFill && strokeAndFillEqual)
                 {
                     paint.Style = PaintStyle.StrokeAndFill;
-                    paint.Color = StrokeColor;
+                    paint.SetPaintable(StrokePaintable);
                     paint.StrokeWidth = StrokeWidth;
 
                     PaintLine(canvas, line, linePosition, font, paint);
@@ -91,7 +92,7 @@ public class RichText
                     if (hasStroke)
                     {
                         paint.Style = PaintStyle.Stroke;
-                        paint.Color = StrokeColor;
+                        paint.SetPaintable(StrokePaintable);
                         paint.StrokeWidth = StrokeWidth;
                         PaintLine(canvas, line, linePosition, font, paint);
                     }
@@ -99,7 +100,7 @@ public class RichText
                     if (hasFill)
                     {
                         paint.Style = PaintStyle.Fill;
-                        paint.Color = FillColor;
+                        paint.SetPaintable(FillPaintable);
                         PaintLine(canvas, line, linePosition, font, paint);
                     }
                 }

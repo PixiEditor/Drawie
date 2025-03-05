@@ -1,5 +1,6 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
@@ -15,6 +16,13 @@ namespace Drawie.Backend.Core.Surfaces
     {
         public override object Native => DrawingBackendApi.Current.CanvasImplementation.GetNativeCanvas(ObjectPointer);
         public Matrix3X3 TotalMatrix => DrawingBackendApi.Current.CanvasImplementation.GetTotalMatrix(ObjectPointer);
+
+        public RectD LocalClipBounds =>
+            DrawingBackendApi.Current.CanvasImplementation.GetLocalClipBounds(ObjectPointer);
+
+        public RectI DeviceClipBounds =>
+            DrawingBackendApi.Current.CanvasImplementation.GetDeviceClipBounds(ObjectPointer);
+
         public bool IsDisposed { get; private set; }
 
         public event SurfaceChangedEventHandler? Changed;
@@ -205,8 +213,32 @@ namespace Drawie.Backend.Core.Surfaces
 
         public void DrawLine(VecD from, VecD to, Paint paint)
         {
+            ShapeCorners corners = new ShapeCorners(from, to, paint.StrokeWidth);
+            if (paint?.Paintable != null)
+            {
+                if (paint.Paintable.AbsoluteValues)
+                {
+                    paint.ApplyPaintable(LocalClipBounds, Matrix3X3.Identity);
+                }
+                else
+                {
+                    if (paint.Paintable is IStartEndPaintable startEndPaintable)
+                    {
+                        startEndPaintable.UpdateWithStartEnd(from, to);
+                        paint.ApplyPaintable(new RectD(0, 0, 1, 1), Matrix3X3.Identity);
+                    }
+                    else
+                    {
+                        Matrix3X3 rotationMatrix = Matrix3X3.CreateRotation((float)corners.RectRotation,
+                            (float)corners.RectCenter.X, (float)corners.RectCenter.Y);
+                        var unrotated = corners.AsRotated(-corners.RectRotation, corners.RectCenter);
+                        paint.ApplyPaintable(unrotated.AABBBounds, rotationMatrix);
+                    }
+                }
+            }
+
             DrawingBackendApi.Current.CanvasImplementation.DrawLine(ObjectPointer, from, to, paint);
-            Changed?.Invoke(new RectD(from, to));
+            Changed?.Invoke(corners.AABBBounds);
         }
 
         public void Flush()
@@ -228,6 +260,23 @@ namespace Drawie.Backend.Core.Surfaces
         {
             DrawingBackendApi.Current.CanvasImplementation.DrawColor(ObjectPointer, color, paintBlendMode);
             Changed?.Invoke(null);
+        }
+
+        public void DrawPaintable(Paintable paintable, BlendMode blendMode)
+        {
+            if (paintable is ColorPaintable colorPaintable)
+            {
+                DrawColor(colorPaintable.Color, blendMode);
+            }
+            else
+            {
+                var shader = paintable.GetShader(LocalClipBounds, Matrix3X3.Identity);
+                if (shader != null)
+                {
+                    using Paint paint = new Paint() { Shader = shader, BlendMode = blendMode };
+                    DrawPaint(paint);
+                }
+            }
         }
 
         public void RotateRadians(float dataAngle, float centerX, float centerY)

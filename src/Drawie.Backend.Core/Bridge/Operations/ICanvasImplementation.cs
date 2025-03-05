@@ -53,5 +53,7 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public Matrix3X3 GetTotalMatrix(IntPtr objectPointer);
         public void RotateDegrees(IntPtr objectPointer, float degrees);
         public void DrawTextOnPath(IntPtr objectPointer, VectorPath path, string text, float positionX, float positionY, Font font, Paint paint);
+        public RectD GetLocalClipBounds(IntPtr objectPointer);
+        public RectI GetDeviceClipBounds(IntPtr objectPointer);
     }
 }
