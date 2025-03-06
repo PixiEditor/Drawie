@@ -51,7 +51,7 @@ public class RichText
                 paint.SetPaintable(StrokePaintable);
                 paint.StrokeWidth = StrokeWidth;
 
-                canvas.DrawTextOnPath(onPath, FormattedText, position, font, paint);
+                canvas.DrawTextOnPath(onPath, FormattedText, VecD.Zero, font, paint);
             }
             else
             {
@@ -60,14 +60,14 @@ public class RichText
                     paint.Style = PaintStyle.Stroke;
                     paint.SetPaintable(StrokePaintable);
                     paint.StrokeWidth = StrokeWidth;
-                    canvas.DrawTextOnPath(onPath, FormattedText, position, font, paint);
+                    canvas.DrawTextOnPath(onPath, FormattedText, VecD.Zero, font, paint);
                 }
 
                 if (hasFill)
                 {
                     paint.Style = PaintStyle.Fill;
                     paint.SetPaintable(FillPaintable);
-                    canvas.DrawTextOnPath(onPath, FormattedText, position, font, paint);
+                    canvas.DrawTextOnPath(onPath, FormattedText, VecD.Zero, font, paint);
                 }
             }
         }

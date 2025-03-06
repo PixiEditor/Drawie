@@ -139,6 +139,7 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
 
         public void ApplyPaintable(RectD bounds, Matrix3X3 matrix)
         {
+            Shader = null;
             if (Paintable == null)
             {
                 return;

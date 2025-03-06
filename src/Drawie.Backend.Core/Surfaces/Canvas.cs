@@ -36,8 +36,10 @@ namespace Drawie.Backend.Core.Surfaces
 
         public void DrawPixel(float posX, float posY, Paint drawingPaint)
         {
+            RectD rect = new RectD(posX, posY, 1, 1);
+            ApplyPaintable(rect, drawingPaint);
             DrawingBackendApi.Current.CanvasImplementation.DrawPixel(ObjectPointer, posX, posY, drawingPaint);
-            Changed?.Invoke(new RectD(posX, posY, 1, 1));
+            Changed?.Invoke(rect);
         }
 
         public void DrawSurface(DrawingSurface original, float x, float y, Paint? paint)
@@ -110,14 +112,17 @@ namespace Drawie.Backend.Core.Surfaces
 
         public void DrawPath(VectorPath path, Paint paint)
         {
+            ApplyPaintable(path.Bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawPath(ObjectPointer, path, paint);
             Changed?.Invoke(path.Bounds);
         }
 
         public void DrawPoint(VecD pos, Paint paint)
         {
+            RectD rect = new RectD(pos.X, pos.Y, 1, 1);
+            ApplyPaintable(rect, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawPoint(ObjectPointer, pos, paint);
-            Changed?.Invoke(new RectD(pos.X, pos.Y, 1, 1));
+            Changed?.Invoke(rect);
         }
 
         public void DrawPoints(PointMode pointMode, VecF[] points, Paint paint)
@@ -130,14 +135,19 @@ namespace Drawie.Backend.Core.Surfaces
 
         public void DrawRect(float x, float y, float width, float height, Paint paint)
         {
+            RectD rect = new RectD(x, y, width, height);
+            ApplyPaintable(rect, paint);
+
             DrawingBackendApi.Current.CanvasImplementation.DrawRect(ObjectPointer, x, y, width, height, paint);
-            Changed?.Invoke(new RectD(x, y, width, height));
+            Changed?.Invoke(rect);
         }
 
         public void DrawCircle(float centerX, float centerY, float radius, Paint paint)
         {
+            RectD rect = new RectD(centerX - radius, centerY - radius, radius * 2, radius * 2);
+            ApplyPaintable(rect, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawCircle(ObjectPointer, centerX, centerY, radius, paint);
-            Changed?.Invoke(new RectD(centerX - radius, centerY - radius, radius * 2, radius * 2));
+            Changed?.Invoke(rect);
         }
 
         public void DrawCircle(VecD center, float radius, Paint paint) =>
@@ -145,9 +155,12 @@ namespace Drawie.Backend.Core.Surfaces
 
         public void DrawOval(float centerX, float centerY, float radiusX, float radiusY, Paint paint)
         {
+            RectD rect = new RectD(centerX - radiusX, centerY - radiusY, radiusX * 2, radiusY * 2);
+            ApplyPaintable(rect, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawOval(ObjectPointer, centerX, centerY, radiusX, radiusY,
                 paint);
-            Changed?.Invoke(new RectD(centerX - radiusX, centerY - radiusY, radiusX * 2, radiusY * 2));
+
+            Changed?.Invoke(rect);
         }
 
         public void DrawOval(VecD center, VecD radius, Paint paint) =>
@@ -161,29 +174,44 @@ namespace Drawie.Backend.Core.Surfaces
         public void DrawRoundRect(float x, float y, float width, float height, float radiusX, float radiusY,
             Paint paint)
         {
+            RectD rect = new RectD(x, y, width, height);
+            ApplyPaintable(rect, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawRoundRect(ObjectPointer, x, y, width, height, radiusX,
                 radiusY, paint);
-            Changed?.Invoke(new RectD(x, y, width, height));
+            Changed?.Invoke(rect);
         }
 
         public void DrawText(string text, VecD position, Paint paint)
         {
+            using Font defaultFont = Font.CreateDefault();
+            defaultFont.MeasureText(text, out RectD bounds, paint);
+
+            bounds = new RectD(position.X, position.Y, bounds.Width, bounds.Height);
+            ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
                 (float)position.Y, paint);
-            Changed?.Invoke(null);
+            Changed?.Invoke(bounds);
         }
 
         public void DrawText(string text, VecD position, Font font, Paint paint)
         {
+            font.MeasureText(text, out RectD bounds, paint);
+            bounds = new RectD(position.X, position.Y, bounds.Width, bounds.Height);
+            ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
                 (float)position.Y, font, paint);
-            Changed?.Invoke(null);
+            Changed?.Invoke(bounds);
         }
 
         public void DrawText(string text, VecD position, TextAlign align, Font font, Paint paint)
         {
+            font.MeasureText(text, out RectD bounds, paint);
+            bounds = new RectD(position.X, position.Y, bounds.Width, bounds.Height);
+            ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
                 (float)position.Y, align, font, paint);
+
+            Changed?.Invoke(bounds);
         }
 
         public void ClipPath(VectorPath clipPath) => ClipPath(clipPath, ClipOperation.Intersect);
@@ -329,11 +357,15 @@ namespace Drawie.Backend.Core.Surfaces
             DrawingBackendApi.Current.CanvasImplementation.RotateDegrees(ObjectPointer, degrees);
         }
 
-        public void DrawTextOnPath(VectorPath path, string text, VecD position, Font font, Paint paint)
+        public void DrawTextOnPath(VectorPath path, string text, VecD offset, Font font, Paint paint)
         {
-            DrawingBackendApi.Current.CanvasImplementation.DrawTextOnPath(ObjectPointer, path, text, (float)position.X,
-                (float)position.Y, font, paint);
-            Changed?.Invoke(null);
+            // below is not very precise
+            RectD bounds = path.Bounds.Inflate(font.Size);
+            bounds = bounds.Offset(offset);
+            ApplyPaintable(bounds, paint);
+            DrawingBackendApi.Current.CanvasImplementation.DrawTextOnPath(ObjectPointer, path, text, (float)offset.X,
+                (float)offset.Y, font, paint);
+            Changed?.Invoke(bounds);
         }
 
         private void ApplyPaintable(RectD? rect, Paint paint)
