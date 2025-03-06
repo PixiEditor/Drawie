@@ -4,11 +4,14 @@ using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.ColorsImpl.Paintables;
 
-public abstract class Paintable
+public abstract class Paintable : IDisposable
 {
     public abstract bool AnythingVisible { get; }
     public bool AbsoluteValues { get; set; } = false;
     public abstract Shader? GetShader(RectD bounds, Matrix3X3 matrix);
 
     public static implicit operator Paintable(Color color) => new ColorPaintable(color);
+    public abstract Paintable? Clone();
+    public virtual void Dispose() { }
+    internal abstract Shader? GetShaderCached();
 }

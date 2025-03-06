@@ -6,17 +6,26 @@ namespace Drawie.Backend.Core.ColorsImpl.Paintables;
 
 public class ColorPaintable : Paintable
 {
+    public Color Color { get; }
     public override bool AnythingVisible => Color.A > 0;
+
+    public ColorPaintable(Color color)
+    {
+        Color = color;
+    }
 
     public override Shader? GetShader(RectD bounds, Matrix3X3 matrix)
     {
         return null;
     }
 
-    public Color Color { get; }
-
-    public ColorPaintable(Color color)
+    internal override Shader? GetShaderCached()
     {
-        Color = color;
+        return null;
+    }
+
+    public override Paintable? Clone()
+    {
+        return new ColorPaintable(Color);
     }
 }

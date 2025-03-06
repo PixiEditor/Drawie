@@ -122,6 +122,8 @@ namespace Drawie.Backend.Core.Surfaces
 
         public void DrawPoints(PointMode pointMode, VecF[] points, Paint paint)
         {
+            RectD? rect = RectD.FromPoints(points);
+            ApplyPaintable(rect, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawPoints(ObjectPointer, pointMode, points, paint);
             Changed?.Invoke(RectD.FromPoints(points));
         }
@@ -224,8 +226,8 @@ namespace Drawie.Backend.Core.Surfaces
                 {
                     if (paint.Paintable is IStartEndPaintable startEndPaintable)
                     {
-                        startEndPaintable.UpdateWithStartEnd(from, to);
-                        paint.ApplyPaintable(new RectD(0, 0, 1, 1), Matrix3X3.Identity);
+                        startEndPaintable.TempUpdateWithStartEnd(from, to);
+                        paint.ApplyPaintableCached();
                     }
                     else
                     {
@@ -332,6 +334,21 @@ namespace Drawie.Backend.Core.Surfaces
             DrawingBackendApi.Current.CanvasImplementation.DrawTextOnPath(ObjectPointer, path, text, (float)position.X,
                 (float)position.Y, font, paint);
             Changed?.Invoke(null);
+        }
+
+        private void ApplyPaintable(RectD? rect, Paint paint)
+        {
+            if (paint?.Paintable != null)
+            {
+                if (paint.Paintable.AbsoluteValues || rect == null)
+                {
+                    paint.ApplyPaintable(LocalClipBounds, Matrix3X3.Identity);
+                }
+                else
+                {
+                    paint.ApplyPaintable(rect.Value, Matrix3X3.Identity);
+                }
+            }
         }
     }
 }

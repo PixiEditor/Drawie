@@ -13,7 +13,6 @@ public class LinearGradientPaintable : GradientPaintable, IStartEndPaintable
     private VecD lastEnd;
     private Color[] lastColors;
     private double[] lastOffsets;
-    private Shader lastShader;
     private Matrix3X3 lastMatrix;
     private RectD lastBounds;
 
@@ -32,14 +31,19 @@ public class LinearGradientPaintable : GradientPaintable, IStartEndPaintable
 
         UpdateLast(default, bounds, colors, offsets);
 
-        VecD start = new VecD(Start.X * bounds.Width + bounds.X, Start.Y * bounds.Height + bounds.Y);
-        VecD end = new VecD(End.X * bounds.Width + bounds.X, End.Y * bounds.Height + bounds.Y);
+        VecD start = AbsoluteValues ? Start : new VecD(Start.X * bounds.Width + bounds.X, Start.Y * bounds.Height + bounds.Y);
+        VecD end = AbsoluteValues ? End : new VecD(End.X * bounds.Width + bounds.X, End.Y * bounds.Height + bounds.Y);
         lastShader = Shader.CreateLinearGradient(start, end,
             GradientStops.Select(x => x.Color).ToArray(),
             GradientStops.Select(x => (float)x.Offset).ToArray(),
             matrix);
 
         return lastShader;
+    }
+
+    public override Paintable? Clone()
+    {
+        return new LinearGradientPaintable(Start, End, GradientStops.Select(x => x).ToList());
     }
 
     private void UpdateLast(Matrix3X3 matrix, RectD bounds, Color[] colors, double[] offsets)
@@ -71,7 +75,7 @@ public class LinearGradientPaintable : GradientPaintable, IStartEndPaintable
         return false;
     }
 
-    public void UpdateWithStartEnd(VecD start, VecD end)
+    public void TempUpdateWithStartEnd(VecD start, VecD end)
     {
         lastShader?.Dispose();
         lastShader = null;

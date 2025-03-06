@@ -16,8 +16,6 @@ public class RadialGradientPaintable : GradientPaintable
     private Matrix3X3 lastLocalMatrix;
     private RectD lastBounds;
 
-    private Shader? lastShader;
-
     public RadialGradientPaintable(VecD center, double radius, IEnumerable<GradientStop> gradientStops) : base(
         gradientStops)
     {
@@ -51,9 +49,14 @@ public class RadialGradientPaintable : GradientPaintable
         lastLocalMatrix = matrix;
         lastBounds = bounds;
 
-        VecD center = new VecD(Center.X * bounds.Width + bounds.X, Center.Y * bounds.Height + bounds.Y);
-        double radius = Radius * bounds.Width;
+        VecD center = AbsoluteValues ? Center : new VecD(Center.X * bounds.Width + bounds.X, Center.Y * bounds.Height + bounds.Y);
+        double radius = AbsoluteValues ? Radius : Radius * bounds.Width;
         lastShader = Shader.CreateRadialGradient(center, (float)radius, colors, offsets, matrix);
         return lastShader;
+    }
+
+    public override Paintable? Clone()
+    {
+        return new RadialGradientPaintable(Center, Radius, GradientStops.Select(x => x));
     }
 }

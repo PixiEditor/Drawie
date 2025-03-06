@@ -126,7 +126,10 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
 
         public Paint Clone()
         {
-            return DrawingBackendApi.Current.PaintImplementation.Clone(ObjectPointer);
+            var paint = DrawingBackendApi.Current.PaintImplementation.Clone(ObjectPointer);
+            paint.Paintable = Paintable;
+
+            return paint;
         }
 
         public override void Dispose()
@@ -148,6 +151,23 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             else
             {
                 Shader = Paintable.GetShader(bounds, matrix);
+            }
+        }
+
+        internal void ApplyPaintableCached()
+        {
+            if (Paintable == null)
+            {
+                return;
+            }
+
+            if (Paintable is ColorPaintable colorPaintable)
+            {
+                Color = colorPaintable.Color;
+            }
+            else
+            {
+                Shader = Paintable.GetShaderCached();
             }
         }
     }
