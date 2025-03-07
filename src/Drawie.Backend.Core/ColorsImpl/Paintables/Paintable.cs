@@ -12,6 +12,7 @@ public abstract class Paintable : IDisposable
 
     public static implicit operator Paintable(Color color) => new ColorPaintable(color);
     public abstract Paintable? Clone();
+    public abstract void ApplyOpacity(double opacity);
     public virtual void Dispose() { }
     internal abstract Shader? GetShaderCached();
 }

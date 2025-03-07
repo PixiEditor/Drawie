@@ -6,7 +6,7 @@ namespace Drawie.Backend.Core.ColorsImpl.Paintables;
 
 public class ColorPaintable : Paintable
 {
-    public Color Color { get; }
+    public Color Color { get; private set; }
     public override bool AnythingVisible => Color.A > 0;
 
     public ColorPaintable(Color color)
@@ -27,5 +27,10 @@ public class ColorPaintable : Paintable
     public override Paintable? Clone()
     {
         return new ColorPaintable(Color);
+    }
+
+    public override void ApplyOpacity(double opacity)
+    {
+        Color = Color.WithAlpha((byte)(Color.A * opacity));
     }
 }
