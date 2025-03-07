@@ -107,6 +107,13 @@ public class Shader : NativeObject
             tileMode);
     }
 
+
+    public static Shader? CreateSweepGradient(VecD center, Color[] colors, float[] colorPos, Matrix3X3 localMatrix)
+    {
+        return DrawingBackendApi.Current.ShaderImplementation.CreateSweepGradient(center, colors, colorPos,
+            localMatrix);
+    }
+
     public static Shader CreatePerlinFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves,
         float seed)
     {

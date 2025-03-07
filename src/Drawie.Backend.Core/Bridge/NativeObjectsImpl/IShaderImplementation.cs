@@ -31,5 +31,9 @@ public interface IShaderImplementation
     public Shader? CreateBitmap(Bitmap bitmap, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix);
     public UniformDeclaration[] GetUniformDeclarations(string shaderCode);
     public Shader? CreateCreate(Image image, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix);
-    public Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos, Matrix3X3 localMatrix);
+
+    public Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
+        Matrix3X3 localMatrix);
+
+    public Shader? CreateSweepGradient(VecD center, Color[] colors, float[] colorPos, Matrix3X3 localMatrix);
 }

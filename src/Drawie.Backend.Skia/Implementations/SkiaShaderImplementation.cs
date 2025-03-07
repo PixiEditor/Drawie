@@ -167,6 +167,21 @@ namespace Drawie.Skia.Implementations
             return new Shader(shader.Handle);
         }
 
+        public Shader? CreateSweepGradient(VecD center, Color[] colors, float[] colorPos, Matrix3X3 localMatrix)
+        {
+            SKShader shader = SKShader.CreateSweepGradient(
+                new SKPoint((float)center.X, (float)center.Y),
+                CastUtility.UnsafeArrayCast<Color, SKColor>(colors),
+                colorPos,
+                localMatrix.ToSkMatrix());
+
+            if (shader == null) return null;
+
+            ManagedInstances[shader.Handle] = shader;
+
+            return new Shader(shader.Handle);
+        }
+
         public Shader? CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves,
             float seed)
         {

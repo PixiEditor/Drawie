@@ -186,7 +186,7 @@ namespace Drawie.Backend.Core.Surfaces
             using Font defaultFont = Font.CreateDefault();
             defaultFont.MeasureText(text, out RectD bounds, paint);
 
-            bounds = new RectD(position.X, position.Y, bounds.Width, bounds.Height);
+            bounds = new RectD(position.X + bounds.X, position.Y + bounds.Y, bounds.Width, bounds.Height);
             ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
                 (float)position.Y, paint);
@@ -196,7 +196,7 @@ namespace Drawie.Backend.Core.Surfaces
         public void DrawText(string text, VecD position, Font font, Paint paint)
         {
             font.MeasureText(text, out RectD bounds, paint);
-            bounds = new RectD(position.X, position.Y, bounds.Width, bounds.Height);
+            bounds = new RectD(position.X + bounds.X, position.Y + bounds.Y, bounds.Width, bounds.Height);
             ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
                 (float)position.Y, font, paint);
@@ -206,7 +206,7 @@ namespace Drawie.Backend.Core.Surfaces
         public void DrawText(string text, VecD position, TextAlign align, Font font, Paint paint)
         {
             font.MeasureText(text, out RectD bounds, paint);
-            bounds = new RectD(position.X, position.Y, bounds.Width, bounds.Height);
+            bounds = new RectD(position.X + bounds.X, position.Y + bounds.Y, bounds.Width, bounds.Height);
             ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
                 (float)position.Y, align, font, paint);
