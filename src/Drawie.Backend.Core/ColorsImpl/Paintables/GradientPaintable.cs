@@ -1,4 +1,5 @@
-﻿using Drawie.Backend.Core.Shaders;
+﻿using Drawie.Backend.Core.Numerics;
+using Drawie.Backend.Core.Shaders;
 
 namespace Drawie.Backend.Core.ColorsImpl.Paintables;
 
@@ -6,6 +7,7 @@ public abstract class GradientPaintable : Paintable
 {
     public override bool AnythingVisible => GradientStops is { Count: > 0 } && GradientStops.Any(x => x.Color.A > 0);
     public List<GradientStop> GradientStops { get; }
+    public Matrix3X3? Transform { get; set; }
 
     protected Shader lastShader;
 

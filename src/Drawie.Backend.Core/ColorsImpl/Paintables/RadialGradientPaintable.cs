@@ -15,6 +15,7 @@ public class RadialGradientPaintable : GradientPaintable
     private double lastRadius;
     private Matrix3X3 lastLocalMatrix;
     private RectD lastBounds;
+    private Matrix3X3? lastTransform;
 
     public RadialGradientPaintable(VecD center, double radius, IEnumerable<GradientStop> gradientStops) : base(
         gradientStops)
@@ -35,7 +36,8 @@ public class RadialGradientPaintable : GradientPaintable
             && lastColors.SequenceEqual(colors) && lastOffsets != null
             && lastOffsets.SequenceEqual(offsets)
             && lastLocalMatrix == matrix
-            && lastBounds == bounds)
+            && lastBounds == bounds
+            && lastTransform == Transform)
         {
             return lastShader;
         }
@@ -48,10 +50,19 @@ public class RadialGradientPaintable : GradientPaintable
         lastOffsets = offsets;
         lastLocalMatrix = matrix;
         lastBounds = bounds;
+        lastTransform = Transform;
 
-        VecD center = AbsoluteValues ? Center : new VecD(Center.X * bounds.Width + bounds.X, Center.Y * bounds.Height + bounds.Y);
+        Matrix3X3 finalMatrix = matrix;
+        if (Transform != null)
+        {
+            finalMatrix = matrix.Concat(Transform.Value);
+        }
+
+        VecD center = AbsoluteValues
+            ? Center
+            : new VecD(Center.X * bounds.Width + bounds.X, Center.Y * bounds.Height + bounds.Y);
         double radius = AbsoluteValues ? Radius : Radius * bounds.Width;
-        lastShader = Shader.CreateRadialGradient(center, (float)radius, colors, offsets, matrix);
+        lastShader = Shader.CreateRadialGradient(center, (float)radius, colors, offsets, finalMatrix);
         return lastShader;
     }
 

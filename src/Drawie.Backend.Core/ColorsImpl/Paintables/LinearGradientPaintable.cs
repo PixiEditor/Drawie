@@ -15,6 +15,7 @@ public class LinearGradientPaintable : GradientPaintable, IStartEndPaintable
     private double[] lastOffsets;
     private Matrix3X3 lastMatrix;
     private RectD lastBounds;
+    private Matrix3X3? lastTransform;
 
     public LinearGradientPaintable(VecD start, VecD end, IEnumerable<GradientStop> gradientStops) : base(gradientStops)
     {
@@ -31,12 +32,21 @@ public class LinearGradientPaintable : GradientPaintable, IStartEndPaintable
 
         UpdateLast(default, bounds, colors, offsets);
 
-        VecD start = AbsoluteValues ? Start : new VecD(Start.X * bounds.Width + bounds.X, Start.Y * bounds.Height + bounds.Y);
+        Matrix3X3 finalMatrix = matrix;
+
+        if (Transform != null)
+        {
+            finalMatrix = matrix.Concat(Transform.Value);
+        }
+
+        VecD start = AbsoluteValues
+            ? Start
+            : new VecD(Start.X * bounds.Width + bounds.X, Start.Y * bounds.Height + bounds.Y);
         VecD end = AbsoluteValues ? End : new VecD(End.X * bounds.Width + bounds.X, End.Y * bounds.Height + bounds.Y);
         lastShader = Shader.CreateLinearGradient(start, end,
             GradientStops.Select(x => x.Color).ToArray(),
             GradientStops.Select(x => (float)x.Offset).ToArray(),
-            matrix);
+            finalMatrix);
 
         return lastShader;
     }
@@ -56,6 +66,7 @@ public class LinearGradientPaintable : GradientPaintable, IStartEndPaintable
         lastOffsets = offsets;
         lastMatrix = matrix;
         lastBounds = bounds;
+        lastTransform = Transform;
     }
 
     private bool EqualsLast(Matrix3X3 matrix, RectD bounds, out Color[] colors, out double[] offsets,
@@ -65,7 +76,8 @@ public class LinearGradientPaintable : GradientPaintable, IStartEndPaintable
         offsets = GradientStops.Select(x => x.Offset).ToArray();
         if (lastShader != null && lastStart == Start && lastEnd == End && lastColors != null &&
             lastColors.SequenceEqual(colors) &&
-            lastOffsets != null && lastOffsets.SequenceEqual(offsets) && lastMatrix == matrix && lastBounds == bounds)
+            lastOffsets != null && lastOffsets.SequenceEqual(offsets) && lastMatrix == matrix
+            && lastBounds == bounds && lastTransform == Transform)
         {
             shader = lastShader;
             return true;
