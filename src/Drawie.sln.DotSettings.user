@@ -46,6 +46,8 @@
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
   &lt;PhysicalFolder Path="C:\Users\flubb\.nuget\packages\silk.net.shaderc.native\2.21.0" Loaded="True" /&gt;&#xD;
 &lt;/AssemblyExplorer&gt;</s:String>
+	<s:String x:Key="/Default/Environment/Hierarchy/Build/BuildTool/CustomBuildToolPath/@EntryValue">C:\Program Files\dotnet\sdk\8.0.405\MSBuild.dll</s:String>
+	<s:String x:Key="/Default/Environment/Hierarchy/Build/BuildTool/DotNetCliExePath/@EntryValue">C:\Program Files\dotnet\dotnet.exe</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=3573c91e_002Da329_002D40cb_002Daae2_002D3d24113ce6a3/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestThatDrawingBackendHasGraphicsContext" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;xUnit::5222843B-3E7F-4AF9-9394-4BDBC2D2ABD6::net8.0::Drawie.Tests.SkiaDrawingBackendTests&lt;/TestId&gt;&#xD;

@@ -19,7 +19,7 @@ public class VulkanResources : RenderApiResources
     public VulkanResources(CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop) : base(
         compositionDrawingSurface, interop)
     {
-        Context = new VulkanInteropContext(DrawieInterop.VulkanInteropContext);
+        Context = DrawieInterop.VulkanInteropContext;
         Swapchain = new VulkanSwapchain(Context, interop, compositionDrawingSurface);
         Content = new VulkanContent(Context);
     }
@@ -32,7 +32,6 @@ public class VulkanResources : RenderApiResources
         isDisposed = true;
 
         Content.Dispose();
-        Context.Dispose();
         await Swapchain.DisposeAsync();
     }
 

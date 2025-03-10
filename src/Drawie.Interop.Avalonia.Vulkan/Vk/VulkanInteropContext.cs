@@ -23,23 +23,9 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
     private ICompositionGpuInterop gpuInterop;
     private DescriptorPool descriptorPool;
 
-    private bool isOwnedByMaster;
-
     public VulkanInteropContext(ICompositionGpuInterop gpuInterop)
     {
         this.gpuInterop = gpuInterop;
-    }
-
-    public VulkanInteropContext(VulkanInteropContext master)
-    {
-        gpuInterop = master.gpuInterop;
-        Api = master.Api;
-        Instance = master.Instance;
-        PhysicalDevice = master.PhysicalDevice;
-        LogicalDevice = master.LogicalDevice;
-        GraphicsQueueFamilyIndex = master.GraphicsQueueFamilyIndex;
-        CreatePool();
-        isOwnedByMaster = true;
     }
 
     public override void Initialize(IVulkanContextInfo contextInfo)
@@ -193,8 +179,6 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
     public override unsafe void Dispose()
     {
         Pool.Dispose();
-
-        if (isOwnedByMaster) return;
         LogicalDevice.Dispose();
         if (EnableValidationLayers)
         {
