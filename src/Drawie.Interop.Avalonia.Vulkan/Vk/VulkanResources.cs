@@ -31,6 +31,7 @@ public class VulkanResources : RenderApiResources
 
         isDisposed = true;
 
+        Context.Pool.FreeUsedCommandBuffers();
         Content.Dispose();
         await Swapchain.DisposeAsync();
     }

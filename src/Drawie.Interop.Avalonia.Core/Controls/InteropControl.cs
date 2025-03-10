@@ -25,12 +25,11 @@ public abstract class InteropControl : Control
         update = UpdateFrame;
     }
 
-    protected override void OnInitialized()
+    protected override void OnLoaded(RoutedEventArgs e)
     {
-        base.OnInitialized();
         InitializeComposition();
+        base.OnLoaded(e);
     }
-
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
