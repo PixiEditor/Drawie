@@ -15,6 +15,8 @@ public abstract class DrawieControl : InteropControl
 
     private PixelSize lastSize = PixelSize.Empty;
 
+    private bool isDisposed;
+
     /// <summary>
     ///     If true, intermediate surface will be used to render the frame. This is useful when dealing with non srgb surfaces.
     /// Enabling this will create display-optimized surface and use it for rendering, then draw it to the frame buffer.
@@ -29,15 +31,20 @@ public abstract class DrawieControl : InteropControl
         return (true, string.Empty);
     }
 
-    protected override async Task FreeGraphicsResources()
+    protected override void FreeGraphicsResources()
     {
+        if (isDisposed)
+            return;
+
+        isDisposed = true;
+
         intermediateSurface?.Dispose();
         intermediateSurface = null;
 
         framebuffer?.Dispose();
         framebuffer = null;
 
-        resources?.DisposeAsync();
+        resources.DisposeAsync();
 
         resources = null;
     }
@@ -46,7 +53,7 @@ public abstract class DrawieControl : InteropControl
 
     protected override void RenderFrame(PixelSize size)
     {
-        if (resources is { IsDisposed: false })
+        if (!isDisposed && resources is { IsDisposed: false })
         {
             if (size.Width == 0 || size.Height == 0)
             {

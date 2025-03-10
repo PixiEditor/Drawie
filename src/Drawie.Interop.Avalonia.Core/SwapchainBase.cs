@@ -82,6 +82,9 @@ public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : cl
 
     public async ValueTask DisposeAsync()
     {
+        if (isDisposed)
+            return;
+
         isDisposed = true;
         for (var i = 0; i < _pendingImages.Count; i++)
         {

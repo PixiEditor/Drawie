@@ -84,13 +84,6 @@ public class VulkanSwapchainImage : ISwapchainImage
             ImageLayout.Undefined, AccessFlags.None,
             ImageLayout.ColorAttachmentOptimal, AccessFlags.ColorAttachmentReadBit);
 
-        /*if (_image.IsDirectXBacked)
-            buffer.Submit(null, null, null, null, new VulkanCommandBufferPool.VulkanCommandBuffer.KeyedMutexSubmitInfo
-            {
-                AcquireKey = 0,
-                DeviceMemory = _image.DeviceMemory
-            });
-        else */
         if (_initial)
         {
             _initial = false;
@@ -108,24 +101,11 @@ public class VulkanSwapchainImage : ISwapchainImage
         buffer.BeginRecording();
         _image.TransitionLayout(buffer.InternalHandle, ImageLayout.TransferSrcOptimal, AccessFlags.TransferWriteBit);
 
-
-        /*if (_image.IsDirectXBacked)
-        {
-            buffer.Submit(null, null, null, null,
-                new VulkanCommandBufferPool.VulkanCommandBuffer.KeyedMutexSubmitInfo
-                {
-                    DeviceMemory = _image.DeviceMemory, ReleaseKey = 1
-                });
-        }
-        else*/
         buffer.Submit(null, null, new[] { _semaphorePair.RenderFinishedSemaphore });
 
-        //if (!_image.IsDirectXBacked)
-        {
-            _availableSemaphore ??= _interop.ImportSemaphore(_semaphorePair.Export(false));
+        _availableSemaphore ??= _interop.ImportSemaphore(_semaphorePair.Export(false));
 
-            _renderCompletedSemaphore ??= _interop.ImportSemaphore(_semaphorePair.Export(true));
-        }
+        _renderCompletedSemaphore ??= _interop.ImportSemaphore(_semaphorePair.Export(true));
 
         _importedImage ??= _interop.ImportImage(_image.Export(),
             new PlatformGraphicsExternalImageProperties
@@ -136,9 +116,6 @@ public class VulkanSwapchainImage : ISwapchainImage
                 MemorySize = _image.MemorySize
             });
 
-        /*if (_image.IsDirectXBacked)
-            _lastPresent = _target.UpdateWithKeyedMutexAsync(_importedImage, 1, 0);
-        else*/
         _lastPresent =
             _target.UpdateWithSemaphoresAsync(_importedImage, _renderCompletedSemaphore!, _availableSemaphore!);
     }

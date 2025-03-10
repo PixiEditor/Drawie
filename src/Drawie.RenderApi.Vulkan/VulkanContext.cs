@@ -19,7 +19,7 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
     public Instance Instance
     {
         get => instance;
-        private set => instance = value;
+        protected set => instance = value;
     }
 
     public bool EnableValidationLayers { get; set; }

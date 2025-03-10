@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using System;
+using System.Threading.Tasks;
 using Avalonia.Logging;
 using Avalonia.Vulkan;
 using Drawie.Interop.Avalonia.Vulkan;
@@ -13,8 +14,11 @@ class Program
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
     [STAThread]
-    public static void Main(string[] args) => BuildAvaloniaApp()
-        .StartWithClassicDesktopLifetime(args);
+    public static void Main(string[] args)
+    {
+        BuildAvaloniaApp()
+            .StartWithClassicDesktopLifetime(args);
+    }
 
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
@@ -26,16 +30,9 @@ class Program
                 RenderingMode = new[]
                 {
                     Win32RenderingMode.Vulkan
-                }
+                },
             })
             .With(new X11PlatformOptions() { RenderingMode = new[] { X11RenderingMode.Vulkan, X11RenderingMode.Glx } })
-            .With(new VulkanOptions()
-            {
-                VulkanInstanceCreationOptions = new VulkanInstanceCreationOptions()
-                {
-                    UseDebug = true
-                }
-            })
             .WithDrawie()
             .LogToTrace(LogEventLevel.Debug, "Vulkan");
 }

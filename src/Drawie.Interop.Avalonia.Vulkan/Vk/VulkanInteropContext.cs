@@ -23,9 +23,23 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
     private ICompositionGpuInterop gpuInterop;
     private DescriptorPool descriptorPool;
 
+    private bool isOwnedByMaster;
+
     public VulkanInteropContext(ICompositionGpuInterop gpuInterop)
     {
         this.gpuInterop = gpuInterop;
+    }
+
+    public VulkanInteropContext(VulkanInteropContext master)
+    {
+        gpuInterop = master.gpuInterop;
+        Api = master.Api;
+        Instance = master.Instance;
+        PhysicalDevice = master.PhysicalDevice;
+        LogicalDevice = master.LogicalDevice;
+        GraphicsQueueFamilyIndex = master.GraphicsQueueFamilyIndex;
+        CreatePool();
+        isOwnedByMaster = true;
     }
 
     public override void Initialize(IVulkanContextInfo contextInfo)
@@ -80,39 +94,6 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
                 return false;
             requiredDeviceExtensions.Add(KhrExternalMemoryFd.ExtensionName);
             requiredDeviceExtensions.Add(KhrExternalSemaphoreFd.ExtensionName);
-        }
-
-        return true;
-    }
-
-    protected override unsafe bool IsDeviceSuitable(PhysicalDevice device)
-    {
-        if (requiredDeviceExtensions.Any(x => !Api!.IsDeviceExtensionPresent(device, x)))
-            return false;
-
-        var physicalDeviceIDProperties = new PhysicalDeviceIDProperties()
-        {
-            SType = StructureType.PhysicalDeviceIDProperties
-        };
-
-        var physicalDeviceProperties2 = new PhysicalDeviceProperties2()
-        {
-            SType = StructureType.PhysicalDeviceProperties2, PNext = &physicalDeviceIDProperties
-        };
-
-        Api!.GetPhysicalDeviceProperties2(device, &physicalDeviceProperties2);
-
-        if (gpuInterop.DeviceLuid != null && physicalDeviceIDProperties.DeviceLuidvalid)
-        {
-            if (!new Span<byte>(physicalDeviceIDProperties.DeviceLuid, 8)
-                    .SequenceEqual(gpuInterop.DeviceLuid))
-                return false;
-        }
-        else if (gpuInterop.DeviceUuid != null)
-        {
-            if (!new Span<byte>(physicalDeviceIDProperties.DeviceUuid, 16)
-                    .SequenceEqual(gpuInterop.DeviceUuid))
-                return false;
         }
 
         return true;
@@ -176,10 +157,44 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
         Pool = new VulkanCommandBufferPool(Api, LogicalDevice.Device, queue, (uint)GraphicsQueueFamilyIndex);
     }
 
+    protected override unsafe bool IsDeviceSuitable(PhysicalDevice device)
+    {
+        if (requiredDeviceExtensions.Any(x => !Api!.IsDeviceExtensionPresent(device, x)))
+            return false;
+
+        var physicalDeviceIDProperties = new PhysicalDeviceIDProperties()
+        {
+            SType = StructureType.PhysicalDeviceIDProperties
+        };
+
+        var physicalDeviceProperties2 = new PhysicalDeviceProperties2()
+        {
+            SType = StructureType.PhysicalDeviceProperties2, PNext = &physicalDeviceIDProperties
+        };
+
+        Api!.GetPhysicalDeviceProperties2(device, &physicalDeviceProperties2);
+
+        if (gpuInterop.DeviceLuid != null && physicalDeviceIDProperties.DeviceLuidvalid)
+        {
+            if (!new Span<byte>(physicalDeviceIDProperties.DeviceLuid, 8)
+                    .SequenceEqual(gpuInterop.DeviceLuid))
+                return false;
+        }
+        else if (gpuInterop.DeviceUuid != null)
+        {
+            if (!new Span<byte>(physicalDeviceIDProperties.DeviceUuid, 16)
+                    .SequenceEqual(gpuInterop.DeviceUuid))
+                return false;
+        }
+
+        return true;
+    }
+
     public override unsafe void Dispose()
     {
-        Pool.FreeUsedCommandBuffers();
         Pool.Dispose();
+
+        if (isOwnedByMaster) return;
         LogicalDevice.Dispose();
         if (EnableValidationLayers)
         {

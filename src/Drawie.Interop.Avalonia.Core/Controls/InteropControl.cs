@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Rendering.Composition;
 using Avalonia.VisualTree;
 
@@ -24,21 +25,23 @@ public abstract class InteropControl : Control
         update = UpdateFrame;
     }
 
-    protected override void OnLoaded(RoutedEventArgs e)
+    protected override void OnInitialized()
     {
-        base.OnLoaded(e);
+        base.OnInitialized();
         InitializeComposition();
     }
 
-    protected override async void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+
+    protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
         if (initialized)
         {
-            await FreeGraphicsResources();
+            surface.Dispose();
+            FreeGraphicsResources();
         }
 
         initialized = false;
-        base.OnDetachedFromVisualTree(e);
+        base.OnDetachedFromLogicalTree(e);
     }
 
     private async void InitializeComposition()
@@ -128,6 +131,6 @@ public abstract class InteropControl : Control
     protected abstract (bool success, string info) InitializeGraphicsResources(Compositor targetCompositor,
         CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop);
 
-    protected abstract Task FreeGraphicsResources();
+    protected abstract void FreeGraphicsResources();
     protected abstract void RenderFrame(PixelSize size);
 }

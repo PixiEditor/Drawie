@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.OpenGL;
 using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
+using Avalonia.Vulkan;
 using Drawie.Interop.Avalonia.Core;
 using Drawie.Interop.Avalonia.OpenGl;
 using Drawie.Interop.Avalonia.Vulkan;
