@@ -155,7 +155,7 @@ public class RichText
             }
         }
 
-        if (Lines.Length > 1)
+        if (Lines.Length > 1 && lastBounds != null)
         {
             height = GetLineOffset(Lines.Length - 1, font).Y + lastBounds.Value.Height;
         }
