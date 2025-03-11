@@ -36,4 +36,7 @@ public interface IShaderImplementation
         Matrix3X3 localMatrix);
 
     public Shader? CreateSweepGradient(VecD center, Color[] colors, float[] colorPos, Matrix3X3 localMatrix);
+
+    public Shader? CreateSweepGradient(VecD center, Color[] colors, float[] colorPos,
+        ShaderTileMode tileMode, float angle, Matrix3X3 localMatrix);
 }
