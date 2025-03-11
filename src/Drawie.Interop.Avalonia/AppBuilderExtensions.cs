@@ -12,8 +12,6 @@ using Drawie.RenderApi.OpenGL;
 using Drawie.RenderApi.Vulkan;
 using Drawie.Skia;
 using DrawiEngine;
-using Silk.NET.Core.Contexts;
-using Silk.NET.OpenGL;
 
 namespace Drawie.Interop.VulkanAvalonia;
 
