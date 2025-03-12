@@ -3,6 +3,7 @@ using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
+using Drawie.Backend.Core.Utils;
 using Drawie.Backend.Core.Vector;
 using Drawie.Numerics;
 
@@ -16,6 +17,9 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
         private ImageFilter? imageFilter;
         private ColorFilter? colorFilter;
         private Shader? shader;
+
+        private Shader? lastShader;
+        private Color lastColor;
 
         public override object Native => DrawingBackendApi.Current.PaintImplementation.GetNativePaint(ObjectPointer);
 
@@ -137,13 +141,15 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             DrawingBackendApi.Current.PaintImplementation.Dispose(ObjectPointer);
         }
 
-        public void ApplyPaintable(RectD bounds, Matrix3X3 matrix)
+        internal IDisposable ApplyPaintable(RectD bounds, Matrix3X3 matrix)
         {
-            Shader = null;
             if (Paintable == null)
             {
-                return;
+                return Disposable.Empty;
             }
+
+            lastShader = Shader;
+            lastColor = Color;
 
             if (Paintable is ColorPaintable colorPaintable)
             {
@@ -153,14 +159,23 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             {
                 Shader = Paintable.GetShader(bounds, matrix);
             }
+
+            return Disposable.Create(() =>
+            {
+                Shader = lastShader;
+                Color = lastColor;
+            });
         }
 
-        internal void ApplyPaintableCached()
+        internal IDisposable ApplyPaintableCached()
         {
             if (Paintable == null)
             {
-                return;
+                return Disposable.Empty;
             }
+
+            lastShader = Shader;
+            lastColor = Color;
 
             if (Paintable is ColorPaintable colorPaintable)
             {
@@ -170,6 +185,12 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             {
                 Shader = Paintable.GetShaderCached();
             }
+
+            return Disposable.Create(() =>
+            {
+                Shader = lastShader;
+                Color = lastColor;
+            });
         }
     }
 }

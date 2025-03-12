@@ -5,6 +5,7 @@ using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Text;
+using Drawie.Backend.Core.Utils;
 using Drawie.Backend.Core.Vector;
 using Drawie.Numerics;
 
@@ -37,8 +38,10 @@ namespace Drawie.Backend.Core.Surfaces
         public void DrawPixel(float posX, float posY, Paint drawingPaint)
         {
             RectD rect = new RectD(posX, posY, 1, 1);
-            ApplyPaintable(rect, drawingPaint);
+            var reset = ApplyPaintable(rect, drawingPaint);
             DrawingBackendApi.Current.CanvasImplementation.DrawPixel(ObjectPointer, posX, posY, drawingPaint);
+
+            reset.Dispose();
             Changed?.Invoke(rect);
         }
 
@@ -112,41 +115,46 @@ namespace Drawie.Backend.Core.Surfaces
 
         public void DrawPath(VectorPath path, Paint paint)
         {
-            ApplyPaintable(path.Bounds, paint);
+            var reset = ApplyPaintable(path.Bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawPath(ObjectPointer, path, paint);
+            reset.Dispose();
             Changed?.Invoke(path.Bounds);
         }
 
         public void DrawPoint(VecD pos, Paint paint)
         {
             RectD rect = new RectD(pos.X, pos.Y, 1, 1);
-            ApplyPaintable(rect, paint);
+            var reset = ApplyPaintable(rect, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawPoint(ObjectPointer, pos, paint);
+            reset.Dispose();
             Changed?.Invoke(rect);
         }
 
         public void DrawPoints(PointMode pointMode, VecF[] points, Paint paint)
         {
             RectD? rect = RectD.FromPoints(points);
-            ApplyPaintable(rect, paint);
+            var reset = ApplyPaintable(rect, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawPoints(ObjectPointer, pointMode, points, paint);
+            reset.Dispose();
             Changed?.Invoke(RectD.FromPoints(points));
         }
 
         public void DrawRect(float x, float y, float width, float height, Paint paint)
         {
             RectD rect = new RectD(x, y, width, height);
-            ApplyPaintable(rect, paint);
+            var reset = ApplyPaintable(rect, paint);
 
             DrawingBackendApi.Current.CanvasImplementation.DrawRect(ObjectPointer, x, y, width, height, paint);
+            reset.Dispose();
             Changed?.Invoke(rect);
         }
 
         public void DrawCircle(float centerX, float centerY, float radius, Paint paint)
         {
             RectD rect = new RectD(centerX - radius, centerY - radius, radius * 2, radius * 2);
-            ApplyPaintable(rect, paint);
+            var reset = ApplyPaintable(rect, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawCircle(ObjectPointer, centerX, centerY, radius, paint);
+            reset.Dispose();
             Changed?.Invoke(rect);
         }
 
@@ -156,10 +164,11 @@ namespace Drawie.Backend.Core.Surfaces
         public void DrawOval(float centerX, float centerY, float radiusX, float radiusY, Paint paint)
         {
             RectD rect = new RectD(centerX - radiusX, centerY - radiusY, radiusX * 2, radiusY * 2);
-            ApplyPaintable(rect, paint);
+            var reset = ApplyPaintable(rect, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawOval(ObjectPointer, centerX, centerY, radiusX, radiusY,
                 paint);
 
+            reset.Dispose();
             Changed?.Invoke(rect);
         }
 
@@ -175,9 +184,10 @@ namespace Drawie.Backend.Core.Surfaces
             Paint paint)
         {
             RectD rect = new RectD(x, y, width, height);
-            ApplyPaintable(rect, paint);
+            var reset = ApplyPaintable(rect, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawRoundRect(ObjectPointer, x, y, width, height, radiusX,
                 radiusY, paint);
+            reset.Dispose();
             Changed?.Invoke(rect);
         }
 
@@ -187,9 +197,11 @@ namespace Drawie.Backend.Core.Surfaces
             defaultFont.MeasureText(text, out RectD bounds, paint);
 
             bounds = new RectD(position.X + bounds.X, position.Y + bounds.Y, bounds.Width, bounds.Height);
-            ApplyPaintable(bounds, paint);
+            var reset = ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
                 (float)position.Y, paint);
+
+            reset.Dispose();
             Changed?.Invoke(bounds);
         }
 
@@ -197,9 +209,11 @@ namespace Drawie.Backend.Core.Surfaces
         {
             font.MeasureText(text, out RectD bounds, paint);
             bounds = new RectD(position.X + bounds.X, position.Y + bounds.Y, bounds.Width, bounds.Height);
-            ApplyPaintable(bounds, paint);
+            var reset = ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
                 (float)position.Y, font, paint);
+
+            reset.Dispose();
             Changed?.Invoke(bounds);
         }
 
@@ -207,9 +221,11 @@ namespace Drawie.Backend.Core.Surfaces
         {
             font.MeasureText(text, out RectD bounds, paint);
             bounds = new RectD(position.X + bounds.X, position.Y + bounds.Y, bounds.Width, bounds.Height);
-            ApplyPaintable(bounds, paint);
+            var reset = ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
                 (float)position.Y, align, font, paint);
+
+            reset.Dispose();
 
             Changed?.Invoke(bounds);
         }
@@ -244,30 +260,32 @@ namespace Drawie.Backend.Core.Surfaces
         public void DrawLine(VecD from, VecD to, Paint paint)
         {
             ShapeCorners corners = new ShapeCorners(from, to, paint.StrokeWidth);
+            IDisposable? reset = null;
             if (paint?.Paintable != null)
             {
                 if (paint.Paintable.AbsoluteValues)
                 {
-                    paint.ApplyPaintable(LocalClipBounds, Matrix3X3.Identity);
+                    reset = paint.ApplyPaintable(LocalClipBounds, Matrix3X3.Identity);
                 }
                 else
                 {
                     if (paint.Paintable is IStartEndPaintable startEndPaintable)
                     {
                         startEndPaintable.TempUpdateWithStartEnd(from, to);
-                        paint.ApplyPaintableCached();
+                        reset = paint.ApplyPaintableCached();
                     }
                     else
                     {
                         Matrix3X3 rotationMatrix = Matrix3X3.CreateRotation((float)corners.RectRotation,
                             (float)corners.RectCenter.X, (float)corners.RectCenter.Y);
                         var unrotated = corners.AsRotated(-corners.RectRotation, corners.RectCenter);
-                        paint.ApplyPaintable(unrotated.AABBBounds, rotationMatrix);
+                        reset = paint.ApplyPaintable(unrotated.AABBBounds, rotationMatrix);
                     }
                 }
             }
 
             DrawingBackendApi.Current.CanvasImplementation.DrawLine(ObjectPointer, from, to, paint);
+            reset?.Dispose();
             Changed?.Invoke(corners.AABBBounds);
         }
 
@@ -362,25 +380,27 @@ namespace Drawie.Backend.Core.Surfaces
             // below is not very precise
             RectD bounds = path.Bounds.Inflate(font.Size);
             bounds = bounds.Offset(offset);
-            ApplyPaintable(bounds, paint);
+            var reset = ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawTextOnPath(ObjectPointer, path, text, (float)offset.X,
                 (float)offset.Y, font, paint);
+
+            reset.Dispose();
             Changed?.Invoke(bounds);
         }
 
-        private void ApplyPaintable(RectD? rect, Paint paint)
+        private IDisposable ApplyPaintable(RectD? rect, Paint paint)
         {
             if (paint?.Paintable != null)
             {
                 if (paint.Paintable.AbsoluteValues || rect == null)
                 {
-                    paint.ApplyPaintable(LocalClipBounds, Matrix3X3.Identity);
+                    return paint.ApplyPaintable(LocalClipBounds, Matrix3X3.Identity);
                 }
-                else
-                {
-                    paint.ApplyPaintable(rect.Value, Matrix3X3.Identity);
-                }
+
+                return paint.ApplyPaintable(rect.Value, Matrix3X3.Identity);
             }
+
+            return Disposable.Empty;
         }
     }
 }

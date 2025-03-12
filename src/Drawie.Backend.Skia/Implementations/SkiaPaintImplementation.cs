@@ -226,7 +226,13 @@ namespace Drawie.Skia.Implementations
         public void SetShader(Paint paint, Shader? shader)
         {
             SKPaint skPaint = ManagedInstances[paint.ObjectPointer];
-            skPaint.Shader = shader == null ? null : shaderImplementation[shader.ObjectPointer];
+            if(shader == null)
+            {
+                skPaint.Shader = null;
+                return;
+            }
+
+            skPaint.Shader = shaderImplementation.ManagedInstances.GetValueOrDefault(shader.ObjectPointer);
         }
 
         public PathEffect GetPathEffect(Paint paint)
