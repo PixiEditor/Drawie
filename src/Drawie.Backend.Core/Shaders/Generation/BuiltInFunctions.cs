@@ -3,9 +3,9 @@ using Drawie.Backend.Core.Shaders.Generation.Expressions;
 
 namespace Drawie.Backend.Core.Shaders.Generation;
 
-public class BuiltInFunctions
+public partial class BuiltInFunctions
 {
-    private readonly List<IBuiltInFunction> usedFunctions = new(6);
+    private readonly List<IBuiltInFunction> usedFunctions = new(37);
 
     public Expression GetRgbToHsv(Expression rgba) => Call(RgbToHsv, rgba);
 
@@ -131,10 +131,20 @@ public class BuiltInFunctions
 
         public string FullSource =>
             $$"""
-              {{typeof(TReturn).Name.ToLower()}} {{Name}}({{ArgumentList}}) {
+              {{GetReturnType()}} {{Name}}({{ArgumentList}}) {
               {{Body}}
               }
               """;
+
+        private static string GetReturnType()
+        {
+            if (typeof(TReturn) == typeof(Float1))
+            {
+                return "float";
+            }
+
+            return typeof(TReturn).Name.ToLower();
+        }
 
         public string Call(string arguments) => $"{Name}({arguments})";
     }
