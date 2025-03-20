@@ -152,6 +152,12 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
         return newSurface;
     }
 
+    /// <summary>
+    ///     Copies the content of this surface to another surface. The target surface must have the same dimensions.
+    /// </summary>
+    /// <remarks>THIS FUNCTION IGNORES COLOR SPACE!</remarks>
+    /// <param name="other"></param>
+    /// <exception cref="ArgumentException"></exception>
     public unsafe void CopyTo(Surface other)
     {
         if (other.Size != Size)
