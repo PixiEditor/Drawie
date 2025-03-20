@@ -81,17 +81,6 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
         return new Surface(DefaultImageInfo.WithSize(size).WithColorType(type));
     }
 
-    public static Surface Combine(int width, int height, List<(Image img, VecI offset)> images)
-    {
-        Surface surface = new Surface(new VecI(width, height));
-        foreach (var (img, offset) in images)
-        {
-            surface.DrawingSurface.Canvas.DrawImage(img, offset.X, offset.Y);
-        }
-
-        return surface;
-    }
-
     public static Surface Load(string path)
     {
         if (!File.Exists(path))
@@ -100,7 +89,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
         if (image is null)
             throw new ArgumentException($"The image with path {path} couldn't be loaded");
 
-        var surface = new Surface(new VecI(image.Width, image.Height));
+        var surface = new Surface(image.Info);
         surface.DrawingSurface.Canvas.DrawImage(image, 0, 0);
 
         return surface;
@@ -112,19 +101,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
         if (image is null)
             throw new ArgumentException($"The passed byte array does not contain a valid image");
 
-        var surface = new Surface(new VecI(image.Width, image.Height));
-        surface.DrawingSurface.Canvas.DrawImage(image, 0, 0);
-
-        return surface;
-    }
-
-    public static Surface? Load(byte[] encoded, ColorType colorType, VecI imageSize)
-    {
-        using var image = Image.FromPixels(new ImageInfo(imageSize.X, imageSize.Y, colorType), encoded);
-        if (image is null)
-            return null;
-
-        var surface = new Surface(new VecI(image.Width, image.Height));
+        var surface = new Surface(image.Info);
         surface.DrawingSurface.Canvas.DrawImage(image, 0, 0);
 
         return surface;
@@ -147,7 +124,8 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     public Surface Resize(VecI newSize, ResizeMethod resizeMethod)
     {
         using Image image = DrawingSurface.Snapshot();
-        Surface newSurface = new(newSize);
+        Surface newSurface = new Surface(new ImageInfo(newSize.X, newSize.Y, ImageInfo.ColorType, ImageInfo.AlphaType,
+            ImageInfo.ColorSpace ?? ColorSpace.CreateSrgb()));
         using Paint paint = new();
 
         FilterQuality filterQuality = resizeMethod switch
@@ -167,7 +145,8 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     public Surface ResizeNearestNeighbor(VecI newSize)
     {
         using Image image = DrawingSurface.Snapshot();
-        Surface newSurface = new(newSize);
+        Surface newSurface = new(new ImageInfo(newSize.X, newSize.Y, ImageInfo.ColorType, ImageInfo.AlphaType,
+            ImageInfo.ColorSpace ?? ColorSpace.CreateSrgb()));
         newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y),
             nearestNeighborReplacingPaint);
         return newSurface;
