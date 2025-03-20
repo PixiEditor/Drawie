@@ -57,6 +57,13 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
             new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgbLinear()));
     }
 
+    public static Surface? ForProcessing(VecI size, ColorSpace? colorSpace)
+    {
+        return new Surface(
+            new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul,
+                colorSpace ?? ColorSpace.CreateSrgbLinear()));
+    }
+
     public Surface(VecI size) : this(DefaultImageInfo.WithSize(size))
     {
     }
