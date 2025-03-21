@@ -98,7 +98,7 @@ public abstract class InteropControl : Control
 
     public void QueueNextFrame()
     {
-        if (initialized && !updateQueued && compositor != null)
+        if (initialized && !updateQueued && compositor != null && surface is { IsDisposed: false })
         {
             updateQueued = true;
             compositor.RequestCompositionUpdate(update);
