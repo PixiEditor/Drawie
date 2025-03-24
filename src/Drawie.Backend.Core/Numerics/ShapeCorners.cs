@@ -134,6 +134,12 @@ public struct ShapeCorners
         }
     }
 
+    public VecD TopCenter => (TopLeft + TopRight) / 2;
+    public VecD BottomCenter => (BottomLeft + BottomRight) / 2;
+    public VecD LeftCenter => (TopLeft + BottomLeft) / 2;
+    public VecD RightCenter => (TopRight + BottomRight) / 2;
+
+
     public bool IsPointInside(VecD point)
     {
         var top = TopLeft - TopRight;
