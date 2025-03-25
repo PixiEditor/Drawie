@@ -132,6 +132,10 @@ public class Texture : IDisposable, ICloneable
     {
         using var ctx = EnsureContext();
         using Image image = Image.FromEncodedData(data);
+
+        if (image is null || image.Size.ShortestAxis <= 0)
+            throw new ArgumentException("The image couldn't be loaded");
+
         Texture texture = new Texture(image.Size);
         texture.DrawingSurface.Canvas.DrawImage(image, 0, 0);
 
@@ -272,7 +276,7 @@ public class Texture : IDisposable, ICloneable
         Texture texture = new(drawingSurface);
         return texture;
     }
-    
+
     private static IDisposable EnsureContext()
     {
         return DrawingBackendApi.Current.RenderingDispatcher.EnsureContext();
