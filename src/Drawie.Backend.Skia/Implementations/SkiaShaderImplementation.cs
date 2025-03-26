@@ -120,7 +120,7 @@ namespace Drawie.Skia.Implementations
         }
 
         public Shader? CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
-            ShaderTileMode tileMode)
+            TileMode tileMode)
         {
             SKShader shader = SKShader.CreateRadialGradient(
                 new SKPoint((float)center.X, (float)center.Y),
@@ -183,7 +183,7 @@ namespace Drawie.Skia.Implementations
         }
 
         public Shader? CreateSweepGradient(VecD center, Color[] colors, float[] colorPos,
-            ShaderTileMode tileMode, float angle,
+            TileMode tileMode, float angle,
             Matrix3X3 localMatrix)
         {
             SKShader shader = SKShader.CreateSweepGradient(
@@ -273,7 +273,7 @@ namespace Drawie.Skia.Implementations
             shader.WithLocalMatrix(matrix.ToSkMatrix());
         }
 
-        public Shader? CreateBitmap(Bitmap bitmap, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix)
+        public Shader? CreateBitmap(Bitmap bitmap, TileMode tileX, TileMode tileY, Matrix3X3 matrix)
         {
             SKBitmap skBitmap = bitmapImplementation.ManagedInstances[bitmap.ObjectPointer];
             SKShader shader = SKShader.CreateBitmap(skBitmap, (SKShaderTileMode)tileX, (SKShaderTileMode)tileY,
@@ -282,7 +282,7 @@ namespace Drawie.Skia.Implementations
             return new Shader(shader.Handle);
         }
 
-        public Shader? CreateCreate(Image image, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix)
+        public Shader? CreateCreate(Image image, TileMode tileX, TileMode tileY, Matrix3X3 matrix)
         {
             if (image == null)
             {

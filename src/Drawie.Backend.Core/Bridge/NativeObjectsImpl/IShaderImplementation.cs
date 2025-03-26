@@ -21,16 +21,16 @@ public interface IShaderImplementation
     public Shader CreateRadialGradient(VecD center, float radius, Color[] colors);
 
     public Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
-        ShaderTileMode tileMode);
+        TileMode tileMode);
 
     public Shader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed);
     public Shader CreatePerlinFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed);
     public object GetNativeShader(IntPtr objectPointer);
     public Shader WithUpdatedUniforms(IntPtr objectPointer, Uniforms uniforms);
     public void SetLocalMatrix(IntPtr objectPointer, Matrix3X3 matrix);
-    public Shader? CreateBitmap(Bitmap bitmap, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix);
+    public Shader? CreateBitmap(Bitmap bitmap, TileMode tileX, TileMode tileY, Matrix3X3 matrix);
     public UniformDeclaration[] GetUniformDeclarations(string shaderCode);
-    public Shader? CreateCreate(Image image, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix);
+    public Shader? CreateCreate(Image image, TileMode tileX, TileMode tileY, Matrix3X3 matrix);
 
     public Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
         Matrix3X3 localMatrix);
@@ -38,5 +38,5 @@ public interface IShaderImplementation
     public Shader? CreateSweepGradient(VecD center, Color[] colors, float[] colorPos, Matrix3X3 localMatrix);
 
     public Shader? CreateSweepGradient(VecD center, Color[] colors, float[] colorPos,
-        ShaderTileMode tileMode, float angle, Matrix3X3 localMatrix);
+        TileMode tileMode, float angle, Matrix3X3 localMatrix);
 }

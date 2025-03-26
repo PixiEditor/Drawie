@@ -101,7 +101,7 @@ public class Shader : NativeObject
     }
 
     public static Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
-        ShaderTileMode tileMode)
+        TileMode tileMode)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateRadialGradient(center, radius, colors, colorPos,
             tileMode);
@@ -115,7 +115,7 @@ public class Shader : NativeObject
     }
 
     public static Shader? CreateSweepGradient(VecD center, Color[] colors, float[] colorPos,
-        ShaderTileMode tileMode, float angle,
+        TileMode tileMode, float angle,
         Matrix3X3 localMatrix)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateSweepGradient(center, colors, colorPos, tileMode,
@@ -134,12 +134,12 @@ public class Shader : NativeObject
         DrawingBackendApi.Current.ShaderImplementation.SetLocalMatrix(ObjectPointer, matrix);
     }
 
-    public static Shader? CreateBitmap(Bitmap bitmap, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix)
+    public static Shader? CreateBitmap(Bitmap bitmap, TileMode tileX, TileMode tileY, Matrix3X3 matrix)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateBitmap(bitmap, tileX, tileY, matrix);
     }
 
-    public static Shader? CreateImage(Image image, ShaderTileMode tileX, ShaderTileMode tileY, Matrix3X3 matrix)
+    public static Shader? CreateImage(Image image, TileMode tileX, TileMode tileY, Matrix3X3 matrix)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateCreate(image, tileX, tileY, matrix);
     }
