@@ -2,6 +2,7 @@
 using Avalonia.Rendering.Composition;
 using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
+using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Numerics;
 
@@ -10,7 +11,7 @@ namespace Drawie.Interop.Avalonia.Core.Controls;
 public abstract class DrawieControl : InteropControl
 {
     private RenderApiResources resources;
-    private DrawingSurface framebuffer;
+    private DrawingSurface? framebuffer;
     private Texture intermediateSurface;
 
     private PixelSize lastSize = PixelSize.Empty;
@@ -29,6 +30,13 @@ public abstract class DrawieControl : InteropControl
         resources = IDrawieInteropContext.Current.CreateResources(compositionDrawingSurface, interop);
 
         return (true, string.Empty);
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        framebuffer?.Dispose();
+        framebuffer = null;
     }
 
     protected override void FreeGraphicsResources()
