@@ -39,4 +39,34 @@ public abstract class GradientPaintable : Paintable
     {
         lastShader?.Dispose();
     }
+
+    protected bool Equals(GradientPaintable other)
+    {
+        return (GradientStops == other.GradientStops || GradientStops.SequenceEqual(other.GradientStops)) && Nullable.Equals(Transform, other.Transform);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+
+        return Equals((GradientPaintable)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(GradientStops, Transform);
+    }
 }

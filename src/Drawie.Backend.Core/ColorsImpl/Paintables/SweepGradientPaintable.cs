@@ -31,4 +31,34 @@ public class SweepGradientPaintable : GradientPaintable
     {
         return new SweepGradientPaintable(Center, Angle, GradientStops.Select(x => x));
     }
+
+    protected bool Equals(SweepGradientPaintable other)
+    {
+        return base.Equals(other) && Center.Equals(other.Center) && Angle.Equals(other.Angle);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+
+        return Equals((SweepGradientPaintable)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(base.GetHashCode(), Center, Angle);
+    }
 }

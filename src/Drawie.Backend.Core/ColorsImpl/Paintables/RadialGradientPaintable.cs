@@ -70,4 +70,34 @@ public class RadialGradientPaintable : GradientPaintable
     {
         return new RadialGradientPaintable(Center, Radius, GradientStops.Select(x => x));
     }
+
+    protected bool Equals(RadialGradientPaintable other)
+    {
+        return base.Equals(other) && Center.Equals(other.Center) && Radius.Equals(other.Radius);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+
+        return Equals((RadialGradientPaintable)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(base.GetHashCode(), Center, Radius);
+    }
 }

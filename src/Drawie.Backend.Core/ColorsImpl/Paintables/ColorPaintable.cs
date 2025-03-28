@@ -33,4 +33,34 @@ public class ColorPaintable : Paintable
     {
         Color = Color.WithAlpha((byte)(Color.A * opacity));
     }
+
+    protected bool Equals(ColorPaintable other)
+    {
+        return Color.Equals(other.Color);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+
+        return Equals((ColorPaintable)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return Color.GetHashCode();
+    }
 }

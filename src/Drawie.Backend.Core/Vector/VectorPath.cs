@@ -245,6 +245,97 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
     {
         return GetEnumerator();
     }
+
+    protected bool Equals(VectorPath other)
+    {
+        if (this.IsDisposed)
+        {
+            return ReferenceEquals(this, other);
+        }
+
+        List<(PathVerb verb, VecF[] points, float conicWeight)> otherVerbs = new();
+        foreach (var verb in other)
+        {
+            otherVerbs.Add(verb);
+        }
+
+        List<(PathVerb verb, VecF[] points, float conicWeight)> thisVerbs = new();
+        foreach (var verb in this)
+        {
+            thisVerbs.Add(verb);
+        }
+
+        if (otherVerbs.Count != thisVerbs.Count)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < thisVerbs.Count; i++)
+        {
+            if (thisVerbs[i].verb != otherVerbs[i].verb)
+            {
+                return false;
+            }
+
+            if (thisVerbs[i].points.Length != otherVerbs[i].points.Length)
+            {
+                return false;
+            }
+
+            for (int j = 0; j < thisVerbs[i].points.Length; j++)
+            {
+                if (Math.Abs(thisVerbs[i].points[j].X - otherVerbs[i].points[j].X) > float.Epsilon
+                    || Math.Abs(thisVerbs[i].points[j].Y - otherVerbs[i].points[j].Y) > float.Epsilon)
+                {
+                    return false;
+                }
+            }
+
+            if (Math.Abs(thisVerbs[i].conicWeight - otherVerbs[i].conicWeight) > float.Epsilon)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+
+        return Equals((VectorPath)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        HashCode hash = new();
+        foreach (var verb in this)
+        {
+            hash.Add(verb.verb);
+            foreach (var point in verb.points)
+            {
+                hash.Add(point);
+            }
+
+            hash.Add(verb.conicWeight);
+        }
+
+        return hash.ToHashCode();
+    }
 }
 
 public enum PathDirection

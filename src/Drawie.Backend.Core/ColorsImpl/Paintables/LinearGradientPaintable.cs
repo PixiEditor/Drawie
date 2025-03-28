@@ -96,4 +96,34 @@ public class LinearGradientPaintable : GradientPaintable, IStartEndPaintable
             GradientStops.Select(x => x.Color).ToArray(),
             GradientStops.Select(x => (float)x.Offset).ToArray());
     }
+
+    protected bool Equals(LinearGradientPaintable other)
+    {
+        return base.Equals(other) && Start.Equals(other.Start) && End.Equals(other.End);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+
+        return Equals((LinearGradientPaintable)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(base.GetHashCode(), Start, End);
+    }
 }

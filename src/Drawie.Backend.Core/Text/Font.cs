@@ -188,13 +188,37 @@ public class Font : NativeObject
 
     public override int GetHashCode()
     {
-        HashCode hash = new();
-        hash.Add(Size);
-        hash.Add(Family);
-        hash.Add(SubPixel);
-        hash.Add(Edging);
-        hash.Add(Bold);
-        hash.Add(Italic);
-        return hash.ToHashCode();
+        return Family.GetHashCode();
+    }
+
+    protected bool Equals(Font other)
+    {
+        if (IsDisposed)
+        {
+            return ReferenceEquals(this, other);
+        }
+
+        return Family.Equals(other.Family) && Size.Equals(other.Size) && SubPixel == other.SubPixel &&
+               Edging == other.Edging && Bold == other.Bold && Italic == other.Italic && GlyphCount == other.GlyphCount;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+
+        return Equals((Font)obj);
     }
 }
