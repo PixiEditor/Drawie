@@ -245,6 +245,11 @@ namespace Drawie.Backend.Core.Surfaces
             DrawingBackendApi.Current.CanvasImplementation.ClipRect(ObjectPointer, rect, clipOperation);
         }
 
+        public void ClipRoundRect(RectD rect, VecD radius, ClipOperation clipOperation)
+        {
+            DrawingBackendApi.Current.CanvasImplementation.ClipRoundRect(ObjectPointer, rect, radius, clipOperation);
+        }
+
         public void Clear()
         {
             DrawingBackendApi.Current.CanvasImplementation.Clear(ObjectPointer);

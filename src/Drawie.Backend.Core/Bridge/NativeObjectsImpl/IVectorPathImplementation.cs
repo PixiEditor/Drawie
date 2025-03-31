@@ -24,6 +24,7 @@ public interface IVectorPathImplementation
     public RectD GetBounds(VectorPath vectorPath);
     public void Reset(VectorPath vectorPath);
     public void AddRect(VectorPath path, RectD rect, PathDirection direction);
+    public void AddRoundRect(VectorPath path, RectD rect, VecD cornerRadius, PathDirection direction);
     public void MoveTo(VectorPath vectorPath, VecF vecF);
     public void LineTo(VectorPath vectorPath, VecF vecF);
     public void QuadTo(VectorPath vectorPath, VecF control, VecF point);

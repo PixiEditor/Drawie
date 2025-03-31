@@ -164,6 +164,13 @@ namespace Drawie.Skia.Implementations
             canvas.ClipRect(rect.ToSKRect(), (SKClipOperation)clipOperation);
         }
 
+        public void ClipRoundRect(IntPtr objPtr, RectD rect, VecD radius, ClipOperation clipOperation)
+        {
+            SKCanvas canvas = ManagedInstances[objPtr];
+            SKRoundRect roundRect = new SKRoundRect(rect.ToSKRect(), (float)radius.X, (float)radius.Y);
+            canvas.ClipRoundRect(roundRect, (SKClipOperation)clipOperation);
+        }
+
         public void Clear(IntPtr objPtr)
         {
             ManagedInstances[objPtr].Clear();

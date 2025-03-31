@@ -113,6 +113,11 @@ namespace Drawie.Skia.Implementations
             ManagedInstances[path.ObjectPointer].AddRect(rect.ToSkRect(), (SKPathDirection)direction);
         }
 
+        public void AddRoundRect(VectorPath path, RectD rect, VecD cornerRadius, PathDirection direction)
+        {
+            ManagedInstances[path.ObjectPointer].AddRoundRect(rect.ToSkRect(), (float)cornerRadius.X, (float)cornerRadius.Y, (SKPathDirection)direction);
+        }
+
         public void MoveTo(VectorPath vectorPath, VecF vecF)
         {
             ManagedInstances[vectorPath.ObjectPointer].MoveTo(vecF.ToSkPoint());

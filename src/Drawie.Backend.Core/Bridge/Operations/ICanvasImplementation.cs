@@ -26,6 +26,7 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public void DrawOval(IntPtr objPtr, float cx, float cy, float width, float height, Paint paint);
         public void ClipPath(IntPtr objPtr, VectorPath clipPath, ClipOperation clipOperation, bool antialias);
         public void ClipRect(IntPtr objPtr, RectD rect, ClipOperation clipOperation);
+        public void ClipRoundRect(IntPtr objPtr, RectD rect, VecD radius, ClipOperation clipOperation);
         public void Clear(IntPtr objPtr);
         public void Clear(IntPtr objPtr, Color color);
         public void DrawLine(IntPtr objPtr, VecD from, VecD to, Paint paint);
@@ -42,17 +43,25 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public object GetNativeCanvas(IntPtr objectPointer);
         public void DrawPaint(IntPtr objectPointer, Paint paint);
         public void DrawImage(IntPtr objectPointer, Image image, float x, float y, Paint paint);
+
         public void DrawRoundRect(IntPtr objectPointer, float x, float y, float width, float height, float radiusX,
             float radiusY, Paint paint);
+
         public void DrawText(IntPtr objectPointer, string text, float x, float y, Paint paint);
         public void DrawText(IntPtr objectPointer, string text, float x, float y, Font font, Paint paint);
-        public void DrawText(IntPtr objectPointer, string text, float x, float y, TextAlign align, Font font, Paint paint);
+
+        public void DrawText(IntPtr objectPointer, string text, float x, float y, TextAlign align, Font font,
+            Paint paint);
+
         public int SaveLayer(IntPtr objectPtr);
         public int SaveLayer(IntPtr objectPtr, Paint paint);
         public int SaveLayer(IntPtr objectPtr, Paint paint, RectD bounds);
         public Matrix3X3 GetTotalMatrix(IntPtr objectPointer);
         public void RotateDegrees(IntPtr objectPointer, float degrees);
-        public void DrawTextOnPath(IntPtr objectPointer, VectorPath path, string text, float offsetX, float offsetY, Font font, Paint paint);
+
+        public void DrawTextOnPath(IntPtr objectPointer, VectorPath path, string text, float offsetX, float offsetY,
+            Font font, Paint paint);
+
         public RectD GetLocalClipBounds(IntPtr objectPointer);
         public RectI GetDeviceClipBounds(IntPtr objectPointer);
     }

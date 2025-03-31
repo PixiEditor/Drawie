@@ -197,6 +197,12 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
         Changed?.Invoke(this);
     }
 
+    public void AddRoundRect(RectD rect, VecD cornerRadius)
+    {
+        DrawingBackendApi.Current.PathImplementation.AddRoundRect(this, rect, cornerRadius, PathDirection.Clockwise);
+        Changed?.Invoke(this);
+    }
+
     public void Offset(VecD delta)
     {
         DrawingBackendApi.Current.PathImplementation.Offset(this, delta);
