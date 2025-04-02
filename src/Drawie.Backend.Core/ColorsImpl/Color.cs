@@ -238,14 +238,14 @@ namespace Drawie.Backend.Core.ColorsImpl
         ///     Returns hex string representation of the color.
         /// </summary>
         /// <returns>Color string in format: RRGGBB</returns>
-        public string? ToRgbHex()
+        public string ToRgbHex()
         {
-            return this == Empty ? null : $"#{this.R:x2}{this.G:x2}{this.B:x2}";
+            return $"#{this.R:x2}{this.G:x2}{this.B:x2}";
         }
 
-        public string? ToArgbHex()
+        public string ToArgbHex()
         {
-            return this == Empty ? null : $"#{this._colorValue:X8}";
+            return $"#{this._colorValue:X8}";
         }
 
         public static Color Lerp(Color from, Color to, double t)
