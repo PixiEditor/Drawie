@@ -340,6 +340,8 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
             hash.Add(verb.conicWeight);
         }
 
+        hash.Add(FillType);
+
         return hash.ToHashCode();
     }
 }
