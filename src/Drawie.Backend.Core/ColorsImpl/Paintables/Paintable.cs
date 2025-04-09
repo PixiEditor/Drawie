@@ -4,7 +4,7 @@ using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.ColorsImpl.Paintables;
 
-public abstract class Paintable : IDisposable
+public abstract class Paintable : IDisposable, ICloneable
 {
     public abstract bool AnythingVisible { get; }
     public bool AbsoluteValues { get; set; } = false;
@@ -12,6 +12,7 @@ public abstract class Paintable : IDisposable
 
     public static implicit operator Paintable(Color color) => new ColorPaintable(color);
     public abstract Paintable? Clone();
+    object ICloneable.Clone() => Clone();
     public abstract void ApplyOpacity(double opacity);
     public virtual void Dispose() { }
     internal abstract Shader? GetShaderCached();
