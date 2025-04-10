@@ -21,16 +21,16 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public object GetNative(IntPtr objectPointer)
     {
-        ManagedInstances.TryGetValue(objectPointer, out SKFont? font);
+        TryGetInstance(objectPointer, out SKFont? font);
         return font;
     }
 
     public VectorPath GetTextPath(IntPtr objectPointer, string text)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             var path = font.GetTextPath(text);
-            pathImplementation.ManagedInstances[path.Handle] = path;
+            pathImplementation.AddManagedInstance(path);
             return new VectorPath(path.Handle);
         }
 
@@ -43,13 +43,13 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
         SKFont font = new(typeface, fontSize, scaleX, skewY);
         int handle = Interlocked.Increment(ref fontCounter);
-        ManagedInstances[handle] = font;
+        AddManagedInstance(handle, font);
         return new Font(handle, new FontFamilyName(typeface.FamilyName));
     }
 
     public double GetFontSize(IntPtr objectPointer)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             return font.Size;
         }
@@ -59,7 +59,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public void SetFontSize(IntPtr objectPointer, double value)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             font.Size = (float)value;
             return;
@@ -70,7 +70,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public double MeasureText(IntPtr objectPointer, string text)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             return font.MeasureText(text);
         }
@@ -80,7 +80,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public double MeasureText(IntPtr objectPointer, string text, out RectD bounds, Paint? paint = null)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             SKPaint? skPaint = (SKPaint)paint?.Native;
             double measurement = font.MeasureText(text, out SKRect skBounds, skPaint);
@@ -93,7 +93,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public int BreakText(IntPtr objectPointer, string text, double maxWidth, out float measuredWidth)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             return font.BreakText(text, (float)maxWidth, out measuredWidth);
         }
@@ -103,7 +103,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public VecF[] GetGlyphPositions(IntPtr objectPointer, string text)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             SKPoint[] skPoints = font.GetGlyphPositions(text);
             return CastUtility.UnsafeArrayCast<SKPoint, VecF>(skPoints);
@@ -114,7 +114,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public float[] GetGlyphWidths(IntPtr objectPointer, string text)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             float[] widths = font.GetGlyphWidths(text);
             return widths;
@@ -125,7 +125,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public float[] GetGlyphWidths(IntPtr objectPointer, string text, Paint paint)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             float[] widths = font.GetGlyphWidths(text, (SKPaint)paint.Native);
             return widths;
@@ -136,7 +136,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public bool GetSubPixel(IntPtr objectPointer)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             return font.Subpixel;
         }
@@ -146,7 +146,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public void SetSubPixel(IntPtr objectPointer, bool value)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             font.Subpixel = value;
             return;
@@ -157,7 +157,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public FontEdging GetEdging(IntPtr objectPointer)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             return (FontEdging)font.Edging;
         }
@@ -167,7 +167,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public void SetEdging(IntPtr objectPointer, FontEdging fontEdging)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             font.Edging = (SKFontEdging)fontEdging;
             return;
@@ -178,7 +178,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public bool GetBold(IntPtr objectPointer)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             return font.Typeface.IsBold || font.Embolden;
         }
@@ -188,7 +188,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public void SetBold(IntPtr objectPointer, bool value, FontFamilyName family)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             if (family.FontUri is { IsFile: true })
             {
@@ -218,7 +218,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public bool GetItalic(IntPtr objectPointer)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             return font.Typeface.IsItalic || font.SkewX != 0;
         }
@@ -228,7 +228,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public void SetItalic(IntPtr objectPointer, bool value, FontFamilyName family)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             if (family.FontUri is { IsFile: true })
             {
@@ -275,14 +275,14 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         newFont.Embolden = font.Embolden;
         newFont.SkewX = font.SkewX;
 
-        font.Dispose();
+        UnmanageAndDispose(font);
 
-        ManagedInstances[objectPointer] = newFont;
+        AddManagedInstance(objectPointer, newFont);
     }
 
     public int GetGlyphCount(IntPtr objectPointer)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             return font.Typeface.GlyphCount;
         }
@@ -292,7 +292,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public ushort[] GetGlyphs(IntPtr objectPointer, int[] codePoints)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             return font.GetGlyphs(codePoints);
         }
@@ -302,7 +302,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public bool ContainsGlyph(IntPtr objectPointer, int glyphId)
     {
-        if (ManagedInstances.TryGetValue(objectPointer, out SKFont? font))
+        if (TryGetInstance(objectPointer, out SKFont? font))
         {
             return font.ContainsGlyph(glyphId);
         }
@@ -314,7 +314,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
     {
         SKFont font = new(SKTypeface.Default, fontSize);
         int handle = Interlocked.Increment(ref fontCounter);
-        ManagedInstances[handle] = font;
+        AddManagedInstance(handle, font);
         return new Font(handle, new FontFamilyName(SKTypeface.Default.FamilyName));
     }
 
@@ -328,7 +328,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
         SKFont font = new(typeface);
         int handle = Interlocked.Increment(ref fontCounter);
-        ManagedInstances[handle] = font;
+        AddManagedInstance(handle, font);
         return new Font(handle, new FontFamilyName(familyName));
     }
 
@@ -343,15 +343,12 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
         SKFont font = new(typeface);
         int handle = Interlocked.Increment(ref fontCounter);
-        ManagedInstances[handle] = font;
+        AddManagedInstance(handle, font);
         return new Font(handle, new FontFamilyName(familyName));
     }
 
     public void Dispose(IntPtr objectPointer)
     {
-        if (ManagedInstances.TryRemove(objectPointer, out SKFont font))
-        {
-            font.Dispose();
-        }
+        UnmanageAndDispose(objectPointer);
     }
 }

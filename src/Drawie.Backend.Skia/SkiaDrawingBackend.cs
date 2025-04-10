@@ -1,4 +1,5 @@
-﻿using Drawie.Backend.Core;
+﻿using System.Diagnostics;
+using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 using Drawie.Backend.Core.Bridge.Operations;
@@ -239,6 +240,54 @@ namespace Drawie.Skia
             {
                 _grContext.Dispose();
             }
+        }
+
+        public int GetNativeInstancesTotalCount()
+        {
+            int totalCount = 0;
+            totalCount += (CanvasImplementation as SkiaCanvasImplementation).Count;
+            Debug.WriteLine("Canvases: " + totalCount);
+            int lastCount = totalCount;
+            totalCount += (PaintImplementation as SkiaPaintImplementation).Count;
+            Debug.WriteLine("Paints: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            totalCount += (PathImplementation as SkiaPathImplementation).Count;
+            Debug.WriteLine("Paths: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            totalCount += (PixmapImplementation as SkiaPixmapImplementation).Count;
+            Debug.WriteLine("Pixmaps: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            totalCount += (SurfaceImplementation as SkiaSurfaceImplementation).Count;
+            Debug.WriteLine("Surfaces: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            totalCount += (ImageImplementation as SkiaImageImplementation).Count;
+            Debug.WriteLine("Images: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            totalCount += (BitmapImplementation as SkiaBitmapImplementation).Count;
+            Debug.WriteLine("Bitmaps: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            totalCount += (ColorSpaceImplementation as SkiaColorSpaceImplementation).Count;
+            Debug.WriteLine("ColorSpaces: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            totalCount += (ColorFilterImplementation as SkiaColorFilterImplementation).Count;
+            Debug.WriteLine("ColorFilters: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            totalCount += (ImageFilterImplementation as SkiaImageFilterImplementation).Count;
+            Debug.WriteLine("ImageFilters: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            totalCount += (ShaderImplementation as SkiaShaderImplementation).Count;
+            Debug.WriteLine("Shaders: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            totalCount += (FontImplementation as SkiaFontImplementation).Count;
+            Debug.WriteLine("Fonts: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            totalCount += (PathEffectImplementation as SkiaPathEffectImplementation).Count;
+            Debug.WriteLine("PathEffects: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            totalCount += (ImgDataImplementation as SkiaImgDataImplementation).Count;
+            Debug.WriteLine("ImgData: " + (totalCount - lastCount));
+            lastCount = totalCount;
+            return totalCount;
         }
 
         private void DisposeImpl<T>(SkObjectImplementation<T> impl) where T : SKObject

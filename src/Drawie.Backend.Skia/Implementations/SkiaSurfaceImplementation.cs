@@ -1,4 +1,5 @@
-﻿using Drawie.Backend.Core.Bridge.Operations;
+﻿using System.Diagnostics;
+using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
@@ -26,7 +27,7 @@ namespace Drawie.Skia.Implementations
 
         public Pixmap PeekPixels(DrawingSurface drawingSurface)
         {
-            SKPixmap pixmap = ManagedInstances[drawingSurface.ObjectPointer].PeekPixels();
+            SKPixmap pixmap = this[drawingSurface.ObjectPointer].PeekPixels();
             if (pixmap == null)
             {
                 using var snapshot = drawingSurface.Snapshot();
@@ -41,7 +42,7 @@ namespace Drawie.Skia.Implementations
             int srcX,
             int srcY)
         {
-            return ManagedInstances[drawingSurface.ObjectPointer]
+            return this[drawingSurface.ObjectPointer]
                 .ReadPixels(dstInfo.ToSkImageInfo(), dstPixels, dstRowBytes, srcX, srcY);
         }
 
@@ -49,7 +50,7 @@ namespace Drawie.Skia.Implementations
         {
             SKCanvas canvas = _canvasImplementation[surfaceToDraw.ObjectPointer];
             SKPaint paint = _paintImplementation[drawingPaint.ObjectPointer];
-            var instance = ManagedInstances[drawingSurface.ObjectPointer];
+            var instance = this[drawingSurface.ObjectPointer];
             instance.Draw(canvas, x, y, paint);
         }
 
@@ -108,7 +109,7 @@ namespace Drawie.Skia.Implementations
 
         private SKSurface CreateSkiaSurface(SKPixmap skPixmap)
         {
-            SKSurface skSurface = SKSurface.Create(skPixmap); 
+            SKSurface skSurface = SKSurface.Create(skPixmap);
             return skSurface;
         }
 
@@ -130,29 +131,32 @@ namespace Drawie.Skia.Implementations
 
         public void Dispose(DrawingSurface drawingSurface)
         {
-            ManagedInstances[drawingSurface.ObjectPointer].Dispose();
-            ManagedInstances.TryRemove(drawingSurface.ObjectPointer, out _);
+            UnmanageAndDispose(drawingSurface.ObjectPointer);
         }
 
         public object GetNativeSurface(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer];
+            return this[objectPointer];
         }
 
         private DrawingSurface CreateDrawingSurface(SKSurface skSurface)
         {
-            _canvasImplementation.ManagedInstances[skSurface.Canvas.Handle] = skSurface.Canvas;
+#if DRAWIE_TRACE
+            Trace(skSurface);
+#endif
+
+            _canvasImplementation.AddManagedInstance(skSurface.Canvas.Handle, skSurface.Canvas);
             Canvas canvas = new Canvas(skSurface.Canvas.Handle);
 
             DrawingSurface surface = new DrawingSurface(skSurface.Handle, canvas);
-            ManagedInstances[skSurface.Handle] = skSurface;
+            AddManagedInstance(skSurface);
 
             return surface;
         }
 
         public void Flush(DrawingSurface drawingSurface)
         {
-            ManagedInstances[drawingSurface.ObjectPointer].Flush(true, true);
+            this[drawingSurface.ObjectPointer].Flush(true, true);
         }
 
         public DrawingSurface FromNative(object native)
@@ -167,18 +171,18 @@ namespace Drawie.Skia.Implementations
 
         public RectI GetDeviceClipBounds(IntPtr drawingSurface)
         {
-            SKRectI skRectI = ManagedInstances[drawingSurface].Canvas.DeviceClipBounds;
+            SKRectI skRectI = this[drawingSurface].Canvas.DeviceClipBounds;
             return new RectI(skRectI.Left, skRectI.Top, skRectI.Width, skRectI.Height);
         }
 
         public void Unmanage(DrawingSurface surface)
         {
-            ManagedInstances.TryRemove(surface.ObjectPointer, out _);
+            Unmanage(surface.ObjectPointer);
         }
 
         public RectD GetLocalClipBounds(IntPtr objectPointer)
         {
-            SKRect skRect = ManagedInstances[objectPointer].Canvas.LocalClipBounds;
+            SKRect skRect = this[objectPointer].Canvas.LocalClipBounds;
             return new RectD(skRect.Left, skRect.Top, skRect.Width, skRect.Height);
         }
     }

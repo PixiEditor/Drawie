@@ -18,56 +18,55 @@ namespace Drawie.Skia.Implementations
 
         public void Dispose(IntPtr objectPointer)
         {
-            ManagedInstances[objectPointer].Dispose();
-            ManagedInstances.TryRemove(objectPointer, out _);
+            UnmanageAndDispose(objectPointer);
         }
 
         public Color GetPixelColor(IntPtr objectPointer, VecI position)
         {
-            return ManagedInstances[objectPointer].GetPixelColor(position.X, position.Y).ToBackendColor();
+            return this[objectPointer].GetPixelColor(position.X, position.Y).ToBackendColor();
         }
 
         public IntPtr GetPixels(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer].GetPixels();
+            return this[objectPointer].GetPixels();
         }
 
         public Span<T> GetPixelSpan<T>(Pixmap pixmap)
             where T : unmanaged
         {
-            return ManagedInstances[pixmap.ObjectPointer].GetPixelSpan<T>();
+            return this[pixmap.ObjectPointer].GetPixelSpan<T>();
         }
 
         public IntPtr Construct(IntPtr dataPtr, ImageInfo imgInfo)
         {
             SKPixmap pixmap = new SKPixmap(imgInfo.ToSkImageInfo(), dataPtr);
-            ManagedInstances[pixmap.Handle] = pixmap;
+            AddManagedInstance(pixmap);
             return pixmap.Handle;
         }
 
         public int GetWidth(Pixmap pixmap)
         {
-            return ManagedInstances[pixmap.ObjectPointer].Width;
+            return this[pixmap.ObjectPointer].Width;
         }
 
         public int GetHeight(Pixmap pixmap)
         {
-            return ManagedInstances[pixmap.ObjectPointer].Height;
+            return this[pixmap.ObjectPointer].Height;
         }
 
         public int GetBytesSize(Pixmap pixmap)
         {
-            return ManagedInstances[pixmap.ObjectPointer].BytesSize;
+            return this[pixmap.ObjectPointer].BytesSize;
         }
 
         public object GetNativePixmap(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer];
+            return this[objectPointer];
         }
 
         public Pixmap CreateFrom(SKPixmap pixmap)
         {
-            ManagedInstances[pixmap.Handle] = pixmap;
+            AddManagedInstance(pixmap);
             return Pixmap.InternalCreateFromExistingPointer(pixmap.Handle);
         }
     }

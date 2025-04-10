@@ -151,31 +151,7 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             lastShader = Shader;
             lastColor = Color;
 
-            if (Paintable is ColorPaintable colorPaintable)
-            {
-                Color = colorPaintable.Color;
-            }
-            else
-            {
-                Shader = Paintable.GetShader(bounds, matrix);
-            }
-
-            return Disposable.Create(() =>
-            {
-                Shader = lastShader;
-                Color = lastColor;
-            });
-        }
-
-        internal IDisposable ApplyPaintableCached()
-        {
-            if (Paintable == null)
-            {
-                return Disposable.Empty;
-            }
-
-            lastShader = Shader;
-            lastColor = Color;
+            Shaders.Shader? createdShader = null;
 
             if (Paintable is ColorPaintable colorPaintable)
             {
@@ -183,11 +159,13 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             }
             else
             {
-                Shader = Paintable.GetShaderCached();
+                createdShader = Paintable.GetShader(bounds, matrix);
+                Shader = createdShader;
             }
 
             return Disposable.Create(() =>
             {
+                createdShader?.Dispose();
                 Shader = lastShader;
                 Color = lastColor;
             });

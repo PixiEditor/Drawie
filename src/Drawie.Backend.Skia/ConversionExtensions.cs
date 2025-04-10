@@ -79,7 +79,7 @@ namespace Drawie.Skia
             {
                 cs = new ColorSpace(info.ColorSpace.Handle);
                 var colorSpaceImpl = DrawingBackendApi.Current.ColorSpaceImplementation as SkiaColorSpaceImplementation;
-                colorSpaceImpl.ManagedInstances[info.ColorSpace.Handle] = info.ColorSpace;
+                colorSpaceImpl.AddManagedInstance(info.ColorSpace);
             }
 
             return new ImageInfo(info.Width, info.Height,

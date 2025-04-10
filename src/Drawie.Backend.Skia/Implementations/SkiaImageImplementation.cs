@@ -30,8 +30,8 @@ namespace Drawie.Skia.Implementations
         {
             var surface = _surfaceImplementation![drawingSurface.ObjectPointer];
             SKImage snapshot = surface.Snapshot();
-            
-            ManagedInstances[snapshot.Handle] = snapshot;
+
+            AddManagedInstance(snapshot);
             return new Image(snapshot.Handle);
         }
 
@@ -40,7 +40,7 @@ namespace Drawie.Skia.Implementations
             var surface = _surfaceImplementation![drawingSurface.ObjectPointer];
             SKImage snapshot = surface.Snapshot(bounds.ToSkRectI());
 
-            ManagedInstances[snapshot.Handle] = snapshot;
+            AddManagedInstance(snapshot);
             return new Image(snapshot.Handle);
         }
         
@@ -49,15 +49,14 @@ namespace Drawie.Skia.Implementations
             SKImage img = SKImage.FromEncodedData(dataBytes);
             if (img is null)
                 return null;
-            ManagedInstances[img.Handle] = img;
-            
+            AddManagedInstance(img);
+
             return new Image(img.Handle);
         }
 
         public void DisposeImage(Image image)
         {
-            ManagedInstances[image.ObjectPointer].Dispose();
-            ManagedInstances.TryRemove(image.ObjectPointer, out _);
+            UnmanageAndDispose(image.ObjectPointer);
         }
 
         public Image? FromEncodedData(string path)
@@ -65,7 +64,7 @@ namespace Drawie.Skia.Implementations
             var nativeImg = SKImage.FromEncodedData(path);
             if (nativeImg is null)
                 return null;
-            ManagedInstances[nativeImg.Handle] = nativeImg;
+            AddManagedInstance(nativeImg);
             return new Image(nativeImg.Handle);
         }
 
@@ -74,13 +73,13 @@ namespace Drawie.Skia.Implementations
             var nativeImg = SKImage.FromPixelCopy(info.ToSkImageInfo(), pixels);
             if (nativeImg is null)
                 return null;
-            ManagedInstances[nativeImg.Handle] = nativeImg;
+            AddManagedInstance(nativeImg);
             return new Image(nativeImg.Handle);
         }
         
         public Pixmap PeekPixels(Image image)
         {
-            var native = ManagedInstances[image.ObjectPointer];
+            var native = this[image.ObjectPointer];
             var pixmap = native.PeekPixels();
             return _pixmapImplementation.CreateFrom(pixmap);
         }
@@ -96,69 +95,69 @@ namespace Drawie.Skia.Implementations
 
         public ImgData Encode(Image image)
         {
-            var native = ManagedInstances[image.ObjectPointer];
+            var native = this[image.ObjectPointer];
             var encoded = native.Encode();
-            _imgImplementation.ManagedInstances[encoded.Handle] = encoded;
+            _imgImplementation.AddManagedInstance(encoded);
             return new ImgData(encoded.Handle);
         }
 
         public ImgData Encode(Image image, EncodedImageFormat format, int quality)
         {
-            var native = ManagedInstances[image.ObjectPointer];
+            var native = this[image.ObjectPointer];
             var encoded = native.Encode((SKEncodedImageFormat)format, quality);
-            _imgImplementation.ManagedInstances[encoded.Handle] = encoded;
+            _imgImplementation.AddManagedInstance(encoded);
             return new ImgData(encoded.Handle);
         }
 
         public int GetWidth(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer].Width;
+            return this[objectPointer].Width;
         }
 
         public int GetHeight(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer].Height;
+            return this[objectPointer].Height;
         }
         
         public Image Clone(Image image)
         {
-            var native = ManagedInstances[image.ObjectPointer];
+            var native = this[image.ObjectPointer];
             var encoded = native.Encode();
             var clone = SKImage.FromEncodedData(encoded);
-            ManagedInstances[clone.Handle] = clone;
+            AddManagedInstance(clone);
             return new Image(clone.Handle);
         }
 
         public Pixmap PeekPixels(IntPtr objectPointer)
         {
-            var nativePixmap = ManagedInstances[objectPointer].PeekPixels();
+            var nativePixmap = this[objectPointer].PeekPixels();
 
             return _pixmapImplementation.CreateFrom(nativePixmap);
         }
 
         public ImageInfo GetImageInfo(IntPtr objectPointer)
         {
-            var info = ManagedInstances[objectPointer].Info;
+            var info = this[objectPointer].Info;
             return info.ToImageInfo();
         }
 
         public Shader ToShader(IntPtr objectPointer)
         {
-            var shader = ManagedInstances[objectPointer].ToShader();
-            shaderImpl.ManagedInstances[shader.Handle] = shader;
+            var shader = this[objectPointer].ToShader();
+            shaderImpl.AddManagedInstance(shader);
             return new Shader(shader.Handle);
         }
         
         public Shader ToRawShader(IntPtr objectPointer)
         {
-            var shader = ManagedInstances[objectPointer].ToRawShader();
-            shaderImpl.ManagedInstances[shader.Handle] = shader;
+            var shader = this[objectPointer].ToRawShader();
+            shaderImpl.AddManagedInstance(shader);
             return new Shader(shader.Handle);
         }
 
         public object GetNativeImage(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer];
+            return this[objectPointer];
         }
     }
 }

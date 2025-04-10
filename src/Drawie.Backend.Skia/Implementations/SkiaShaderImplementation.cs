@@ -16,6 +16,7 @@ namespace Drawie.Skia.Implementations
         private Dictionary<IntPtr, SKRuntimeEffect> runtimeEffects = new();
         private Dictionary<IntPtr, List<UniformDeclaration>> declarations = new();
 
+
         public SkiaShaderImplementation()
         {
         }
@@ -30,7 +31,7 @@ namespace Drawie.Skia.Implementations
         public IntPtr CreateShader()
         {
             SKShader skShader = SKShader.CreateEmpty();
-            ManagedInstances[skShader.Handle] = skShader;
+            AddManagedInstance(skShader);
             return skShader.Handle;
         }
 
@@ -43,9 +44,10 @@ namespace Drawie.Skia.Implementations
                 SKRuntimeEffectChildren effectChildren = UniformsToSkChildren(uniforms, effect);
                 SKShader shader = effect.ToShader(effectUniforms, effectChildren);
                 var declaration = DeclarationsFromEffect(shaderCode, effect);
-                ManagedInstances[shader.Handle] = shader;
+                AddManagedInstance(shader);
                 runtimeEffects[shader.Handle] = effect;
                 declarations[shader.Handle] = declaration;
+
                 return new Shader(shader.Handle, declaration);
             }
 
@@ -63,10 +65,13 @@ namespace Drawie.Skia.Implementations
                     return null;
                 }
 
-                ManagedInstances[shader.Handle] = shader;
+                AddManagedInstance(shader);
                 var declaration = DeclarationsFromEffect(shaderCode, effect);
                 declarations[shader.Handle] = declaration;
 
+#if DRAWIE_TRACE
+            Trace(shader);
+#endif
                 return new Shader(shader.Handle, declaration);
             }
 
@@ -84,7 +89,7 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            ManagedInstances[shader.Handle] = shader;
+            AddManagedInstance(shader);
             return new Shader(shader.Handle);
         }
 
@@ -99,7 +104,11 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            ManagedInstances[shader.Handle] = shader;
+            AddManagedInstance(shader);
+
+#if DRAWIE_TRACE
+            Trace(shader);
+#endif
             return new Shader(shader.Handle);
         }
 
@@ -115,7 +124,11 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            ManagedInstances[shader.Handle] = shader;
+            AddManagedInstance(shader);
+
+#if DRAWIE_TRACE
+            Trace(shader);
+#endif
             return new Shader(shader.Handle);
         }
 
@@ -130,7 +143,11 @@ namespace Drawie.Skia.Implementations
                 (SKShaderTileMode)tileMode);
             if (shader == null) return null;
 
-            ManagedInstances[shader.Handle] = shader;
+            AddManagedInstance(shader);
+
+#if DRAWIE_TRACE
+            Trace(shader);
+#endif
 
             return new Shader(shader.Handle);
         }
@@ -144,7 +161,11 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            ManagedInstances[shader.Handle] = shader;
+            AddManagedInstance(shader);
+
+#if DRAWIE_TRACE
+            Trace(shader);
+#endif
 
             return new Shader(shader.Handle);
         }
@@ -162,7 +183,11 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            ManagedInstances[shader.Handle] = shader;
+            AddManagedInstance(shader);
+
+#if DRAWIE_TRACE
+            Trace(shader);
+#endif
 
             return new Shader(shader.Handle);
         }
@@ -177,7 +202,11 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            ManagedInstances[shader.Handle] = shader;
+            AddManagedInstance(shader);
+
+#if DRAWIE_TRACE
+            Trace(shader);
+#endif
 
             return new Shader(shader.Handle);
         }
@@ -190,11 +219,16 @@ namespace Drawie.Skia.Implementations
                 new SKPoint((float)center.X, (float)center.Y),
                 CastUtility.UnsafeArrayCast<Color, SKColor>(colors),
                 colorPos,
-                localMatrix.Concat(Matrix3X3.CreateRotationDegrees(angle - 90, (float)center.X, (float)center.Y)).ToSkMatrix());
+                localMatrix.Concat(Matrix3X3.CreateRotationDegrees(angle - 90, (float)center.X, (float)center.Y))
+                    .ToSkMatrix());
 
             if (shader == null) return null;
 
-            ManagedInstances[shader.Handle] = shader;
+            AddManagedInstance(shader);
+
+#if DRAWIE_TRACE
+            Trace(shader);
+#endif
 
             return new Shader(shader.Handle);
         }
@@ -210,7 +244,11 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            ManagedInstances[shader.Handle] = shader;
+            AddManagedInstance(shader);
+
+#if DRAWIE_TRACE
+            Trace(shader);
+#endif
             return new Shader(shader.Handle);
         }
 
@@ -225,21 +263,22 @@ namespace Drawie.Skia.Implementations
                 numOctaves,
                 seed);
 
-            ManagedInstances[shader.Handle] = shader;
+            AddManagedInstance(shader);
+
+#if DRAWIE_TRACE
+            Trace(shader);
+#endif
             return new Shader(shader.Handle);
         }
 
         public object GetNativeShader(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer];
+            return this[objectPointer];
         }
 
         public Shader WithUpdatedUniforms(IntPtr objectPointer, Uniforms uniforms)
         {
-            if (!ManagedInstances.TryGetValue(objectPointer, out var shader))
-            {
-                throw new InvalidOperationException("Shader does not exist");
-            }
+            UnmanageAndDispose(objectPointer);
 
             if (!runtimeEffects.TryGetValue(objectPointer, out var effect))
             {
@@ -250,22 +289,25 @@ namespace Drawie.Skia.Implementations
             SKRuntimeEffectUniforms effectUniforms = UniformsToSkUniforms(uniforms, effect);
             SKRuntimeEffectChildren effectChildren = UniformsToSkChildren(uniforms, effect);
 
-            shader.Dispose();
-            ManagedInstances.TryRemove(objectPointer, out _);
             runtimeEffects.Remove(objectPointer);
             declarations.Remove(objectPointer, out var oldDeclarations);
 
             var newShader = effect.ToShader(effectUniforms, effectChildren);
-            ManagedInstances[newShader.Handle] = newShader;
+            AddManagedInstance(newShader);
+
             runtimeEffects[newShader.Handle] = effect;
             declarations[newShader.Handle] = oldDeclarations;
+
+#if DRAWIE_TRACE
+            Trace(newShader);
+#endif
 
             return new Shader(newShader.Handle, oldDeclarations);
         }
 
         public void SetLocalMatrix(IntPtr objectPointer, Matrix3X3 matrix)
         {
-            if (!ManagedInstances.TryGetValue(objectPointer, out var shader))
+            if (!TryGetInstance(objectPointer, out var shader))
             {
                 throw new InvalidOperationException("Shader does not exist");
             }
@@ -275,10 +317,14 @@ namespace Drawie.Skia.Implementations
 
         public Shader? CreateBitmap(Bitmap bitmap, TileMode tileX, TileMode tileY, Matrix3X3 matrix)
         {
-            SKBitmap skBitmap = bitmapImplementation.ManagedInstances[bitmap.ObjectPointer];
+            SKBitmap skBitmap = bitmapImplementation[bitmap.ObjectPointer];
             SKShader shader = SKShader.CreateBitmap(skBitmap, (SKShaderTileMode)tileX, (SKShaderTileMode)tileY,
                 matrix.ToSkMatrix());
-            ManagedInstances[shader.Handle] = shader;
+            AddManagedInstance(shader);
+
+#if DRAWIE_TRACE
+            Trace(shader);
+#endif
             return new Shader(shader.Handle);
         }
 
@@ -289,10 +335,10 @@ namespace Drawie.Skia.Implementations
                 return null;
             }
 
-            SKImage target = ImageImplementation.ManagedInstances[image.ObjectPointer];
+            SKImage target = ImageImplementation[image.ObjectPointer];
             SKShader shader = SKShader.CreateImage(target, (SKShaderTileMode)tileX, (SKShaderTileMode)tileY,
                 matrix.ToSkMatrix());
-            ManagedInstances[shader.Handle] = shader;
+            AddManagedInstance(shader);
             return new Shader(shader.Handle);
         }
 
@@ -309,13 +355,7 @@ namespace Drawie.Skia.Implementations
 
         public void Dispose(IntPtr shaderObjPointer)
         {
-            ManagedInstances.TryRemove(shaderObjPointer, out var shader);
-            if (shader == null)
-            {
-                return;
-            }
-
-            shader.Dispose();
+            UnmanageAndDispose(shaderObjPointer);
             if (runtimeEffects.TryGetValue(shaderObjPointer, out var effect))
             {
                 effect.Dispose();

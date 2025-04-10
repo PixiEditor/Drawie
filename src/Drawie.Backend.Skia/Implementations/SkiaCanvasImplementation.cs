@@ -38,28 +38,28 @@ namespace Drawie.Skia.Implementations
 
         public void DrawPixel(IntPtr objectPointer, float posX, float posY, Paint drawingPaint)
         {
-            var canvas = ManagedInstances[objectPointer];
-            canvas.DrawPoint(posX, posY, _paintImpl.ManagedInstances[drawingPaint.ObjectPointer]);
+            var canvas = this[objectPointer];
+            canvas.DrawPoint(posX, posY, _paintImpl[drawingPaint.ObjectPointer]);
         }
 
         public void DrawSurface(IntPtr objPtr, DrawingSurface drawingSurface, float x, float y, Paint? paint)
         {
-            var canvas = ManagedInstances[objPtr];
+            var canvas = this[objPtr];
             canvas.DrawSurface(
-                _surfaceImpl.ManagedInstances[drawingSurface.ObjectPointer],
+                _surfaceImpl[drawingSurface.ObjectPointer],
                 x, y,
-                paint != null ? _paintImpl.ManagedInstances[paint.ObjectPointer] : null);
+                paint != null ? _paintImpl[paint.ObjectPointer] : null);
         }
 
         public void DrawImage(IntPtr objPtr, Image image, float x, float y)
         {
-            var canvas = ManagedInstances[objPtr];
-            canvas.DrawImage(_imageImpl.ManagedInstances[image.ObjectPointer], x, y);
+            var canvas = this[objPtr];
+            canvas.DrawImage(_imageImpl[image.ObjectPointer], x, y);
         }
 
         public void DrawImage(IntPtr objPtr, Image image, float x, float y, Paint paint)
         {
-            if (!ManagedInstances.TryGetValue(objPtr, out var canvas))
+            if (!TryGetInstance(objPtr, out var canvas))
             {
                 throw new ObjectDisposedException(nameof(canvas));
             }
@@ -67,13 +67,13 @@ namespace Drawie.Skia.Implementations
             SKPaint? skPaint = null;
             if (paint != null)
             {
-                if (!_paintImpl.ManagedInstances.TryGetValue(paint.ObjectPointer, out skPaint))
+                if (!_paintImpl.TryGetInstance(paint.ObjectPointer, out skPaint))
                 {
                     throw new ObjectDisposedException(nameof(paint));
                 }
             }
 
-            if (!_imageImpl.ManagedInstances.TryGetValue(image.ObjectPointer, out var img))
+            if (!_imageImpl.TryGetInstance(image.ObjectPointer, out var img))
             {
                 throw new ObjectDisposedException(nameof(image));
             }
@@ -85,40 +85,40 @@ namespace Drawie.Skia.Implementations
             float radiusY,
             Paint paint)
         {
-            ManagedInstances[objectPointer]
+            this[objectPointer]
                 .DrawRoundRect(x, y, width, height, radiusX, radiusY, _paintImpl[paint.ObjectPointer]);
         }
 
         public int Save(IntPtr objPtr)
         {
-            return ManagedInstances[objPtr].Save();
+            return this[objPtr].Save();
         }
 
         public void Restore(IntPtr objPtr)
         {
-            ManagedInstances[objPtr].Restore();
+            this[objPtr].Restore();
         }
 
         public void Scale(IntPtr objPtr, float sizeX, float sizeY)
         {
-            ManagedInstances[objPtr].Scale(sizeX, sizeY);
+            this[objPtr].Scale(sizeX, sizeY);
         }
 
         public void Translate(IntPtr objPtr, float translationX, float translationY)
         {
-            ManagedInstances[objPtr].Translate(translationX, translationY);
+            this[objPtr].Translate(translationX, translationY);
         }
 
         public void DrawPath(IntPtr objPtr, VectorPath path, Paint paint)
         {
-            ManagedInstances[objPtr].DrawPath(
+            this[objPtr].DrawPath(
                 _pathImpl[path.ObjectPointer],
                 _paintImpl[paint.ObjectPointer]);
         }
 
         public void DrawPoint(IntPtr objPtr, VecD pos, Paint paint)
         {
-            ManagedInstances[objPtr].DrawPoint(
+            this[objPtr].DrawPoint(
                 (float)pos.X,
                 (float)pos.Y,
                 _paintImpl[paint.ObjectPointer]);
@@ -126,7 +126,7 @@ namespace Drawie.Skia.Implementations
 
         public void DrawPoints(IntPtr objPtr, PointMode pointMode, VecF[] points, Paint paint)
         {
-            ManagedInstances[objPtr].DrawPoints(
+            this[objPtr].DrawPoints(
                 (SKPointMode)pointMode,
                 CastUtility.UnsafeArrayCast<VecF, SKPoint>(points),
                 _paintImpl[paint.ObjectPointer]);
@@ -136,97 +136,97 @@ namespace Drawie.Skia.Implementations
         {
             SKPaint skPaint = _paintImpl[paint.ObjectPointer];
 
-            var canvas = ManagedInstances[objPtr];
+            var canvas = this[objPtr];
             canvas.DrawRect(x, y, width, height, skPaint);
         }
 
         public void DrawCircle(IntPtr objPtr, float cx, float cy, float radius, Paint paint)
         {
-            var canvas = ManagedInstances[objPtr];
+            var canvas = this[objPtr];
             canvas.DrawCircle(cx, cy, radius, _paintImpl[paint.ObjectPointer]);
         }
 
         public void DrawOval(IntPtr objPtr, float cx, float cy, float width, float height, Paint paint)
         {
-            var canvas = ManagedInstances[objPtr];
+            var canvas = this[objPtr];
             canvas.DrawOval(cx, cy, width, height, _paintImpl[paint.ObjectPointer]);
         }
 
         public void ClipPath(IntPtr objPtr, VectorPath clipPath, ClipOperation clipOperation, bool antialias)
         {
-            SKCanvas canvas = ManagedInstances[objPtr];
+            SKCanvas canvas = this[objPtr];
             canvas.ClipPath(_pathImpl[clipPath.ObjectPointer], (SKClipOperation)clipOperation, antialias);
         }
 
         public void ClipRect(IntPtr objPtr, RectD rect, ClipOperation clipOperation)
         {
-            SKCanvas canvas = ManagedInstances[objPtr];
+            SKCanvas canvas = this[objPtr];
             canvas.ClipRect(rect.ToSKRect(), (SKClipOperation)clipOperation);
         }
 
         public void ClipRoundRect(IntPtr objPtr, RectD rect, VecD radius, ClipOperation clipOperation)
         {
-            SKCanvas canvas = ManagedInstances[objPtr];
+            SKCanvas canvas = this[objPtr];
             SKRoundRect roundRect = new SKRoundRect(rect.ToSKRect(), (float)radius.X, (float)radius.Y);
             canvas.ClipRoundRect(roundRect, (SKClipOperation)clipOperation);
         }
 
         public void Clear(IntPtr objPtr)
         {
-            ManagedInstances[objPtr].Clear();
+            this[objPtr].Clear();
         }
 
         public void Clear(IntPtr objPtr, Color color)
         {
-            ManagedInstances[objPtr].Clear(color.ToSKColor());
+            this[objPtr].Clear(color.ToSKColor());
         }
 
         public void DrawLine(IntPtr objPtr, VecD from, VecD to, Paint paint)
         {
-            var canvas = ManagedInstances[objPtr];
+            var canvas = this[objPtr];
             canvas.DrawLine((float)from.X, (float)from.Y, (float)to.X, (float)to.Y, _paintImpl[paint.ObjectPointer]);
         }
 
         public void DrawPaint(IntPtr objectPointer, Paint paint)
         {
-            var canvas = ManagedInstances[objectPointer];
+            var canvas = this[objectPointer];
             canvas.DrawPaint(_paintImpl[paint.ObjectPointer]);
         }
 
         public void Flush(IntPtr objPtr)
         {
-            ManagedInstances[objPtr].Flush();
+            this[objPtr].Flush();
         }
 
         public void SetMatrix(IntPtr objPtr, Matrix3X3 finalMatrix)
         {
-            SKCanvas canvas = ManagedInstances[objPtr];
+            SKCanvas canvas = this[objPtr];
             canvas.SetMatrix(finalMatrix.ToSkMatrix());
         }
 
         public void RestoreToCount(IntPtr objPtr, int count)
         {
-            ManagedInstances[objPtr].RestoreToCount(count);
+            this[objPtr].RestoreToCount(count);
         }
 
         public void DrawColor(IntPtr objPtr, Color color, BlendMode paintBlendMode)
         {
-            ManagedInstances[objPtr].DrawColor(color.ToSKColor(), (SKBlendMode)paintBlendMode);
+            this[objPtr].DrawColor(color.ToSKColor(), (SKBlendMode)paintBlendMode);
         }
 
         public void RotateRadians(IntPtr objPtr, float radians, float centerX, float centerY)
         {
-            ManagedInstances[objPtr].RotateRadians(radians, centerX, centerY);
+            this[objPtr].RotateRadians(radians, centerX, centerY);
         }
 
         public void RotateDegrees(IntPtr objectPointer, float degrees, float centerX, float centerY)
         {
-            ManagedInstances[objectPointer].RotateDegrees(degrees, centerX, centerY);
+            this[objectPointer].RotateDegrees(degrees, centerX, centerY);
         }
 
         public void DrawImage(IntPtr objPtr, Image image, RectD destRect, Paint paint)
         {
-            ManagedInstances[objPtr].DrawImage(
+            this[objPtr].DrawImage(
                 _imageImpl[image.ObjectPointer],
                 destRect.ToSKRect(),
                 paint == null ? null : _paintImpl[paint.ObjectPointer]);
@@ -234,7 +234,7 @@ namespace Drawie.Skia.Implementations
 
         public void DrawImage(IntPtr obj, Image image, RectD sourceRect, RectD destRect, Paint paint)
         {
-            ManagedInstances[obj].DrawImage(
+            this[obj].DrawImage(
                 _imageImpl[image.ObjectPointer],
                 sourceRect.ToSKRect(),
                 destRect.ToSKRect(),
@@ -243,57 +243,57 @@ namespace Drawie.Skia.Implementations
 
         public void DrawBitmap(IntPtr objPtr, Bitmap bitmap, float x, float y)
         {
-            ManagedInstances[objPtr].DrawBitmap(_bitmapImpl[bitmap.ObjectPointer], x, y);
+            this[objPtr].DrawBitmap(_bitmapImpl[bitmap.ObjectPointer], x, y);
         }
 
         public void DrawText(IntPtr objPtr, string text, float x, float y, Paint paint)
         {
-            ManagedInstances[objPtr].DrawText(text, x, y, _paintImpl[paint.ObjectPointer]);
+            this[objPtr].DrawText(text, x, y, _paintImpl[paint.ObjectPointer]);
         }
         
         public void DrawText(IntPtr objPtr, string text, float x, float y, Font font, Paint paint)
         {
             SKFont skFont = _fontImpl[font.ObjectPointer];
-            ManagedInstances[objPtr].DrawText(text, x, y, skFont, _paintImpl[paint.ObjectPointer]);
+            this[objPtr].DrawText(text, x, y, skFont, _paintImpl[paint.ObjectPointer]);
         }
 
         public void DrawText(IntPtr objectPointer, string text, float x, float y, TextAlign align, Font font, Paint paint)
         {
             SKFont skFont = _fontImpl[font.ObjectPointer];
-            ManagedInstances[objectPointer].DrawText(text, x, y, (SKTextAlign)align, skFont, _paintImpl[paint.ObjectPointer]);
+            this[objectPointer].DrawText(text, x, y, (SKTextAlign)align, skFont, _paintImpl[paint.ObjectPointer]);
         }
 
         public int SaveLayer(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer].SaveLayer();
+            return this[objectPointer].SaveLayer();
         }
 
         public int SaveLayer(IntPtr objectPtr, Paint? paint)
         {
-            return ManagedInstances[objectPtr]
-                .SaveLayer(paint != null ? _paintImpl.ManagedInstances[paint.ObjectPointer] : null);
+            return this[objectPtr]
+                .SaveLayer(paint != null ? _paintImpl[paint.ObjectPointer] : null);
         }
 
         public int SaveLayer(IntPtr objectPtr, Paint paint, RectD bounds)
         {
-            return ManagedInstances[objectPtr]
-                .SaveLayer(bounds.ToSKRect(), _paintImpl.ManagedInstances[paint.ObjectPointer]);
+            return this[objectPtr]
+                .SaveLayer(bounds.ToSKRect(), _paintImpl[paint.ObjectPointer]);
         }
 
         public Matrix3X3 GetTotalMatrix(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer].TotalMatrix.ToMatrix3X3();
+            return this[objectPointer].TotalMatrix.ToMatrix3X3();
         }
 
         public void RotateDegrees(IntPtr objectPointer, float degrees)
         {
-            ManagedInstances[objectPointer].RotateDegrees(degrees);
+            this[objectPointer].RotateDegrees(degrees);
         }
 
         public void DrawTextOnPath(IntPtr objectPointer, VectorPath path, string text, float offsetX, float offsetY, Font font,
             Paint paint)
         {
-            ManagedInstances[objectPointer].DrawTextOnPath(
+            this[objectPointer].DrawTextOnPath(
                 text,
                 _pathImpl[path.ObjectPointer],
                 offsetX,
@@ -304,26 +304,24 @@ namespace Drawie.Skia.Implementations
 
         public RectD GetLocalClipBounds(IntPtr objectPointer)
         {
-            var clipBounds = ManagedInstances[objectPointer].LocalClipBounds;
+            var clipBounds = this[objectPointer].LocalClipBounds;
             return new RectD(clipBounds.Left, clipBounds.Top, clipBounds.Width, clipBounds.Height);
         }
 
         public RectI GetDeviceClipBounds(IntPtr objectPointer)
         {
-            var clipBounds = ManagedInstances[objectPointer].DeviceClipBounds;
+            var clipBounds = this[objectPointer].DeviceClipBounds;
             return new RectI(clipBounds.Left, clipBounds.Top, clipBounds.Width, clipBounds.Height);
         }
 
         public void Dispose(IntPtr objectPointer)
         {
-            ManagedInstances[objectPointer].Dispose();
-
-            ManagedInstances.TryRemove(objectPointer, out _);
+            UnmanageAndDispose(objectPointer);
         }
 
         public object GetNativeCanvas(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer];
+            return this[objectPointer];
         }
     }
 }

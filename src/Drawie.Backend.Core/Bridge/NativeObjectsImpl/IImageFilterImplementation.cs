@@ -16,7 +16,6 @@ public interface IImageFilterImplementation
 
     object GetNativeImageFilter(IntPtr objPtr);
 
-    void DisposeObject(IntPtr objPtr);
     public IntPtr CreateBlur(float sigmaX, float sigmaY);
 
     public IntPtr CreateDropShadow(float dx, float dy, float sigmaX, float sigmaY, Color color,
@@ -25,4 +24,5 @@ public interface IImageFilterImplementation
     public IntPtr CreateShader(Shader shader, bool dither);
     public IntPtr CreateImage(Image image);
     public IntPtr CreateTile(RectD source, RectD dest, ImageFilter input);
+    public void DisposeObject(IntPtr objectPointer);
 }

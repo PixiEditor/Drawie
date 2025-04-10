@@ -8,20 +8,17 @@ public class SkiaPathEffectImplementation : SkObjectImplementation<SKPathEffect>
     public IntPtr CreateDash(float[] intervals, float phase)
     {
         SKPathEffect skPathEffect = SKPathEffect.CreateDash(intervals, phase);
-        ManagedInstances[skPathEffect.Handle] = skPathEffect;
+        AddManagedInstance(skPathEffect);
         return skPathEffect.Handle;
     }
 
     public void Dispose(IntPtr pathEffectPointer)
     {
-        if (!ManagedInstances.TryGetValue(pathEffectPointer, out var pathEffect)) return;
-
-        pathEffect.Dispose();
-        ManagedInstances.TryRemove(pathEffectPointer, out _);
+        UnmanageAndDispose(pathEffectPointer);
     }
 
-    public object GetNativePathEffect(IntPtr objectPointer)
+    public object? GetNativePathEffect(IntPtr objectPointer)
     {
-        return ManagedInstances.GetValueOrDefault(objectPointer);
+        return GetInstanceOrDefault(objectPointer);
     }
 }

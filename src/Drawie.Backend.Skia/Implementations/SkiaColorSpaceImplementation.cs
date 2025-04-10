@@ -22,14 +22,14 @@ namespace Drawie.Skia.Implementations
         public ColorSpace CreateSrgb()
         {
             SKColorSpace skColorSpace = SKColorSpace.CreateSrgb();
-            ManagedInstances[skColorSpace.Handle] = skColorSpace;
+            AddManagedInstance(skColorSpace);
             return new ColorSpace(skColorSpace.Handle);
         }
 
         public ColorSpace CreateSrgbLinear()
         {
             SKColorSpace skColorSpace = SKColorSpace.CreateSrgbLinear();
-            ManagedInstances[skColorSpace.Handle] = skColorSpace;
+            AddManagedInstance(skColorSpace);
             return new ColorSpace(skColorSpace.Handle);
         }
 
@@ -38,18 +38,17 @@ namespace Drawie.Skia.Implementations
             if (objectPointer == _srgbPointer) return;
             if (objectPointer == _srgbLinearPointer) return;
 
-            ManagedInstances[objectPointer].Dispose();
-            ManagedInstances.TryRemove(objectPointer, out _);
+            UnmanageAndDispose(objectPointer);
         }
 
         public object GetNativeColorSpace(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer];
+            return this[objectPointer];
         }
 
         public ColorSpaceTransformFn GetTransformFunction(IntPtr objectPointer)
         {
-            ManagedInstances.TryGetValue(objectPointer, out SKColorSpace skColorSpace);
+            TryGetInstance(objectPointer, out SKColorSpace skColorSpace);
 
             if (skColorSpace == null)
             {
@@ -98,7 +97,7 @@ namespace Drawie.Skia.Implementations
 
         public bool IsSrgb(IntPtr objectPointer)
         {
-            ManagedInstances.TryGetValue(objectPointer, out SKColorSpace skColorSpace);
+            TryGetInstance(objectPointer, out SKColorSpace skColorSpace);
 
             return skColorSpace?.IsSrgb ?? false;
         }

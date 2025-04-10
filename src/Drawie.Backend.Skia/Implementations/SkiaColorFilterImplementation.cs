@@ -11,7 +11,7 @@ namespace Drawie.Skia.Implementations
         public IntPtr CreateBlendMode(Color color, BlendMode blendMode)
         {
             SKColorFilter skColorFilter = SKColorFilter.CreateBlendMode(color.ToSKColor(), (SKBlendMode)blendMode);
-            ManagedInstances[skColorFilter.Handle] = skColorFilter;
+            AddManagedInstance(skColorFilter);
 
             return skColorFilter.Handle;
         }
@@ -19,7 +19,7 @@ namespace Drawie.Skia.Implementations
         public IntPtr CreateColorMatrix(float[] matrix)
         {
             var skColorFilter = SKColorFilter.CreateColorMatrix(matrix);
-            ManagedInstances[skColorFilter.Handle] = skColorFilter;
+            AddManagedInstance(skColorFilter);
 
             return skColorFilter.Handle;
         }
@@ -27,38 +27,36 @@ namespace Drawie.Skia.Implementations
         public IntPtr CreateHighContrast(bool grayscale, ContrastInvertMode invert, float contrast)
         {
             var skColorFilter = SKColorFilter.CreateHighContrast(grayscale, (SKHighContrastConfigInvertStyle)invert, contrast);
-            ManagedInstances[skColorFilter.Handle] = skColorFilter;
+            AddManagedInstance(skColorFilter);
 
             return skColorFilter.Handle;
         }
 
         public IntPtr CreateCompose(ColorFilter outer, ColorFilter inner)
         {
-            var skOuter = ManagedInstances[outer.ObjectPointer];
-            var skInner = ManagedInstances[inner.ObjectPointer];
+            var skOuter = this[outer.ObjectPointer];
+            var skInner = this[inner.ObjectPointer];
 
             var skColorFilter = SKColorFilter.CreateCompose(skOuter, skInner);
-            ManagedInstances[skColorFilter.Handle] = skColorFilter;
+            AddManagedInstance(skColorFilter);
 
             return skColorFilter.Handle;
         }
 
         public void Dispose(ColorFilter colorFilter)
         {
-            SKColorFilter skColorFilter = ManagedInstances[colorFilter.ObjectPointer];
-            skColorFilter.Dispose();
-            ManagedInstances.TryRemove(skColorFilter.Handle, out _);
+            UnmanageAndDispose(colorFilter.ObjectPointer);
         }
 
         public object GetNativeColorFilter(IntPtr objectPointer)
         {
-            return ManagedInstances[objectPointer];
+            return this[objectPointer];
         }
 
         public IntPtr CreateLumaColor()
         {
             var skColorFilter = SKColorFilter.CreateLumaColor();
-            ManagedInstances[skColorFilter.Handle] = skColorFilter;
+            AddManagedInstance(skColorFilter);
 
             return skColorFilter.Handle;
         }

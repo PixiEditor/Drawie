@@ -276,8 +276,19 @@ namespace Drawie.Backend.Core.Surfaces
                 {
                     if (paint.Paintable is IStartEndPaintable startEndPaintable)
                     {
-                        startEndPaintable.TempUpdateWithStartEnd(from, to);
-                        reset = paint.ApplyPaintableCached();
+                        var start = startEndPaintable.Start;
+                        var end = startEndPaintable.End;
+                        bool absolute = paint.Paintable.AbsoluteValues;
+
+                        paint.Paintable.AbsoluteValues = true;
+                        startEndPaintable.Start = from;
+                        startEndPaintable.End = to;
+
+                        reset = paint.ApplyPaintable(corners.AABBBounds, Matrix3X3.Identity);
+
+                        paint.Paintable.AbsoluteValues = absolute;
+                        startEndPaintable.Start = start;
+                        startEndPaintable.End = end;
                     }
                     else
                     {

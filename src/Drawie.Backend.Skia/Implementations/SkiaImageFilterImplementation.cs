@@ -26,27 +26,27 @@ namespace Drawie.Skia.Implementations
                 (SKShaderTileMode)mode,
                 convolveAlpha);
 
-            ManagedInstances[skImageFilter.Handle] = skImageFilter;
+            AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
         public IntPtr CreateCompose(ImageFilter outer, ImageFilter inner)
         {
-            var skOuter = ManagedInstances[outer.ObjectPointer];
-            var skInner = ManagedInstances[inner.ObjectPointer];
+            var skOuter = this[outer.ObjectPointer];
+            var skInner = this[inner.ObjectPointer];
 
             var compose = SKImageFilter.CreateCompose(skOuter, skInner);
-            ManagedInstances[compose.Handle] = compose;
+            AddManagedInstance(compose);
 
             return compose.Handle;
         }
 
-        public object GetNativeImageFilter(IntPtr objPtr) => ManagedInstances[objPtr];
+        public object GetNativeImageFilter(IntPtr objPtr) => this[objPtr];
 
         public IntPtr CreateBlur(float sigmaX, float sigmaY)
         {
             var skImageFilter = SKImageFilter.CreateBlur(sigmaX, sigmaY);
-            ManagedInstances[skImageFilter.Handle] = skImageFilter;
+            AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
@@ -56,19 +56,19 @@ namespace Drawie.Skia.Implementations
             SKImageFilter? inputFilter = null;
             if (input != null)
             {
-                inputFilter = ManagedInstances[input.ObjectPointer];
+                inputFilter = this[input.ObjectPointer];
             }
 
             var skImageFilter = SKImageFilter.CreateDropShadow(dx, dy, sigmaX, sigmaY, color.ToSKColor(), inputFilter);
-            ManagedInstances[skImageFilter.Handle] = skImageFilter;
+            AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
         public IntPtr CreateShader(Shader shader, bool dither)
         {
-            var skShader = ShaderImplementation.ManagedInstances[shader.ObjectPointer];
+            var skShader = ShaderImplementation[shader.ObjectPointer];
             var skImageFilter = SKImageFilter.CreateShader(skShader, dither);
-            ManagedInstances[skImageFilter.Handle] = skImageFilter;
+            AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
@@ -80,9 +80,9 @@ namespace Drawie.Skia.Implementations
             }
 
 
-            SKImage target = ImageImplementation.ManagedInstances[image.ObjectPointer];
+            SKImage target = ImageImplementation[image.ObjectPointer];
             var skImageFilter = SKImageFilter.CreateImage(target);
-            ManagedInstances[skImageFilter.Handle] = skImageFilter;
+            AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
@@ -94,9 +94,14 @@ namespace Drawie.Skia.Implementations
             }
 
             var skImageFilter = SKImageFilter.CreateTile(source.ToSKRect(), dest.ToSKRect(),
-                ManagedInstances[input.ObjectPointer]);
-            ManagedInstances[skImageFilter.Handle] = skImageFilter;
+                this[input.ObjectPointer]);
+            AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
+        }
+
+        public void DisposeObject(IntPtr objectPointer)
+        {
+            UnmanageAndDispose(objectPointer);
         }
     }
 }

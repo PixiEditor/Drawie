@@ -28,5 +28,6 @@ namespace Drawie.Backend.Core.Bridge
         public IRenderingDispatcher RenderingDispatcher { get; set; }
         public IFontImplementation FontImplementation { get; }
         public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture, SurfaceOrigin origin);
+        public int GetNativeInstancesTotalCount();
     }
 }

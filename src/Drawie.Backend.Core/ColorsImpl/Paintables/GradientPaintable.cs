@@ -9,16 +9,9 @@ public abstract class GradientPaintable : Paintable
     public List<GradientStop> GradientStops { get; }
     public Matrix3X3? Transform { get; set; }
 
-    protected Shader lastShader;
-
     public GradientPaintable(IEnumerable<GradientStop> gradientStops)
     {
         GradientStops = new List<GradientStop>(gradientStops);
-    }
-
-    internal override Shader? GetShaderCached()
-    {
-        return lastShader;
     }
 
     public override void ApplyOpacity(double opacity)
@@ -31,13 +24,6 @@ public abstract class GradientPaintable : Paintable
 
         GradientStops.Clear();
         GradientStops.AddRange(newStops);
-        lastShader?.Dispose();
-        lastShader = null;
-    }
-
-    public override void Dispose()
-    {
-        lastShader?.Dispose();
     }
 
     protected bool Equals(GradientPaintable other)

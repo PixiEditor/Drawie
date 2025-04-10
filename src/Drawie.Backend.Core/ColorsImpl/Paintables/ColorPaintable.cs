@@ -19,11 +19,6 @@ public class ColorPaintable : Paintable
         return null;
     }
 
-    internal override Shader? GetShaderCached()
-    {
-        return null;
-    }
-
     public override Paintable? Clone()
     {
         return new ColorPaintable(Color);
