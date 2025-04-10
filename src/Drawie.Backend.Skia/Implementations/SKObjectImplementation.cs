@@ -115,12 +115,12 @@ namespace Drawie.Skia.Implementations
             return flattenedSources;
         }
 
-        protected static void Untrace(SKShader shader)
+        protected static void Untrace(T shader)
         {
             sources.Remove(shader);
         }
 
-        protected static void Trace(SKShader shader)
+        protected static void Trace(T shader)
         {
             sources[shader] = Environment.StackTrace;
         }
