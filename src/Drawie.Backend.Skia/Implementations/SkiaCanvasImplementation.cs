@@ -201,7 +201,8 @@ namespace Drawie.Skia.Implementations
         public void SetMatrix(IntPtr objPtr, Matrix3X3 finalMatrix)
         {
             SKCanvas canvas = this[objPtr];
-            canvas.SetMatrix(finalMatrix.ToSkMatrix());
+            var mappedMatrix = finalMatrix.ToSkMatrix();
+            canvas.SetMatrix(in mappedMatrix);
         }
 
         public void RestoreToCount(IntPtr objPtr, int count)

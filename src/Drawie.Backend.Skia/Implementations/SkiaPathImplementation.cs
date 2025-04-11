@@ -93,7 +93,8 @@ namespace Drawie.Skia.Implementations
 
         public void Transform(VectorPath vectorPath, Matrix3X3 matrix)
         {
-            this[vectorPath.ObjectPointer].Transform(matrix.ToSkMatrix());
+            SKMatrix mappedMatrix = matrix.ToSkMatrix();
+            this[vectorPath.ObjectPointer].Transform(in mappedMatrix);
         }
 
         public RectD GetBounds(VectorPath vectorPath)
