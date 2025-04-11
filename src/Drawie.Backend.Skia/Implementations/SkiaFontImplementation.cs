@@ -275,9 +275,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         newFont.Embolden = font.Embolden;
         newFont.SkewX = font.SkewX;
 
-        UnmanageAndDispose(font);
-
-        AddManagedInstance(objectPointer, newFont);
+        UpdateManagedInstance(objectPointer, newFont);
     }
 
     public int GetGlyphCount(IntPtr objectPointer)

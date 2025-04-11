@@ -63,6 +63,25 @@ namespace Drawie.Skia.Implementations
             instance.Dispose();
         }
 
+        public void UpdateManagedInstance(IntPtr objPtr, T instance)
+        {
+            if (ManagedInstances.TryRemove(objPtr, out var managedInstance))
+            {
+                if (managedInstance == null) return;
+#if DRAWIE_TRACE
+                Untrace(managedInstance);
+#endif
+                managedInstance.Dispose();
+            }
+
+            if (ManagedInstances.TryAdd(objPtr, instance))
+            {
+#if DRAWIE_TRACE
+                Trace(instance);
+#endif
+            }
+        }
+
         public T? GetInstanceOrDefault(IntPtr obj)
         {
             return ManagedInstances.GetValueOrDefault(obj);
