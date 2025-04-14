@@ -28,13 +28,6 @@ namespace Drawie.Skia.Implementations
         public Pixmap PeekPixels(DrawingSurface drawingSurface)
         {
             SKPixmap pixmap = this[drawingSurface.ObjectPointer].PeekPixels();
-            if (pixmap == null)
-            {
-                using var snapshot = drawingSurface.Snapshot();
-                Bitmap bitmap = Bitmap.FromImage(snapshot);
-                return bitmap.PeekPixels();
-            }
-
             return _pixmapImplementation.CreateFrom(pixmap);
         }
 

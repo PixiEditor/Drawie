@@ -14,4 +14,8 @@ public interface IBitmapImplementation
     public byte[] GetBytes(IntPtr objectPointer);
     public ImageInfo GetInfo(IntPtr objectPointer);
     public Pixmap? PeekPixels(IntPtr objectPointer);
+    public IntPtr Construct(ImageInfo info);
+    public bool InstallPixels(IntPtr objectPointer, ImageInfo info, IntPtr pixels);
+    public void SetPixels(IntPtr objectPointer, IntPtr pixels);
+    public IntPtr GetAddress(IntPtr objectPointer);
 }

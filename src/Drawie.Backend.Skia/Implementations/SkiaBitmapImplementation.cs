@@ -63,6 +63,32 @@ namespace Drawie.Skia.Implementations
             return _pixmapImplementation.CreateFrom(pixmap);
         }
 
+        public IntPtr Construct(ImageInfo info)
+        {
+            SKImageInfo imageInfo = info.ToSkImageInfo();
+            SKBitmap bitmap = new SKBitmap(imageInfo);
+            AddManagedInstance(bitmap);
+            return bitmap.Handle;
+        }
+
+        public bool InstallPixels(IntPtr objectPointer, ImageInfo info, IntPtr pixels)
+        {
+            SKBitmap bitmap = this[objectPointer];
+            return bitmap.InstallPixels(info.ToSkImageInfo(), pixels);
+        }
+
+        public void SetPixels(IntPtr objectPointer, IntPtr pixels)
+        {
+            SKBitmap bitmap = this[objectPointer];
+            bitmap.SetPixels(pixels);
+        }
+
+        public IntPtr GetAddress(IntPtr objectPointer)
+        {
+            SKBitmap bitmap = this[objectPointer];
+            return bitmap.GetAddress(0, 0);
+        }
+
         public object GetNativeBitmap(IntPtr objectPointer)
         {
             return this[objectPointer];

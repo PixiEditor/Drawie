@@ -19,8 +19,10 @@ public class Texture : IDisposable, ICloneable
 
     public ColorSpace ColorSpace { get; }
 
-    private bool pixmapUpToDate;
-    private Pixmap pixmap;
+    public ImageInfo Info { get; }
+
+    private Bitmap? bitmap;
+    private bool cpuSynced;
 
     private bool isDisposed;
 
@@ -33,6 +35,11 @@ public class Texture : IDisposable, ICloneable
             GpuBacked = true
         })
     {
+    }
+
+    private void OnChanged(RectD? changedRect)
+    {
+        cpuSynced = false;
     }
 
     public static Texture ForDisplay(VecI size)
@@ -73,6 +80,7 @@ public class Texture : IDisposable, ICloneable
 
     public Texture(ImageInfo imageInfo)
     {
+        Info = imageInfo;
         Size = new VecI(imageInfo.Width, imageInfo.Height);
         if (!imageInfo.GpuBacked)
             throw new ArgumentException(
@@ -87,6 +95,7 @@ public class Texture : IDisposable, ICloneable
         );
 
         DrawingSurface.Changed += DrawingSurfaceOnChanged;
+        Changed += OnChanged;
     }
 
     public Texture(Texture other) : this(other.Size)
@@ -177,36 +186,9 @@ public class Texture : IDisposable, ICloneable
         return newTexture;
     }
 
-    public Pixmap? PeekReadOnlyPixels()
-    {
-        if (pixmapUpToDate)
-        {
-            return pixmap;
-        }
-
-        pixmap = DrawingSurface.PeekPixels();
-        pixmapUpToDate = true;
-
-        return pixmap;
-    }
-
     public void CopyTo(Texture destination)
     {
         destination.DrawingSurface.Canvas.DrawSurface(DrawingSurface, 0, 0);
-    }
-
-    public unsafe bool IsFullyTransparent()
-    {
-        ulong* ptr = (ulong*)PeekReadOnlyPixels().GetPixels();
-        for (int i = 0; i < Size.X * Size.Y; i++)
-        {
-            // ptr[i] actually contains 4 16-bit floats. We only care about the first one which is alpha.
-            // An empty pixel can have alpha of 0 or -0 (not sure if -0 actually ever comes up). 0 in hex is 0x0, -0 in hex is 0x8000
-            if ((ptr[i] & 0x1111_0000_0000_0000) != 0 && (ptr[i] & 0x1111_0000_0000_0000) != 0x8000_0000_0000_0000)
-                return false;
-        }
-
-        return true;
     }
 
     public void DrawBytes(VecI surfaceSize, byte[] pixels, ColorType color, AlphaType alphaType)
@@ -242,16 +224,42 @@ public class Texture : IDisposable, ICloneable
 
     public Color GetSRGBPixel(VecI vecI)
     {
-        if (vecI.X < 0 || vecI.X >= Size.X || vecI.Y < 0 || vecI.Y >= Size.Y)
+        var color = GetPixel(vecI);
+        if (color is { R: 0, G: 0, B: 0, A: 0 })
             return Color.Empty;
 
-        if (!pixmapUpToDate)
+        if (!ColorSpace.IsSrgb)
         {
-            pixmapUpToDate = true;
-            pixmap = DrawingSurface.PeekPixels();
+            var transformFunction = ColorSpace.CreateSrgb().GetTransformFunction();
+            return color.TransformColor(transformFunction.Invert());
         }
 
-        return pixmap.GetPixelColor(vecI);
+        return color;
+    }
+
+    public Color GetPixel(VecI at)
+    {
+        if (at.X < 0 || at.X >= Size.X || at.Y < 0 || at.Y >= Size.Y)
+            return Color.Empty;
+
+        SyncBitmap();
+
+        return bitmap.PeekPixels().GetPixelColor(at);
+    }
+
+    private void SyncBitmap()
+    {
+        if (!cpuSynced)
+        {
+            if (bitmap == null)
+            {
+                bitmap = new Bitmap(Info);
+            }
+
+            DrawingSurface.ReadPixels(Info, bitmap.Address, bitmap.Info.RowBytes, 0, 0);
+
+            cpuSynced = true;
+        }
     }
 
     public void AddDirtyRect(RectI dirtyRect)
@@ -267,7 +275,7 @@ public class Texture : IDisposable, ICloneable
         isDisposed = true;
         DrawingSurface.Changed -= DrawingSurfaceOnChanged;
         DrawingSurface.Dispose();
-        pixmap?.Dispose();
+        bitmap?.Dispose();
         nearestNeighborReplacingPaint.Dispose();
     }
 
