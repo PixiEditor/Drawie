@@ -3,6 +3,7 @@ using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Numerics;
+using Drawie.Skia.Encoders;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations
@@ -13,19 +14,25 @@ namespace Drawie.Skia.Implementations
         private readonly SkiaPixmapImplementation _pixmapImplementation;
         private SkObjectImplementation<SKSurface>? _surfaceImplementation;
         private SkiaShaderImplementation shaderImpl;
-        
-        public SkiaImageImplementation(SkObjectImplementation<SKData> imgDataImplementation, SkiaPixmapImplementation pixmapImplementation,  SkiaShaderImplementation shaderImplementation)
+
+        private Dictionary<EncodedImageFormat, IImageEncoder> nonSkiaEncoders = new Dictionary<EncodedImageFormat, IImageEncoder>()
+        {
+            { EncodedImageFormat.Bmp , new BmpEncoder() }
+        };
+
+        public SkiaImageImplementation(SkObjectImplementation<SKData> imgDataImplementation,
+            SkiaPixmapImplementation pixmapImplementation, SkiaShaderImplementation shaderImplementation)
         {
             _imgImplementation = imgDataImplementation;
             _pixmapImplementation = pixmapImplementation;
             shaderImpl = shaderImplementation;
         }
-        
+
         public void SetSurfaceImplementation(SkObjectImplementation<SKSurface> surfaceImplementation)
         {
             _surfaceImplementation = surfaceImplementation;
         }
-        
+
         public Image Snapshot(DrawingSurface drawingSurface)
         {
             var surface = _surfaceImplementation![drawingSurface.ObjectPointer];
@@ -43,7 +50,7 @@ namespace Drawie.Skia.Implementations
             AddManagedInstance(snapshot);
             return new Image(snapshot.Handle);
         }
-        
+
         public Image? FromEncodedData(byte[] dataBytes)
         {
             SKImage img = SKImage.FromEncodedData(dataBytes);
@@ -76,7 +83,7 @@ namespace Drawie.Skia.Implementations
             AddManagedInstance(nativeImg);
             return new Image(nativeImg.Handle);
         }
-        
+
         public Pixmap PeekPixels(Image image)
         {
             var native = this[image.ObjectPointer];
@@ -84,7 +91,8 @@ namespace Drawie.Skia.Implementations
             return _pixmapImplementation.CreateFrom(pixmap);
         }
 
-        public void GetColorShifts(ref int platformColorAlphaShift, ref int platformColorRedShift, ref int platformColorGreenShift,
+        public void GetColorShifts(ref int platformColorAlphaShift, ref int platformColorRedShift,
+            ref int platformColorGreenShift,
             ref int platformColorBlueShift)
         {
             platformColorAlphaShift = SKImageInfo.PlatformColorAlphaShift;
@@ -104,7 +112,25 @@ namespace Drawie.Skia.Implementations
         public ImgData Encode(Image image, EncodedImageFormat format, int quality)
         {
             var native = this[image.ObjectPointer];
-            var encoded = native.Encode((SKEncodedImageFormat)format, quality);
+            SKData? encoded = null;
+            if (format != EncodedImageFormat.Png && format != EncodedImageFormat.Jpeg &&
+                format != EncodedImageFormat.Webp)
+            {
+                if (nonSkiaEncoders.TryGetValue(format, out var encoder))
+                {
+                    byte[] bytes = encoder.Encode(image);
+                    encoded = SKData.CreateCopy(bytes);
+                }
+                else
+                {
+                    throw new NotSupportedException($"Encoding {format} format is not supported");
+                }
+            }
+            else
+            {
+                encoded = native.Encode((SKEncodedImageFormat)format, quality);
+            }
+
             _imgImplementation.AddManagedInstance(encoded);
             return new ImgData(encoded.Handle);
         }
@@ -118,7 +144,7 @@ namespace Drawie.Skia.Implementations
         {
             return this[objectPointer].Height;
         }
-        
+
         public Image Clone(Image image)
         {
             var native = this[image.ObjectPointer];
@@ -147,7 +173,7 @@ namespace Drawie.Skia.Implementations
             shaderImpl.AddManagedInstance(shader);
             return new Shader(shader.Handle);
         }
-        
+
         public Shader ToRawShader(IntPtr objectPointer)
         {
             var shader = this[objectPointer].ToRawShader();
