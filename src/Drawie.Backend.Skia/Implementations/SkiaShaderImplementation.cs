@@ -404,9 +404,22 @@ namespace Drawie.Skia.Implementations
 
                     skUniforms.Add(uniform.Value.Name, values);
                 }
-                else if (uniform.Value.DataType == UniformValueType.FloatArray)
+                else if (uniform.Value.DataType is UniformValueType.FloatArray or UniformValueType.Matrix3X3)
                 {
                     skUniforms.Add(uniform.Value.Name, uniform.Value.FloatArrayValue);
+                }
+                else if (uniform.Value.DataType == UniformValueType.Int)
+                {
+                    skUniforms.Add(uniform.Value.Name, uniform.Value.IntValue);
+                }
+                else if (uniform.Value.DataType == UniformValueType.Vector2Int)
+                {
+                    skUniforms.Add(uniform.Value.Name,
+                        new SKPointI((int)uniform.Value.Vector2IntValue.X, (int)uniform.Value.Vector2IntValue.Y));
+                }
+                else if (uniform.Value.DataType is UniformValueType.Vector3Int or UniformValueType.Vector4Int or UniformValueType.IntArray)
+                {
+                    skUniforms.Add(uniform.Value.Name, uniform.Value.IntArrayValue);
                 }
             }
 
@@ -538,31 +551,61 @@ namespace Drawie.Skia.Implementations
                 return true;
             }
 
-            if (nameLessBlock.Contains("float2", StringComparison.InvariantCultureIgnoreCase)
-                || nameLessBlock.Contains("vec2", StringComparison.InvariantCultureIgnoreCase)
-                || nameLessBlock.Contains("half2", StringComparison.InvariantCultureIgnoreCase))
+            if (nameLessBlock.Contains("int ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                detectedType = UniformValueType.Int;
+                return true;
+            }
+
+            if (nameLessBlock.Contains("float3x3 "))
+            {
+                detectedType = UniformValueType.Matrix3X3;
+                return true;
+            }
+
+            if (nameLessBlock.Contains("float2 ", StringComparison.InvariantCultureIgnoreCase)
+                || nameLessBlock.Contains("vec2 ", StringComparison.InvariantCultureIgnoreCase)
+                || nameLessBlock.Contains("half2 ", StringComparison.InvariantCultureIgnoreCase))
             {
                 detectedType = UniformValueType.Vector2;
                 return true;
             }
 
-            if (nameLessBlock.Contains("float3", StringComparison.InvariantCultureIgnoreCase)
-                || nameLessBlock.Contains("vec3", StringComparison.InvariantCultureIgnoreCase)
-                || nameLessBlock.Contains("half3", StringComparison.InvariantCultureIgnoreCase))
+            if (nameLessBlock.Contains("int2 ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                detectedType = UniformValueType.Vector2Int;
+                return true;
+            }
+
+            if (nameLessBlock.Contains("float3 ", StringComparison.InvariantCultureIgnoreCase)
+                || nameLessBlock.Contains("vec3 ", StringComparison.InvariantCultureIgnoreCase)
+                || nameLessBlock.Contains("half3 ", StringComparison.InvariantCultureIgnoreCase))
             {
                 detectedType = UniformValueType.Vector3;
                 return true;
             }
 
-            if (nameLessBlock.Contains("float4", StringComparison.InvariantCultureIgnoreCase)
-                || nameLessBlock.Contains("vec4", StringComparison.InvariantCultureIgnoreCase)
-                || nameLessBlock.Contains("half4", StringComparison.InvariantCultureIgnoreCase))
+            if (nameLessBlock.Contains("int3 ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                detectedType = UniformValueType.Vector3Int;
+                return true;
+            }
+
+            if (nameLessBlock.Contains("float4 ", StringComparison.InvariantCultureIgnoreCase)
+                || nameLessBlock.Contains("vec4 ", StringComparison.InvariantCultureIgnoreCase)
+                || nameLessBlock.Contains("half4 ", StringComparison.InvariantCultureIgnoreCase))
             {
                 detectedType = UniformValueType.Vector4;
                 return true;
             }
 
-            if (nameLessBlock.Contains("shader", StringComparison.InvariantCultureIgnoreCase))
+            if (nameLessBlock.Contains("int4 ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                detectedType = UniformValueType.Vector4Int;
+                return true;
+            }
+
+            if (nameLessBlock.Contains("shader ", StringComparison.InvariantCultureIgnoreCase))
             {
                 detectedType = UniformValueType.Shader;
                 return true;

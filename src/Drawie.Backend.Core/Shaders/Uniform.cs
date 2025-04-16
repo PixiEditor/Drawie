@@ -1,4 +1,5 @@
 ﻿using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.Numerics;
 using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Shaders;
@@ -7,10 +8,15 @@ public struct Uniform
 {
     public string Name { get; }
     public float FloatValue { get; }
+
+    public int IntValue { get; }
     public float[] FloatArrayValue { get; }
+
+    public int[] IntArrayValue { get; }
     public Shader ShaderValue { get; }
     public Color ColorValue { get; }
     public VecD Vector2Value { get; }
+    public VecI Vector2IntValue { get; }
     public Vec3D Vector3Value { get; }
     public Vec4D Vector4Value { get; }
     public string UniformName { get; }
@@ -72,6 +78,44 @@ public struct Uniform
         UniformName = "half4";
     }
 
+    public Uniform(string name, int value)
+    {
+        Name = name;
+        IntValue = value;
+        DataType = UniformValueType.Int;
+        UniformName = "int";
+    }
+
+    public Uniform(string name, VecI vector)
+    {
+        Name = name;
+        IntArrayValue = new int[] { vector.X, vector.Y };
+        DataType = UniformValueType.Vector2Int;
+        Vector2IntValue = vector;
+        UniformName = "int2";
+    }
+
+    public Uniform(string name, int[] vector)
+    {
+        Name = name;
+        IntArrayValue = vector;
+        DataType = UniformValueType.IntArray;
+        UniformName = vector.Length switch
+        {
+            3 => "int3",
+            4 => "int4",
+            _ => throw new ArgumentException("Invalid length")
+        };
+    }
+
+    public Uniform(string name, Matrix3X3 matrix)
+    {
+        Name = name;
+        FloatArrayValue = matrix.Values;
+        DataType = UniformValueType.Matrix3X3;
+        UniformName = "float3x3";
+    }
+
     public void Dispose()
     {
         ShaderValue?.Dispose();
@@ -81,10 +125,16 @@ public struct Uniform
 public enum UniformValueType
 {
     Float,
+    Int,
     FloatArray,
+    IntArray,
     Shader,
     Color,
     Vector2,
     Vector3,
-    Vector4
+    Vector4,
+    Vector2Int,
+    Vector3Int,
+    Vector4Int,
+    Matrix3X3,
 }
