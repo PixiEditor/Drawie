@@ -40,10 +40,10 @@ namespace Drawie.Skia.Implementations
             SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(shaderCode, out errors);
             if (string.IsNullOrEmpty(errors))
             {
-                SKRuntimeEffectUniforms effectUniforms = UniformsToSkUniforms(uniforms, effect);
+                var declaration = DeclarationsFromEffect(shaderCode, effect);
+                SKRuntimeEffectUniforms effectUniforms = UniformsToSkUniforms(uniforms, declaration, effect);
                 SKRuntimeEffectChildren effectChildren = UniformsToSkChildren(uniforms, effect);
                 SKShader shader = effect.ToShader(effectUniforms, effectChildren);
-                var declaration = DeclarationsFromEffect(shaderCode, effect);
                 AddManagedInstance(shader);
                 runtimeEffects[shader.Handle] = effect;
                 declarations[shader.Handle] = declaration;
@@ -284,13 +284,13 @@ namespace Drawie.Skia.Implementations
             {
                 throw new InvalidOperationException("Shader is not a runtime effect shader");
             }
+            declarations.Remove(objectPointer, out var oldDeclarations);
 
             // TODO: Don't reupload shaders if they are the same
-            SKRuntimeEffectUniforms effectUniforms = UniformsToSkUniforms(uniforms, effect);
+            SKRuntimeEffectUniforms effectUniforms = UniformsToSkUniforms(uniforms, oldDeclarations, effect);
             SKRuntimeEffectChildren effectChildren = UniformsToSkChildren(uniforms, effect);
 
             runtimeEffects.Remove(objectPointer);
-            declarations.Remove(objectPointer, out var oldDeclarations);
 
             var newShader = effect.ToShader(effectUniforms, effectChildren);
             AddManagedInstance(newShader);
@@ -365,7 +365,8 @@ namespace Drawie.Skia.Implementations
             declarations.Remove(shaderObjPointer, out var declaration);
         }
 
-        private SKRuntimeEffectUniforms UniformsToSkUniforms(Uniforms uniforms, SKRuntimeEffect effect)
+        private SKRuntimeEffectUniforms UniformsToSkUniforms(Uniforms uniforms, List<UniformDeclaration> declarations,
+            SKRuntimeEffect effect)
         {
             SKRuntimeEffectUniforms skUniforms = new SKRuntimeEffectUniforms(effect);
             foreach (var uniform in uniforms)
@@ -375,26 +376,28 @@ namespace Drawie.Skia.Implementations
                     continue;
                 }
 
-                if (uniform.Value.DataType == UniformValueType.Float)
+                var declaration = declarations.FirstOrDefault(x => x.Name == uniform.Key);
+
+                if (declaration.DataType == UniformValueType.Float)
                 {
                     skUniforms.Add(uniform.Value.Name, uniform.Value.FloatValue);
                 }
-                else if (uniform.Value.DataType == UniformValueType.Color)
+                else if (declaration.DataType == UniformValueType.Color)
                 {
                     skUniforms.Add(uniform.Value.Name, uniform.Value.ColorValue.ToSKColor());
                 }
-                else if (uniform.Value.DataType == UniformValueType.Vector2)
+                else if (declaration.DataType == UniformValueType.Vector2)
                 {
                     skUniforms.Add(uniform.Value.Name,
                         new SKPoint((float)uniform.Value.Vector2Value.X, (float)uniform.Value.Vector2Value.Y));
                 }
-                else if (uniform.Value.DataType == UniformValueType.Vector3)
+                else if (declaration.DataType == UniformValueType.Vector3)
                 {
                     skUniforms.Add(uniform.Value.Name,
                         new SKPoint3((float)uniform.Value.Vector3Value.X, (float)uniform.Value.Vector3Value.Y,
                             (float)uniform.Value.Vector3Value.Z));
                 }
-                else if (uniform.Value.DataType == UniformValueType.Vector4)
+                else if (declaration.DataType == UniformValueType.Vector4)
                 {
                     float[] values = new[]
                     {
@@ -404,20 +407,20 @@ namespace Drawie.Skia.Implementations
 
                     skUniforms.Add(uniform.Value.Name, values);
                 }
-                else if (uniform.Value.DataType is UniformValueType.FloatArray or UniformValueType.Matrix3X3)
+                else if (declaration.DataType is UniformValueType.FloatArray or UniformValueType.Matrix3X3)
                 {
                     skUniforms.Add(uniform.Value.Name, uniform.Value.FloatArrayValue);
                 }
-                else if (uniform.Value.DataType == UniformValueType.Int)
+                else if (declaration.DataType == UniformValueType.Int)
                 {
                     skUniforms.Add(uniform.Value.Name, uniform.Value.IntValue);
                 }
-                else if (uniform.Value.DataType == UniformValueType.Vector2Int)
+                else if (declaration.DataType == UniformValueType.Vector2Int)
                 {
                     skUniforms.Add(uniform.Value.Name,
                         new SKPointI((int)uniform.Value.Vector2IntValue.X, (int)uniform.Value.Vector2IntValue.Y));
                 }
-                else if (uniform.Value.DataType is UniformValueType.Vector3Int or UniformValueType.Vector4Int or UniformValueType.IntArray)
+                else if (declaration.DataType is UniformValueType.Vector3Int or UniformValueType.Vector4Int or UniformValueType.IntArray)
                 {
                     skUniforms.Add(uniform.Value.Name, uniform.Value.IntArrayValue);
                 }

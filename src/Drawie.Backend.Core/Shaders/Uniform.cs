@@ -29,6 +29,7 @@ public struct Uniform
     {
         Name = name;
         FloatValue = value;
+        IntValue = (int)value;
         DataType = UniformValueType.Float;
         UniformName = "float";
     }
@@ -37,6 +38,7 @@ public struct Uniform
     {
         Name = name;
         FloatArrayValue = new float[] { (float)vector.X, (float)vector.Y };
+        IntArrayValue = new int[] { (int)vector.X, (int)vector.Y };
         DataType = UniformValueType.Vector2;
         Vector2Value = vector;
         UniformName = "float2";
@@ -46,6 +48,7 @@ public struct Uniform
     {
         Name = name;
         FloatArrayValue = new float[] { (float)vector.X, (float)vector.Y, (float)vector.Z };
+        IntArrayValue = new int[] { (int)vector.X, (int)vector.Y, (int)vector.Z };
         DataType = UniformValueType.Vector3;
         Vector3Value = vector;
         UniformName = "float3";
@@ -55,6 +58,7 @@ public struct Uniform
     {
         Name = name;
         FloatArrayValue = new float[] { (float)vector.X, (float)vector.Y, (float)vector.Z, (float)vector.W };
+        IntArrayValue = new int[] { (int)vector.X, (int)vector.Y, (int)vector.Z, (int)vector.W };
         Vector4Value = vector;
         DataType = UniformValueType.Vector4;
         UniformName = "float4";
@@ -83,6 +87,7 @@ public struct Uniform
         Name = name;
         IntValue = value;
         DataType = UniformValueType.Int;
+        FloatValue = value;
         UniformName = "int";
     }
 
@@ -92,6 +97,7 @@ public struct Uniform
         IntArrayValue = new int[] { vector.X, vector.Y };
         DataType = UniformValueType.Vector2Int;
         Vector2IntValue = vector;
+        Vector2Value = new VecD(vector.X, vector.Y);
         UniformName = "int2";
     }
 
@@ -99,6 +105,7 @@ public struct Uniform
     {
         Name = name;
         IntArrayValue = vector;
+        FloatArrayValue = vector.Select(i => (float)i).ToArray();
         DataType = UniformValueType.IntArray;
         UniformName = vector.Length switch
         {
