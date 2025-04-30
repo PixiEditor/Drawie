@@ -111,7 +111,14 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             keyboards[i] = keyboard;
         }
 
-        InputController = new InputController(keyboards);
+        GlfwPointer[] pointers = new GlfwPointer[input.Mice.Count];
+        for (var i = 0; i < input.Mice.Count; i++)
+        {
+            var pointer = input.Mice[i];
+            pointers[i] = new GlfwPointer(pointer);
+        }
+
+        InputController = new InputController(keyboards, pointers);
     }
 
     public void Show()
