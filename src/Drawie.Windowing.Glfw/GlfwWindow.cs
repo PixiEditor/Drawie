@@ -37,6 +37,15 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         }
     }
 
+    public bool IsVisible
+    {
+        get => window?.IsVisible ?? false;
+        set
+        {
+            if (window != null) window.IsVisible = value;
+        }
+    }
+
     public IWindowRenderApi RenderApi { get; set; }
 
     public InputController InputController { get; private set; }
@@ -49,6 +58,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             if (window != null) window.TopMost = value;
         }
     }
+
     public event Action<double> Update;
     public event Action<Texture, double> Render;
 
@@ -65,7 +75,6 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             Size = size.ToVector2DInt(),
             API = renderApi is IVulkanWindowRenderApi ? GraphicsAPI.DefaultVulkan : GraphicsAPI.Default
         });
-
         RenderApi = renderApi;
     }
 

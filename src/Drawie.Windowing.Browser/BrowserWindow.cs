@@ -31,6 +31,15 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
         set { }
     }
 
+    public bool IsVisible
+    {
+        get => true;
+        set
+        {
+            throw new NotSupportedException("Browser windows cannot be hidden.");
+        }
+    }
+
     public event Action<double>? Update;
     public event Action<Texture, double>? Render;
 

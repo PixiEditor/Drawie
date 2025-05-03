@@ -15,6 +15,8 @@ public interface IWindow
     public InputController InputController { get; }
     public bool ShowOnTop { get; set; }
 
+    public bool IsVisible { get; set;  }
+
     public event Action<double> Update;
     public event Action<Texture, double> Render;
     
