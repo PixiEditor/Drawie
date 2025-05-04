@@ -115,7 +115,8 @@ namespace Drawie.Skia.Implementations
 
         public void AddRoundRect(VectorPath path, RectD rect, VecD cornerRadius, PathDirection direction)
         {
-            this[path.ObjectPointer].AddRoundRect(rect.ToSkRect(), (float)cornerRadius.X, (float)cornerRadius.Y, (SKPathDirection)direction);
+            this[path.ObjectPointer].AddRoundRect(rect.ToSkRect(), (float)cornerRadius.X, (float)cornerRadius.Y,
+                (SKPathDirection)direction);
         }
 
         public void MoveTo(VectorPath vectorPath, VecF vecF)
@@ -283,6 +284,13 @@ namespace Drawie.Skia.Implementations
         {
             SKPath skPath = this[vectorPath.ObjectPointer]
                 .Op(this[ellipsePath.ObjectPointer], (SKPathOp)pathOp);
+
+            if (skPath == null)
+            {
+                var emptyPath = new SKPath();
+                return new VectorPath(emptyPath.Handle);
+            }
+
             AddManagedInstance(skPath);
             return new VectorPath(skPath.Handle);
         }
