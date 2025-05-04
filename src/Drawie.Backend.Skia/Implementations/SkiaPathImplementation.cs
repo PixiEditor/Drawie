@@ -288,6 +288,7 @@ namespace Drawie.Skia.Implementations
             if (skPath == null)
             {
                 var emptyPath = new SKPath();
+                AddManagedInstance(emptyPath);
                 return new VectorPath(emptyPath.Handle);
             }
 
