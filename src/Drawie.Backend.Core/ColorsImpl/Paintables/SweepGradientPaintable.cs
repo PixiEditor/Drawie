@@ -5,11 +5,19 @@ using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.ColorsImpl.Paintables;
 
-public class SweepGradientPaintable : GradientPaintable
+public class SweepGradientPaintable : GradientPaintable, IPositionPaintable
 {
     public VecD Center { get; set; } = new VecD(0.5, 0.5);
     public double Angle { get; set; }
-    public SweepGradientPaintable(VecD center, double angle, IEnumerable<GradientStop> gradientStops) : base(gradientStops)
+
+    VecD IPositionPaintable.Position
+    {
+        get => Center;
+        set => Center = value;
+    }
+
+    public SweepGradientPaintable(VecD center, double angle, IEnumerable<GradientStop> gradientStops) : base(
+        gradientStops)
     {
         Center = center;
         Angle = angle;
@@ -17,7 +25,9 @@ public class SweepGradientPaintable : GradientPaintable
 
     public override Shader? GetShader(RectD bounds, Matrix3X3 matrix)
     {
-        VecD finalCenter = AbsoluteValues ? Center : new VecD(Center.X * bounds.Width + bounds.X, Center.Y * bounds.Height + bounds.Y);
+        VecD finalCenter = AbsoluteValues
+            ? Center
+            : new VecD(Center.X * bounds.Width + bounds.X, Center.Y * bounds.Height + bounds.Y);
         return Shader.CreateSweepGradient(finalCenter,
             GradientStops.Select(x => x.Color).ToArray(),
             GradientStops.Select(x => (float)x.Offset).ToArray(),
@@ -28,7 +38,11 @@ public class SweepGradientPaintable : GradientPaintable
 
     public override Paintable? Clone()
     {
-        return new SweepGradientPaintable(Center, Angle, GradientStops.Select(x => x));
+        return new SweepGradientPaintable(Center, Angle, GradientStops.Select(x => x))
+        {
+            Transform = Transform,
+            AbsoluteValues = AbsoluteValues
+        };
     }
 
     protected bool Equals(SweepGradientPaintable other)

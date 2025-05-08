@@ -36,7 +36,11 @@ public class LinearGradientPaintable : GradientPaintable, IStartEndPaintable
 
     public override Paintable? Clone()
     {
-        return new LinearGradientPaintable(Start, End, GradientStops.Select(x => x).ToList());
+        return new LinearGradientPaintable(Start, End, GradientStops.Select(x => x).ToList())
+        {
+            AbsoluteValues = AbsoluteValues,
+            Transform = Transform
+        };
     }
 
     protected bool Equals(LinearGradientPaintable other)

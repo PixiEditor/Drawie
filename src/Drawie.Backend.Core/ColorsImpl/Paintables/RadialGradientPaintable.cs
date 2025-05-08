@@ -4,10 +4,17 @@ using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.ColorsImpl.Paintables;
 
-public class RadialGradientPaintable : GradientPaintable
+public class RadialGradientPaintable : GradientPaintable, IPositionPaintable
 {
     public VecD Center { get; set; }
     public double Radius { get; set; }
+
+    VecD IPositionPaintable.Position
+    {
+        get => Center;
+        set => Center = value;
+    }
+
     public RadialGradientPaintable(VecD center, double radius, IEnumerable<GradientStop> gradientStops) : base(
         gradientStops)
     {
@@ -35,7 +42,11 @@ public class RadialGradientPaintable : GradientPaintable
 
     public override Paintable? Clone()
     {
-        return new RadialGradientPaintable(Center, Radius, GradientStops.Select(x => x));
+        return new RadialGradientPaintable(Center, Radius, GradientStops.Select(x => x))
+        {
+            AbsoluteValues = AbsoluteValues,
+            Transform = Transform
+        };
     }
 
     protected bool Equals(RadialGradientPaintable other)
