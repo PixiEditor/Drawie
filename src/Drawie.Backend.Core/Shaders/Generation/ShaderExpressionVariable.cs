@@ -52,6 +52,6 @@ public abstract class ShaderExpressionVariable<TConstant>(string name)
     
     public override object GetConstant()
     {
-        return ConstantValue;
+        return OverrideExpression is ShaderExpressionVariable overrideExpression ? overrideExpression.GetConstant() : ConstantValue;
     }
 }
