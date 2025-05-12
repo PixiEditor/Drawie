@@ -65,7 +65,10 @@ public static class AppBuilderExtensions
                     DrawingEngine drawingEngine =
                         new DrawingEngine(renderApi, null, drawingBackend, new AvaloniaRenderingDispatcher());
 
-                    if (c.Instance.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                    // It's very likely that this is not needed and may cause issues when reopening main window without
+                    // proper reinitialization.
+                    // But leaving in case it is needed for some reason
+                    /*if (c.Instance.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                     {
                         desktop.Exit += (sender, args) =>
                         {
@@ -84,7 +87,7 @@ public static class AppBuilderExtensions
                                 };
                             }
                         };
-                    }
+                    }*/
 
                     drawingEngine.Run();
 
