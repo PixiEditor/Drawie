@@ -58,4 +58,9 @@ public class ColorPaintable : Paintable
     {
         return Color.GetHashCode();
     }
+
+    public override string ToString()
+    {
+        return $"{Color}";
+    }
 }

@@ -1,4 +1,5 @@
-﻿using Drawie.Backend.Core.Bridge;
+﻿using System.Text;
+using Drawie.Backend.Core.Bridge;
 using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Numerics;
@@ -408,7 +409,21 @@ public struct Matrix3X3 : IEquatable<Matrix3X3>
     {
         return (float)((a * (double)b) - (c * (double)d));
     }
-    
+
+    public override string ToString()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine($"ScaleX: {ScaleX}");
+        sb.AppendLine($"SkewX: {SkewX}");
+        sb.AppendLine($"TransX: {TransX}");
+        sb.AppendLine($"SkewY: {SkewY}");
+        sb.AppendLine($"ScaleY: {ScaleY}");
+        sb.AppendLine($"TransY: {TransY}");
+        sb.AppendLine($"Persp0: {Persp0}");
+        sb.AppendLine($"Persp1: {Persp1}");
+        sb.Append($"Persp2: {Persp2}");
+        return sb.ToString();
+    }
 
     private class Indices
     {
