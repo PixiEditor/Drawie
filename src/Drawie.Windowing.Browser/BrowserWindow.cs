@@ -23,7 +23,7 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
 
     public IWindowRenderApi RenderApi { get; set; } = windowRenderApi;
 
-    public InputController InputController => throw new NotImplementedException();
+    public InputController InputController { get; } = new InputController([], []);
 
     public bool ShowOnTop
     {
