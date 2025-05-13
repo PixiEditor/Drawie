@@ -413,15 +413,15 @@ public struct Matrix3X3 : IEquatable<Matrix3X3>
     public override string ToString()
     {
         StringBuilder sb = new StringBuilder();
-        sb.AppendLine($"ScaleX: {ScaleX}");
-        sb.AppendLine($"SkewX: {SkewX}");
-        sb.AppendLine($"TransX: {TransX}");
-        sb.AppendLine($"SkewY: {SkewY}");
-        sb.AppendLine($"ScaleY: {ScaleY}");
-        sb.AppendLine($"TransY: {TransY}");
-        sb.AppendLine($"Persp0: {Persp0}");
-        sb.AppendLine($"Persp1: {Persp1}");
-        sb.Append($"Persp2: {Persp2}");
+        sb.AppendLine($"ScaleX: {ScaleX:0.##}");
+        sb.AppendLine($"SkewX: {SkewX:0.##}");
+        sb.AppendLine($"TransX: {TransX:0.##}");
+        sb.AppendLine($"SkewY: {SkewY:0.##}");
+        sb.AppendLine($"ScaleY: {ScaleY:0.##}");
+        sb.AppendLine($"TransY: {TransY:0.##}");
+        sb.AppendLine($"Persp0: {Persp0:0.##}");
+        sb.AppendLine($"Persp1: {Persp1:0.##}");
+        sb.Append($"Persp2: {Persp2:0.##}");
         return sb.ToString();
     }
 
