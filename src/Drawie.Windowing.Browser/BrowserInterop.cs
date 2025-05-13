@@ -1,4 +1,5 @@
 ﻿using Drawie.Numerics;
+using Drawie.Windowing.Input;
 using JSRuntime = Drawie.JSInterop.JSRuntime;
 
 namespace Drawie.Windowing.Browser;
@@ -51,5 +52,11 @@ public partial class BrowserInterop
         }
         
         JSRuntime.WindowResizedEvent += onWindowResize;
+    }
+
+    public static bool IsKeyPressed(Key key)
+    {
+        return false;
+        //return JSRuntime.IsKeyPressed(key);
     }
 }
