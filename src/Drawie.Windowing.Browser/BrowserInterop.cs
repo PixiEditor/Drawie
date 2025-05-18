@@ -7,17 +7,18 @@ namespace Drawie.Windowing.Browser;
 public partial class BrowserInterop
 {
     private static bool subscribedWindowResize = false;
-    private static event Action<double> OnRender;
+    private static List<Action<double>>? OnRender = new List<Action<double>>();
 
     static BrowserInterop()
     {
         JSRuntime.OnAnimationFrameCalled += OnAnimationFrame;
     }
-    
+
     public static string GetTitle()
     {
         return JSRuntime.GetTitle();
     }
+
     public static void SetTitle(string value)
     {
         JSRuntime.InvokeJs($"document.title = '{value}'");
@@ -27,20 +28,30 @@ public partial class BrowserInterop
     {
         int width = JSRuntime.GetWindowWidth();
         int height = JSRuntime.GetWindowHeight();
-        
+
         return new VecI(width, height);
     }
 
     public static void RequestAnimationFrame(Action<double> onRender)
     {
-        OnRender += onRender;
+        OnRender?.Add(onRender);
         JSRuntime.RequestAnimationFrame();
     }
 
     private static void OnAnimationFrame(double obj)
     {
-        OnRender?.Invoke(obj);
-        OnRender = null;
+        if (OnRender == null)
+        {
+            return;
+        }
+
+        int count = OnRender.Count;
+        for(int i = 0; i < count; i++)
+        {
+            OnRender[i].Invoke(obj);
+        }
+
+        OnRender.RemoveRange(0, count);
     }
 
     public static void SubscribeWindowResize(Action<int, int> onWindowResize)
@@ -50,7 +61,7 @@ public partial class BrowserInterop
             JSRuntime.SubscribeWindowResize();
             subscribedWindowResize = true;
         }
-        
+
         JSRuntime.WindowResizedEvent += onWindowResize;
     }
 

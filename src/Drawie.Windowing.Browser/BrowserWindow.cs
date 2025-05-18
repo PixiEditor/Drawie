@@ -60,16 +60,19 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
     public void Show()
     {
         renderTexture = CreateRenderTexture();
-        BrowserInterop.RequestAnimationFrame(OnRender);
+        OnRender(0);
         BrowserInterop.SubscribeWindowResize(OnWindowResized);
     }
 
     private void OnRender(double dt)
     {
+        double deltaTime = dt / 1000.0;
+        Update?.Invoke(deltaTime);
         RenderApi.PrepareTextureToWrite();
         renderTexture.DrawingSurface?.Canvas.Clear();
-        Render?.Invoke(renderTexture, dt);
+        Render?.Invoke(renderTexture, deltaTime);
         renderTexture.DrawingSurface?.Flush();
+        BrowserInterop.RequestAnimationFrame(OnRender);
     }
 
     public void Close()
