@@ -7,6 +7,8 @@ namespace Drawie.Windowing.Browser;
 public partial class BrowserInterop
 {
     private static bool subscribedWindowResize = false;
+    private static bool subscribedKeyDown = false;
+    private static bool subscribedKeyUp = false;
     private static List<Action<double>>? OnRender = new List<Action<double>>();
 
     static BrowserInterop()
@@ -46,7 +48,7 @@ public partial class BrowserInterop
         }
 
         int count = OnRender.Count;
-        for(int i = 0; i < count; i++)
+        for (int i = 0; i < count; i++)
         {
             OnRender[i].Invoke(obj);
         }
@@ -65,9 +67,25 @@ public partial class BrowserInterop
         JSRuntime.WindowResizedEvent += onWindowResize;
     }
 
-    public static bool IsKeyPressed(Key key)
+    public static void SubscribeKeyDownEvent(Action<string> onKeyDown)
     {
-        return false;
-        //return JSRuntime.IsKeyPressed(key);
+        if (!subscribedKeyDown)
+        {
+            JSRuntime.SubscribeKeyDown();
+            subscribedKeyDown = true;
+        }
+
+        JSRuntime.KeyDownEvent += onKeyDown;
+    }
+
+    public static void SubscribeKeyUpEvent(Action<string> onKeyUp)
+    {
+        if (!subscribedKeyUp)
+        {
+            JSRuntime.SubscribeKeyUp();
+            subscribedKeyUp = true;
+        }
+
+        JSRuntime.KeyUpEvent += onKeyUp;
     }
 }

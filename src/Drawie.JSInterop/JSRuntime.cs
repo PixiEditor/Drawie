@@ -9,6 +9,9 @@ public partial class JSRuntime
     
     public static event Action<double> OnAnimationFrameCalled;
     public static event Action<int, int> WindowResizedEvent;
+    public static event Action<string> KeyDownEvent;
+    public static event Action<string> KeyUpEvent;
+
 
     [JSImport("interop.invokeJs", "drawie.js")]
     public static partial void InvokeJs(string js);
@@ -27,7 +30,26 @@ public partial class JSRuntime
     
     [JSImport("window.subscribeWindowResize", "drawie.js")]
     public static partial void SubscribeWindowResize();
-    
+
+    [JSImport("input.subscribeKeyDown", "drawie.js")]
+    public static partial void SubscribeKeyDown();
+
+
+    [JSImport("input.subscribeKeyUp", "drawie.js")]
+    public static partial void SubscribeKeyUp();
+
+    [JSExport]
+    private static void OnKeyDown(string keyCode)
+    {
+        KeyDownEvent?.Invoke(keyCode);
+    }
+
+    [JSExport]
+    private static void OnKeyUp(string keyCode)
+    {
+        KeyUpEvent?.Invoke(keyCode);
+    }
+
     [JSExport]
     internal static void OnAnimationFrame(double dt)
     {

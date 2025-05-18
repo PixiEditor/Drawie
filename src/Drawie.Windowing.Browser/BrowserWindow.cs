@@ -2,6 +2,7 @@
 using Drawie.Backend.Core.Bridge;
 using Drawie.Numerics;
 using Drawie.RenderApi;
+using Drawie.Windowing.Browser.Input;
 using Drawie.Windowing.Input;
 
 namespace Drawie.Windowing.Browser;
@@ -23,7 +24,7 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
 
     public IWindowRenderApi RenderApi { get; set; } = windowRenderApi;
 
-    public InputController InputController { get; } = new InputController([], []);
+    public InputController InputController { get; private set; }
 
     public bool ShowOnTop
     {
@@ -49,6 +50,8 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
     {
         RenderApi.CreateInstance(null, UsableWindowSize);
         RenderApi.FramebufferResized += FramebufferResized;
+
+        InputController = new InputController(new [] { new BrowserKeyboard() }, []);
     }
 
     private void FramebufferResized()
