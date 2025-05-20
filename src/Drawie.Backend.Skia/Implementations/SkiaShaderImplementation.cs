@@ -485,7 +485,7 @@ namespace Drawie.Skia.Implementations
             {
                 if (isInBlockComment || isInInlineComment)
                 {
-                    if (codeChar == '*' && lastString[^1] == '/')
+                    if (codeChar == '/' && lastString.LastOrDefault() == '*')
                     {
                         isInBlockComment = false;
                         lastString = string.Empty;
@@ -495,6 +495,8 @@ namespace Drawie.Skia.Implementations
                         isInInlineComment = false;
                         lastString = string.Empty;
                     }
+
+                    lastString += codeChar;
 
                     continue;
                 }
@@ -516,6 +518,8 @@ namespace Drawie.Skia.Implementations
                         isInInlineComment = true;
                         lastString = string.Empty;
                     }
+
+                    lastString += codeChar;
                 }
                 else if (codeChar == '*' && lastString.LastOrDefault() == '/')
                 {
