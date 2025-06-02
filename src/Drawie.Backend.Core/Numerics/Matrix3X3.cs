@@ -204,6 +204,11 @@ public struct Matrix3X3 : IEquatable<Matrix3X3>
         return new Matrix3X3() { ScaleX = 1f, ScaleY = 1f, Persp2 = 1f };
     }
 
+    public static Matrix3X3 CreateTranslation(double x, double y)
+    {
+        return CreateTranslation((float)x, (float)y);
+    }
+
     public static Matrix3X3 CreateTranslation(float x, float y)
     {
         if (x == 0.0 && y == 0.0)
