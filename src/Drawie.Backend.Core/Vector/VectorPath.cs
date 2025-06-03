@@ -91,6 +91,33 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
         return DrawingBackendApi.Current.PathImplementation.FromSvgPath(svgPath);
     }
 
+    public static VectorPath FromPoints(VecD[] points, bool close)
+    {
+        if (points == null)
+        {
+            throw new ArgumentException("Points cannot be null or empty.", nameof(points));
+        }
+
+        if (points.Length < 2)
+        {
+            return new VectorPath();
+        }
+
+        VectorPath path = new();
+        path.MoveTo((VecF)points[0]);
+        for (int i = 1; i < points.Length; i++)
+        {
+            path.LineTo((VecF)points[i]);
+        }
+
+        if (close)
+        {
+            path.Close();
+        }
+
+        return path;
+    }
+
     public VectorPath(IntPtr nativePointer) : base(nativePointer)
     {
     }
