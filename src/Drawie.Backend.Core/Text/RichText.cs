@@ -37,8 +37,13 @@ public class RichText
         Lines = text.Split('\n');
     }
 
-    public void Paint(Canvas canvas, VecD position, Font font, Paint paint, VectorPath? onPath)
+    public void Paint(Canvas canvas, VecD position, Font font, Paint paint, VectorPath? onPath, VecD? pathOffset = null)
     {
+        if (pathOffset == null)
+        {
+            pathOffset = VecD.Zero;
+        }
+
         bool hasStroke = StrokeWidth > 0;
         bool hasFill = Fill && FillPaintable.AnythingVisible;
         bool strokeAndFillEqual = StrokePaintable == FillPaintable;
@@ -51,7 +56,7 @@ public class RichText
                 paint.SetPaintable(StrokePaintable);
                 paint.StrokeWidth = StrokeWidth;
 
-                canvas.DrawTextOnPath(onPath, FormattedText, VecD.Zero, font, paint);
+                canvas.DrawTextOnPath(onPath, FormattedText, pathOffset.Value, font, paint);
             }
             else
             {
@@ -60,14 +65,14 @@ public class RichText
                     paint.Style = PaintStyle.Stroke;
                     paint.SetPaintable(StrokePaintable);
                     paint.StrokeWidth = StrokeWidth;
-                    canvas.DrawTextOnPath(onPath, FormattedText, VecD.Zero, font, paint);
+                    canvas.DrawTextOnPath(onPath, FormattedText, pathOffset.Value, font, paint);
                 }
 
                 if (hasFill)
                 {
                     paint.Style = PaintStyle.Fill;
                     paint.SetPaintable(FillPaintable);
-                    canvas.DrawTextOnPath(onPath, FormattedText, VecD.Zero, font, paint);
+                    canvas.DrawTextOnPath(onPath, FormattedText, pathOffset.Value, font, paint);
                 }
             }
         }
