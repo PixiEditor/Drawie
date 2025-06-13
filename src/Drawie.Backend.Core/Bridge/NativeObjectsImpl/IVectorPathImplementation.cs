@@ -55,4 +55,7 @@ public interface IVectorPathImplementation
     public void Offset(VectorPath vectorPath, VecD delta);
     public float GetConicWeight(IntPtr objectPointer);
     public float GetRawConicWeight(IntPtr objectPointer);
+    public Vec4D GetPositionAndTangentAtDistance(IntPtr objectPointer, float distance, bool forceClose);
+    public Matrix3X3 GetMatrixAtDistance(IntPtr objectPointer, float distance, bool forceClose, PathMeasureMatrixMode mode);
+    public double GetLength(IntPtr objectPointer, bool forceClose);
 }

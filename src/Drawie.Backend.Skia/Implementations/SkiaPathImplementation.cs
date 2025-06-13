@@ -224,6 +224,29 @@ namespace Drawie.Skia.Implementations
             return managedRawIterators[objectPointer].ConicWeight();
         }
 
+        public Vec4D GetPositionAndTangentAtDistance(IntPtr objectPointer, float distance, bool forceClose)
+        {
+            using SKPathMeasure measure = new SKPathMeasure(this[objectPointer], forceClose);
+            if (measure.GetPositionAndTangent(distance, out var pos, out var tangent))
+            {
+                return new Vec4D(pos.X, pos.Y, tangent.X, tangent.Y);
+            }
+
+            return Vec4D.Zero;
+        }
+
+        public Matrix3X3 GetMatrixAtDistance(IntPtr objectPointer, float distance, bool forceClose, PathMeasureMatrixMode mode)
+        {
+            using SKPathMeasure measure = new SKPathMeasure(this[objectPointer], forceClose);
+            return measure.GetMatrix(distance, (SKPathMeasureMatrixFlags)(int)mode).ToMatrix3X3();
+        }
+
+        public double GetLength(IntPtr objectPointer, bool forceClose)
+        {
+            using SKPathMeasure measure = new SKPathMeasure(this[objectPointer], forceClose);
+            return measure.Length;
+        }
+
         public PathVerb IteratorNextVerb(IntPtr objectPointer, VecF[] points)
         {
             // TODO: maybe there is a way to unsafely cast the array directly

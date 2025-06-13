@@ -45,6 +45,11 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
     /// <summary>Gets the number of points on the path.</summary>
     public int PointCount => DrawingBackendApi.Current.PathImplementation.GetPointCount(this);
 
+    public double Length
+    {
+        get => DrawingBackendApi.Current.PathImplementation.GetLength(ObjectPointer, false);
+    }
+
     /// <summary>Gets the "tight" bounds of the path. the control points of curves are excluded.</summary>
     /// <value>The tight bounds of the path.</value>
     public RectD TightBounds => DrawingBackendApi.Current.PathImplementation.GetTightBounds(this);
@@ -258,6 +263,15 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
         return DrawingBackendApi.Current.PathImplementation.Simplify(this);
     }
 
+    public Matrix3X3 GetMatrixAtDistance(float distance, bool forceClose, PathMeasureMatrixMode mode)
+    {
+        return DrawingBackendApi.Current.PathImplementation.GetMatrixAtDistance(ObjectPointer, distance, forceClose, mode);
+    }
+
+    public Vec4D GetPositionAndTangentAtDistance(float distance, bool forceClose)
+    {
+        return DrawingBackendApi.Current.PathImplementation.GetPositionAndTangentAtDistance(ObjectPointer, distance, forceClose);
+    }
 
     public PathIterator CreateIterator(bool forceClose)
     {
