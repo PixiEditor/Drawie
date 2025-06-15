@@ -5,7 +5,7 @@ namespace Drawie.Backend.Core.Shaders.Generation;
 
 public partial class BuiltInFunctions
 {
-    private readonly List<IBuiltInFunction> usedFunctions = new(37);
+    private readonly List<IBuiltInFunction> usedFunctions = new(38);
 
     public Expression GetRgbToHsv(Expression rgba) => Call(RgbToHsv, rgba);
 
@@ -20,6 +20,11 @@ public partial class BuiltInFunctions
 
     public Expression GetHslToRgb(Expression h, Expression s, Expression l, Expression a) =>
         GetHslToRgb(Half4Float1Accessor.GetOrConstructorExpressionHalf4(h, s, l, a));
+
+    public Expression GetRemap(Expression value, Expression oldMin, Expression oldMax, Expression newMin, Expression newMax)
+    {
+        return Call(Remap, new Expression($"{value.ExpressionValue}, {oldMin.ExpressionValue}, {oldMax.ExpressionValue}, {newMin.ExpressionValue}, {newMax.ExpressionValue}"));
+    }
 
     public string BuildFunctions()
     {
@@ -114,6 +119,13 @@ public partial class BuiltInFunctions
          return half4((rgb - 0.5) * c + hsla.z, hsla.w);
          """,
         HueToRgb);
+
+    private static readonly BuiltInFunction<Float1> Remap = new(
+        "float value, float oldMin, float oldMax, float newMin, float newMax",
+        nameof(Remap),
+        """
+        return (value - oldMin) / (oldMax - oldMin) * (newMax - newMin) + newMin;
+        """);
 
     private class BuiltInFunction<TReturn>(
         string argumentList,
