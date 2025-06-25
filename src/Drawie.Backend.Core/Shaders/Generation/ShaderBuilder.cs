@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders.Generation.Expressions;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Numerics;
@@ -112,6 +113,11 @@ public class ShaderBuilder
         Uniforms[uniformName] = new Uniform(uniformName, floatValue);
     }
 
+    public void AddUniform(string uniformName, Matrix3X3 matrixValue)
+    {
+        Uniforms[uniformName] = new Uniform(uniformName, matrixValue);
+    }
+
     public void Set<T>(T contextPosition, T coordinateValue) where T : ShaderExpressionVariable
     {
         if (contextPosition.VariableName == coordinateValue.VariableName)
@@ -174,6 +180,17 @@ public class ShaderBuilder
     }
 
 
+    public Float3x3 ConstructFloat3x3(Expression m00, Expression m01, Expression m02, Expression m10, Expression m11, Expression m12, Expression m20, Expression m21, Expression m22)
+    {
+        string name = $"mat3_{GetUniqueNameNumber()}";
+        Float3x3 result = new Float3x3(name);
+        _variables.Add(result);
+
+        _bodyBuilder.AppendLine($"float3x3 {name} = float3x3({m00.ExpressionValue}, {m01.ExpressionValue}, {m02.ExpressionValue}, {m10.ExpressionValue}, {m11.ExpressionValue}, {m12.ExpressionValue}, {m20.ExpressionValue}, {m21.ExpressionValue}, {m22.ExpressionValue});");
+        return result;
+    }
+
+
     public Half4 AssignNewHalf4(Expression assignment) => AssignNewHalf4($"color_{GetUniqueNameNumber()}", assignment);
 
     public Half4 AssignNewHalf4(string name, Expression assignment)
@@ -182,6 +199,17 @@ public class ShaderBuilder
         _variables.Add(result);
 
         _bodyBuilder.AppendLine($"half4 {name} = {assignment.ExpressionValue};");
+        return result;
+    }
+
+
+    public Float3x3 AssignNewFloat3x3(Expression matrixExpression)
+    {
+        string name = $"mat3_{GetUniqueNameNumber()}";
+        Float3x3 result = new Float3x3(name);
+        _variables.Add(result);
+
+        _bodyBuilder.AppendLine($"float3x3 {name} = {matrixExpression.ExpressionValue};");
         return result;
     }
 

@@ -13,4 +13,9 @@ public class Expression
     {
         ExpressionValue = expressionValue;
     }
+
+    public override string ToString()
+    {
+        return ExpressionValue;
+    }
 }

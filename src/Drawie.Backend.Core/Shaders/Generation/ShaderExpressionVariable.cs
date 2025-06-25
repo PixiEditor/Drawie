@@ -17,7 +17,7 @@ public abstract class ShaderExpressionVariable(string name) : Expression
 
     public abstract void SetConstantValue(object? value, Func<object, Type, object> convertFunc);
     
-    public string VarOrConst()
+    private string VarOrConst()
     {
         return string.IsNullOrEmpty(VariableName) ? ConstantValueString : VariableName;
     }

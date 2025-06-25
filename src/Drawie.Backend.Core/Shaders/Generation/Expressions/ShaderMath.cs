@@ -69,12 +69,12 @@ public static class ShaderMath
 
     public static Expression Compare(ShaderExpressionVariable a, ShaderExpressionVariable b, ShaderExpressionVariable t)
     {
-        return new Expression($"float(abs({a.ExpressionValue} - {b.VarOrConst()}) < {t.VarOrConst()})");
+        return new Expression($"float(abs({a.ExpressionValue} - {b.ExpressionValue}) < {t.ExpressionValue})");
     }
 
     public static Expression Power(ShaderExpressionVariable a, ShaderExpressionVariable b)
     {
-        return new Expression($"pow({a.ExpressionValue}, {b.VarOrConst()})");
+        return new Expression($"pow({a.ExpressionValue}, {b.ExpressionValue})");
     }
 
     public static Expression Log(ShaderExpressionVariable a, ShaderExpressionVariable b)
@@ -82,8 +82,8 @@ public static class ShaderMath
         var baseConstant = Convert.ToDouble(b.GetConstant());
 
         return Math.Abs(baseConstant - 2) < 0.00000001
-            ? new Expression($"log2({a.ExpressionValue}, {b.VarOrConst()})")
-            : new Expression($"log({a.ExpressionValue}) / log({b.VarOrConst()})");
+            ? new Expression($"log2({a.ExpressionValue}, {b.ExpressionValue})")
+            : new Expression($"log({a.ExpressionValue}) / log({b.ExpressionValue})");
     }
 
     public static Expression LogE(ShaderExpressionVariable a)
@@ -97,7 +97,7 @@ public static class ShaderMath
 
         return Math.Abs(baseConstant - 2) < 0.00000001
             ? new Expression($"sqrt({a.ExpressionValue})")
-            : new Expression($"pow({a.ExpressionValue}, 1.0 / {b.VarOrConst()})");
+            : new Expression($"pow({a.ExpressionValue}, 1.0 / {b.ExpressionValue})");
     }
 
     public static Expression InverseRoot(ShaderExpressionVariable a, ShaderExpressionVariable b)
@@ -138,32 +138,38 @@ public static class ShaderMath
 
     public static Expression Modulo(ShaderExpressionVariable a, ShaderExpressionVariable b)
     {
-        return new Expression($"mod({a.ExpressionValue}, {b.VarOrConst()})");
+        return new Expression($"mod({a.ExpressionValue}, {b.ExpressionValue})");
     }
 
     public static Expression Min(ShaderExpressionVariable a, ShaderExpressionVariable b)
     {
-        return new Expression($"min({a.ExpressionValue}, {b.VarOrConst()})");
+        return new Expression($"min({a.ExpressionValue}, {b.ExpressionValue})");
     }
 
     public static Expression Max(ShaderExpressionVariable a, ShaderExpressionVariable b)
     {
-        return new Expression($"max({a.ExpressionValue}, {b.VarOrConst()})");
+        return new Expression($"max({a.ExpressionValue}, {b.ExpressionValue})");
     }
 
     public static Expression Step(ShaderExpressionVariable a, ShaderExpressionVariable b)
     {
-        return new Expression($"step({a.ExpressionValue}, {b.VarOrConst()})");
+        return new Expression($"step({a.ExpressionValue}, {b.ExpressionValue})");
     }
 
     public static Expression SmoothStep(ShaderExpressionVariable a, ShaderExpressionVariable b,
         ShaderExpressionVariable c)
     {
-        return new Expression($"smoothstep({a.ExpressionValue}, {b.VarOrConst()}, {c.VarOrConst()})");
+        return new Expression($"smoothstep({a.ExpressionValue}, {b.ExpressionValue}, {c.ExpressionValue})");
     }
 
     public static Expression Length(ShaderExpressionVariable a)
     {
         return new Expression($"length({a.ExpressionValue})");
+    }
+
+    public static Expression PostConcat(ShaderExpressionVariable a, ShaderExpressionVariable b)
+    {
+        return new Expression(
+            $"{b.ExpressionValue} * {a.ExpressionValue}");
     }
 }
