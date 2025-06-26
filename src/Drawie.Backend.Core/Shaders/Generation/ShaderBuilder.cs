@@ -146,6 +146,20 @@ public class ShaderBuilder
         return result;
     }
 
+    public Float3 ConstructFloat3(Expression x, Expression y, Expression z)
+    {
+        string name = $"vec3_{GetUniqueNameNumber()}";
+        Float3 result = new Float3(name);
+        _variables.Add(result);
+
+        string xExpression = x.ExpressionValue;
+        string yExpression = y.ExpressionValue;
+        string zExpression = z.ExpressionValue;
+
+        _bodyBuilder.AppendLine($"float3 {name} = float3({xExpression}, {yExpression}, {zExpression});");
+        return result;
+    }
+
     public Float1 ConstructFloat1(Expression assignment)
     {
         string name = $"float_{GetUniqueNameNumber()}";
@@ -202,6 +216,26 @@ public class ShaderBuilder
         return result;
     }
 
+    public Float3 AssignNewFloat3(Expression expression)
+    {
+        string name = $"vec3_{GetUniqueNameNumber()}";
+        Float3 result = new Float3(name);
+        _variables.Add(result);
+
+        _bodyBuilder.AppendLine($"float3 {name} = {expression.ExpressionValue};");
+        return result;
+    }
+
+    public Float2 AssignNewFloat2(Expression expression)
+    {
+        string name = $"vec2_{GetUniqueNameNumber()}";
+        Float2 result = new Float2(name);
+        _variables.Add(result);
+
+        _bodyBuilder.AppendLine($"float2 {name} = {expression.ExpressionValue};");
+        return result;
+    }
+
 
     public Float3x3 AssignNewFloat3x3(Expression matrixExpression)
     {
@@ -228,6 +262,21 @@ public class ShaderBuilder
     public string GetUniqueNameNumber()
     {
         return (_variables.Count + Uniforms.Count + 1).ToString();
+    }
+
+    public void AssignVariable<T>(T variable, Expression assignment) where T : ShaderExpressionVariable
+    {
+        if (variable.VariableName == assignment.ExpressionValue)
+        {
+            return;
+        }
+
+        if(string.IsNullOrEmpty(variable.VariableName))
+        {
+            return;
+        }
+
+        _bodyBuilder.AppendLine($"{variable.VariableName} = {assignment.ExpressionValue};");
     }
 }
 

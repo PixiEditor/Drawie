@@ -118,7 +118,7 @@ public struct Uniform
     public Uniform(string name, Matrix3X3 matrix)
     {
         Name = name;
-        FloatArrayValue = matrix.Values;
+        FloatArrayValue = matrix.ValuesColumnMajor;
         DataType = UniformValueType.Matrix3X3;
         UniformName = "float3x3";
     }

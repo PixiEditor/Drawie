@@ -169,6 +169,13 @@ public struct Matrix3X3 : IEquatable<Matrix3X3>
         }
     }
 
+    public float[] ValuesColumnMajor
+    {
+        get => new float[9] { ScaleX, SkewY, Persp0,
+                              SkewX, ScaleY, Persp1,
+                              TransX, TransY, Persp2 };
+    }
+
     /// <param name="values">The array to populate.</param>
     /// <summary>Populates the specified array with the matrix values.</summary>
     /// <remarks>The result will be the same as <see cref="P:SkiaSharp.Matrix3x3.Values" />.</remarks>

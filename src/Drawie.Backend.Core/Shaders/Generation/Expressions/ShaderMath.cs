@@ -172,4 +172,10 @@ public static class ShaderMath
         return new Expression(
             $"{b.ExpressionValue} * {a.ExpressionValue}");
     }
+
+    public static Expression DegreesToRadians(ShaderExpressionVariable angleExpressionValue)
+    {
+        return new Expression(
+            $"{angleExpressionValue.ExpressionValue} * 0.017453292519943295"); // π / 180
+    }
 }
