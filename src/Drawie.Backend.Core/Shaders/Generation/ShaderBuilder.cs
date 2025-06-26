@@ -10,6 +10,7 @@ namespace Drawie.Backend.Core.Shaders.Generation;
 public class ShaderBuilder
 {
     public Uniforms Uniforms { get; } = new Uniforms();
+    public bool NormalizedCoordinates { get; set; } = true;
 
     private StringBuilder _bodyBuilder = new StringBuilder();
 
@@ -20,9 +21,10 @@ public class ShaderBuilder
     public BuiltInFunctions Functions { get; } = new();
 
 
-    public ShaderBuilder(VecI resolution)
+    public ShaderBuilder(VecI resolution, bool normalizedCoordinates = true)
     {
         AddUniform("iResolution", resolution);
+        NormalizedCoordinates = normalizedCoordinates;
     }
 
     public Shader BuildShader()
@@ -40,7 +42,11 @@ public class ShaderBuilder
 
         sb.AppendLine("half4 main(float2 coords)");
         sb.AppendLine("{");
-        sb.AppendLine("coords = coords / iResolution;");
+        if (NormalizedCoordinates)
+        {
+            sb.AppendLine("coords = coords / iResolution;");
+        }
+
         sb.Append(_bodyBuilder);
         sb.AppendLine("}");
 
@@ -75,22 +81,37 @@ public class ShaderBuilder
         return newSampler;
     }
 
-    public Half4 Sample(SurfaceSampler texName, Expression pos)
+    public Half4 Sample(SurfaceSampler texName, Expression pos, bool normalizedCoordinates)
     {
         string resultName = $"color_{GetUniqueNameNumber()}";
         Half4 result = new Half4(resultName);
         _variables.Add(result);
-        _bodyBuilder.AppendLine(
-            $"half4 {resultName} = {texName.VariableName}.eval({pos.ExpressionValue} * iResolution);");
+        if (normalizedCoordinates)
+        {
+            _bodyBuilder.AppendLine(
+                $"half4 {resultName} = {texName.VariableName}.eval({pos.ExpressionValue} * iResolution);");
+        }
+        else
+        {
+            _bodyBuilder.AppendLine($"half4 {resultName} = {texName.VariableName}.eval({pos.ExpressionValue});");
+        }
+
         return result;
     }
 
-    public void ReturnVar(Half4 colorValue)
+    public void ReturnVar(Half4 colorValue, bool premultiply)
     {
-        string alphaExpression = colorValue.A.ExpressionValue;
-        _bodyBuilder.AppendLine(
-            $"half4 premultiplied = half4({colorValue.R.ExpressionValue} * {alphaExpression}, {colorValue.G.ExpressionValue} * {alphaExpression}, {colorValue.B.ExpressionValue} * {alphaExpression}, {alphaExpression});");
-        _bodyBuilder.AppendLine($"return premultiplied;");
+        if (premultiply)
+        {
+            string alphaExpression = colorValue.A.ExpressionValue;
+            _bodyBuilder.AppendLine(
+                $"half4 premultiplied = half4({colorValue.R.ExpressionValue} * {alphaExpression}, {colorValue.G.ExpressionValue} * {alphaExpression}, {colorValue.B.ExpressionValue} * {alphaExpression}, {alphaExpression});");
+            _bodyBuilder.AppendLine($"return premultiplied;");
+        }
+        else
+        {
+            _bodyBuilder.AppendLine($"return {colorValue.ExpressionValue};");
+        }
     }
 
     public void ReturnConst(Half4 colorValue)
@@ -125,7 +146,7 @@ public class ShaderBuilder
             return;
         }
 
-        _bodyBuilder.AppendLine($"{contextPosition.VariableName} = {coordinateValue.VariableName};");
+        _bodyBuilder.AppendLine($"{contextPosition.VariableName} = {coordinateValue.ExpressionValue};");
     }
 
     public void SetConstant<T>(T contextPosition, T constantValueVar) where T : ShaderExpressionVariable
@@ -262,21 +283,6 @@ public class ShaderBuilder
     public string GetUniqueNameNumber()
     {
         return (_variables.Count + Uniforms.Count + 1).ToString();
-    }
-
-    public void AssignVariable<T>(T variable, Expression assignment) where T : ShaderExpressionVariable
-    {
-        if (variable.VariableName == assignment.ExpressionValue)
-        {
-            return;
-        }
-
-        if(string.IsNullOrEmpty(variable.VariableName))
-        {
-            return;
-        }
-
-        _bodyBuilder.AppendLine($"{variable.VariableName} = {assignment.ExpressionValue};");
     }
 }
 
