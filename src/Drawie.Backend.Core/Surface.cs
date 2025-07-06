@@ -190,7 +190,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
         float a = (float)ptr[3];
         Color color = (Color)new ColorF((float)ptr[0] / a, (float)ptr[1] / a, (float)ptr[2] / a, (float)ptr[3]);
         if (ImageInfo.ColorSpace is { IsSrgb: false })
-            return color.TransformColor(ColorSpace.CreateSrgb().GetTransformFunction().Invert());
+            return (Color)color.TransformColor(ColorSpace.CreateSrgb().GetTransformFunction().Invert());
 
         return color;
     }

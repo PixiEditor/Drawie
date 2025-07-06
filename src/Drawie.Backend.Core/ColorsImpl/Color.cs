@@ -277,14 +277,14 @@ namespace Drawie.Backend.Core.ColorsImpl
             return TryParse(input, out var color) ? color : Empty;
         }
 
-        public Color TransformColor(ColorSpaceTransformFn func)
+        public ColorF TransformColor(ColorSpaceTransformFn func)
         {
             float r = this.R / 255f;
             float g = this.G / 255f;
             float b = this.B / 255f;
             float a = this.A / 255f;
 
-            return (Color)new ColorF(func.Transform(r), func.Transform(g), func.Transform(b), a);
+            return new ColorF(func.Transform(r), func.Transform(g), func.Transform(b), a);
         }
     }
 }

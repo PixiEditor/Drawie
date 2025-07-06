@@ -231,7 +231,7 @@ public class Texture : IDisposable, ICloneable
         if (!ColorSpace.IsSrgb)
         {
             var transformFunction = ColorSpace.CreateSrgb().GetTransformFunction();
-            return color.TransformColor(transformFunction.Invert());
+            return (Color)color.TransformColor(transformFunction.Invert());
         }
 
         return color;
