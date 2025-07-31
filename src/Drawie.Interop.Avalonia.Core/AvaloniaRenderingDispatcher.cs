@@ -7,6 +7,8 @@ public class AvaloniaRenderingDispatcher : IRenderingDispatcher
 {
     public Action<Action> Invoke { get; } = action =>
     {
+        if (action == null) return;
+
         Dispatcher.UIThread.Invoke(() =>
         {
             using var _ = IDrawieInteropContext.Current.EnsureContext();
