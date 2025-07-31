@@ -52,7 +52,7 @@ public class VulkanSwapchainImage : ISwapchainImage
         _target = target;
         Size = size;
         _image = new VulkanImage(vk, (uint)Format.R8G8B8A8Unorm, size, true, interop.SupportedImageHandleTypes);
-        _semaphorePair = new VulkanSemaphorePair(vk, true);
+        _semaphorePair = new VulkanSemaphorePair(vk, interop.SupportedImageHandleTypes, true);
     }
 
     public async ValueTask DisposeAsync()

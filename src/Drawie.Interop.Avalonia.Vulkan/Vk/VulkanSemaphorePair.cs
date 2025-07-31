@@ -11,16 +11,20 @@ public class VulkanSemaphorePair : IDisposable
 {
      private readonly VulkanInteropContext _resources;
 
-    public unsafe VulkanSemaphorePair(VulkanInteropContext resources, bool exportable)
+    public unsafe VulkanSemaphorePair(VulkanInteropContext resources,
+        IReadOnlyList<string> supportedHandleTypes, bool exportable)
     {
         _resources = resources;
 
         var semaphoreExportInfo = new ExportSemaphoreCreateInfo
         {
             SType = StructureType.ExportSemaphoreCreateInfo,
-            HandleTypes = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
-                ExternalSemaphoreHandleTypeFlags.OpaqueWin32Bit :
-                ExternalSemaphoreHandleTypeFlags.OpaqueFDBit
+            HandleTypes = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? (supportedHandleTypes.Contains(KnownPlatformGraphicsExternalImageHandleTypes.D3D11TextureNtHandle)
+               && !supportedHandleTypes.Contains(KnownPlatformGraphicsExternalImageHandleTypes.VulkanOpaqueNtHandle)
+                ? ExternalSemaphoreHandleTypeFlags.D3D11FenceBit
+                : ExternalSemaphoreHandleTypeFlags.OpaqueWin32Bit)
+            : ExternalSemaphoreHandleTypeFlags.OpaqueFDBit
         };
 
         var semaphoreCreateInfo = new SemaphoreCreateInfo
