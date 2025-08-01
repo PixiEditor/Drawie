@@ -63,6 +63,7 @@ public abstract class DrawieControl : InteropControl
     {
         if (!isDisposed && resources is { IsDisposed: false })
         {
+            using var ctx = IDrawieInteropContext.Current.EnsureContext();
             if (size.Width == 0 || size.Height == 0)
             {
                 return;

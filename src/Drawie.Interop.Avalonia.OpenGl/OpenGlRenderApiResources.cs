@@ -70,7 +70,7 @@ public class OpenGlRenderApiResources : RenderApiResources
         if (isDisposed)
             return;
 
-        var ctx = Context.MakeCurrent();
+        //var ctx = Context.MakeCurrent();
 
         Context.GlInterface.GetIntegerv((int)GLEnum.FramebufferBinding, out var oldFbo);
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, fbo);
@@ -88,10 +88,10 @@ public class OpenGlRenderApiResources : RenderApiResources
             renderAction();
             disp.Dispose();
 
-            ctx = Context.MakeCurrent();
+            //ctx = Context.MakeCurrent();
         }
 
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, oldFbo);
-        ctx.Dispose();
+       // ctx.Dispose();
     }
 }
