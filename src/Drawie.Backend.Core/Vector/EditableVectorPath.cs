@@ -82,7 +82,7 @@ public class EditableVectorPath
 
     private void UpdatePathFrom(VectorPath from)
     {
-        subShapes.Clear();
+        subShapes?.Clear();
         if (from == null)
         {
             path = null;
@@ -108,6 +108,17 @@ public class EditableVectorPath
             {
                 isSubShapeClosed = true;
                 VecF[] verbData = data.points.ToArray();
+                if(verbData.Length < 2)
+                {
+                    var newData = new VecF[2];
+                    if (verbData.Length == 1)
+                    {
+                        newData[0] = verbData[0];
+                        newData[1] = verbData[0];
+                    }
+
+                    verbData = newData;
+                }
                 if (currentSubShapePoints[^1].Verb.IsEmptyVerb())
                 {
                     verbData[0] = currentSubShapePoints[^2].Verb.To;
