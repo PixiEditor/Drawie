@@ -70,8 +70,6 @@ public class OpenGlRenderApiResources : RenderApiResources
         if (isDisposed)
             return;
 
-        //var ctx = Context.MakeCurrent();
-
         Context.GlInterface.GetIntegerv((int)GLEnum.FramebufferBinding, out var oldFbo);
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, fbo);
         using (Swapchain.BeginDraw(size, out var texture))
@@ -84,14 +82,9 @@ public class OpenGlRenderApiResources : RenderApiResources
                 throw new Exception("Framebuffer is not complete");
             }
 
-            //var disp = globalContext.MakeCurrent();
             renderAction();
-            //disp.Dispose();
-
-            //ctx = Context.MakeCurrent();
         }
 
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, oldFbo);
-       // ctx.Dispose();
     }
 }
