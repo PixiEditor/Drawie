@@ -84,9 +84,9 @@ public class OpenGlRenderApiResources : RenderApiResources
                 throw new Exception("Framebuffer is not complete");
             }
 
-            var disp = globalContext.MakeCurrent();
+            //var disp = globalContext.MakeCurrent();
             renderAction();
-            disp.Dispose();
+            //disp.Dispose();
 
             //ctx = Context.MakeCurrent();
         }
