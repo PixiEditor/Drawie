@@ -242,6 +242,7 @@ public class Texture : IDisposable, ICloneable
         if (at.X < 0 || at.X >= Size.X || at.Y < 0 || at.Y >= Size.Y)
             return Color.Empty;
 
+        using var ctx = EnsureContext();
         SyncBitmap();
 
         return bitmap.PeekPixels().GetPixelColor(at);
