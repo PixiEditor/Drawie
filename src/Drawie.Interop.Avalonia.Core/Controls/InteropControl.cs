@@ -104,7 +104,16 @@ public abstract class InteropControl : Control
         }
 
         var size = new PixelSize((int)Bounds.Width, (int)Bounds.Height);
-        RenderFrame(size);
+        try
+        {
+            RenderFrame(size);
+            info = string.Empty;
+        }
+        catch (Exception e)
+        {
+            info = $"Error rendering frame: {e.Message}. Try updating graphics drivers or change Render API in settings if issue persists.";
+            return;
+        }
     }
 
     public void QueueNextFrame()
