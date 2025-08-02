@@ -27,7 +27,14 @@ public abstract class DrawieControl : InteropControl
     protected override (bool success, string info) InitializeGraphicsResources(Compositor targetCompositor,
         CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop)
     {
-        resources = IDrawieInteropContext.Current.CreateResources(compositionDrawingSurface, interop);
+        try
+        {
+            resources = IDrawieInteropContext.Current.CreateResources(compositionDrawingSurface, interop);
+        }
+        catch (Exception e)
+        {
+            return (false, $"Failed to create resources: {e.Message}");
+        }
 
         return (true, string.Empty);
     }

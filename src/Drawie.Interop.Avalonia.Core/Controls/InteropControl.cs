@@ -1,7 +1,9 @@
-﻿using Avalonia;
+﻿using System.Globalization;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.Media;
 using Avalonia.Rendering.Composition;
 using Avalonia.VisualTree;
 
@@ -73,6 +75,15 @@ public abstract class InteropControl : Control
         {
             info = e.Message;
             throw;
+        }
+    }
+
+    public override void Render(DrawingContext context)
+    {
+        if (!string.IsNullOrEmpty(info))
+        {
+            context.DrawText(new FormattedText(info, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface.Default, 12, Brushes.White),
+                new Point(0, 0));
         }
     }
 
