@@ -30,6 +30,11 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
 
     public override void Initialize(IVulkanContextInfo contextInfo)
     {
+        if (gpuInterop is null)
+        {
+            throw new ArgumentNullException(nameof(gpuInterop), "GpuInterop cannot be null");
+        }
+
         Api = Silk.NET.Vulkan.Vk.GetApi();
 
         TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
