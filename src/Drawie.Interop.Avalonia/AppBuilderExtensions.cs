@@ -50,6 +50,20 @@ public static class AppBuilderExtensions
                     }
                     else
                     {
+                        if (interop == null)
+                        {
+                            string configPath = Path.Combine(
+                                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                                "PixiEditor",
+                                "render_api.config");
+
+                            Console.WriteLine(
+                                $"Vulkan support was reported as available, but no interop was found. Pass --opengl command line argument to use OpenGL instead or enter \"OpenGL\" inside a file: '{configPath}'.");
+                            throw new InvalidOperationException(
+                                "Vulkan support was reported as available, but no interop was found. Pass --opengl command line argument to use OpenGL instead or enter \"OpenGL\" inside a file: '" +
+                                configPath + "'.");
+                        }
+
                         AvaloniaInteropContextInfo contextInfo = new AvaloniaInteropContextInfo();
 
                         VulkanInteropContext context = new VulkanInteropContext(interop);
