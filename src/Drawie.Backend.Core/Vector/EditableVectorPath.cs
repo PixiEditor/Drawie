@@ -121,7 +121,13 @@ public class EditableVectorPath
                 }
                 if (currentSubShapePoints[^1].Verb.IsEmptyVerb())
                 {
-                    verbData[0] = currentSubShapePoints[^2].Verb.To;
+                    int lastIndex = currentSubShapePoints.Count - 2;
+                    if (currentSubShapePoints.Count == 1)
+                    {
+                        lastIndex = 0;
+                    }
+
+                    verbData[0] = currentSubShapePoints[lastIndex].Verb.To;
                     verbData[1] = currentSubShapePoints[0].Verb.From;
                     if (verbData[0] != verbData[1])
                     {
