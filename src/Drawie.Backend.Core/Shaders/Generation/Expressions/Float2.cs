@@ -82,4 +82,9 @@ public class Float2(string name) : ShaderExpressionVariable<VecD>(name), IMultiV
     {
         return 2;
     }
+
+    public Expression? GetWholeNestedExpression()
+    {
+        return new Expression($"float2({X.ExpressionValue}, {Y.ExpressionValue})");
+    }
 }

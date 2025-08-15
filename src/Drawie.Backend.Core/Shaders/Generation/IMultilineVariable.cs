@@ -7,4 +7,5 @@ public interface IMultiValueVariable
     public ShaderExpressionVariable GetValueAt(int index);
     public void OverrideExpressionAt(int index, Expression? expression);
     public int GetValuesCount();
+    public Expression? GetWholeNestedExpression();
 }

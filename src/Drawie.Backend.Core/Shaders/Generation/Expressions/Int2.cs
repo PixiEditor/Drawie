@@ -61,4 +61,9 @@ public class Int2(string name) : ShaderExpressionVariable<VecI>(name), IMultiVal
     {
         return 2;
     }
+
+    public Expression? GetWholeNestedExpression()
+    {
+        return new Expression($"int2({X.ExpressionValue}, {Y.ExpressionValue})");
+    }
 }

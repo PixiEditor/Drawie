@@ -137,4 +137,9 @@ public class Float3x3(string name) : ShaderExpressionVariable<Matrix3X3>(name), 
     {
         return 9;
     }
+
+    public Expression? GetWholeNestedExpression()
+    {
+        return new Expression($"float3x3({M11}, {M12}, {M13}, {M21}, {M22}, {M23}, {M31}, {M32}, {M33})");
+    }
 }

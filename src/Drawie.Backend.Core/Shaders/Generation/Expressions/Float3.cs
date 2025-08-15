@@ -99,4 +99,9 @@ public class Float3(string name) : ShaderExpressionVariable<Vec3D>(name), IMulti
     {
         return 3;
     }
+
+    public Expression? GetWholeNestedExpression()
+    {
+        return new Expression($"float3({X.ExpressionValue}, {Y.ExpressionValue}, {Z.ExpressionValue})");
+    }
 }

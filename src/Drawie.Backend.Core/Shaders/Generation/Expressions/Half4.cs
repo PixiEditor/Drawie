@@ -87,6 +87,8 @@ public class Half4(string name) : ShaderExpressionVariable<Color>(name), IMultiV
         return 4;
     }
 
+    public Expression? GetWholeNestedExpression() => Constructor(R, G, B, A);
+
     public static string ConstructorText(Expression r, Expression g, Expression b, Expression a) =>
         $"half4({r.ExpressionValue}, {g.ExpressionValue}, {b.ExpressionValue}, {a.ExpressionValue})";
 

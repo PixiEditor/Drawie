@@ -72,6 +72,11 @@ public class Half3(string name) : ShaderExpressionVariable<Vec3D>(name), IMultiV
         return 3;
     }
 
+    public Expression? GetWholeNestedExpression()
+    {
+        return Constructor(R, G, B);
+    }
+
     public static string ConstructorText(Expression r, Expression g, Expression b) =>
         $"half3({r.ExpressionValue}, {g.ExpressionValue}, {b.ExpressionValue})";
 
