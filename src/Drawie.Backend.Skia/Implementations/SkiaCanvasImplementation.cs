@@ -7,6 +7,7 @@ using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Text;
 using Drawie.Backend.Core.Vector;
 using Drawie.Numerics;
+using Drawie.Skia.Extensions;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations
@@ -55,6 +56,19 @@ namespace Drawie.Skia.Implementations
         {
             var canvas = this[objPtr];
             canvas.DrawImage(_imageImpl[image.ObjectPointer], x, y);
+        }
+
+        public void DrawImage(IntPtr objPtr, Image image, float x, float y, SamplingOptions samplingOptions)
+        {
+            var canvas = this[objPtr];
+            canvas.DrawImage(_imageImpl[image.ObjectPointer], x, y, samplingOptions.ToSkSamplingOptions());
+        }
+
+        public void DrawImage(IntPtr objPtr, Image image, float x, float y, SamplingOptions samplingOptions, Paint? paint)
+        {
+            var canvas = this[objPtr];
+            var skPaint = paint != null ? _paintImpl[paint.ObjectPointer] : null;
+            canvas.DrawImage(_imageImpl[image.ObjectPointer], x, y, samplingOptions.ToSkSamplingOptions(), skPaint);
         }
 
         public void DrawImage(IntPtr objPtr, Image image, float x, float y, Paint paint)

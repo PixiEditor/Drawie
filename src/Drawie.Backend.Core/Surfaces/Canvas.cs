@@ -61,6 +61,11 @@ namespace Drawie.Backend.Core.Surfaces
         public void DrawImage(Image image, float x, float y) =>
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y);
 
+        public void DrawImage(Image image, float x, float y, SamplingOptions samplingOptions) =>
+            DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, samplingOptions);
+
+        public void DrawImage(Image image, float x, float y, SamplingOptions samplingOptions, Paint? paint) =>
+            DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, samplingOptions, paint);
         public void DrawImage(Image image, float x, float y, Paint paint) =>
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, paint);
 

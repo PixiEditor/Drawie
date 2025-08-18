@@ -14,6 +14,8 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public void DrawPixel(IntPtr objPtr, float posX, float posY, Paint drawingPaint);
         public void DrawSurface(IntPtr objPtr, DrawingSurface drawingSurface, float x, float y, Paint? paint);
         public void DrawImage(IntPtr objPtr, Image image, float x, float y);
+        public void DrawImage(IntPtr objPtr, Image image, float x, float y, SamplingOptions samplingOptions);
+        public void DrawImage(IntPtr objectPointer, Image image, float x, float y, SamplingOptions samplingOptions, Paint? paint);
         public int Save(IntPtr objPtr);
         public void Restore(IntPtr objPtr);
         public void Scale(IntPtr objPtr, float sizeX, float sizeY);
