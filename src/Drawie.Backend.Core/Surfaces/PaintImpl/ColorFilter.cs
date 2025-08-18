@@ -63,4 +63,9 @@ public class ColorFilter : NativeObject
         return new ColorFilter(
             DrawingBackendApi.Current.ColorFilterImplementation.CreateHighContrast(grayscale, mode, contrastValue));
     }
+
+    public static ColorFilter CreateLighting(Color mul, Color add)
+    {
+        return new ColorFilter(DrawingBackendApi.Current.ColorFilterImplementation.CreateLighting(mul, add));
+    }
 }

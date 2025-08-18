@@ -13,4 +13,5 @@ public interface IColorFilterImplementation
     public object GetNativeColorFilter(IntPtr objectPointer);
     public IntPtr CreateLumaColor();
     public IntPtr CreateHighContrast(bool grayscale, ContrastInvertMode invert, float contrast);
+    public IntPtr CreateLighting(Color mul, Color add);
 }

@@ -60,5 +60,13 @@ namespace Drawie.Skia.Implementations
 
             return skColorFilter.Handle;
         }
+
+        public IntPtr CreateLighting(Color mul, Color add)
+        {
+            var skColorFilter = SKColorFilter.CreateLighting(mul.ToSKColor(), add.ToSKColor());
+            AddManagedInstance(skColorFilter);
+
+            return skColorFilter.Handle;
+        }
     }
 }
