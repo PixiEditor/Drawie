@@ -34,4 +34,14 @@ public class ColorSpace : NativeObject
     {
         DrawingBackendApi.Current.ColorSpaceImplementation.Dispose(ObjectPointer);
     }
+
+    public override bool Equals(object? obj)
+    {
+        if(obj is ColorSpace other)
+        {
+            return ObjectPointer == other.ObjectPointer || this.IsSrgb && other.IsSrgb || this == other;
+        }
+
+        return false;
+    }
 }

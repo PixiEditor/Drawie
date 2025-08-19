@@ -3,6 +3,7 @@
 public readonly struct SamplingOptions : IEquatable<SamplingOptions>
 {
     public static readonly SamplingOptions Default = new(FilterMode.Nearest, MipmapMode.None);
+    public static readonly SamplingOptions Bilinear = new(FilterMode.Linear, MipmapMode.Linear);
 
     public int MaxAnisotropy { get; }
     public bool UseCubic { get; }
