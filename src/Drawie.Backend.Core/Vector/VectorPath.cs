@@ -91,7 +91,7 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
 
     public event Action<VectorPath>? Changed;
 
-    public static VectorPath FromSvgPath(string svgPath)
+    public static VectorPath? FromSvgPath(string svgPath)
     {
         return DrawingBackendApi.Current.PathImplementation.FromSvgPath(svgPath);
     }

@@ -42,7 +42,7 @@ public interface IVectorPathImplementation
     public object GetNativePath(IntPtr objectPointer);
     public VecF[] GetPoints(IntPtr objectPointer);
     public VecF GetLastPoint(VectorPath vectorPath);
-    public VectorPath FromSvgPath(string svgPath);
+    public VectorPath? FromSvgPath(string svgPath);
     public PathIterator CreateIterator(IntPtr objectPointer, bool forceClose);
     public void DisposeIterator(IntPtr objectPointer);
     public object GetNativeIterator(IntPtr objectPointer);

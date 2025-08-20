@@ -177,9 +177,14 @@ namespace Drawie.Skia.Implementations
             return new VecF(point.X, point.Y);
         }
 
-        public VectorPath FromSvgPath(string svgPath)
+        public VectorPath? FromSvgPath(string svgPath)
         {
             SKPath skPath = SKPath.ParseSvgPathData(svgPath);
+
+            if (skPath == null)
+            {
+                return null;
+            }
 
             AddManagedInstance(skPath);
             return new VectorPath(skPath.Handle);
