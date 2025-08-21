@@ -1,4 +1,5 @@
 ﻿using Drawie.Backend.Core.Bridge;
+using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Numerics;
 
@@ -78,6 +79,11 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
         public Shader ToShader()
         {
             return DrawingBackendApi.Current.ImageImplementation.ToShader(ObjectPointer);
+        }
+
+        public Shader ToShader(TileMode tileX, TileMode tileY, SamplingOptions samplingOptions, Matrix3X3 localMatrix)
+        {
+            return DrawingBackendApi.Current.ImageImplementation.ToShader(ObjectPointer, tileX, tileY, samplingOptions, localMatrix);
         }
 
         public Shader ToRawShader()

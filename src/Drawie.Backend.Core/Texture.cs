@@ -1,5 +1,6 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
@@ -25,6 +26,9 @@ public class Texture : IDisposable, ICloneable
     private bool cpuSynced;
 
     private bool isDisposed;
+    private bool disposePending;
+
+    private HashSet<object> lockDisposes = new();
 
     private Paint nearestNeighborReplacingPaint =
         new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
@@ -273,6 +277,12 @@ public class Texture : IDisposable, ICloneable
         if (isDisposed)
             return;
 
+        if (lockDisposes.Count > 0)
+        {
+            disposePending = true;
+            return;
+        }
+
         isDisposed = true;
         DrawingSurface.Changed -= DrawingSurfaceOnChanged;
         DrawingSurface.Dispose();
@@ -289,5 +299,26 @@ public class Texture : IDisposable, ICloneable
     private static IDisposable EnsureContext()
     {
         return DrawingBackendApi.Current.RenderingDispatcher.EnsureContext();
+    }
+
+    public void LockDispose(object locker)
+    {
+        if (lockDisposes.Contains(locker) || isDisposed)
+            return;
+
+        lockDisposes.Add(locker);
+    }
+
+    public void UnlockDispose(object locker)
+    {
+        if (!lockDisposes.Contains(locker))
+            return;
+
+        lockDisposes.Remove(locker);
+
+        if (lockDisposes.Count == 0 && disposePending)
+        {
+            Dispose();
+        }
     }
 }

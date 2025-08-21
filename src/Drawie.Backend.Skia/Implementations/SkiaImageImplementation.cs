@@ -1,9 +1,11 @@
 ﻿using Drawie.Backend.Core.Bridge.Operations;
+using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Numerics;
 using Drawie.Skia.Encoders;
+using Drawie.Skia.Extensions;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations
@@ -170,6 +172,15 @@ namespace Drawie.Skia.Implementations
         public Shader ToShader(IntPtr objectPointer)
         {
             var shader = this[objectPointer].ToShader();
+            shaderImpl.AddManagedInstance(shader);
+            return new Shader(shader.Handle);
+        }
+
+
+        public Shader ToShader(IntPtr objectPointer, TileMode tileX, TileMode tileY, SamplingOptions samplingOptions, Matrix3X3 localMatrix)
+        {
+            var shader = this[objectPointer]
+                .ToShader((SKShaderTileMode)tileX, (SKShaderTileMode)tileY, samplingOptions.ToSkSamplingOptions(), localMatrix.ToSkMatrix());
             shaderImpl.AddManagedInstance(shader);
             return new Shader(shader.Handle);
         }

@@ -15,4 +15,5 @@ public abstract class Paintable : IDisposable, ICloneable
     object ICloneable.Clone() => Clone();
     public abstract void ApplyOpacity(double opacity);
     public virtual void Dispose() { }
+    public virtual void DisposeShaderElements() { }
 }

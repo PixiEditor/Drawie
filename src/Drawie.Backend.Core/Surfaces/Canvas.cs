@@ -344,6 +344,7 @@ namespace Drawie.Backend.Core.Surfaces
                 {
                     using Paint paint = new Paint() { Shader = shader, BlendMode = blendMode };
                     DrawPaint(paint);
+                    shader.Dispose();
                 }
             }
         }

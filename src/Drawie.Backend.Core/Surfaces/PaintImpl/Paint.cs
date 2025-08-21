@@ -165,10 +165,11 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
 
             return Disposable.Create(() =>
             {
+                Paintable?.DisposeShaderElements();
                 createdShader?.Dispose();
                 Shader = lastShader;
                 Color = lastColor;
             });
-        }
+            }
     }
 }

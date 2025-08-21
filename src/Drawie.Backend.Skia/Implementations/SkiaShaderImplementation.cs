@@ -305,14 +305,14 @@ namespace Drawie.Skia.Implementations
             return new Shader(newShader.Handle, oldDeclarations);
         }
 
-        public void SetLocalMatrix(IntPtr objectPointer, Matrix3X3 matrix)
+        public Shader SetLocalMatrix(IntPtr objectPointer, Matrix3X3 matrix)
         {
             if (!TryGetInstance(objectPointer, out var shader))
             {
                 throw new InvalidOperationException("Shader does not exist");
             }
 
-            shader.WithLocalMatrix(matrix.ToSkMatrix());
+            return new Shader(shader.WithLocalMatrix(matrix.ToSkMatrix()).Handle);
         }
 
         public Shader? CreateBitmap(Bitmap bitmap, TileMode tileX, TileMode tileY, Matrix3X3 matrix)

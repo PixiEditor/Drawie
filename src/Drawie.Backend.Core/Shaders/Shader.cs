@@ -129,9 +129,9 @@ public class Shader : NativeObject
             numOctaves, seed);
     }
 
-    public void SetLocalMatrix(Matrix3X3 matrix)
+    public Shader SetLocalMatrix(Matrix3X3 matrix)
     {
-        DrawingBackendApi.Current.ShaderImplementation.SetLocalMatrix(ObjectPointer, matrix);
+        return DrawingBackendApi.Current.ShaderImplementation.SetLocalMatrix(ObjectPointer, matrix);
     }
 
     public static Shader? CreateBitmap(Bitmap bitmap, TileMode tileX, TileMode tileY, Matrix3X3 matrix)
