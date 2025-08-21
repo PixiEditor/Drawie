@@ -36,7 +36,7 @@ public class TexturePaintable : Paintable
             (float)bounds.Y);
 
 
-        var shader = lastSnapshot.ToShader(TileMode.Clamp, TileMode.Clamp, SamplingOptions.Default, scalingMatrix);
+        var shader = lastSnapshot.ToShader(TileMode.Clamp, TileMode.Clamp, SamplingOptions.Default, scalingMatrix.PostConcat(matrix));
 
         return shader;
     }
