@@ -1,5 +1,6 @@
 ﻿using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
+using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.ColorsImpl.Paintables;
@@ -16,4 +17,6 @@ public abstract class Paintable : IDisposable, ICloneable
     public abstract void ApplyOpacity(double opacity);
     public virtual void Dispose() { }
     public virtual void DisposeShaderElements() { }
+
+    public virtual void ModifyPaint(Paint paint) { }
 }

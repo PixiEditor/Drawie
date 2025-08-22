@@ -65,7 +65,9 @@ namespace Drawie.Backend.Core.Surfaces
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, samplingOptions);
 
         public void DrawImage(Image image, float x, float y, SamplingOptions samplingOptions, Paint? paint) =>
-            DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, samplingOptions, paint);
+            DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, samplingOptions,
+                paint);
+
         public void DrawImage(Image image, float x, float y, Paint paint) =>
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, paint);
 
@@ -333,19 +335,18 @@ namespace Drawie.Backend.Core.Surfaces
 
         public void DrawPaintable(Paintable paintable, BlendMode blendMode)
         {
-            if (paintable is ColorPaintable colorPaintable)
+            var shader = paintable.GetShader(LocalClipBounds, Matrix3X3.Identity);
+            if (shader != null)
             {
-                DrawColor(colorPaintable.Color, blendMode);
+                using Paint paint = new Paint() { Shader = shader, BlendMode = blendMode };
+                DrawPaint(paint);
+                shader.Dispose();
             }
             else
             {
-                var shader = paintable.GetShader(LocalClipBounds, Matrix3X3.Identity);
-                if (shader != null)
-                {
-                    using Paint paint = new Paint() { Shader = shader, BlendMode = blendMode };
-                    DrawPaint(paint);
-                    shader.Dispose();
-                }
+                using Paint paint = new Paint() { BlendMode = blendMode };
+                paintable.ModifyPaint(paint);
+                DrawPaint(paint);
             }
         }
 
