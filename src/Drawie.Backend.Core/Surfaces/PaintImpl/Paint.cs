@@ -154,7 +154,7 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             Shaders.Shader? createdShader = null;
 
             createdShader = Paintable.GetShader(bounds, matrix);
-            if (Shader != null)
+            if (createdShader != null)
             {
                 Shader = createdShader;
             }
