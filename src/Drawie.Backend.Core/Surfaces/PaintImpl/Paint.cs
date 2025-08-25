@@ -139,6 +139,11 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
         public override void Dispose()
         {
             DrawingBackendApi.Current.PaintImplementation.Dispose(ObjectPointer);
+            if (Paintable != null && Paintable.IsOneTimeUse)
+            {
+                Paintable.Dispose();
+                Paintable = null;
+            }
         }
 
         internal IDisposable ApplyPaintable(RectD bounds, Matrix3X3 matrix)

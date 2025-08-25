@@ -14,10 +14,20 @@ public class TexturePaintable : Paintable
 
     private Image lastSnapshot;
 
+    private bool disposeAfterUse;
+
     public TexturePaintable(Texture image)
     {
         Image = image;
         Image.LockDispose(this);
+    }
+
+    public TexturePaintable(Texture image, bool disposeAfterUse)
+    {
+        Image = image;
+        Image.LockDispose(this);
+        this.disposeAfterUse = disposeAfterUse;
+        IsOneTimeUse = disposeAfterUse;
     }
 
     public override Shader? GetShader(RectD bounds, Matrix3X3 matrix)
@@ -102,5 +112,9 @@ public class TexturePaintable : Paintable
     {
         base.Dispose();
         Image?.UnlockDispose(this);
+        if (disposeAfterUse)
+        {
+            Image?.Dispose();
+        }
     }
 }
