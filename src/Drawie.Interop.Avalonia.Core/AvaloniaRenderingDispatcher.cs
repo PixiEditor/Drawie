@@ -9,12 +9,24 @@ public class AvaloniaRenderingDispatcher : IRenderingDispatcher
     {
         if (action == null) return;
 
+        if(Dispatcher.UIThread.CheckAccess())
+        {
+            using var _ = IDrawieInteropContext.Current.EnsureContext();
+            action();
+            return;
+        }
+
         Dispatcher.UIThread.Invoke(() =>
         {
             using var _ = IDrawieInteropContext.Current.EnsureContext();
             action();
         });
     };
+
+    public async Task<TResult> InvokeAsync<TResult>(Func<TResult> function)
+    {
+        return await Dispatcher.UIThread.InvokeAsync(function, DispatcherPriority.Background);
+    }
 
     public IDisposable EnsureContext()
     {
