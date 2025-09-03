@@ -450,4 +450,19 @@ public struct Matrix3X3 : IEquatable<Matrix3X3>
         public const int Persp2 = 8;
         public const int Count = 9;
     }
+
+    public RectD TransformRect(RectD rect)
+    {
+        VecD p1 = MapPoint(new VecD(rect.Left, rect.Top));
+        VecD p2 = MapPoint(new VecD(rect.Right, rect.Top));
+        VecD p3 = MapPoint(new VecD(rect.Right, rect.Bottom));
+        VecD p4 = MapPoint(new VecD(rect.Left, rect.Bottom));
+
+        double minX = Math.Min(Math.Min(p1.X, p2.X), Math.Min(p3.X, p4.X));
+        double maxX = Math.Max(Math.Max(p1.X, p2.X), Math.Max(p3.X, p4.X));
+        double minY = Math.Min(Math.Min(p1.Y, p2.Y), Math.Min(p3.Y, p4.Y));
+        double maxY = Math.Max(Math.Max(p1.Y, p2.Y), Math.Max(p3.Y, p4.Y));
+
+        return new RectD(minX, minY, maxX - minX, maxY - minY);
+    }
 }
