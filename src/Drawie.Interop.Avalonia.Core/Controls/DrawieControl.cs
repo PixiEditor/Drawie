@@ -40,6 +40,7 @@ public abstract class DrawieControl : InteropControl
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
+        using var ctx = IDrawieInteropContext.Current.EnsureContext();
         base.OnDetachedFromVisualTree(e);
         framebuffer?.Dispose();
         framebuffer = null;
@@ -47,6 +48,7 @@ public abstract class DrawieControl : InteropControl
 
     protected override void FreeGraphicsResources()
     {
+        using var ctx = IDrawieInteropContext.Current.EnsureContext();
         intermediateSurface?.Dispose();
         intermediateSurface = null;
 
