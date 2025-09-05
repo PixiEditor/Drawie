@@ -280,6 +280,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         if (isDisposed)
             return;
 
+        using var ctx = EnsureContext();
         isDisposed = true;
         DrawingSurface.Changed -= DrawingSurfaceOnChanged;
         DrawingSurface.Dispose();
