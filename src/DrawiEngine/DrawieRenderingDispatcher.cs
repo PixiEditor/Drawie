@@ -6,12 +6,17 @@ public class DrawieRenderingDispatcher : IRenderingDispatcher
 {
     public Action<Action> Invoke { get; } = action => action();
 
-    public async Task<TResult> InvokeAsync<TResult>(Func<TResult> function)
+    public async Task<TResult> InvokeAsync<TResult>(Func<TResult> func)
+    {
+        return await Task.Run(func);
+    }
+
+    public async Task<TResult> InvokeInBackgroundAsync<TResult>(Func<TResult> function)
     {
         return await Task.Run(function);
     }
 
-    public Task InvokeAsync(Action function)
+    public Task InvokeInBackgroundAsync(Action function)
     {
         return Task.Run(function);
     }

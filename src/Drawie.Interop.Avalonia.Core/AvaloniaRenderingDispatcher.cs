@@ -23,14 +23,31 @@ public class AvaloniaRenderingDispatcher : IRenderingDispatcher
         });
     };
 
-    public async Task<TResult> InvokeAsync<TResult>(Func<TResult> function)
+    public async Task<TResult> InvokeAsync<TResult>(Func<TResult> func)
     {
-        return await Dispatcher.UIThread.InvokeAsync(function, DispatcherPriority.Background);
+        return await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            using var _ = IDrawieInteropContext.Current.EnsureContext();
+            return func();
+        });
     }
 
-    public async Task InvokeAsync(Action function)
+    public async Task<TResult> InvokeInBackgroundAsync<TResult>(Func<TResult> function)
     {
-        await Dispatcher.UIThread.InvokeAsync(function, DispatcherPriority.Background);
+        return await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            using var _ = IDrawieInteropContext.Current.EnsureContext();
+            return function();
+        }, DispatcherPriority.Background);
+    }
+
+    public async Task InvokeInBackgroundAsync(Action function)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            using var _ = IDrawieInteropContext.Current.EnsureContext();
+            function();
+        }, DispatcherPriority.Background);
     }
 
     public IDisposable EnsureContext()
