@@ -88,6 +88,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
 
         ColorSpace = imageImageInfo.ColorSpace;
 
+        // TODO: Fallback to CPU if GPU call fails
         DrawingBackendApi.Current.RenderingDispatcher.Invoke(() =>
             DrawingSurface =
                 DrawingSurface.Create(imageImageInfo)

@@ -28,6 +28,11 @@ public class AvaloniaRenderingDispatcher : IRenderingDispatcher
         return await Dispatcher.UIThread.InvokeAsync(function, DispatcherPriority.Background);
     }
 
+    public async Task InvokeAsync(Action function)
+    {
+        await Dispatcher.UIThread.InvokeAsync(function, DispatcherPriority.Background);
+    }
+
     public IDisposable EnsureContext()
     {
         return IDrawieInteropContext.Current.EnsureContext();

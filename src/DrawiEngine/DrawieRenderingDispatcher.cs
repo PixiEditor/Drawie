@@ -11,6 +11,11 @@ public class DrawieRenderingDispatcher : IRenderingDispatcher
         return await Task.Run(function);
     }
 
+    public Task InvokeAsync(Action function)
+    {
+        return Task.Run(function);
+    }
+
     public IDisposable EnsureContext()
     {
         return new EmptyDisposable();
