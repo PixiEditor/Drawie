@@ -11,6 +11,7 @@ using DrawiEngine;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
+using D3DDevice = SharpDX.Direct3D11.Device;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
@@ -22,6 +23,7 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
 
     private ICompositionGpuInterop gpuInterop;
     private DescriptorPool descriptorPool;
+    public D3DDevice? D3DDevice { get; private set; }
 
     public VulkanInteropContext(ICompositionGpuInterop gpuInterop)
     {
@@ -55,6 +57,32 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
         GpuInfo = PickPhysicalDevice();
         CreateLogicalDevice();
         CreatePool();
+
+        CreateDirectxDevice();
+    }
+
+    private unsafe void CreateDirectxDevice()
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return;
+
+        var physicalDeviceIDProperties = new PhysicalDeviceIDProperties()
+        {
+            SType = StructureType.PhysicalDeviceIDProperties
+        };
+        var physicalDeviceProperties2 = new PhysicalDeviceProperties2()
+        {
+            SType = StructureType.PhysicalDeviceProperties2, PNext = &physicalDeviceIDProperties
+        };
+
+        Api!.GetPhysicalDeviceProperties2(PhysicalDevice, &physicalDeviceProperties2);
+
+        if (physicalDeviceIDProperties.DeviceLuidvalid &&
+            !gpuInterop.SupportedImageHandleTypes.Contains(KnownPlatformGraphicsExternalImageHandleTypes
+                .VulkanOpaqueNtHandle)
+           )
+            D3DDevice = D3DMemoryHelper.CreateDeviceByLuid(
+                new Span<byte>(physicalDeviceIDProperties.DeviceLuid, 8));
     }
 
     private bool SetRequiredDeviceExtensions()

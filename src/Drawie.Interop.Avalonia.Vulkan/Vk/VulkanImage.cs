@@ -2,8 +2,11 @@
 using Avalonia;
 using Avalonia.Platform;
 using Drawie.RenderApi.Vulkan.Extensions;
+using SharpDX.DXGI;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
+using Device = Silk.NET.Vulkan.Device;
+using Format = Silk.NET.Vulkan.Format;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
@@ -19,7 +22,7 @@ public class VulkanImage : IDisposable
     private ImageUsageFlags _imageUsageFlags { get; }
     private ImageView _imageView { get; set; }
     private DeviceMemory _imageMemory { get; set; }
-    //private readonly SharpDX.Direct3D11.Texture2D? _d3dTexture2D;
+    private readonly SharpDX.Direct3D11.Texture2D? _d3dTexture2D;
 
     internal Image InternalHandle { get; private set; }
     internal Format Format { get; }
@@ -103,7 +106,7 @@ public class VulkanImage : IDisposable
         };
 
         ImportMemoryWin32HandleInfoKHR handleImport = default;
-        /*if (handleType == ExternalMemoryHandleTypeFlags.D3D11TextureBit && exportable)
+        if (handleType == ExternalMemoryHandleTypeFlags.D3D11TextureBit && exportable)
         {
             var d3dDevice = vk.D3DDevice ?? throw new NotSupportedException("Vulkan D3DDevice wasn't created");
             _d3dTexture2D = D3DMemoryHelper.CreateMemoryHandle(d3dDevice, size, Format);
@@ -116,7 +119,7 @@ public class VulkanImage : IDisposable
                 HandleType = ExternalMemoryHandleTypeFlags.D3D11TextureBit,
                 Handle = dxgi.CreateSharedHandle(null, SharedResourceFlags.Read | SharedResourceFlags.Write),
             };
-        }*/
+        }
 
         var memoryAllocateInfo = new MemoryAllocateInfo
         {
@@ -202,25 +205,25 @@ public class VulkanImage : IDisposable
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            /*if (_d3dTexture2D != null)
+            if (_d3dTexture2D != null)
             {
                 using var dxgi = _d3dTexture2D!.QueryInterface<Resource1>();
                 return new PlatformHandle(
                     dxgi.CreateSharedHandle(null, SharedResourceFlags.Read | SharedResourceFlags.Write),
                     KnownPlatformGraphicsExternalImageHandleTypes.D3D11TextureNtHandle);
-            }*/
+            }
 
             return new PlatformHandle(ExportOpaqueNtHandle(),
                 KnownPlatformGraphicsExternalImageHandleTypes.VulkanOpaqueNtHandle);
         }
-        else
-            return new PlatformHandle(new IntPtr(ExportFd()),
-                KnownPlatformGraphicsExternalImageHandleTypes.VulkanOpaquePosixFileDescriptor);
+
+        return new PlatformHandle(new IntPtr(ExportFd()),
+            KnownPlatformGraphicsExternalImageHandleTypes.VulkanOpaquePosixFileDescriptor);
     }
 
     public ImageTiling Tiling => ImageTiling.Optimal;
 
-    //public bool IsDirectXBacked => _d3dTexture2D != null;
+    public bool IsDirectXBacked => _d3dTexture2D != null;
 
     internal void TransitionLayout(CommandBuffer commandBuffer,
         ImageLayout fromLayout, AccessFlags fromAccessFlags,
