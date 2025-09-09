@@ -15,11 +15,11 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
     public event SurfaceChangedEventHandler? Changed;
 
     public bool IsDisposed => isDisposed || DrawingSurface.IsDisposed;
-    public bool IsHardwareAccelerated { get; } = DrawingBackendApi.Current.IsHardwareAccelerated;
+    public bool IsHardwareAccelerated => ImageInfo.GpuBacked && DrawingBackendApi.Current.IsHardwareAccelerated;
 
     public ColorSpace ColorSpace { get; }
 
-    public ImageInfo ImageInfo { get; }
+    public ImageInfo ImageInfo { get; private set; }
 
     private Bitmap? bitmap;
     private bool cpuSynced;
@@ -90,9 +90,19 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
 
         // TODO: Fallback to CPU if GPU call fails
         DrawingBackendApi.Current.RenderingDispatcher.Invoke(() =>
+        {
             DrawingSurface =
-                DrawingSurface.Create(imageImageInfo)
-        );
+                DrawingSurface.Create(imageImageInfo);
+
+            if (DrawingSurface == null)
+            {
+                ImageInfo = imageImageInfo.WithGpuBacked(false);
+                DrawingSurface = DrawingSurface.Create(ImageInfo);
+            }
+        });
+
+        if (DrawingSurface == null)
+            throw new InvalidOperationException("Could not create a DrawingSurface for the given ImageInfo");
 
         DrawingSurface.Changed += DrawingSurfaceOnChanged;
         Changed += OnChanged;
