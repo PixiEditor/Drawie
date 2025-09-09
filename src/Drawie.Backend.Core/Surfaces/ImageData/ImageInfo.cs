@@ -5,29 +5,31 @@ using HashCode = System.HashCode;
 namespace Drawie.Backend.Core.Surfaces.ImageData;
 
 public struct ImageInfo : System.IEquatable<ImageInfo>
-  {
+{
     /// <summary>An empty <see cref="ImageInfo" />.</summary>
     public static readonly ImageInfo Empty;
-    
+
     /// <summary>The current 32-bit color for the current platform.</summary>
     /// <remarks>On Windows, it is typically <see cref="ColorType.Bgra8888" />, and on Unix-based systems (macOS, Linux) it is typically <see cref="ColorType.Rgba8888" />.</remarks>
-    public static readonly ColorType PlatformColorType = DrawingBackendApi.Current.ColorImplementation.GetPlatformColorType();
-    
+    public static readonly ColorType PlatformColorType =
+        DrawingBackendApi.Current.ColorImplementation.GetPlatformColorType();
+
     /// <summary>The number of bits to shift left for the alpha color component.</summary>
     public static readonly int PlatformColorAlphaShift;
-    
+
     /// <summary>The number of bits to shift left for the red color component.</summary>
     public static readonly int PlatformColorRedShift;
-    
+
     /// <summary>The number of bits to shift left for the green color component.</summary>
     public static readonly int PlatformColorGreenShift;
-    
+
     /// <summary>The number of bits to shift left for the blue color component.</summary>
     public static readonly int PlatformColorBlueShift;
 
     static unsafe ImageInfo()
     {
-      DrawingBackendApi.Current.ImageImplementation.GetColorShifts(ref PlatformColorAlphaShift, ref PlatformColorRedShift, ref PlatformColorGreenShift, ref PlatformColorBlueShift);
+        DrawingBackendApi.Current.ImageImplementation.GetColorShifts(ref PlatformColorAlphaShift,
+            ref PlatformColorRedShift, ref PlatformColorGreenShift, ref PlatformColorBlueShift);
     }
 
     /// <summary>Gets or sets the width.</summary>
@@ -52,43 +54,43 @@ public struct ImageInfo : System.IEquatable<ImageInfo>
 
     public ImageInfo(int width, int height)
     {
-      this.Width = width;
-      this.Height = height;
-      this.ColorType = ImageInfo.PlatformColorType;
-      this.AlphaType = AlphaType.Premul;
-      this.ColorSpace = null;
+        this.Width = width;
+        this.Height = height;
+        this.ColorType = ImageInfo.PlatformColorType;
+        this.AlphaType = AlphaType.Premul;
+        this.ColorSpace = null;
     }
 
     public ImageInfo(int width, int height, ColorType colorType)
     {
-      this.Width = width;
-      this.Height = height;
-      this.ColorType = colorType;
-      this.AlphaType = AlphaType.Premul;
-      this.ColorSpace = (ColorSpace)null;
+        this.Width = width;
+        this.Height = height;
+        this.ColorType = colorType;
+        this.AlphaType = AlphaType.Premul;
+        this.ColorSpace = (ColorSpace)null;
     }
 
     public ImageInfo(int width, int height, ColorType colorType, AlphaType alphaType)
     {
-      this.Width = width;
-      this.Height = height;
-      this.ColorType = colorType;
-      this.AlphaType = alphaType;
-      this.ColorSpace = (ColorSpace) null;
+        this.Width = width;
+        this.Height = height;
+        this.ColorType = colorType;
+        this.AlphaType = alphaType;
+        this.ColorSpace = (ColorSpace)null;
     }
 
     public ImageInfo(
-      int width,
-      int height,
-      ColorType colorType,
-      AlphaType alphaType,
-      ColorSpace colorspace)
+        int width,
+        int height,
+        ColorType colorType,
+        AlphaType alphaType,
+        ColorSpace colorspace)
     {
-      this.Width = width;
-      this.Height = height;
-      this.ColorType = colorType;
-      this.AlphaType = alphaType;
-      this.ColorSpace = colorspace;
+        this.Width = width;
+        this.Height = height;
+        this.ColorType = colorType;
+        this.AlphaType = alphaType;
+        this.ColorSpace = colorspace;
     }
 
     /// <summary>Gets the number of bytes used per pixel.</summary>
@@ -109,7 +111,7 @@ public struct ImageInfo : System.IEquatable<ImageInfo>
     /// <summary>Gets the total number of bytes needed to store the bitmap data as a 64-bit integer.</summary>
     /// <value />
     /// <remarks>This is calculated as: <see cref="P:SkiaSharp.ImageInfo.Width" /> * <see cref="ImageInfo.Height" /> * <see cref="ImageInfo.BytesPerPixel" />.</remarks>
-    public readonly long BytesSize64 => (long) this.Width * (long) this.Height * (long) this.BytesPerPixel;
+    public readonly long BytesSize64 => (long)this.Width * (long)this.Height * (long)this.BytesPerPixel;
 
     /// <summary>Gets the number of bytes per row.</summary>
     /// <value />
@@ -119,7 +121,7 @@ public struct ImageInfo : System.IEquatable<ImageInfo>
     /// <summary>Gets the number of bytes per row as a 64-bit integer.</summary>
     /// <value />
     /// <remarks>This is calculated as: <see cref="ImageInfo.Width" /> * <see cref="ImageInfo.BytesPerPixel" />.</remarks>
-    public readonly long RowBytes64 => (long) this.Width * (long) this.BytesPerPixel;
+    public readonly long RowBytes64 => (long)this.Width * (long)this.BytesPerPixel;
 
     /// <summary>Gets a value indicating whether the width or height are less or equal than zero.</summary>
     /// <value />
@@ -146,52 +148,44 @@ public struct ImageInfo : System.IEquatable<ImageInfo>
     /// <param name="height">The height.</param>
     /// <summary>Creates a new <see cref="ImageInfo" /> with the same properties as this <see cref="ImageInfo" />, but with the specified dimensions.</summary>
     /// <returns>Returns the new <see cref="ImageInfo" />.</returns>
-    public readonly ImageInfo WithSize(int width, int height) => this with
-    {
-      Width = width,
-      Height = height
-    };
+    public readonly ImageInfo WithSize(int width, int height) => this with { Width = width, Height = height };
 
     /// <param name="newColorType">The color type.</param>
     /// <summary>Creates a new <see cref="ImageInfo" /> with the same properties as this <see cref="ImageInfo" />, but with the specified color type.</summary>
     /// <returns>Returns the new <see cref="ImageInfo" />.</returns>
-    public readonly ImageInfo WithColorType(ColorType newColorType) => this with
-    {
-      ColorType = newColorType
-    };
+    public readonly ImageInfo WithColorType(ColorType newColorType) => this with { ColorType = newColorType };
 
     /// <param name="newColorSpace">The color space.</param>
     /// <summary>Creates a new <see cref="ImageInfo" /> with the same properties as this <see cref="ImageInfo" />, but with the specified color space.</summary>
     /// <returns>Returns the new <see cref="ImageInfo" />.</returns>
-    public readonly ImageInfo WithColorSpace(ColorSpace newColorSpace) => this with
-    {
-      ColorSpace = newColorSpace
-    };
+    public readonly ImageInfo WithColorSpace(ColorSpace newColorSpace) => this with { ColorSpace = newColorSpace };
 
     /// <param name="newAlphaType">The alpha/transparency type.</param>
     /// <summary>Creates a new <see cref="ImageInfo" /> with the same properties as this <see cref="ImageInfo" />, but with the specified transparency type.</summary>
     /// <returns>Returns the new <see cref="ImageInfo" />.</returns>
-    public readonly ImageInfo WithAlphaType(AlphaType newAlphaType) => this with
-    {
-      AlphaType = newAlphaType
-    };
-    
-    public readonly bool Equals(ImageInfo obj) => this.ColorSpace == obj.ColorSpace && this.Width == obj.Width && this.Height == obj.Height && this.ColorType == obj.ColorType && this.AlphaType == obj.AlphaType;
-    
+    public readonly ImageInfo WithAlphaType(AlphaType newAlphaType) => this with { AlphaType = newAlphaType };
+
+
+    public ImageInfo WithGpuBacked(bool gpuBacked) => this with { GpuBacked = gpuBacked };
+
+    public readonly bool Equals(ImageInfo obj) => this.ColorSpace == obj.ColorSpace && this.Width == obj.Width &&
+                                                  this.Height == obj.Height && this.ColorType == obj.ColorType &&
+                                                  this.AlphaType == obj.AlphaType;
+
     public override readonly bool Equals(object obj) => obj is ImageInfo ImageInfo && this.Equals(ImageInfo);
-    
+
     public static bool operator ==(ImageInfo left, ImageInfo right) => left.Equals(right);
-    
+
     public static bool operator !=(ImageInfo left, ImageInfo right) => !left.Equals(right);
-    
+
     public override readonly int GetHashCode()
     {
-      HashCode hashCode = new HashCode();
-      hashCode.Add<ColorSpace>(this.ColorSpace);
-      hashCode.Add<int>(this.Width);
-      hashCode.Add<int>(this.Height);
-      hashCode.Add<ColorType>(this.ColorType);
-      hashCode.Add<AlphaType>(this.AlphaType);
-      return hashCode.ToHashCode();
+        HashCode hashCode = new HashCode();
+        hashCode.Add<ColorSpace>(this.ColorSpace);
+        hashCode.Add<int>(this.Width);
+        hashCode.Add<int>(this.Height);
+        hashCode.Add<ColorType>(this.ColorType);
+        hashCode.Add<AlphaType>(this.AlphaType);
+        return hashCode.ToHashCode();
     }
-  }
+}
