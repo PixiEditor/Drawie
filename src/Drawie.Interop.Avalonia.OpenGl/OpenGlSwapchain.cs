@@ -3,6 +3,7 @@ using Avalonia.OpenGL;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
 using Drawie.Interop.Avalonia.Core;
+using Drawie.Numerics;
 using Drawie.RenderApi;
 
 namespace Drawie.Interop.Avalonia.OpenGl;
@@ -31,14 +32,14 @@ public class OpenGlSwapchain : SwapchainBase<IGlSwapchainImage>
     }
 
 
-    protected override IGlSwapchainImage CreateImage(PixelSize size)
+    protected override IGlSwapchainImage CreateImage(VecI size)
     {
         if (_sharingFeature != null)
             return new CompositionOpenGlSwapChainImage(_context, _sharingFeature, size, Interop, Target);
         return new DxgiMutexOpenGlSwapChainImage(Interop, Target, _externalObjectsFeature!, size);
     }
 
-    public IDisposable BeginDraw(PixelSize size, out IOpenGlTexture texture)
+    public IDisposable BeginDraw(VecI size, out IOpenGlTexture texture)
     {
         var rv = BeginDrawCore(size, out var tex);
         texture = tex;
@@ -59,13 +60,13 @@ internal class DxgiMutexOpenGlSwapChainImage : IGlSwapchainImage
     private ICompositionImportedGpuImage? _imported;
 
     public DxgiMutexOpenGlSwapChainImage(ICompositionGpuInterop interop, CompositionDrawingSurface surface,
-        IGlContextExternalObjectsFeature externalObjects, PixelSize size)
+        IGlContextExternalObjectsFeature externalObjects, VecI size)
     {
         _interop = interop;
         _surface = surface;
         _texture = externalObjects.CreateImage(
             KnownPlatformGraphicsExternalImageHandleTypes.D3D11TextureGlobalSharedHandle,
-            size, PlatformGraphicsExternalImageFormat.R8G8B8A8UNorm);
+            new PixelSize(size.X, size.Y), PlatformGraphicsExternalImageFormat.R8G8B8A8UNorm);
     }
 
     public async ValueTask DisposeAsync()
@@ -90,7 +91,7 @@ internal class DxgiMutexOpenGlSwapChainImage : IGlSwapchainImage
 
     public uint TextureId => (uint)_texture.TextureId;
     public int InternalFormat => _texture.InternalFormat;
-    public PixelSize Size => new(_texture.Properties.Width, _texture.Properties.Height);
+    public VecI Size => new(_texture.Properties.Width, _texture.Properties.Height);
     public Task? LastPresent => _lastPresent;
     public void BeginDraw() => _texture.AcquireKeyedMutex(0);
 
@@ -112,13 +113,13 @@ internal class CompositionOpenGlSwapChainImage : IGlSwapchainImage
     public CompositionOpenGlSwapChainImage(
         IGlContext context,
         IOpenGlTextureSharingRenderInterfaceContextFeature sharingFeature,
-        PixelSize size,
+        VecI size,
         ICompositionGpuInterop interop,
         CompositionDrawingSurface target)
     {
         _interop = interop;
         _target = target;
-        _texture = sharingFeature.CreateSharedTextureForComposition(context, size);
+        _texture = sharingFeature.CreateSharedTextureForComposition(context, new PixelSize(size.X, size.Y));
     }
 
 
@@ -144,7 +145,7 @@ internal class CompositionOpenGlSwapChainImage : IGlSwapchainImage
 
     public uint TextureId => (uint)_texture.TextureId;
     public int InternalFormat => _texture.InternalFormat;
-    public PixelSize Size => _texture.Size;
+    public VecI Size => new VecI(_texture.Size.Width, _texture.Size.Height);
     public Task? LastPresent { get; private set; }
 
     public void BeginDraw()

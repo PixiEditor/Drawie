@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Rendering.Composition;
 using Drawie.Interop.Avalonia.Core;
+using Drawie.Numerics;
 using Drawie.RenderApi;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
@@ -36,7 +37,7 @@ public class VulkanResources : RenderApiResources
         await Swapchain.DisposeAsync();
     }
 
-    public override void CreateTemporalObjects(PixelSize size)
+    public override void CreateTemporalObjects(VecI size)
     {
         if (isDisposed)
             return;
@@ -44,15 +45,14 @@ public class VulkanResources : RenderApiResources
         Content.CreateTemporalObjects(size);
     }
 
-    public override void Render(PixelSize size, Action renderAction)
+    public override IDisposable? Render(VecI size, Action renderAction)
     {
         if (isDisposed)
-            return;
+            return null;
 
-        using (Swapchain.BeginDraw(size, out var image))
-        {
-            renderAction();
-            Content.Render(image);
-        }
+        var present = Swapchain.BeginDraw(size, out var image);
+        renderAction();
+        Content.Render(image);
+        return present;
     }
 }

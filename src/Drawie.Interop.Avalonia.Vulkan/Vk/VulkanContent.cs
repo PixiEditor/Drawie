@@ -9,7 +9,7 @@ public class VulkanContent : IDisposable
 {
     private readonly VulkanInteropContext context;
 
-    private PixelSize? _previousImageSize = PixelSize.Empty;
+    private VecI? _previousImageSize = VecI.Zero;
 
     public VulkanTexture texture;
 
@@ -42,11 +42,11 @@ public class VulkanContent : IDisposable
                 new ImageBlit.SrcOffsetsBuffer
                 {
                     Element0 = new Offset3D(0, 0, 0),
-                    Element1 = new Offset3D(image.Size.Width, image.Size.Height, 1),
+                    Element1 = new Offset3D(image.Size.X, image.Size.Y, 1),
                 },
             DstOffsets = new ImageBlit.DstOffsetsBuffer
             {
-                Element0 = new Offset3D(0, 0, 0), Element1 = new Offset3D(image.Size.Width, image.Size.Height, 1),
+                Element0 = new Offset3D(0, 0, 0), Element1 = new Offset3D(image.Size.X, image.Size.Y, 1),
             },
             SrcSubresource =
                 new ImageSubresourceLayers
@@ -84,14 +84,14 @@ public class VulkanContent : IDisposable
     public void DestroyTemporalObjects()
     {
         texture?.Dispose();
-        _previousImageSize = PixelSize.Empty;
+        _previousImageSize = VecI.Zero;
     }
 
-    public void CreateTemporalObjects(PixelSize size)
+    public void CreateTemporalObjects(VecI size)
     {
         DestroyTemporalObjects();
 
-        VecI vecSize = new VecI(size.Width, size.Height);
+        VecI vecSize = new VecI(size.X, size.Y);
 
         CreateTextureImage(vecSize);
 

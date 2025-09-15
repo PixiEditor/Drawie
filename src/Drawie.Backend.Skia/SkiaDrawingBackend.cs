@@ -176,7 +176,7 @@ namespace Drawie.Skia
                     SharingMode = texture.TargetSharingMode,
                 };
 
-                var surface = SKSurface.Create(GraphicsContext, new GRBackendRenderTarget(size.X, size.Y, 1, imageInfo),
+                var surface = SKSurface.Create(GraphicsContext, new GRBackendRenderTarget(size.X, size.Y, imageInfo),
                     (GRSurfaceOrigin)surfaceOrigin, SKColorType.Rgba8888,
                     new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
 
@@ -288,6 +288,11 @@ namespace Drawie.Skia
             Debug.WriteLine("ImgData: " + (totalCount - lastCount));
             lastCount = totalCount;
             return totalCount;
+        }
+
+        public void Flush()
+        {
+            GraphicsContext?.Flush();
         }
 
         private void DisposeImpl<T>(SkObjectImplementation<T> impl) where T : SKObject

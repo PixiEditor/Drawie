@@ -2,6 +2,7 @@
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
 using Drawie.Interop.Avalonia.Core;
+using Drawie.Numerics;
 using Silk.NET.Vulkan;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
@@ -17,12 +18,12 @@ public class VulkanSwapchain : SwapchainBase<VulkanSwapchainImage>
         _vk = vk;
     }
 
-    protected override VulkanSwapchainImage CreateImage(PixelSize size)
+    protected override VulkanSwapchainImage CreateImage(VecI size)
     {
         return new VulkanSwapchainImage(_vk, size, Interop, Target);
     }
 
-    public IDisposable BeginDraw(PixelSize size, out VulkanImage image)
+    public IDisposable BeginDraw(VecI size, out VulkanImage image)
     {
         _vk.Pool.FreeUsedCommandBuffers();
         var rv = BeginDrawCore(size, out var swapchainImage);
@@ -44,7 +45,7 @@ public class VulkanSwapchainImage : ISwapchainImage
     public VulkanImage Image => _image;
     private bool _initial = true;
 
-    public VulkanSwapchainImage(VulkanInteropContext vk, PixelSize size, ICompositionGpuInterop interop,
+    public VulkanSwapchainImage(VulkanInteropContext vk, VecI size, ICompositionGpuInterop interop,
         CompositionDrawingSurface target)
     {
         _vk = vk;
@@ -71,7 +72,7 @@ public class VulkanSwapchainImage : ISwapchainImage
         _image.Dispose();
     }
 
-    public PixelSize Size { get; }
+    public VecI Size { get; }
 
     public Task? LastPresent => _lastPresent;
 
@@ -111,8 +112,8 @@ public class VulkanSwapchainImage : ISwapchainImage
             new PlatformGraphicsExternalImageProperties
             {
                 Format = PlatformGraphicsExternalImageFormat.R8G8B8A8UNorm,
-                Width = Size.Width,
-                Height = Size.Height,
+                Width = Size.X,
+                Height = Size.Y,
                 MemorySize = _image.MemorySize
             });
 
