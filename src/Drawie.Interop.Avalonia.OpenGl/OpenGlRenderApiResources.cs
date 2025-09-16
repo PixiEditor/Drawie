@@ -3,7 +3,6 @@ using Avalonia.OpenGL;
 using Avalonia.Rendering.Composition;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Interop.Avalonia.Core;
-using Drawie.Numerics;
 using Drawie.RenderApi;
 using Drawie.RenderApi.OpenGL;
 using Silk.NET.OpenGL;
@@ -62,29 +61,30 @@ public class OpenGlRenderApiResources : RenderApiResources
         }
     }
 
-    public override void CreateTemporalObjects(VecI size)
+    public override void CreateTemporalObjects(PixelSize size)
     {
     }
 
-    public override IDisposable? Render(VecI size, Action renderAction)
+    public override void Render(PixelSize size, Action renderAction)
     {
         if (isDisposed)
-            return null;
+            return;
 
         Context.GlInterface.GetIntegerv((int)GLEnum.FramebufferBinding, out var oldFbo);
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, fbo);
-        var present = Swapchain.BeginDraw(size, out var texture);
-        Context.GlInterface.FramebufferTexture2D((int)GLEnum.Framebuffer, (int)GLEnum.ColorAttachment0,
-            (int)GLEnum.Texture2D, (int)texture.TextureId, 0);
-        if (Context.GlInterface.CheckFramebufferStatus((int)GLEnum.Framebuffer) !=
-            (int)GLEnum.FramebufferComplete)
+        using (Swapchain.BeginDraw(size, out var texture))
         {
-            throw new Exception("Framebuffer is not complete");
+            Context.GlInterface.FramebufferTexture2D((int)GLEnum.Framebuffer, (int)GLEnum.ColorAttachment0,
+                (int)GLEnum.Texture2D, (int)texture.TextureId, 0);
+            if (Context.GlInterface.CheckFramebufferStatus((int)GLEnum.Framebuffer) !=
+                (int)GLEnum.FramebufferComplete)
+            {
+                throw new Exception("Framebuffer is not complete");
+            }
+
+            renderAction();
         }
 
-        renderAction();
-
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, oldFbo);
-        return present;
     }
 }

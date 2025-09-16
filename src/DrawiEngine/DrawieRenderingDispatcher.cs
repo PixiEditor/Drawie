@@ -6,25 +6,24 @@ public class DrawieRenderingDispatcher : IRenderingDispatcher
 {
     public Action<Action> Invoke { get; } = action => action();
 
-    public RenderThread RenderThread { get; } = new();
-
-    public DrawieRenderingDispatcher()
+    public async Task<TResult> InvokeAsync<TResult>(Func<TResult> func)
     {
+        return await Task.Run(func);
     }
 
-    public void QueueRender(Action renderAction)
+    public async Task<TResult> InvokeInBackgroundAsync<TResult>(Func<TResult> function)
     {
-        RenderThread.QueueRender(renderAction);
+        return await Task.Run(function);
+    }
+
+    public Task InvokeInBackgroundAsync(Action function)
+    {
+        return Task.Run(function);
     }
 
     public IDisposable EnsureContext()
     {
         return new EmptyDisposable();
-    }
-
-    public void StartRenderThread()
-    {
-        RenderThread.Start();
     }
 }
 

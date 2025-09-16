@@ -3,7 +3,8 @@
 public interface IRenderingDispatcher
 {
     public Action<Action> Invoke { get; }
-    public void QueueRender(Action renderAction);
+    public Task<TResult> InvokeAsync<TResult>(Func<TResult> func);
+    public Task<TResult> InvokeInBackgroundAsync<TResult>(Func<TResult> function);
+    public Task InvokeInBackgroundAsync(Action function);
     public IDisposable EnsureContext();
-    public void StartRenderThread();
 }

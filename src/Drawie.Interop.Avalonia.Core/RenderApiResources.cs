@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.Rendering.Composition;
-using Drawie.Numerics;
 using Drawie.RenderApi;
 
 namespace Drawie.Interop.Avalonia.Core;
@@ -22,7 +21,7 @@ public abstract class RenderApiResources : IAsyncDisposable
 
     public abstract ValueTask DisposeAsync();
 
-    public abstract void CreateTemporalObjects(VecI size);
+    public abstract void CreateTemporalObjects(PixelSize size);
 
-    public abstract IDisposable? Render(VecI size, Action renderAction);
+    public abstract void Render(PixelSize size, Action renderAction);
 }

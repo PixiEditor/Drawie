@@ -21,7 +21,6 @@ public abstract class InteropControl : Control
 
     private string info = string.Empty;
     private bool initialized = false;
-    protected RenderApiResources resources;
 
     public InteropControl()
     {
@@ -40,8 +39,6 @@ public abstract class InteropControl : Control
         {
             surface.Dispose();
             FreeGraphicsResources();
-            resources.DisposeAsync();
-            resources = null;
         }
 
         initialized = false;
@@ -123,19 +120,9 @@ public abstract class InteropControl : Control
     {
         if (initialized && !updateQueued && compositor != null && surface is { IsDisposed: false })
         {
-            QueueFrameRequested();
-            RequestBlit();
+            updateQueued = true;
+            compositor.RequestCompositionUpdate(update);
         }
-    }
-
-    protected void RequestBlit()
-    {
-        updateQueued = true;
-        compositor.RequestCompositionUpdate(update);
-    }
-
-    protected virtual void QueueFrameRequested()
-    {
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -157,17 +144,11 @@ public abstract class InteropControl : Control
             return (false, "Composition interop not available");
         }
 
-        resources = InitializeGraphicsResources(compositor, surface, interop, out string createInfo);
-        if (resources == null || resources.IsDisposed)
-        {
-            return (false, createInfo);
-        }
-
-        return (true, string.Empty);
+        return InitializeGraphicsResources(compositor, surface, interop);
     }
 
-    protected abstract RenderApiResources? InitializeGraphicsResources(Compositor targetCompositor,
-        CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop, out string? info);
+    protected abstract (bool success, string info) InitializeGraphicsResources(Compositor targetCompositor,
+        CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop);
 
     protected abstract void FreeGraphicsResources();
     protected abstract void RenderFrame(PixelSize size);

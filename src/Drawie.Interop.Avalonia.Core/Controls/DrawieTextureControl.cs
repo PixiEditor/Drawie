@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.Media;
-using Avalonia.Threading;
 using Drawie.Backend.Core;
 using Drawie.Backend.Core.Surfaces;
 using Colors = Drawie.Backend.Core.ColorsImpl.Colors;
@@ -28,10 +27,6 @@ public class DrawieTextureControl : DrawieControl
         get => GetValue(TextureProperty);
         set => SetValue(TextureProperty, value);
     }
-
-    private Texture? texture;
-    private Stretch stretch = Stretch.Uniform;
-    private Rect bounds;
 
     static DrawieTextureControl()
     {
@@ -80,16 +75,9 @@ public class DrawieTextureControl : DrawieControl
         return new Size();
     }
 
-    protected override void PrepareToDraw()
-    {
-        texture = Texture;
-        stretch = Stretch;
-        bounds = Bounds;
-    }
-
     public override void Draw(DrawingSurface surface)
     {
-        if (texture == null || texture.IsDisposed)
+        if (Texture == null || Texture.IsDisposed)
         {
             return;
         }
@@ -97,38 +85,38 @@ public class DrawieTextureControl : DrawieControl
         surface.Canvas.Clear(Colors.Transparent);
         surface.Canvas.Save();
 
-        ScaleCanvas(surface.Canvas, texture, stretch, bounds);
-        surface.Canvas.DrawSurface(texture.DrawingSurface, 0, 0);
+        ScaleCanvas(surface.Canvas);
+        surface.Canvas.DrawSurface(Texture.DrawingSurface, 0, 0);
 
         surface.Canvas.Restore();
     }
 
-    private void ScaleCanvas(Canvas canvas, Texture texture, Stretch stretch, Rect bounds)
+    private void ScaleCanvas(Canvas canvas)
     {
-        float x = (float)texture.Size.X;
-        float y = (float)texture.Size.Y;
+        float x = (float)Texture.Size.X;
+        float y = (float)Texture.Size.Y;
 
-        if (stretch == Stretch.Fill)
+        if (Stretch == Stretch.Fill)
         {
-            canvas.Scale((float)bounds.Width / x, (float)bounds.Height / y);
+            canvas.Scale((float)Bounds.Width / x, (float)Bounds.Height / y);
         }
-        else if (stretch == Stretch.Uniform)
+        else if (Stretch == Stretch.Uniform)
         {
-            float scaleX = (float)bounds.Width / x;
-            float scaleY = (float)bounds.Height / y;
+            float scaleX = (float)Bounds.Width / x;
+            float scaleY = (float)Bounds.Height / y;
             var scale = Math.Min(scaleX, scaleY);
-            float dX = (float)bounds.Width / 2 / scale - x / 2;
-            float dY = (float)bounds.Height / 2 / scale - y / 2;
+            float dX = (float)Bounds.Width / 2 / scale - x / 2;
+            float dY = (float)Bounds.Height / 2 / scale - y / 2;
             canvas.Scale(scale, scale);
             canvas.Translate(dX, dY);
         }
-        else if (stretch == Stretch.UniformToFill)
+        else if (Stretch == Stretch.UniformToFill)
         {
-            float scaleX = (float)bounds.Width / x;
-            float scaleY = (float)bounds.Height / y;
+            float scaleX = (float)Bounds.Width / x;
+            float scaleY = (float)Bounds.Height / y;
             var scale = Math.Max(scaleX, scaleY);
-            float dX = (float)bounds.Width / 2 / scale - x / 2;
-            float dY = (float)bounds.Height / 2 / scale - y / 2;
+            float dX = (float)Bounds.Width / 2 / scale - x / 2;
+            float dY = (float)Bounds.Height / 2 / scale - y / 2;
             canvas.Scale(scale, scale);
             canvas.Translate(dX, dY);
         }

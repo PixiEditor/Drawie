@@ -1,7 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Platform;
-using Drawie.Numerics;
 using Drawie.RenderApi.Vulkan.Extensions;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
@@ -33,11 +32,11 @@ public class VulkanImage : IDisposable
     public DeviceMemory DeviceMemory => _imageMemory;
     public uint MipLevels { get; }
     public Silk.NET.Vulkan.Vk Api { get; }
-    public VecI Size { get; }
+    public PixelSize Size { get; }
     public ulong MemorySize { get; }
     public uint CurrentLayout => (uint)_currentLayout;
 
-    public unsafe VulkanImage(VulkanInteropContext vk, uint format, VecI size,
+    public unsafe VulkanImage(VulkanInteropContext vk, uint format, PixelSize size,
         bool exportable, IReadOnlyList<string> supportedHandleTypes)
     {
         _vk = vk;
@@ -74,8 +73,8 @@ public class VulkanImage : IDisposable
             ImageType = ImageType.Type2D,
             Format = Format,
             Extent =
-                new Extent3D((uint?)Size.X,
-                    (uint?)Size.Y, 1),
+                new Extent3D((uint?)Size.Width,
+                    (uint?)Size.Height, 1),
             MipLevels = MipLevels,
             ArrayLayers = 1,
             Samples = SampleCountFlags.Count1Bit,

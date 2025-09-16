@@ -1,7 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Rendering.Composition;
 using Drawie.Interop.Avalonia.Core.Utils;
-using Drawie.Numerics;
 
 namespace Drawie.Interop.Avalonia.Core;
 
@@ -23,7 +22,7 @@ public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : cl
     static bool IsReady(TImage image) =>
         image.LastPresent == null || image.LastPresent.Status == TaskStatus.RanToCompletion;
 
-    TImage? CleanupAndFindNextImage(VecI size)
+    TImage? CleanupAndFindNextImage(PixelSize size)
     {
         if (isDisposed)
             return null;
@@ -56,9 +55,9 @@ public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : cl
         return foundMultiple ? firstFound : null;
     }
 
-    protected abstract TImage CreateImage(VecI size);
+    protected abstract TImage CreateImage(PixelSize size);
 
-    protected IDisposable BeginDrawCore(VecI size, out TImage image)
+    protected IDisposable BeginDrawCore(PixelSize size, out TImage image)
     {
         if (isDisposed)
         {
@@ -97,7 +96,7 @@ public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : cl
 
 public interface ISwapchainImage : IAsyncDisposable
 {
-    VecI Size { get; }
+    PixelSize Size { get; }
     Task? LastPresent { get; }
     void BeginDraw();
     void Present();

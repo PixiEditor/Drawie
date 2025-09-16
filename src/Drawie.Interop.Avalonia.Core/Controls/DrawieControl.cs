@@ -1,23 +1,21 @@
 ﻿using Avalonia;
 using Avalonia.Rendering.Composition;
-using Avalonia.Threading;
 using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
+using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Numerics;
 
 namespace Drawie.Interop.Avalonia.Core.Controls;
 
-public abstract class DrawieControl : InteropControl, IDrawieControl
+public abstract class DrawieControl : InteropControl
 {
-    private VecI lastSize = VecI.Zero;
-
-    public bool NeedsRedraw { get; private set; } = true;
-
-    private Texture? intermediateSurface;
+    private RenderApiResources resources;
     private DrawingSurface? framebuffer;
+    private Texture intermediateSurface;
 
-    private IDisposable? toPresent;
+    private PixelSize lastSize = PixelSize.Empty;
+
 
     /// <summary>
     ///     If true, intermediate surface will be used to render the frame. This is useful when dealing with non srgb surfaces.
@@ -25,19 +23,19 @@ public abstract class DrawieControl : InteropControl, IDrawieControl
     /// </summary>
     protected bool UseIntermediateSurface { get; set; } = true;
 
-    protected override RenderApiResources? InitializeGraphicsResources(Compositor targetCompositor,
-        CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop, out string? createInfo)
+    protected override (bool success, string info) InitializeGraphicsResources(Compositor targetCompositor,
+        CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop)
     {
         try
         {
-            createInfo = null;
-            return IDrawieInteropContext.Current.CreateResources(compositionDrawingSurface, interop);
+            resources = IDrawieInteropContext.Current.CreateResources(compositionDrawingSurface, interop);
         }
         catch (Exception e)
         {
-            createInfo = e.Message;
-            return null;
+            return (false, $"Failed to create resources: {e.Message}");
         }
+
+        return (true, string.Empty);
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -56,31 +54,20 @@ public abstract class DrawieControl : InteropControl, IDrawieControl
 
         framebuffer?.Dispose();
         framebuffer = null;
+
+        resources.DisposeAsync();
+
+        resources = null;
     }
 
-    protected override void QueueFrameRequested()
-    {
-        if (Bounds.Width <= 0 || Bounds.Height <= 0 || double.IsNaN(Bounds.Width) || double.IsNaN(Bounds.Height))
-            return;
-        PrepareToDraw();
-        DrawingBackendApi.Current.RenderingDispatcher.QueueRender(() =>
-        {
-            BeginDraw(new VecI((int)Bounds.Width, (int)Bounds.Height));
-            Dispatcher.UIThread.Post(RequestBlit);
-        });
-    }
+    public abstract void Draw(DrawingSurface surface);
 
-    protected virtual void PrepareToDraw()
-    {
-
-    }
-
-    public void BeginDraw(VecI size)
+    protected override void RenderFrame(PixelSize size)
     {
         if (resources is { IsDisposed: false })
         {
             using var ctx = IDrawieInteropContext.Current.EnsureContext();
-            if (size.X == 0 || size.Y == 0)
+            if (size.Width == 0 || size.Height == 0)
             {
                 return;
             }
@@ -89,7 +76,7 @@ public abstract class DrawieControl : InteropControl, IDrawieControl
             {
                 resources.CreateTemporalObjects(size);
 
-                VecI sizeVec = new VecI(size.X, size.Y);
+                VecI sizeVec = new VecI(size.Width, size.Height);
 
                 framebuffer?.Dispose();
 
@@ -106,7 +93,7 @@ public abstract class DrawieControl : InteropControl, IDrawieControl
                 lastSize = size;
             }
 
-            toPresent = resources.Render(size, () =>
+            resources.Render(size, () =>
             {
                 framebuffer.Canvas.Clear();
                 intermediateSurface?.DrawingSurface.Canvas.Clear();
@@ -124,14 +111,5 @@ public abstract class DrawieControl : InteropControl, IDrawieControl
                 framebuffer.Flush();
             });
         }
-    }
-
-    public abstract void Draw(DrawingSurface surface);
-
-    protected override void RenderFrame(PixelSize size)
-    {
-        toPresent?.Dispose();
-        toPresent = null;
-        NeedsRedraw = false;
     }
 }

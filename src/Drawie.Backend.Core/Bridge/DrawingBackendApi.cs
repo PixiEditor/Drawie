@@ -40,7 +40,6 @@ namespace Drawie.Backend.Core.Bridge
             }
 
             _current.Setup(renderApi);
-            _current.RenderingDispatcher.StartRenderThread();
         }
     }
 }
