@@ -28,16 +28,19 @@ public partial class MainWindow : Window
     protected override void OnLoaded(RoutedEventArgs e)
     {
         Texture skiaTexture = new Texture(new VecI(128));
+        Texture skiaTexture2 = new Texture(new VecI(128));
 
         if (DrawingBackendApi.HasBackend)
         {
             DrawingBackendApi.Current.RenderingDispatcher.QueueRender(() =>
             {
                 UpdateDraw(skiaTexture);
+                UpdateDraw(skiaTexture2);
             });
         }
 
         DrawieControl.Texture = skiaTexture;
+        DrawieControl2.Texture = skiaTexture2;
         base.OnLoaded(e);
     }
 

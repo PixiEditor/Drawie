@@ -3,6 +3,7 @@ using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
 using Drawie.Interop.Avalonia.Core;
 using Drawie.Numerics;
+using Drawie.RenderApi;
 using Silk.NET.Vulkan;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
@@ -18,7 +19,7 @@ public class VulkanSwapchain : SwapchainBase<VulkanSwapchainImage>
         _vk = vk;
     }
 
-    protected override VulkanSwapchainImage CreateImage(VecI size)
+    public override VulkanSwapchainImage CreateImage(VecI size)
     {
         return new VulkanSwapchainImage(_vk, size, Interop, Target);
     }
@@ -32,7 +33,7 @@ public class VulkanSwapchain : SwapchainBase<VulkanSwapchainImage>
     }
 }
 
-public class VulkanSwapchainImage : ISwapchainImage
+public class VulkanSwapchainImage : ISwapchainImage, IVkTexture
 {
     private readonly VulkanInteropContext _vk;
     private readonly ICompositionGpuInterop _interop;
@@ -73,6 +74,10 @@ public class VulkanSwapchainImage : ISwapchainImage
     }
 
     public VecI Size { get; }
+    public void BlitFrom(ITexture texture)
+    {
+        throw new NotImplementedException();
+    }
 
     public Task? LastPresent => _lastPresent;
 
@@ -96,7 +101,7 @@ public class VulkanSwapchainImage : ISwapchainImage
     }
 
 
-    public void Present()
+    public Task Present()
     {
         var buffer = _vk.Pool.CreateCommandBuffer();
         buffer.BeginRecording();
@@ -119,5 +124,35 @@ public class VulkanSwapchainImage : ISwapchainImage
 
         _lastPresent =
             _target.UpdateWithSemaphoresAsync(_importedImage, _renderCompletedSemaphore!, _availableSemaphore!);
+        return _lastPresent;
+    }
+
+    public FrameHandle ExportFrame()
+    {
+        return new FrameHandle
+        {
+            ImageHandle = _image.Export(),
+            AvailableSemaphore = _semaphorePair.Export(false),
+            RenderCompletedSemaphore = _semaphorePair.Export(true),
+            MemorySize = _image.MemorySize,
+            Size = Size
+        };
+    }
+
+    public uint QueueFamily => _vk.GraphicsQueueFamilyIndex;
+    public uint ImageFormat => (uint)Format.R8G8B8A8Unorm;
+    public ulong ImageHandle => _image.InternalHandle.Handle;
+    public uint UsageFlags => _image.UsageFlags;
+    public uint Layout => _image.CurrentLayout;
+    public uint TargetSharingMode => (uint)SharingMode.Exclusive;
+    public uint Tiling => (uint)ImageTiling.Optimal;
+    public void MakeReadOnly()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void MakeWriteable()
+    {
+        throw new NotImplementedException();
     }
 }

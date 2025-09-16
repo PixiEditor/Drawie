@@ -25,4 +25,7 @@ public abstract class RenderApiResources : IAsyncDisposable
     public abstract void CreateTemporalObjects(VecI size);
 
     public abstract IDisposable Render(VecI size, Action renderAction);
+
+    public abstract ITexture CreateTexture(VecI size);
+    public abstract ITexture CreateSwapchainTexture(VecI size);
 }

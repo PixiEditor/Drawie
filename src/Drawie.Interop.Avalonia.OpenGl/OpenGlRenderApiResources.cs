@@ -87,4 +87,14 @@ public class OpenGlRenderApiResources : RenderApiResources
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, oldFbo);
         return present;
     }
+
+    public override ITexture CreateTexture(VecI size)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override ITexture CreateSwapchainTexture(VecI size)
+    {
+        throw new NotImplementedException();
+    }
 }

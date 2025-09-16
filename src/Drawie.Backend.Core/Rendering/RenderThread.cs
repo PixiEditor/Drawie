@@ -1,117 +1,130 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using Drawie.Backend.Core.Bridge;
 
 namespace Drawie.Backend.Core.Rendering;
 
-public class RenderThread
+public sealed class RenderThread : IDisposable
 {
-    private Thread renderThread;
-    private Stopwatch renderTimer;
-    private bool running;
-    private bool paused;
+    private readonly Thread _thread;
+    private readonly CancellationTokenSource _cts = new();
 
-    private Queue<Action> renderQueue = new();
-    private readonly object renderQueueLock = new();
-    private Queue<Action> uiQueue = new();
 
-    private Action<Action> mainThreadDispatcher;
+    private readonly ConcurrentQueue<Action> _renderQueue = new();
 
-    public RenderThread(Action<Action> mainThreadDispatcher)
+
+    private readonly ConcurrentDictionary<object, Action> _uiQueue = new();
+    private ConcurrentQueue<Action> swapQueue = new();
+
+
+    private readonly Action<Action> _uiPost;
+    private readonly Action<Action> _requestCompositionUpdate;
+
+
+    public RenderThread(Action<Action> requestCompositionUpdate, Action<Action> uiPost)
     {
-        renderTimer = new Stopwatch();
-        renderThread = new Thread(RenderLoop) { IsBackground = true, Name = "Drawie Render Thread" };
-        this.mainThreadDispatcher = mainThreadDispatcher;
+        _requestCompositionUpdate = requestCompositionUpdate ??
+                                    throw new ArgumentNullException(nameof(requestCompositionUpdate));
+        _uiPost = uiPost ?? throw new ArgumentNullException(nameof(uiPost));
+        _thread = new Thread(Run) { IsBackground = true, Name = "Drawie Render Thread" };
     }
 
-    public void RenderLoop()
-    {
-        renderTimer = Stopwatch.StartNew();
-        while (running)
-        {
-            var frameStart = renderTimer.ElapsedMilliseconds;
-            DispatchRenders();
-
-            Queue<Action> toUpdate;
-            lock (uiQueue)
-            {
-                toUpdate = new Queue<Action>(uiQueue);
-                uiQueue.Clear();
-            }
-
-            if (toUpdate.Count > 0)
-            {
-                mainThreadDispatcher(() =>
-                {
-                    while (toUpdate.Count > 0)
-                    {
-                        var action = toUpdate.Dequeue();
-                        try
-                        {
-                            action();
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine($"Exception during UI update action: {e}");
-                        }
-                    }
-                });
-            }
-
-            var elapsed = renderTimer.ElapsedMilliseconds - frameStart;
-            var sleep = TimeSpan.FromMilliseconds(16 - elapsed);
-            /*if (sleep > TimeSpan.Zero)
-                Thread.Sleep(sleep);*/
-        }
-    }
 
     public void Start()
     {
-        if (running)
-            return;
-
-        running = true;
-        renderThread.Start();
+        _thread.Start();
     }
 
-    private void DispatchRenders()
-    {
-        using var ctx = DrawingBackendApi.Current.RenderingDispatcher.EnsureContext();
-        Queue<Action> toRender;
-        lock (renderQueueLock)
-        {
-            toRender = new Queue<Action>(renderQueue);
-            renderQueue.Clear();
-        }
 
-        while (toRender.Count > 0)
+    public void EnqueueRender(Action renderAction)
+    {
+        if (renderAction == null) return;
+        _renderQueue.Enqueue(renderAction);
+    }
+
+
+    public void EnqueueUiPresent(object sender, Action uiPresentAction, Action swapAction)
+    {
+        if (uiPresentAction == null) return;
+        _uiQueue[sender] = uiPresentAction;
+        swapQueue.Enqueue(swapAction);
+
+        _uiPost(() => _requestCompositionUpdate(ProcessUiQueue));
+    }
+
+
+    private void ProcessUiQueue()
+    {
+        var queue = new Queue<Action>(_uiQueue.Values);
+
+        while (queue.TryDequeue(out var action))
         {
-            var action = toRender.Dequeue();
             try
             {
                 action();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Exception during render action: {e}");
+                Console.WriteLine($"UI present error: {ex}");
             }
         }
-
-        DrawingBackendApi.Current.Flush();
     }
 
-    public void QueueRender(Action renderAction)
+
+    private void Run()
     {
-        lock (renderQueueLock)
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        const double targetFrameMs = 1000.0 / 60.0;
+
+
+        while (!_cts.IsCancellationRequested)
         {
-            renderQueue.Enqueue(renderAction);
+            var frameStart = sw.Elapsed.TotalMilliseconds;
+
+            var queueToProcess = new Queue<Action>(_renderQueue);
+            _renderQueue.Clear();
+
+            while (queueToProcess.TryDequeue(out var render))
+            {
+                try
+                {
+                    render();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Render action threw: {ex}");
+                }
+            }
+
+            var swapToProcess = new Queue<Action>(swapQueue);
+            swapQueue.Clear();
+            while (swapToProcess.TryDequeue(out var swap))
+            {
+                try
+                {
+                    swap();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Swap action threw: {ex}");
+                }
+            }
+
+            //DrawingBackendApi.Current.Flush();
+
+            var elapsed = sw.Elapsed.TotalMilliseconds - frameStart;
+            var wait = targetFrameMs - elapsed;
+            if (wait > 1.0)
+                Thread.Sleep((int)wait);
+            else
+                Thread.Yield();
         }
     }
 
-    public void QueueUIUpdate(Action update)
+    public void Dispose()
     {
-        lock (uiQueue)
-        {
-            uiQueue.Enqueue(update);
-        }
+        _cts.Cancel();
+        _thread.Join();
+        _cts.Dispose();
     }
 }

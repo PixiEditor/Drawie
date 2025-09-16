@@ -6,5 +6,5 @@ public interface IRenderingDispatcher
     public void QueueRender(Action renderAction);
     public IDisposable EnsureContext();
     public void StartRenderThread();
-    public void EnqueueUIUpdate(Action update);
+    public void EnqueueUIUpdate(object requester, Action update, Action swapAction);
 }

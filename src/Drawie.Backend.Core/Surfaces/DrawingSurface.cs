@@ -104,5 +104,14 @@ namespace Drawie.Backend.Core.Surfaces
         {
             DrawingBackendApi.Current.SurfaceImplementation.Unmanage(surface);
         }
+
+        #if DEBUG
+        public void SaveToDesktop()
+        {
+            Surface surf = new Surface(DeviceClipBounds.Size);
+            surf.DrawingSurface.Canvas.DrawSurface(this, 0, 0);
+            surf.SaveToDesktop();
+        }
+        #endif
     }
 }

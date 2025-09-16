@@ -2,6 +2,7 @@
 using Avalonia;
 using Avalonia.Platform;
 using Drawie.Numerics;
+using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan.Extensions;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;

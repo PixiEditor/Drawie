@@ -56,7 +56,7 @@ public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : cl
         return foundMultiple ? firstFound : null;
     }
 
-    protected abstract TImage CreateImage(VecI size);
+    public abstract TImage CreateImage(VecI size);
 
     protected IDisposable BeginDrawCore(VecI size, out TImage image)
     {
@@ -100,5 +100,6 @@ public interface ISwapchainImage : IAsyncDisposable
     VecI Size { get; }
     Task? LastPresent { get; }
     void BeginDraw();
-    void Present();
+    Task Present();
+    FrameHandle ExportFrame();
 }

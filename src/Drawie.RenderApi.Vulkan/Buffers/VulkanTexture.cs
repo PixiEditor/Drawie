@@ -76,7 +76,7 @@ public class VulkanTexture : IDisposable, IVkTexture
     
     public void BlitFrom(ITexture texture)
     {
-        if (texture is not VulkanTexture vkTexture)
+        if (texture is not IVkTexture vkTexture)
             throw new ArgumentException("The texture must be a VulkanTexture.", nameof(texture));
 
         using var commandBuffer = new SingleTimeCommandBufferSession(Vk, CommandPool, LogicalDevice, GraphicsQueue);
@@ -103,7 +103,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             }
         };
 
-        Vk.CmdBlitImage(commandBuffer.CommandBuffer, vkTexture.VkImage,
+        Vk.CmdBlitImage(commandBuffer.CommandBuffer, new Image(vkTexture.ImageHandle),
             ImageLayout.TransferSrcOptimal,
             textureImage, ImageLayout.TransferDstOptimal, 1, srcBlitRegion, Filter.Linear);
 

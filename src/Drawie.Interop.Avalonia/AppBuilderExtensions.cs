@@ -27,7 +27,9 @@ public static class AppBuilderExtensions
                     ICompositionGpuInterop interop =
                         Compositor.TryGetDefaultCompositor().TryGetCompositionGpuInterop().Result;
 
-                    var openglFeature = Compositor.TryGetDefaultCompositor()
+                    Compositor compositor = Compositor.TryGetDefaultCompositor();
+
+                    var openglFeature = compositor
                         .TryGetRenderInterfaceFeature(typeof(IOpenGlTextureSharingRenderInterfaceContextFeature))
                         .Result;
 
@@ -77,7 +79,7 @@ public static class AppBuilderExtensions
 
                     SkiaDrawingBackend drawingBackend = new SkiaDrawingBackend();
                     DrawingEngine drawingEngine =
-                        new DrawingEngine(renderApi, null, drawingBackend, new DrawieRenderingDispatcher(a => Dispatcher.UIThread.Invoke(a, DispatcherPriority.Render)));
+                        new DrawingEngine(renderApi, null, drawingBackend, new DrawieRenderingDispatcher(compositor.RequestCompositionUpdate, a => Dispatcher.UIThread.Post(a, DispatcherPriority.Render)));
 
                     // It's very likely that this is not needed and may cause issues when reopening main window without
                     // proper reinitialization.

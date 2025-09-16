@@ -21,7 +21,7 @@ public abstract class InteropControl : Control
     private Compositor compositor;
 
     private readonly Action update;
-    private bool updateQueued;
+    protected bool updateQueued;
 
     private CompositionDrawingSurface? surface;
 
@@ -96,7 +96,7 @@ public abstract class InteropControl : Control
         }
     }
 
-    void UpdateFrame()
+    protected void UpdateFrame()
     {
         updateQueued = false;
         var root = this.GetVisualRoot();
@@ -107,7 +107,7 @@ public abstract class InteropControl : Control
 
         surfaceVisual.Size = new Vector(Bounds.Width, Bounds.Height);
 
-        if (double.IsNaN(surfaceVisual.Size.X) || double.IsNaN(surfaceVisual.Size.Y))
+        /*if (double.IsNaN(surfaceVisual.Size.X) || double.IsNaN(surfaceVisual.Size.Y))
         {
             return;
         }
@@ -122,7 +122,7 @@ public abstract class InteropControl : Control
         {
             info = $"Error rendering frame: {e.Message}. Try updating graphics drivers or change Render API in settings if issue persists.";
             return;
-        }
+        }*/
     }
 
     public void QueueNextFrame()
@@ -137,11 +137,6 @@ public abstract class InteropControl : Control
             updateQueued = true;
             QueueFrameRequested();
         }
-    }
-
-    protected void RequestBlit()
-    {
-        DrawingBackendApi.Current.RenderingDispatcher.EnqueueUIUpdate(update);
     }
 
     protected virtual void QueueFrameRequested()

@@ -3,6 +3,7 @@ using Avalonia.Rendering.Composition;
 using Drawie.Interop.Avalonia.Core;
 using Drawie.Numerics;
 using Drawie.RenderApi;
+using Drawie.RenderApi.Vulkan.Buffers;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
@@ -54,5 +55,21 @@ public class VulkanResources : RenderApiResources
         renderAction();
         Content.Render(image);
         return present;
+    }
+
+    public override ITexture CreateTexture(VecI size)
+    {
+        if (isDisposed)
+            throw new ObjectDisposedException(nameof(VulkanResources));
+
+        return Context.CreateTexture(size);
+    }
+
+    public override ITexture CreateSwapchainTexture(VecI size)
+    {
+        if (isDisposed)
+            throw new ObjectDisposedException(nameof(VulkanResources));
+
+        return Swapchain.CreateImage(size);
     }
 }

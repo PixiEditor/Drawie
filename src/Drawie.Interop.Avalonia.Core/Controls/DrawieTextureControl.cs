@@ -99,9 +99,20 @@ public class DrawieTextureControl : DrawieControl
         return finalSize;
     }
 
+    private Texture texture;
+    private Rect bounds;
+    private Stretch stretch;
+
+    protected override void PrepareToDraw()
+    {
+        texture = Texture;
+        bounds = Bounds;
+        stretch = Stretch;
+    }
+
     public override void Draw(DrawingSurface surface)
     {
-        if (Texture == null || Texture.IsDisposed)
+        if (texture == null || texture.IsDisposed)
         {
             return;
         }
@@ -109,8 +120,8 @@ public class DrawieTextureControl : DrawieControl
         surface.Canvas.Clear(Colors.Transparent);
         surface.Canvas.Save();
 
-        ScaleCanvas(surface.Canvas, Texture, Stretch, Bounds);
-        surface.Canvas.DrawSurface(Texture.DrawingSurface, 0, 0);
+        ScaleCanvas(surface.Canvas, texture, stretch, bounds);
+        surface.Canvas.DrawSurface(texture.DrawingSurface, 0, 0);
 
         surface.Canvas.Restore();
     }
