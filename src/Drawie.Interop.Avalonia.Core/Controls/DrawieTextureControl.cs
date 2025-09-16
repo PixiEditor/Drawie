@@ -22,19 +22,15 @@ public class DrawieTextureControl : DrawieControl
         set => SetValue(StretchProperty, value);
     }
 
-    public static readonly StyledProperty<ITexture> TextureProperty =
-        AvaloniaProperty.Register<DrawieTextureControl, ITexture>(
+    public static readonly StyledProperty<Texture> TextureProperty =
+        AvaloniaProperty.Register<DrawieTextureControl, Texture>(
             nameof(Texture));
 
-    public ITexture Texture
+    public Texture Texture
     {
         get => GetValue(TextureProperty);
         set => SetValue(TextureProperty, value);
     }
-
-    private ITexture? texture;
-    private Stretch stretch = Stretch.Uniform;
-    private Rect bounds;
 
     static DrawieTextureControl()
     {
@@ -94,24 +90,18 @@ public class DrawieTextureControl : DrawieControl
             var result = Stretch.CalculateSize(finalSize, new Size(sourceSize.X, sourceSize.Y));
             return result;
         }
-        else
+
+        if (Width > 0 && Height > 0)
         {
             return Stretch.CalculateSize(finalSize, new Size(Width, Height));
         }
 
-        return new Size();
+        return finalSize;
     }
 
-    protected override void PrepareToDraw()
+    public override void Draw(DrawingSurface surface)
     {
-        texture = Texture;
-        stretch = Stretch;
-        bounds = Bounds;
-    }
-
-    /*public override void Draw(DrawingSurface surface)
-    {
-        if (texture == null || texture.IsDisposed)
+        if (Texture == null || Texture.IsDisposed)
         {
             return;
         }
@@ -119,17 +109,10 @@ public class DrawieTextureControl : DrawieControl
         surface.Canvas.Clear(Colors.Transparent);
         surface.Canvas.Save();
 
-        ScaleCanvas(surface.Canvas, texture, stretch, bounds);
-        surface.Canvas.DrawSurface(texture.DrawingSurface, 0, 0);
+        ScaleCanvas(surface.Canvas, Texture, Stretch, Bounds);
+        surface.Canvas.DrawSurface(Texture.DrawingSurface, 0, 0);
 
         surface.Canvas.Restore();
-    }*/
-
-    private VecI lastSize;
-
-    public override void Draw(ITexture target)
-    {
-        target.BlitFrom(texture);
     }
 
     private void ScaleCanvas(Canvas canvas, Texture texture, Stretch stretch, Rect bounds)

@@ -27,8 +27,7 @@ public partial class MainWindow : Window
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
-        ITexture nativeTexture = IDrawieInteropContext.Current.CreateTexture(new VecI(128, 128));
-        Texture skiaTexture = new Texture(nativeTexture);
+        Texture skiaTexture = new Texture(new VecI(128));
 
         if (DrawingBackendApi.HasBackend)
         {
@@ -38,7 +37,7 @@ public partial class MainWindow : Window
             });
         }
 
-        DrawieControl.Texture = nativeTexture;
+        DrawieControl.Texture = skiaTexture;
         base.OnLoaded(e);
     }
 

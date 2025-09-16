@@ -58,48 +58,12 @@ public abstract class DrawieControl : InteropControl
 
     protected override void QueueFrameRequested()
     {
-        if (Bounds.Width <= 0 || Bounds.Height <= 0 || double.IsNaN(Bounds.Width) || double.IsNaN(Bounds.Height))
-            return;
-
         NeedsRedraw = true;
-        PrepareToDraw();
         RequestBlit();
         InvalidateVisual();
-
-        /*DrawingBackendApi.Current.RenderingDispatcher.QueueRender(() =>
-        {
-            BeginDraw(new VecI((int)Bounds.Width, (int)Bounds.Height));
-            Dispatcher.UIThread.Post(RequestBlit);
-        });*/
     }
 
-    protected virtual void PrepareToDraw()
-    {
-    }
-
-    private IDisposable present;
-
-    public void BeginDraw(VecI size)
-    {
-        if (!NeedsRedraw)
-            return;
-
-        if (resources is { IsDisposed: false })
-        {
-            using var ctx = IDrawieInteropContext.Current.EnsureContext();
-            if (size.X == 0 || size.Y == 0)
-            {
-                return;
-            }
-
-            if (lastSize != size)
-            {
-                resources.CreateTemporalObjects(size);
-            }
-        }
-    }
-
-    public abstract void Draw(ITexture resourcesTexture);
+    public abstract void Draw(DrawingSurface texture);
 
     protected override void RenderFrame(PixelSize pixelSize)
     {
@@ -116,23 +80,25 @@ public abstract class DrawieControl : InteropControl
                 return;
             }
 
-            if (lastSize != size)
+            if (lastSize != size || framebuffer == null || framebuffer.IsDisposed || framebuffer.DeviceClipBounds.Size != size)
             {
                 resources.CreateTemporalObjects(size);
+
+                framebuffer?.Dispose();
+                framebuffer =
+                    DrawingBackendApi.Current.CreateRenderSurface(size, resources.Texture, SurfaceOrigin.BottomLeft);
+
+                lastSize = size;
             }
+
+            using var _ = resources.Render(size, () =>
+            {
+                framebuffer.Canvas.Clear();
+                Draw(framebuffer);
+                framebuffer.Canvas.Flush();
+            });
+
+            NeedsRedraw = false;
         }
-
-        using var _ = resources.Render(size, () =>
-        {
-            Draw(resources.Texture);
-        });
-
-        NeedsRedraw = false;
-        /*using var present = resources.Render(new VecI(pixelSize.Width, pixelSize.Height), () =>
-        {
-            framebuffer.Canvas.Clear();
-            Draw(framebuffer);
-            framebuffer.Flush();
-        });*/
     }
 }

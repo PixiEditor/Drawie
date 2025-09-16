@@ -1,4 +1,5 @@
 using Drawie.Backend.Core;
+using Drawie.Backend.Core.Rendering;
 
 namespace DrawiEngine;
 
@@ -31,11 +32,6 @@ public class DrawieRenderingDispatcher : IRenderingDispatcher
     public void StartRenderThread()
     {
         RenderThread.Start();
-    }
-
-    public IDisposable PauseRenderThread()
-    {
-        return RenderThread.Pause();
     }
 
     public void EnqueueUIUpdate(Action update)

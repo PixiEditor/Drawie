@@ -129,14 +129,18 @@ public abstract class InteropControl : Control
     {
         if (initialized && !updateQueued && compositor != null && surface is { IsDisposed: false })
         {
+            if (Bounds.Width <= 0 || Bounds.Height <= 0 || double.IsNaN(Bounds.Width) || double.IsNaN(Bounds.Height))
+            {
+                return;
+            }
+
             updateQueued = true;
-            Dispatcher.UIThread.Post(QueueFrameRequested);
+            QueueFrameRequested();
         }
     }
 
     protected void RequestBlit()
     {
-        //compositor.RequestCompositionUpdate(update);
         DrawingBackendApi.Current.RenderingDispatcher.EnqueueUIUpdate(update);
     }
 

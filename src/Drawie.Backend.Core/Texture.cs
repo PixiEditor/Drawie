@@ -112,13 +112,6 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         DrawingSurface.Changed += DrawingSurfaceOnChanged;
     }
 
-    public Texture(ITexture nativeTexture)
-    {
-        DrawingSurface = DrawingBackendApi.Current.CreateRenderSurface(nativeTexture.Size, nativeTexture, SurfaceOrigin.BottomLeft);
-        Size = DrawingSurface.DeviceClipBounds.Size;
-        DrawingSurface.Changed += DrawingSurfaceOnChanged;
-    }
-
     public object Clone()
     {
         return new Texture(this);
