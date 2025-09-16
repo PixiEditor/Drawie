@@ -4,7 +4,6 @@ using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
-using Drawie.RenderApi;
 
 namespace Drawie.Backend.Core;
 
@@ -109,13 +108,6 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
     {
         DrawingSurface = drawingSurface;
         Size = drawingSurface.DeviceClipBounds.Size;
-        DrawingSurface.Changed += DrawingSurfaceOnChanged;
-    }
-
-    public Texture(ITexture nativeTexture)
-    {
-        DrawingSurface = DrawingBackendApi.Current.CreateRenderSurface(nativeTexture.Size, nativeTexture, SurfaceOrigin.BottomLeft);
-        Size = DrawingSurface.DeviceClipBounds.Size;
         DrawingSurface.Changed += DrawingSurfaceOnChanged;
     }
 

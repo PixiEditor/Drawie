@@ -14,8 +14,6 @@ public class VulkanTexture : IDisposable, IVkTexture
     public Image VkImage => textureImage;
     private Vk Vk { get; }
     private Device LogicalDevice { get; }
-    public VecI Size { get; private set; }
-
     private PhysicalDevice PhysicalDevice { get; }
 
     private CommandPool CommandPool { get; }
@@ -44,7 +42,6 @@ public class VulkanTexture : IDisposable, IVkTexture
         CommandPool = commandPool;
         GraphicsQueue = graphicsQueue;
         QueueFamily = queueFamily;
-        Size = size;
 
         /*var imageSize = (ulong)size.X * (ulong)size.Y * 4;
 
@@ -74,45 +71,7 @@ public class VulkanTexture : IDisposable, IVkTexture
         CreateSampler();
     }
     
-    public void BlitFrom(ITexture texture)
-    {
-        if (texture is not VulkanTexture vkTexture)
-            throw new ArgumentException("The texture must be a VulkanTexture.", nameof(texture));
-
-        using var commandBuffer = new SingleTimeCommandBufferSession(Vk, CommandPool, LogicalDevice, GraphicsQueue);
-
-        var srcBlitRegion = new ImageBlit()
-        {
-            SrcOffsets = new ImageBlit.SrcOffsetsBuffer
-            {
-                Element0 = new Offset3D(0, 0, 0),
-                Element1 = new Offset3D(vkTexture.Size.X, vkTexture.Size.Y, 1),
-            },
-            DstOffsets = new ImageBlit.DstOffsetsBuffer
-            {
-                Element0 = new Offset3D(0, 0, 0), Element1 = new Offset3D(Size.X, Size.Y, 1),
-            },
-            SrcSubresource =
-                new ImageSubresourceLayers
-                {
-                    AspectMask = ImageAspectFlags.ColorBit, BaseArrayLayer = 0, LayerCount = 1, MipLevel = 0
-                },
-            DstSubresource = new ImageSubresourceLayers
-            {
-                AspectMask = ImageAspectFlags.ColorBit, BaseArrayLayer = 0, LayerCount = 1, MipLevel = 0
-            }
-        };
-
-        Vk.CmdBlitImage(commandBuffer.CommandBuffer, vkTexture.VkImage,
-            ImageLayout.TransferSrcOptimal,
-            textureImage, ImageLayout.TransferDstOptimal, 1, srcBlitRegion, Filter.Linear);
-
-        commandBuffer.End();
-
-        TransitionLayoutTo((uint)ImageLayout.TransferDstOptimal,
-            (uint)ImageLayout.ColorAttachmentOptimal);
-    }
-
+    
     public void MakeReadOnly()
     {
         TransitionLayoutTo(ColorAttachmentOptimal, ShaderReadOnlyOptimal);
@@ -308,5 +267,4 @@ public class VulkanTexture : IDisposable, IVkTexture
     {
         TransitionImageLayout(textureImage, from, to, buffer);
     }
-
 }

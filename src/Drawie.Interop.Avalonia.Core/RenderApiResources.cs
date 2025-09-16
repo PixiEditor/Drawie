@@ -24,5 +24,5 @@ public abstract class RenderApiResources : IAsyncDisposable
 
     public abstract void CreateTemporalObjects(VecI size);
 
-    public abstract IDisposable Render(VecI size, Action renderAction);
+    public abstract IDisposable? Render(VecI size, Action renderAction);
 }

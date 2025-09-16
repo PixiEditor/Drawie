@@ -3,10 +3,7 @@ using Avalonia.Rendering.Composition;
 using Drawie.Backend.Core.Debug;
 using Drawie.Backend.Core.Exceptions;
 using Drawie.Interop.Avalonia.Core;
-using Drawie.Numerics;
 using Drawie.RenderApi;
-using Drawie.RenderApi.OpenGL;
-using Silk.NET.OpenGL;
 
 namespace Drawie.Interop.Avalonia.OpenGl;
 
@@ -53,10 +50,5 @@ public class OpenGlInteropContext : IOpenGlContext, IDrawieInteropContext
     public IDisposable EnsureContext()
     {
         return Context.MakeCurrent();
-    }
-
-    public ITexture CreateTexture(VecI vecI)
-    {
-        return new OpenGlTexture(GL.GetApi(Context.GlInterface.GetProcAddress), vecI.X, vecI.Y);
     }
 }

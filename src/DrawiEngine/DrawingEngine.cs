@@ -11,7 +11,7 @@ public class DrawingEngine
     public IWindowingPlatform? WindowingPlatform { get; }
     public IDrawingBackend DrawingBackend { get; }
     
-    public IRenderingDispatcher RenderingDispatcher { get; }
+    public IRenderingDispatcher RenderingDispatcher { get; } = new DrawieRenderingDispatcher();
 
     public DrawingEngine(IRenderApi renderApi, IWindowingPlatform? windowingPlatform,
         IDrawingBackend drawingBackend, IRenderingDispatcher renderingDispatcher)

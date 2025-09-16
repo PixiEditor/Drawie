@@ -2,10 +2,7 @@
 using Avalonia.Media;
 using Avalonia.Threading;
 using Drawie.Backend.Core;
-using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Surfaces;
-using Drawie.Numerics;
-using Drawie.RenderApi;
 using Colors = Drawie.Backend.Core.ColorsImpl.Colors;
 
 namespace Drawie.Interop.Avalonia.Core.Controls;
@@ -22,17 +19,17 @@ public class DrawieTextureControl : DrawieControl
         set => SetValue(StretchProperty, value);
     }
 
-    public static readonly StyledProperty<ITexture> TextureProperty =
-        AvaloniaProperty.Register<DrawieTextureControl, ITexture>(
+    public static readonly StyledProperty<Texture> TextureProperty =
+        AvaloniaProperty.Register<DrawieTextureControl, Texture>(
             nameof(Texture));
 
-    public ITexture Texture
+    public Texture Texture
     {
         get => GetValue(TextureProperty);
         set => SetValue(TextureProperty, value);
     }
 
-    private ITexture? texture;
+    private Texture? texture;
     private Stretch stretch = Stretch.Uniform;
     private Rect bounds;
 
@@ -40,25 +37,6 @@ public class DrawieTextureControl : DrawieControl
     {
         AffectsRender<DrawieTextureControl>(TextureProperty, StretchProperty);
         AffectsMeasure<DrawieTextureControl>(TextureProperty, StretchProperty);
-        TextureProperty.Changed.AddClassHandler<DrawieTextureControl>((x, e) => x.OnTextureChanged(x, e));
-    }
-
-    private void OnTextureChanged(DrawieTextureControl sender, AvaloniaPropertyChangedEventArgs e)
-    {
-        if (e.OldValue is Texture tex)
-        {
-            tex.Changed -= sender.OnTextureContentChanged;
-        }
-
-        if (e.NewValue is Texture newTex)
-        {
-            newTex.Changed += sender.OnTextureContentChanged;
-        }
-    }
-
-    private void OnTextureContentChanged(RectD? changedRect)
-    {
-        QueueNextFrame();
     }
 
     /// <summary>
@@ -109,7 +87,7 @@ public class DrawieTextureControl : DrawieControl
         bounds = Bounds;
     }
 
-    /*public override void Draw(DrawingSurface surface)
+    public override void Draw(DrawingSurface surface)
     {
         if (texture == null || texture.IsDisposed)
         {
@@ -123,13 +101,6 @@ public class DrawieTextureControl : DrawieControl
         surface.Canvas.DrawSurface(texture.DrawingSurface, 0, 0);
 
         surface.Canvas.Restore();
-    }*/
-
-    private VecI lastSize;
-
-    public override void Draw(ITexture target)
-    {
-        target.BlitFrom(texture);
     }
 
     private void ScaleCanvas(Canvas canvas, Texture texture, Stretch stretch, Rect bounds)

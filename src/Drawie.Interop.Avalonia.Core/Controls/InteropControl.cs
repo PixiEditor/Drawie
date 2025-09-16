@@ -5,13 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Rendering.Composition;
-using Avalonia.Threading;
 using Avalonia.VisualTree;
-using Drawie.Backend.Core;
-using Drawie.Backend.Core.Bridge;
-using Drawie.Backend.Core.Surfaces;
-using Drawie.Numerics;
-using Drawie.RenderApi;
 
 namespace Drawie.Interop.Avalonia.Core.Controls;
 
@@ -129,15 +123,15 @@ public abstract class InteropControl : Control
     {
         if (initialized && !updateQueued && compositor != null && surface is { IsDisposed: false })
         {
-            updateQueued = true;
-            Dispatcher.UIThread.Post(QueueFrameRequested);
+            QueueFrameRequested();
+            RequestBlit();
         }
     }
 
     protected void RequestBlit()
     {
-        //compositor.RequestCompositionUpdate(update);
-        DrawingBackendApi.Current.RenderingDispatcher.EnqueueUIUpdate(update);
+        updateQueued = true;
+        compositor.RequestCompositionUpdate(update);
     }
 
     protected virtual void QueueFrameRequested()
@@ -177,5 +171,4 @@ public abstract class InteropControl : Control
 
     protected abstract void FreeGraphicsResources();
     protected abstract void RenderFrame(PixelSize size);
-
 }

@@ -1,5 +1,4 @@
-﻿using Drawie.Numerics;
-using Silk.NET.OpenGL;
+﻿using Silk.NET.OpenGL;
 
 namespace Drawie.RenderApi.OpenGL;
 
@@ -8,9 +7,7 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
     public uint TextureId { get; }
 
     private GL Api { get; set; }
-
-    public VecI Size { get; }
-
+    
     public OpenGlTexture(uint textureId, GL api)
     {
         TextureId = textureId;
@@ -20,7 +17,6 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
     public unsafe OpenGlTexture(GL api, int width, int height)
     {
         TextureId = api.GenTexture();
-        Size = new VecI(width, height);
 
         Api = api;
         Activate(0);
@@ -34,18 +30,6 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
         Api.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.Repeat);
         Api.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
         Api.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
-    }
-
-    public void BlitFrom(ITexture texture)
-    {
-        if (texture is not OpenGlTexture glTexture)
-            throw new ArgumentException("Texture must be of type OpenGlTexture", nameof(texture));
-
-        Api.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
-        Api.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
-
-        Api.BlitFramebuffer(0, 0, glTexture.Size.X, glTexture.Size.Y, 0, 0, Size.X, Size.Y,
-            ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Nearest);
     }
 
     public void Bind()
