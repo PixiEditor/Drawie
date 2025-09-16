@@ -60,7 +60,6 @@ public abstract class DrawieControl : InteropControl
     {
         NeedsRedraw = true;
         RequestBlit();
-        InvalidateVisual();
     }
 
     public abstract void Draw(DrawingSurface texture);
