@@ -92,6 +92,11 @@ internal class DxgiMutexOpenGlSwapChainImage : IGlSwapchainImage
     public uint TextureId => (uint)_texture.TextureId;
     public int InternalFormat => _texture.InternalFormat;
     public VecI Size => new(_texture.Properties.Width, _texture.Properties.Height);
+    public void BlitFrom(ITexture texture)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task? LastPresent => _lastPresent;
     public void BeginDraw() => _texture.AcquireKeyedMutex(0);
 
@@ -146,6 +151,11 @@ internal class CompositionOpenGlSwapChainImage : IGlSwapchainImage
     public uint TextureId => (uint)_texture.TextureId;
     public int InternalFormat => _texture.InternalFormat;
     public VecI Size => new VecI(_texture.Size.Width, _texture.Size.Height);
+    public void BlitFrom(ITexture texture)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task? LastPresent { get; private set; }
 
     public void BeginDraw()

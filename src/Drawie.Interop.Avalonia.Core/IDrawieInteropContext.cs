@@ -1,5 +1,7 @@
 ﻿using Avalonia.Rendering.Composition;
 using Drawie.Backend.Core.Debug;
+using Drawie.Numerics;
+using Drawie.RenderApi;
 
 namespace Drawie.Interop.Avalonia.Core;
 
@@ -21,4 +23,5 @@ public interface IDrawieInteropContext
 
     public GpuDiagnostics GetGpuDiagnostics();
     public IDisposable EnsureContext();
+    public ITexture CreateTexture(VecI vecI);
 }

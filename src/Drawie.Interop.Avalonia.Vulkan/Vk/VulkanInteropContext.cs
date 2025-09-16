@@ -1,10 +1,14 @@
 ﻿using System.Runtime.InteropServices;
+using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
+using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Debug;
 using Drawie.Interop.Avalonia.Core;
+using Drawie.Numerics;
 using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan;
+using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.RenderApi.Vulkan.ContextObjects;
 using Drawie.RenderApi.Vulkan.Extensions;
 using DrawiEngine;
@@ -214,6 +218,11 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
 
     public IDisposable EnsureContext()
     {
-        return new EmptyDisposable();
+        return DrawingBackendApi.Current.RenderingDispatcher.EnsureContext();
+    }
+
+    public ITexture CreateTexture(VecI vecI)
+    {
+        return new VulkanTexture(Api, LogicalDevice.Device, PhysicalDevice, Pool.CommandPool, GraphicsQueue, GraphicsQueueFamilyIndex, vecI);
     }
 }

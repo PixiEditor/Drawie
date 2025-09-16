@@ -6,10 +6,16 @@ public class DrawieRenderingDispatcher : IRenderingDispatcher
 {
     public Action<Action> Invoke { get; } = action => action();
 
-    public RenderThread RenderThread { get; } = new();
+    public RenderThread RenderThread { get; }
 
     public DrawieRenderingDispatcher()
     {
+        RenderThread = new RenderThread(Invoke);
+    }
+
+    public DrawieRenderingDispatcher(Action<Action> mainThreadDispatcher)
+    {
+        RenderThread = new RenderThread(mainThreadDispatcher);
     }
 
     public void QueueRender(Action renderAction)
@@ -25,6 +31,16 @@ public class DrawieRenderingDispatcher : IRenderingDispatcher
     public void StartRenderThread()
     {
         RenderThread.Start();
+    }
+
+    public IDisposable PauseRenderThread()
+    {
+        return RenderThread.Pause();
+    }
+
+    public void EnqueueUIUpdate(Action update)
+    {
+        RenderThread.QueueUIUpdate(update);
     }
 }
 

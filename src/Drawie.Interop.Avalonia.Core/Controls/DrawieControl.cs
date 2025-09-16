@@ -1,23 +1,23 @@
 ﻿using Avalonia;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
 using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Numerics;
+using Drawie.RenderApi;
 
 namespace Drawie.Interop.Avalonia.Core.Controls;
 
-public abstract class DrawieControl : InteropControl, IDrawieControl
+public abstract class DrawieControl : InteropControl
 {
     private VecI lastSize = VecI.Zero;
 
     public bool NeedsRedraw { get; private set; } = true;
 
-    private Texture? intermediateSurface;
     private DrawingSurface? framebuffer;
-
-    private IDisposable? toPresent;
 
     /// <summary>
     ///     If true, intermediate surface will be used to render the frame. This is useful when dealing with non srgb surfaces.
@@ -51,8 +51,6 @@ public abstract class DrawieControl : InteropControl, IDrawieControl
     protected override void FreeGraphicsResources()
     {
         using var ctx = IDrawieInteropContext.Current.EnsureContext();
-        intermediateSurface?.Dispose();
-        intermediateSurface = null;
 
         framebuffer?.Dispose();
         framebuffer = null;
@@ -62,21 +60,30 @@ public abstract class DrawieControl : InteropControl, IDrawieControl
     {
         if (Bounds.Width <= 0 || Bounds.Height <= 0 || double.IsNaN(Bounds.Width) || double.IsNaN(Bounds.Height))
             return;
+
+        NeedsRedraw = true;
         PrepareToDraw();
-        DrawingBackendApi.Current.RenderingDispatcher.QueueRender(() =>
+        RequestBlit();
+        InvalidateVisual();
+
+        /*DrawingBackendApi.Current.RenderingDispatcher.QueueRender(() =>
         {
             BeginDraw(new VecI((int)Bounds.Width, (int)Bounds.Height));
             Dispatcher.UIThread.Post(RequestBlit);
-        });
+        });*/
     }
 
     protected virtual void PrepareToDraw()
     {
-
     }
+
+    private IDisposable present;
 
     public void BeginDraw(VecI size)
     {
+        if (!NeedsRedraw)
+            return;
+
         if (resources is { IsDisposed: false })
         {
             using var ctx = IDrawieInteropContext.Current.EnsureContext();
@@ -85,53 +92,47 @@ public abstract class DrawieControl : InteropControl, IDrawieControl
                 return;
             }
 
-            if (framebuffer == null || lastSize != size)
+            if (lastSize != size)
             {
                 resources.CreateTemporalObjects(size);
-
-                VecI sizeVec = new VecI(size.X, size.Y);
-
-                framebuffer?.Dispose();
-
-                framebuffer =
-                    DrawingBackendApi.Current.CreateRenderSurface(sizeVec,
-                        resources.Texture, SurfaceOrigin.BottomLeft);
-
-                if (UseIntermediateSurface)
-                {
-                    intermediateSurface?.Dispose();
-                    intermediateSurface = Texture.ForDisplay(sizeVec);
-                }
-
-                lastSize = size;
             }
-
-            toPresent = resources.Render(size, () =>
-            {
-                framebuffer.Canvas.Clear();
-                intermediateSurface?.DrawingSurface.Canvas.Clear();
-
-                if (!UseIntermediateSurface)
-                {
-                    Draw(framebuffer);
-                }
-                else
-                {
-                    Draw(intermediateSurface.DrawingSurface);
-                    framebuffer.Canvas.DrawSurface(intermediateSurface.DrawingSurface, 0, 0);
-                }
-
-                framebuffer.Flush();
-            });
         }
     }
 
-    public abstract void Draw(DrawingSurface surface);
+    public abstract void Draw(ITexture resourcesTexture);
 
-    protected override void RenderFrame(PixelSize size)
+    protected override void RenderFrame(PixelSize pixelSize)
     {
-        toPresent?.Dispose();
-        toPresent = null;
+        if (!NeedsRedraw)
+            return;
+
+        VecI size = new VecI(pixelSize.Width, pixelSize.Height);
+
+        if (resources is { IsDisposed: false })
+        {
+            using var ctx = IDrawieInteropContext.Current.EnsureContext();
+            if (size.X == 0 || size.Y == 0)
+            {
+                return;
+            }
+
+            if (lastSize != size)
+            {
+                resources.CreateTemporalObjects(size);
+            }
+        }
+
+        using var _ = resources.Render(size, () =>
+        {
+            Draw(resources.Texture);
+        });
+
         NeedsRedraw = false;
+        /*using var present = resources.Render(new VecI(pixelSize.Width, pixelSize.Height), () =>
+        {
+            framebuffer.Canvas.Clear();
+            Draw(framebuffer);
+            framebuffer.Flush();
+        });*/
     }
 }

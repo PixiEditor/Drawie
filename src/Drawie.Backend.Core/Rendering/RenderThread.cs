@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Drawie.Backend.Core.Bridge;
+using Drawie.Backend.Core.Utils;
 
 namespace Drawie.Backend.Core;
 
@@ -8,14 +9,19 @@ public class RenderThread
     private Thread renderThread;
     private Stopwatch renderTimer;
     private bool running;
+    private bool paused;
 
     private Queue<Action> renderQueue = new();
     private readonly object renderQueueLock = new();
+    private Semaphore pauseSemaphore = new(1, 1);
+    private Queue<Action> uiQueue = new();
 
-    public RenderThread()
+    private Action<Action> mainThreadDispatcher;
+    public RenderThread(Action<Action> mainThreadDispatcher)
     {
         renderTimer = new Stopwatch();
         renderThread = new Thread(RenderLoop) { IsBackground = true, Name = "Drawie Render Thread" };
+        this.mainThreadDispatcher = mainThreadDispatcher;
     }
 
     public void RenderLoop()
@@ -23,15 +29,42 @@ public class RenderThread
         renderTimer = Stopwatch.StartNew();
         while (running)
         {
+            if (paused)
+            {
+                pauseSemaphore.WaitOne();
+                pauseSemaphore.Release();
+            }
+
             var frameStart = renderTimer.ElapsedMilliseconds;
             DispatchRenders();
+
+            mainThreadDispatcher(() =>
+            {
+                Queue<Action> toUpdate;
+                lock (uiQueue)
+                {
+                    toUpdate = new Queue<Action>(uiQueue);
+                    uiQueue.Clear();
+                }
+
+                while (toUpdate.Count > 0)
+                {
+                    var action = toUpdate.Dequeue();
+                    try
+                    {
+                        action();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Exception during UI update action: {e}");
+                    }
+                }
+            });
 
             var elapsed = renderTimer.ElapsedMilliseconds - frameStart;
             var sleep = TimeSpan.FromMilliseconds(16 - elapsed);
             if (sleep > TimeSpan.Zero)
-            {
                 Thread.Sleep(sleep);
-            }
         }
     }
 
@@ -63,7 +96,7 @@ public class RenderThread
             }
             catch (Exception e)
             {
-                System.Diagnostics.Debug.WriteLine($"Exception during render action: {e}");
+                Console.WriteLine($"Exception during render action: {e}");
             }
         }
 
@@ -75,6 +108,28 @@ public class RenderThread
         lock (renderQueueLock)
         {
             renderQueue.Enqueue(renderAction);
+        }
+    }
+
+    public IDisposable Pause()
+    {
+        if (paused)
+            return Disposable.Empty;
+
+        paused = true;
+        pauseSemaphore.WaitOne();
+        return new Disposable(() =>
+        {
+            paused = false;
+            pauseSemaphore.Release();
+        });
+    }
+
+    public void QueueUIUpdate(Action update)
+    {
+        lock (uiQueue)
+        {
+            uiQueue.Enqueue(update);
         }
     }
 }
