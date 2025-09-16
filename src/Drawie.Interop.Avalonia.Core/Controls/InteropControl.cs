@@ -91,7 +91,9 @@ public abstract class InteropControl : Control
     {
         if (!string.IsNullOrEmpty(info))
         {
-            context.DrawText(new FormattedText(info, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface.Default, 12, Brushes.White),
+            context.DrawText(
+                new FormattedText(info, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface.Default, 12,
+                    Brushes.White),
                 new Point(0, 0));
         }
     }
@@ -107,7 +109,7 @@ public abstract class InteropControl : Control
 
         surfaceVisual.Size = new Vector(Bounds.Width, Bounds.Height);
 
-        /*if (double.IsNaN(surfaceVisual.Size.X) || double.IsNaN(surfaceVisual.Size.Y))
+        if (double.IsNaN(surfaceVisual.Size.X) || double.IsNaN(surfaceVisual.Size.Y))
         {
             return;
         }
@@ -115,14 +117,14 @@ public abstract class InteropControl : Control
         var size = new PixelSize((int)Bounds.Width, (int)Bounds.Height);
         try
         {
-            RenderFrame(size);
+            OnCompositorRender(new VecI(size.Width, size.Height));
             info = string.Empty;
         }
         catch (Exception e)
         {
             info = $"Error rendering frame: {e.Message}. Try updating graphics drivers or change Render API in settings if issue persists.";
             return;
-        }*/
+        }
     }
 
     public void QueueNextFrame()
@@ -135,12 +137,23 @@ public abstract class InteropControl : Control
             }
 
             updateQueued = true;
-            QueueFrameRequested();
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                QueueFrameRequested();
+                return;
+            }
+
+            Dispatcher.UIThread.Post(QueueFrameRequested, DispatcherPriority.Render);
         }
     }
 
     protected virtual void QueueFrameRequested()
     {
+    }
+
+    protected void RequestCompositorUpdate()
+    {
+        compositor.RequestCompositionUpdate(update);
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -175,6 +188,5 @@ public abstract class InteropControl : Control
         CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop, out string? info);
 
     protected abstract void FreeGraphicsResources();
-    protected abstract void RenderFrame(PixelSize size);
-
+    protected abstract void OnCompositorRender(VecI size);
 }

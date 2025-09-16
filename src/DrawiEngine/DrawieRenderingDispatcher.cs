@@ -35,11 +35,6 @@ public class DrawieRenderingDispatcher : IRenderingDispatcher
     {
         RenderThread.Start();
     }
-
-    public void EnqueueUIUpdate(object requester, Action update, Action swapAction)
-    {
-        RenderThread.EnqueueUiPresent(requester, update, swapAction);
-    }
 }
 
 public class EmptyDisposable : IDisposable

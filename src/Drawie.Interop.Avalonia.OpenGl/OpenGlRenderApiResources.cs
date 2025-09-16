@@ -97,4 +97,9 @@ public class OpenGlRenderApiResources : RenderApiResources
     {
         throw new NotImplementedException();
     }
+
+    public override ITexture CreateExportableTexture(VecI size)
+    {
+        throw new NotImplementedException();
+    }
 }

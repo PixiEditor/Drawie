@@ -72,4 +72,12 @@ public class VulkanResources : RenderApiResources
 
         return Swapchain.CreateImage(size);
     }
+
+    public override ITexture CreateExportableTexture(VecI size)
+    {
+        if (isDisposed)
+            throw new ObjectDisposedException(nameof(VulkanResources));
+
+        return Context.CreateExportableTexture(size);
+    }
 }

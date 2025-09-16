@@ -3,6 +3,7 @@ using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
+using Drawie.Backend.Core.Utils;
 using Drawie.Numerics;
 using Drawie.RenderApi;
 
@@ -21,6 +22,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
     public ColorSpace ColorSpace { get; }
 
     public ImageInfo ImageInfo { get; }
+
 
     private Bitmap? bitmap;
     private bool cpuSynced;

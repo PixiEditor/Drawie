@@ -28,4 +28,6 @@ public abstract class RenderApiResources : IAsyncDisposable
 
     public abstract ITexture CreateTexture(VecI size);
     public abstract ITexture CreateSwapchainTexture(VecI size);
+
+    public abstract ITexture CreateExportableTexture(VecI size);
 }

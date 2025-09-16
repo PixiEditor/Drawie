@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Platform;
+using Drawie.Interop.Avalonia.Core;
 using Drawie.Numerics;
 using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan.Extensions;
@@ -9,7 +10,7 @@ using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
-public class VulkanImage : IDisposable
+public class VulkanImage : IDisposable, IExportable, IVkTexture
 {
     private readonly VulkanInteropContext _vk;
     private readonly Instance _instance;
@@ -18,6 +19,7 @@ public class VulkanImage : IDisposable
     private readonly VulkanCommandBufferPool _commandBufferPool;
     private ImageLayout _currentLayout;
     private AccessFlags _currentAccessFlags;
+    private uint _tiling;
     private ImageUsageFlags _imageUsageFlags { get; }
     private ImageView _imageView { get; set; }
     private DeviceMemory _imageMemory { get; set; }
@@ -29,14 +31,34 @@ public class VulkanImage : IDisposable
 
     public ulong Handle => InternalHandle.Handle;
     public ulong ViewHandle => _imageView.Handle;
+    public uint QueueFamily => _vk.GraphicsQueueFamilyIndex;
+    public uint ImageFormat => (uint)Format;
+    public ulong ImageHandle => InternalHandle.Handle;
     public uint UsageFlags => (uint)_imageUsageFlags;
+    public uint Layout => (uint)_currentLayout;
+    public uint TargetSharingMode => (uint)SharingMode.Exclusive;
+
+    uint IVkTexture.Tiling => _tiling;
+
+    public void MakeReadOnly()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void MakeWriteable()
+    {
+        throw new NotImplementedException();
+    }
+
     public ulong MemoryHandle => _imageMemory.Handle;
     public DeviceMemory DeviceMemory => _imageMemory;
     public uint MipLevels { get; }
     public Silk.NET.Vulkan.Vk Api { get; }
     public VecI Size { get; }
+
     public ulong MemorySize { get; }
     public uint CurrentLayout => (uint)_currentLayout;
+
 
     public unsafe VulkanImage(VulkanInteropContext vk, uint format, VecI size,
         bool exportable, IReadOnlyList<string> supportedHandleTypes)
@@ -170,6 +192,11 @@ public class VulkanImage : IDisposable
         _currentLayout = ImageLayout.Undefined;
 
         TransitionLayout(ImageLayout.ColorAttachmentOptimal, AccessFlags.NoneKhr);
+    }
+
+    public void BlitFrom(ITexture texture)
+    {
+        throw new NotImplementedException();
     }
 
     public int ExportFd()

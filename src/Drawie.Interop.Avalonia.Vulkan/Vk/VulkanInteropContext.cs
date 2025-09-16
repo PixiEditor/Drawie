@@ -225,4 +225,11 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
     {
         return new VulkanTexture(Api, LogicalDevice.Device, PhysicalDevice, Pool.CommandPool, GraphicsQueue, GraphicsQueueFamilyIndex, vecI);
     }
+
+    // TODO: Needed?
+    public ITexture CreateExportableTexture(VecI size)
+    {
+        uint format = (uint)Format.R8G8B8A8Unorm;
+        return new VulkanImage(this, format, size, true, gpuInterop.SupportedImageHandleTypes);
+    }
 }

@@ -20,7 +20,6 @@ public sealed class RenderThread : IDisposable
     private readonly Action<Action> _uiPost;
     private readonly Action<Action> _requestCompositionUpdate;
 
-
     public RenderThread(Action<Action> requestCompositionUpdate, Action<Action> uiPost)
     {
         _requestCompositionUpdate = requestCompositionUpdate ??
@@ -42,35 +41,6 @@ public sealed class RenderThread : IDisposable
         _renderQueue.Enqueue(renderAction);
     }
 
-
-    public void EnqueueUiPresent(object sender, Action uiPresentAction, Action swapAction)
-    {
-        if (uiPresentAction == null) return;
-        _uiQueue[sender] = uiPresentAction;
-        swapQueue.Enqueue(swapAction);
-
-        _uiPost(() => _requestCompositionUpdate(ProcessUiQueue));
-    }
-
-
-    private void ProcessUiQueue()
-    {
-        var queue = new Queue<Action>(_uiQueue.Values);
-
-        while (queue.TryDequeue(out var action))
-        {
-            try
-            {
-                action();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"UI present error: {ex}");
-            }
-        }
-    }
-
-
     private void Run()
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -80,6 +50,8 @@ public sealed class RenderThread : IDisposable
         while (!_cts.IsCancellationRequested)
         {
             var frameStart = sw.Elapsed.TotalMilliseconds;
+
+            //framePresented.Reset();
 
             var queueToProcess = new Queue<Action>(_renderQueue);
             _renderQueue.Clear();
