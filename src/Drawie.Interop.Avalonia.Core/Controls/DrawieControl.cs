@@ -89,10 +89,8 @@ public abstract class DrawieControl : InteropControl
 
     private void QueueRender(VecI size)
     {
-        Debug.WriteLine("Queue render");
         DrawingBackendApi.Current.RenderingDispatcher.Enqueue(() =>
         {
-            Debug.WriteLine("Update backbuffer");
             UpdateBackbuffer(size);
             frameRequest.SignalBackbufferUpdated();
         });
@@ -100,7 +98,6 @@ public abstract class DrawieControl : InteropControl
 
     private void QueueWriteBackToFront(VecI size)
     {
-        Debug.WriteLine("Queue write back to front");
         DrawingBackendApi.Current.RenderingDispatcher.Enqueue(() =>
         {
             WriteBackToFront(size);
@@ -128,9 +125,9 @@ public abstract class DrawieControl : InteropControl
 
         if (resources.Texture == null || resources.Texture.Size != size)
         {
-            resources.CreateTemporalObjects(size);
+            backingBackbufferTexture = resources.CreateExportableTexture(size);
             backbuffer?.Dispose();
-            backbuffer = DrawingBackendApi.Current.CreateRenderSurface(size, resources.Texture!, SurfaceOrigin.BottomLeft);
+            backbuffer = DrawingBackendApi.Current.CreateRenderSurface(size, backingBackbufferTexture, SurfaceOrigin.BottomLeft);
         }
 
         using (var ctx = IDrawieInteropContext.Current.EnsureContext())
@@ -147,8 +144,6 @@ public abstract class DrawieControl : InteropControl
         {
             return;
         }
-
-        Debug.WriteLine("Present frame");
 
         lock (backingLock)
         {
@@ -171,8 +166,7 @@ public abstract class DrawieControl : InteropControl
     {
         lock (backingLock)
         {
-            Debug.WriteLine("Write back to front");
-            pendingFrames2.Push(resources.Render(size, () => { }));
+            pendingFrames2.Push(resources.Render(size, backingBackbufferTexture));
             /*
             var exportTexture = resources.CreateExportableTexture(backingBackbufferTexture.Size);
             var semaphorePair = resources.CreateSemaphorePair();

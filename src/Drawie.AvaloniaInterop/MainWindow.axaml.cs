@@ -29,6 +29,8 @@ public partial class MainWindow : Window
     {
         Texture skiaTexture = new Texture(new VecI(128));
         Texture skiaTexture2 = new Texture(new VecI(128));
+        Texture skiaTexture3 = new Texture(new VecI(128));
+        Texture skiaTexture4 = new Texture(new VecI(128));
 
         if (DrawingBackendApi.HasBackend)
         {
@@ -36,11 +38,15 @@ public partial class MainWindow : Window
             {
                 UpdateDraw(skiaTexture);
                 UpdateDraw(skiaTexture2);
+                UpdateDraw(skiaTexture3);
+                UpdateDraw(skiaTexture4);
             });
         }
 
         DrawieControl.Texture = skiaTexture;
         DrawieControl2.Texture = skiaTexture2;
+        DrawieControl3.Texture = skiaTexture3;
+        DrawieControl4.Texture = skiaTexture4;
         base.OnLoaded(e);
     }
 

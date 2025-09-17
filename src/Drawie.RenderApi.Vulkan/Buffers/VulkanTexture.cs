@@ -26,7 +26,7 @@ public class VulkanTexture : IDisposable, IVkTexture
     public ulong ImageHandle => textureImage.Handle;
     public uint Tiling { get; }
     public uint UsageFlags { get; set; }
-    public uint Layout => ColorAttachmentOptimal;
+    public uint Layout { get; private set; } = (uint)ImageLayout.ColorAttachmentOptimal;
     public uint TargetSharingMode { get; } = (uint)SharingMode.Exclusive;
     public static uint ColorAttachmentOptimal => (uint)ImageLayout.ColorAttachmentOptimal;
     public static uint ShaderReadOnlyOptimal => (uint)ImageLayout.ShaderReadOnlyOptimal;
@@ -296,6 +296,8 @@ public class VulkanTexture : IDisposable, IVkTexture
 
         Vk.CmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, null, 0, null, 1,
             barrier);
+
+        Layout = (uint)newLayout;
     }
 
     private unsafe void CopyBufferToImage(Buffer buffer, Image image, uint width, uint height)

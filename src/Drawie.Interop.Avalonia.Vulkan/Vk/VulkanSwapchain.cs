@@ -94,16 +94,27 @@ public class VulkanSwapchainImage : ISwapchainImage
         else
             buffer.Submit(new[] { _semaphorePair.ImageAvailableSemaphore },
                 new[] { PipelineStageFlags.AllGraphicsBit });
+
+        PrepareForPresent();
     }
 
-
-    public Task Present()
+    private void PrepareForPresent()
     {
         var buffer = _vk.Pool.CreateCommandBuffer();
         buffer.BeginRecording();
         _image.TransitionLayout(buffer.InternalHandle, ImageLayout.TransferSrcOptimal, AccessFlags.TransferWriteBit);
 
         buffer.Submit(null, null, new[] { _semaphorePair.RenderFinishedSemaphore });
+    }
+
+
+    public Task Present()
+    {
+        /*var buffer = _vk.Pool.CreateCommandBuffer();
+        buffer.BeginRecording();
+        _image.TransitionLayout(buffer.InternalHandle, ImageLayout.TransferSrcOptimal, AccessFlags.TransferWriteBit);
+
+        buffer.Submit(null, null, new[] { _semaphorePair.RenderFinishedSemaphore });*/
 
         _availableSemaphore ??= _interop.ImportSemaphore(_semaphorePair.Export(false));
 
@@ -119,7 +130,14 @@ public class VulkanSwapchainImage : ISwapchainImage
             });
 
         _lastPresent =
-            _target.UpdateWithSemaphoresAsync(_importedImage, _renderCompletedSemaphore!, _availableSemaphore!);
+            _target.UpdateWithSemaphoresAsync(_importedImage, _renderCompletedSemaphore!, _availableSemaphore!)
+                .ContinueWith(t =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        Console.WriteLine("Failed to present frame: " + t.Exception?.Message);
+                    }
+                });
         return _lastPresent;
     }
 
