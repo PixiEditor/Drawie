@@ -97,6 +97,12 @@ internal class DxgiMutexOpenGlSwapChainImage : IGlSwapchainImage
         throw new NotImplementedException();
     }
 
+    public void BlitFrom(ITexture backingBackbufferTexture, object? renderFinishedSemaphore,
+        object? blitSignalSemaphore)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task? LastPresent => _lastPresent;
     public void BeginDraw() => _texture.AcquireKeyedMutex(0);
 
@@ -158,6 +164,12 @@ internal class CompositionOpenGlSwapChainImage : IGlSwapchainImage
     public int InternalFormat => _texture.InternalFormat;
     public VecI Size => new VecI(_texture.Size.Width, _texture.Size.Height);
     public void BlitFrom(ITexture texture)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void BlitFrom(ITexture backingBackbufferTexture, object? renderFinishedSemaphore,
+        object? blitSignalSemaphore)
     {
         throw new NotImplementedException();
     }

@@ -10,21 +10,10 @@ public sealed class RenderThread : IDisposable
     private readonly CancellationTokenSource _cts = new();
 
 
-    private readonly ConcurrentQueue<Action> _renderQueue = new();
+    private readonly ConcurrentDictionary<Priority, ConcurrentQueue<Action>> _renderQueue = new();
 
-
-    private readonly ConcurrentDictionary<object, Action> _uiQueue = new();
-    private ConcurrentQueue<Action> swapQueue = new();
-
-
-    private readonly Action<Action> _uiPost;
-    private readonly Action<Action> _requestCompositionUpdate;
-
-    public RenderThread(Action<Action> requestCompositionUpdate, Action<Action> uiPost)
+    public RenderThread()
     {
-        _requestCompositionUpdate = requestCompositionUpdate ??
-                                    throw new ArgumentNullException(nameof(requestCompositionUpdate));
-        _uiPost = uiPost ?? throw new ArgumentNullException(nameof(uiPost));
         _thread = new Thread(Run) { IsBackground = true, Name = "Drawie Render Thread" };
     }
 
@@ -35,10 +24,11 @@ public sealed class RenderThread : IDisposable
     }
 
 
-    public void EnqueueRender(Action renderAction)
+    public void Enqueue(Action renderAction, Priority priority)
     {
         if (renderAction == null) return;
-        _renderQueue.Enqueue(renderAction);
+
+        _renderQueue.GetOrAdd(priority, _ => new ConcurrentQueue<Action>()).Enqueue(renderAction);
     }
 
     private void Run()
@@ -51,38 +41,9 @@ public sealed class RenderThread : IDisposable
         {
             var frameStart = sw.Elapsed.TotalMilliseconds;
 
-            //framePresented.Reset();
-
-            var queueToProcess = new Queue<Action>(_renderQueue);
-            _renderQueue.Clear();
-
-            while (queueToProcess.TryDequeue(out var render))
-            {
-                try
-                {
-                    render();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Render action threw: {ex}");
-                }
-            }
-
-            var swapToProcess = new Queue<Action>(swapQueue);
-            swapQueue.Clear();
-            while (swapToProcess.TryDequeue(out var swap))
-            {
-                try
-                {
-                    swap();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Swap action threw: {ex}");
-                }
-            }
-
-            //DrawingBackendApi.Current.Flush();
+            ProcessQueue(Priority.Render);
+            DrawingBackendApi.Current.Flush();
+            ProcessQueue(Priority.UI);
 
             var elapsed = sw.Elapsed.TotalMilliseconds - frameStart;
             var wait = targetFrameMs - elapsed;
@@ -91,6 +52,37 @@ public sealed class RenderThread : IDisposable
             else
                 Thread.Yield();
         }
+    }
+
+    private void ProcessQueue(Priority priority)
+    {
+        var queueToProcess = PopQueueToProcess(priority);
+
+        if (queueToProcess == null) return;
+
+        while (queueToProcess.TryDequeue(out var render))
+        {
+            try
+            {
+                render();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Render action threw: {ex}");
+            }
+        }
+    }
+
+    private Queue<Action>? PopQueueToProcess(Priority priority)
+    {
+        if (_renderQueue.TryGetValue(priority, out var queue))
+        {
+            var toProcess = new Queue<Action>(queue);
+            _renderQueue[priority].Clear();
+            return toProcess;
+        }
+
+        return null;
     }
 
     public void Dispose()

@@ -93,12 +93,17 @@ public class OpenGlRenderApiResources : RenderApiResources
         throw new NotImplementedException();
     }
 
-    public override ITexture CreateSwapchainTexture(VecI size)
+    public override IExportableTexture CreateExportableTexture(VecI size)
     {
         throw new NotImplementedException();
     }
 
-    public override ITexture CreateExportableTexture(VecI size)
+    public override ISemaphorePair CreateSemaphorePair()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override IDisposable Render(VecI size, ITexture toBlit)
     {
         throw new NotImplementedException();
     }

@@ -5,7 +5,7 @@ using Drawie.Numerics;
 
 namespace Drawie.Interop.Avalonia.Core;
 
-public abstract class SwapchainBase<TImage> : IAsyncDisposable where TImage : class, ISwapchainImage
+public abstract class SwapchainBase<TImage> : ISwapchain, IAsyncDisposable where TImage : class, ISwapchainImage
 {
     protected ICompositionGpuInterop Interop { get; }
     protected CompositionDrawingSurface Target { get; }

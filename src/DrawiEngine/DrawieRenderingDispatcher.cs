@@ -6,24 +6,22 @@ namespace DrawiEngine;
 public class DrawieRenderingDispatcher : IRenderingDispatcher
 {
     public Action<Action> Invoke { get; } = action => action();
-    public Action<Action> ManualLoopTick { get; }
 
     public RenderThread RenderThread { get; }
 
     public DrawieRenderingDispatcher()
     {
-        RenderThread = new RenderThread(null, Invoke);
+        RenderThread = new RenderThread();
     }
 
-    public DrawieRenderingDispatcher(Action<Action> manualTick, Action<Action> mainThreadDispatcher)
+    public void Enqueue(Action renderAction)
     {
-        ManualLoopTick = manualTick;
-        RenderThread = new RenderThread(ManualLoopTick, mainThreadDispatcher);
+        RenderThread.Enqueue(renderAction, Priority.Render);
     }
 
-    public void QueueRender(Action renderAction)
+    public void Enqueue(Action renderAction, Priority priority)
     {
-        RenderThread.EnqueueRender(renderAction);
+        RenderThread.Enqueue(renderAction, priority);
     }
 
     public IDisposable EnsureContext()

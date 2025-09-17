@@ -3,7 +3,14 @@
 public interface IRenderingDispatcher
 {
     public Action<Action> Invoke { get; }
-    public void QueueRender(Action renderAction);
+    public void Enqueue(Action renderAction);
+    public void Enqueue(Action renderAction, Priority priority);
     public IDisposable EnsureContext();
     public void StartRenderThread();
+}
+
+public enum Priority
+{
+    Render,
+    UI
 }

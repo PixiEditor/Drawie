@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Drawie.Numerics;
+using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan.Buffers;
 using Silk.NET.Vulkan;
 
@@ -18,9 +19,10 @@ public class VulkanContent : IDisposable
         this.context = context;
     }
 
-    public void Render(VulkanImage image)
+    public void Render(VulkanImage image, IVkTexture? blit = null)
     {
         var api = context.Api;
+        blit ??= texture;
 
         if (image.Size != _previousImageSize)
             CreateTemporalObjects(image.Size);
@@ -30,8 +32,8 @@ public class VulkanContent : IDisposable
         var commandBuffer = context.Pool.CreateCommandBuffer();
         commandBuffer.BeginRecording();
 
-        texture.TransitionLayoutTo(commandBuffer.InternalHandle, ImageLayout.ColorAttachmentOptimal,
-            ImageLayout.TransferSrcOptimal);
+        blit.TransitionLayout(commandBuffer.InternalHandle.Handle, /*(uint)ImageLayout.ColorAttachmentOptimal*/
+            (uint)ImageLayout.TransferSrcOptimal, (uint)AccessFlags.MemoryReadBit);
 
         image.TransitionLayout(commandBuffer.InternalHandle, ImageLayout.TransferDstOptimal,
             AccessFlags.TransferWriteBit);
@@ -59,14 +61,14 @@ public class VulkanContent : IDisposable
             }
         };
 
-        api.CmdBlitImage(commandBuffer.InternalHandle, texture.VkImage,
+        api.CmdBlitImage(commandBuffer.InternalHandle, new Image(blit.ImageHandle),
             ImageLayout.TransferSrcOptimal,
             image.InternalHandle, ImageLayout.TransferDstOptimal, 1, srcBlitRegion, Filter.Linear);
 
         commandBuffer.Submit();
 
-        texture.TransitionLayoutTo((uint)ImageLayout.TransferSrcOptimal,
-            (uint)ImageLayout.ColorAttachmentOptimal);
+        blit.TransitionLayout(/*(uint)ImageLayout.TransferSrcOptimal,*/
+            (uint)ImageLayout.ColorAttachmentOptimal, (uint)AccessFlags.MemoryReadBit);
     }
 
     public void CreateTextureImage(VecI size)

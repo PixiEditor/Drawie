@@ -25,14 +25,12 @@ class Program
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
-            .With(new Win32PlatformOptions
+            .With(new Win32PlatformOptions { RenderingMode = new[] { Win32RenderingMode.Vulkan }, })
+            .With(new VulkanInstanceCreationOptions()
             {
-                RenderingMode = new[]
-                {
-                    Win32RenderingMode.Vulkan
-                },
+                UseDebug = true,
+                EnabledLayers = ["VK_LAYER_KHRONOS_validation"],
             })
             .With(new X11PlatformOptions() { RenderingMode = new[] { X11RenderingMode.Vulkan, X11RenderingMode.Glx } })
-            .WithDrawie()
-            .LogToTrace(LogEventLevel.Debug, "Vulkan");
+            .WithDrawie();
 }

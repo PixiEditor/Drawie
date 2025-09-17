@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using Avalonia.Platform;
+using Drawie.Interop.Avalonia.Core;
 using Drawie.RenderApi.Vulkan.Extensions;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
@@ -7,7 +8,7 @@ using Semaphore = Silk.NET.Vulkan.Semaphore;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
-public class VulkanSemaphorePair : IDisposable
+public class VulkanSemaphorePair : IDisposable, ISemaphorePair
 {
      private readonly VulkanInteropContext _resources;
 
@@ -81,6 +82,9 @@ public class VulkanSemaphorePair : IDisposable
 
     internal Semaphore ImageAvailableSemaphore { get; }
     internal Semaphore RenderFinishedSemaphore { get; }
+
+    object ISemaphorePair.RenderFinishedSemaphore => RenderFinishedSemaphore;
+    object ISemaphorePair.AvailableSemaphore => ImageAvailableSemaphore;
 
     public unsafe void Dispose()
     {

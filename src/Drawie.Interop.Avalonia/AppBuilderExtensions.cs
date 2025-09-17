@@ -79,7 +79,7 @@ public static class AppBuilderExtensions
 
                     SkiaDrawingBackend drawingBackend = new SkiaDrawingBackend();
                     DrawingEngine drawingEngine =
-                        new DrawingEngine(renderApi, null, drawingBackend, new DrawieRenderingDispatcher(compositor.RequestCompositionUpdate, a => Dispatcher.UIThread.Post(a, DispatcherPriority.Render)));
+                        new DrawingEngine(renderApi, null, drawingBackend, new DrawieRenderingDispatcher());
 
                     // It's very likely that this is not needed and may cause issues when reopening main window without
                     // proper reinitialization.

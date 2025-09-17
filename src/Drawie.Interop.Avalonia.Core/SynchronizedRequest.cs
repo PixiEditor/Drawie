@@ -1,4 +1,5 @@
-﻿using Drawie.Interop.Avalonia.Core;
+﻿using Avalonia.Media;
+using Drawie.Interop.Avalonia.Core;
 using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Rendering;
@@ -6,15 +7,16 @@ namespace Drawie.Backend.Core.Rendering;
 public class SynchronizedRequest
 {
     private VecI? queuedBackbufferUpdate;
+    private VecI? processingBackbufferUpdate;
     public RenderState State { get; private set; } = RenderState.Idle;
     private readonly object _lock = new();
 
     private Action<VecI> updateBackbuffer;
-    private Action<FrameHandle> _blit;
+    private Action<VecI> _blit;
     private Action requestRender;
 
 
-    public SynchronizedRequest(Action<VecI> updateBackbuffer, Action<FrameHandle> blit, Action requestRender)
+    public SynchronizedRequest(Action<VecI> updateBackbuffer, Action<VecI> blit, Action requestRender)
     {
         this.updateBackbuffer = updateBackbuffer;
         this._blit = blit;
@@ -51,23 +53,39 @@ public class SynchronizedRequest
         }
     }
 
-    public void QueueRequestBackbufferUpdate(VecI vecI)
-    {
-        queuedBackbufferUpdate = vecI;
-        if (State == RenderState.Idle)
-        {
-            TryStartRendering();
-            updateBackbuffer(vecI);
-        }
-    }
-
-    public void SignalBackbufferUpdated(FrameHandle frameHandle)
+    public bool TryStartPresenting()
     {
         lock (_lock)
         {
-            if (State != RenderState.Rendering) return;
-            TryStartSwapping();
-            _blit(frameHandle);
+            if (State != RenderState.Idle) return false;
+            State = RenderState.Presenting;
+            return true;
+        }
+    }
+
+    public void QueueRequestBackbufferUpdate(VecI vecI)
+    {
+        queuedBackbufferUpdate = vecI;
+        if (State is RenderState.Idle or RenderState.Presenting)
+        {
+            if (TryStartRendering())
+            {
+                queuedBackbufferUpdate = null;
+                updateBackbuffer(vecI);
+                processingBackbufferUpdate = vecI;
+            }
+        }
+    }
+
+    public void SignalBackbufferUpdated()
+    {
+        lock (_lock)
+        {
+
+            if (TryStartSwapping())
+            {
+                _blit(processingBackbufferUpdate!.Value);
+            }
         }
     }
 
@@ -75,9 +93,26 @@ public class SynchronizedRequest
     {
         lock (_lock)
         {
-            if (State != RenderState.Swapping) return;
-            TryFinishSwapping();
-            requestRender();
+            if (TryFinishSwapping())
+            {
+                processingBackbufferUpdate = null;
+                requestRender();
+                /*if (queuedBackbufferUpdate.HasValue)
+                {
+                    QueueRequestBackbufferUpdate(queuedBackbufferUpdate.Value);
+                }*/
+            }
+        }
+    }
+
+
+    public void SignalPresentFinished()
+    {
+        lock (_lock)
+        {
+            if (State != RenderState.Presenting) return;
+            State = RenderState.Idle;
+            processingBackbufferUpdate = null;
             if (queuedBackbufferUpdate.HasValue)
             {
                 QueueRequestBackbufferUpdate(queuedBackbufferUpdate.Value);
@@ -90,5 +125,6 @@ public enum RenderState
 {
     Idle, // Backbuffer is idle, waiting to be rendered to
     Rendering, // Backbuffer is being rendered to, unable to swap with frontbuffer
-    Swapping // Backbuffer is rendering onto frontbuffer. Backbuffer can't be rendered onto and frontbuffer can't be presented
+    Swapping, // Backbuffer is rendering onto frontbuffer. Backbuffer can't be rendered onto and frontbuffer can't be presented,
+    Presenting // Frontbuffer is being presented, unable to swap
 }

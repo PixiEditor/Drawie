@@ -33,7 +33,7 @@ public class VulkanSwapchain : SwapchainBase<VulkanSwapchainImage>
     }
 }
 
-public class VulkanSwapchainImage : ISwapchainImage, IVkTexture
+public class VulkanSwapchainImage : ISwapchainImage
 {
     private readonly VulkanInteropContext _vk;
     private readonly ICompositionGpuInterop _interop;
@@ -74,10 +74,6 @@ public class VulkanSwapchainImage : ISwapchainImage, IVkTexture
     }
 
     public VecI Size { get; }
-    public void BlitFrom(ITexture texture)
-    {
-        throw new NotImplementedException();
-    }
 
     public Task? LastPresent => _lastPresent;
 

@@ -1,4 +1,5 @@
 using Silk.NET.Vulkan;
+using Semaphore = System.Threading.Semaphore;
 
 namespace Drawie.RenderApi.Vulkan.Helpers;
 
@@ -49,8 +50,8 @@ public class SingleTimeCommandBufferSession : IDisposable
         Vk.BeginCommandBuffer(commandBuffer, beginInfo);
         CommandBuffer = commandBuffer;
     }
-    
-    public unsafe void End()
+
+    public unsafe void End(Silk.NET.Vulkan.Semaphore? signalSemaphore = null)
     {
         Vk.EndCommandBuffer(CommandBuffer);
         
@@ -60,8 +61,15 @@ public class SingleTimeCommandBufferSession : IDisposable
         {
             SType = StructureType.SubmitInfo,
             CommandBufferCount = 1,
-            PCommandBuffers = &commandBuffer
+            PCommandBuffers = &commandBuffer,
         };
+
+        if (signalSemaphore != null)
+        {
+            var semaphore = signalSemaphore.Value;
+            submitInfo.SignalSemaphoreCount = 1;
+            submitInfo.PSignalSemaphores = &semaphore;
+        }
         
         Vk.QueueSubmit(graphicsQueue, 1, submitInfo, default);
         Vk.QueueWaitIdle(graphicsQueue);

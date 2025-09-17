@@ -227,7 +227,7 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
     }
 
     // TODO: Needed?
-    public ITexture CreateExportableTexture(VecI size)
+    public IExportableTexture CreateExportableTexture(VecI size)
     {
         uint format = (uint)Format.R8G8B8A8Unorm;
         return new VulkanImage(this, format, size, true, gpuInterop.SupportedImageHandleTypes);

@@ -48,6 +48,12 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
             ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Nearest);
     }
 
+    public void BlitFrom(ITexture backingBackbufferTexture, object? renderFinishedSemaphore,
+        object? blitSignalSemaphore)
+    {
+        BlitFrom(backingBackbufferTexture);
+    }
+
     public void Bind()
     {
         Api.BindTexture(TextureTarget.Texture2D, TextureId);
@@ -61,5 +67,10 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
     public void Dispose()
     {
         Api.DeleteTexture(TextureId);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        throw new NotImplementedException();
     }
 }

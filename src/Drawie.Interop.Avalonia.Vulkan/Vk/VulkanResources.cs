@@ -65,19 +65,29 @@ public class VulkanResources : RenderApiResources
         return Context.CreateTexture(size);
     }
 
-    public override ITexture CreateSwapchainTexture(VecI size)
-    {
-        if (isDisposed)
-            throw new ObjectDisposedException(nameof(VulkanResources));
-
-        return Swapchain.CreateImage(size);
-    }
-
-    public override ITexture CreateExportableTexture(VecI size)
+    public override IExportableTexture CreateExportableTexture(VecI size)
     {
         if (isDisposed)
             throw new ObjectDisposedException(nameof(VulkanResources));
 
         return Context.CreateExportableTexture(size);
+    }
+
+    public override ISemaphorePair CreateSemaphorePair()
+    {
+        if (isDisposed)
+            throw new ObjectDisposedException(nameof(VulkanResources));
+
+        return new VulkanSemaphorePair(Context, GpuInterop.SupportedImageHandleTypes, true);
+    }
+
+    public override IDisposable Render(VecI size, ITexture toBlit)
+    {
+        if (isDisposed || toBlit is not IVkTexture img)
+            return null;
+
+        var present = Swapchain.BeginDraw(size, out var image);
+        Content.Render(image, img);
+        return present;
     }
 }

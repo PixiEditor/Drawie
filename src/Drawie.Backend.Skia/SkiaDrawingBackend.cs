@@ -292,7 +292,7 @@ namespace Drawie.Skia
 
         public void Flush()
         {
-            GraphicsContext?.Flush();
+            GraphicsContext?.Flush(true, true);
         }
 
         private void DisposeImpl<T>(SkObjectImplementation<T> impl) where T : SKObject

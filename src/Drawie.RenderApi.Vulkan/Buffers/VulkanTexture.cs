@@ -34,7 +34,7 @@ public class VulkanTexture : IDisposable, IVkTexture
     private Image textureImage;
     private DeviceMemory textureImageMemory;
     private Sampler sampler;
-    
+
     public unsafe VulkanTexture(Vk vk, Device logicalDevice, PhysicalDevice physicalDevice, CommandPool commandPool,
         Queue graphicsQueue, uint queueFamily, VecI size)
     {
@@ -57,7 +57,8 @@ public class VulkanTexture : IDisposable, IVkTexture
 
         ImageFormat = (uint)Format.R8G8B8A8Unorm;
         Tiling = (uint)ImageTiling.Optimal;
-        UsageFlags = (uint)(ImageUsageFlags.SampledBit | ImageUsageFlags.TransferSrcBit | ImageUsageFlags.TransferDstBit | ImageUsageFlags.ColorAttachmentBit);
+        UsageFlags = (uint)(ImageUsageFlags.SampledBit | ImageUsageFlags.TransferSrcBit |
+                            ImageUsageFlags.TransferDstBit | ImageUsageFlags.ColorAttachmentBit);
 
         CreateImage((uint)size.X, (uint)size.Y, (Format)ImageFormat, (ImageTiling)Tiling,
             (ImageUsageFlags)UsageFlags, MemoryPropertyFlags.DeviceLocalBit);
@@ -66,28 +67,40 @@ public class VulkanTexture : IDisposable, IVkTexture
         CopyBufferToImage(stagingBuffer.VkBuffer, textureImage, (uint)size.X, (uint)size.Y);
         TransitionImageLayout(textureImage, Format.R8G8B8A8Srgb, ImageLayout.TransferDstOptimal,
             ImageLayout.ShaderReadOnlyOptimal);*/
-        
-        TransitionImageLayout(textureImage, (Format)ImageFormat, ImageLayout.Undefined, ImageLayout.ColorAttachmentOptimal);
+
+        TransitionImageLayout(textureImage, (Format)ImageFormat, ImageLayout.Undefined,
+            ImageLayout.ColorAttachmentOptimal);
 
         ImageView = ImageUtility.CreateViewForImage(Vk, LogicalDevice, textureImage, Format.R8G8B8A8Unorm);
-        
+
         CreateSampler();
     }
-    
+
     public void BlitFrom(ITexture texture)
+    {
+        BlitFrom(texture, null, null);
+    }
+
+    public void BlitFrom(ITexture texture, object? renderFinishedSemaphore, object? blitSignalSemaphore)
     {
         if (texture is not IVkTexture vkTexture)
             throw new ArgumentException("The texture must be a VulkanTexture.", nameof(texture));
 
         using var commandBuffer = new SingleTimeCommandBufferSession(Vk, CommandPool, LogicalDevice, GraphicsQueue);
 
+        vkTexture.TransitionLayout(commandBuffer.CommandBuffer.Handle, (uint)ImageLayout.TransferSrcOptimal,
+            (uint)AccessFlags.TransferReadBit);
+        TransitionLayout(commandBuffer.CommandBuffer.Handle, (uint)ImageLayout.TransferDstOptimal,
+            (uint)AccessFlags.TransferWriteBit);
+
         var srcBlitRegion = new ImageBlit()
         {
-            SrcOffsets = new ImageBlit.SrcOffsetsBuffer
-            {
-                Element0 = new Offset3D(0, 0, 0),
-                Element1 = new Offset3D(vkTexture.Size.X, vkTexture.Size.Y, 1),
-            },
+            SrcOffsets =
+                new ImageBlit.SrcOffsetsBuffer
+                {
+                    Element0 = new Offset3D(0, 0, 0),
+                    Element1 = new Offset3D(vkTexture.Size.X, vkTexture.Size.Y, 1),
+                },
             DstOffsets = new ImageBlit.DstOffsetsBuffer
             {
                 Element0 = new Offset3D(0, 0, 0), Element1 = new Offset3D(Size.X, Size.Y, 1),
@@ -107,10 +120,17 @@ public class VulkanTexture : IDisposable, IVkTexture
             ImageLayout.TransferSrcOptimal,
             textureImage, ImageLayout.TransferDstOptimal, 1, srcBlitRegion, Filter.Linear);
 
-        commandBuffer.End();
+        if (renderFinishedSemaphore != null && renderFinishedSemaphore is not Silk.NET.Vulkan.Semaphore)
+            throw new ArgumentException("The semaphore must be a Vulkan semaphore.", nameof(renderFinishedSemaphore));
 
-        TransitionLayoutTo((uint)ImageLayout.TransferDstOptimal,
-            (uint)ImageLayout.ColorAttachmentOptimal);
+        commandBuffer.End(renderFinishedSemaphore as Silk.NET.Vulkan.Semaphore?);
+
+        vkTexture.TransitionLayout((uint)ImageLayout.ColorAttachmentOptimal, (uint)AccessFlags.MemoryReadBit);
+    }
+
+    public void TransitionLayout(ulong to, ulong readBit)
+    {
+        TransitionLayoutTo(Layout, (uint)to);
     }
 
     public void MakeReadOnly()
@@ -120,7 +140,18 @@ public class VulkanTexture : IDisposable, IVkTexture
 
     public void MakeWriteable()
     {
-        TransitionLayoutTo(ShaderReadOnlyOptimal, ColorAttachmentOptimal); 
+        TransitionLayoutTo(ShaderReadOnlyOptimal, ColorAttachmentOptimal);
+    }
+
+    public void TransitionLayout(IntPtr commandBufferHandle, ulong to, ulong readBit)
+    {
+        CommandBuffer commandBuffer = new CommandBuffer(commandBufferHandle);
+        TransitionLayoutTo(commandBuffer, (ImageLayout)Layout, (ImageLayout)to);
+    }
+
+    public void TransitionLayout(uint to)
+    {
+        TransitionLayoutTo(Layout, to);
     }
 
     private unsafe void CreateSampler()
@@ -134,7 +165,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             AddressModeV = SamplerAddressMode.Repeat,
             AddressModeW = SamplerAddressMode.Repeat,
             AnisotropyEnable = false,
-            MaxAnisotropy = 1, 
+            MaxAnisotropy = 1,
             BorderColor = BorderColor.IntOpaqueBlack,
             UnnormalizedCoordinates = false,
             CompareEnable = false,
@@ -144,7 +175,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             MinLod = 0,
             MaxLod = 0
         };
-        
+
         fixed (Sampler* samplerPtr = &sampler)
         {
             if (Vk.CreateSampler(LogicalDevice, &samplerCreateInfo, null, samplerPtr) != Result.Success)
@@ -246,7 +277,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             barrier.SrcAccessMask = AccessFlags.MemoryReadBit;
             sourceStage = PipelineStageFlags.BottomOfPipeBit;
         }
-        
+
         if (newLayout == ImageLayout.ColorAttachmentOptimal)
         {
             barrier.DstAccessMask = AccessFlags.ColorAttachmentWriteBit;
@@ -278,10 +309,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             BufferImageHeight = 0,
             ImageSubresource = new ImageSubresourceLayers()
             {
-                AspectMask = ImageAspectFlags.ColorBit,
-                MipLevel = 0,
-                BaseArrayLayer = 0,
-                LayerCount = 1
+                AspectMask = ImageAspectFlags.ColorBit, MipLevel = 0, BaseArrayLayer = 0, LayerCount = 1
             },
             ImageOffset = new Offset3D(0, 0, 0),
             ImageExtent = new Extent3D(width, height, 1)
@@ -301,7 +329,7 @@ public class VulkanTexture : IDisposable, IVkTexture
 
     public void TransitionLayoutTo(uint from, uint to)
     {
-        TransitionImageLayout(textureImage, (Format)ImageFormat, (ImageLayout)from, (ImageLayout)to); 
+        TransitionImageLayout(textureImage, (Format)ImageFormat, (ImageLayout)from, (ImageLayout)to);
     }
 
     public void TransitionLayoutTo(CommandBuffer buffer, ImageLayout from, ImageLayout to)
@@ -309,4 +337,9 @@ public class VulkanTexture : IDisposable, IVkTexture
         TransitionImageLayout(textureImage, from, to, buffer);
     }
 
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
+    }
 }

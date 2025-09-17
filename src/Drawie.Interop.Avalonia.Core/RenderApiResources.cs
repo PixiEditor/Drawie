@@ -27,7 +27,9 @@ public abstract class RenderApiResources : IAsyncDisposable
     public abstract IDisposable Render(VecI size, Action renderAction);
 
     public abstract ITexture CreateTexture(VecI size);
-    public abstract ITexture CreateSwapchainTexture(VecI size);
 
-    public abstract ITexture CreateExportableTexture(VecI size);
+    public abstract IExportableTexture CreateExportableTexture(VecI size);
+    public abstract ISemaphorePair CreateSemaphorePair();
+
+    public abstract IDisposable Render(VecI size, ITexture toBlit);
 }

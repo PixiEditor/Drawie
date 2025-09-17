@@ -7,10 +7,11 @@ using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan.Extensions;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
+using Semaphore = Silk.NET.Vulkan.Semaphore;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
-public class VulkanImage : IDisposable, IExportable, IVkTexture
+public class VulkanImage : IDisposable, IExportableTexture, IVkTexture
 {
     private readonly VulkanInteropContext _vk;
     private readonly Instance _instance;
@@ -50,6 +51,22 @@ public class VulkanImage : IDisposable, IExportable, IVkTexture
         throw new NotImplementedException();
     }
 
+    public void TransitionLayout(ulong to, ulong readBit)
+    {
+        TransitionLayout((ImageLayout)to, (AccessFlags)readBit);
+    }
+
+    public void TransitionLayout(IntPtr commandBufferHandle, ulong to, ulong readBit)
+    {
+        CommandBuffer commandBuffer = new CommandBuffer(commandBufferHandle);
+        TransitionLayout(commandBuffer, (ImageLayout)to, (AccessFlags)readBit);
+    }
+
+    public void TransitionLayout(uint to)
+    {
+        throw new NotImplementedException();
+    }
+
     public ulong MemoryHandle => _imageMemory.Handle;
     public DeviceMemory DeviceMemory => _imageMemory;
     public uint MipLevels { get; }
@@ -57,6 +74,7 @@ public class VulkanImage : IDisposable, IExportable, IVkTexture
     public VecI Size { get; }
 
     public ulong MemorySize { get; }
+
     public uint CurrentLayout => (uint)_currentLayout;
 
 
@@ -194,9 +212,102 @@ public class VulkanImage : IDisposable, IExportable, IVkTexture
         TransitionLayout(ImageLayout.ColorAttachmentOptimal, AccessFlags.NoneKhr);
     }
 
+    public void PrepareForImport(object waitSemaphore, object signalSemaphore)
+    {
+        if (signalSemaphore is not Silk.NET.Vulkan.Semaphore vkSemaphore)
+            throw new ArgumentException("The semaphore must be a Vulkan semaphore.", nameof(signalSemaphore));
+
+        if (waitSemaphore is not Silk.NET.Vulkan.Semaphore vkWait)
+            throw new ArgumentException("The semaphore must be a Vulkan semaphore.", nameof(waitSemaphore));
+
+        var commandBuffer = _commandBufferPool.CreateCommandBuffer();
+        commandBuffer.BeginRecording();
+
+        TransitionLayout(ImageLayout.TransferSrcOptimal, AccessFlags.TransferWriteBit);
+
+        commandBuffer.EndRecording();
+        commandBuffer.Submit(null, null, new [] { vkSemaphore });
+    }
+
     public void BlitFrom(ITexture texture)
     {
-        throw new NotImplementedException();
+        BlitFrom(texture, null, null);
+    }
+
+    public void BlitFrom(ITexture texture, object? renderFinishedSemaphore, object? blitSignalSemaphore)
+    {
+        if (texture is not IVkTexture vkTexture)
+            throw new ArgumentException("The texture must be a VulkanTexture.", nameof(texture));
+
+        var commandBuffer = _commandBufferPool.CreateCommandBuffer();
+        commandBuffer.BeginRecording();
+
+        Image from = new Image(vkTexture.ImageHandle);
+        vkTexture.TransitionLayout(commandBuffer.Handle, (ulong)ImageLayout.TransferSrcOptimal,
+            (ulong)AccessFlags.TransferReadBit);
+
+        TransitionLayout(commandBuffer.InternalHandle,
+            ImageLayout.TransferDstOptimal, AccessFlags.TransferWriteBit);
+
+        var srcBlitRegion = new ImageBlit()
+        {
+            SrcOffsets =
+                new ImageBlit.SrcOffsetsBuffer
+                {
+                    Element0 = new Offset3D(0, 0, 0),
+                    Element1 = new Offset3D(vkTexture.Size.X, vkTexture.Size.Y, 1),
+                },
+            DstOffsets = new ImageBlit.DstOffsetsBuffer
+            {
+                Element0 = new Offset3D(0, 0, 0), Element1 = new Offset3D(Size.X, Size.Y, 1),
+            },
+            SrcSubresource =
+                new ImageSubresourceLayers
+                {
+                    AspectMask = ImageAspectFlags.ColorBit, BaseArrayLayer = 0, LayerCount = 1, MipLevel = 0
+                },
+            DstSubresource = new ImageSubresourceLayers
+            {
+                AspectMask = ImageAspectFlags.ColorBit, BaseArrayLayer = 0, LayerCount = 1, MipLevel = 0
+            }
+        };
+
+        Api.CmdBlitImage(commandBuffer.InternalHandle,
+            from, ImageLayout.TransferSrcOptimal,
+            InternalHandle, ImageLayout.TransferDstOptimal,
+            1, srcBlitRegion, Filter.Linear);
+
+        if (renderFinishedSemaphore != null && renderFinishedSemaphore is not Silk.NET.Vulkan.Semaphore)
+            throw new ArgumentException("The semaphore must be a Vulkan semaphore.", nameof(renderFinishedSemaphore));
+
+        if (blitSignalSemaphore != null && blitSignalSemaphore is not Silk.NET.Vulkan.Semaphore)
+            throw new ArgumentException("The semaphore must be a Vulkan semaphore.", nameof(blitSignalSemaphore));
+
+        commandBuffer.EndRecording();
+
+        Semaphore renderFinishedSemaphoreVk = renderFinishedSemaphore != null
+            ? (Semaphore)renderFinishedSemaphore
+            : default;
+
+        Semaphore blitSignalSemaphoreVk = blitSignalSemaphore != null
+            ? (Semaphore)blitSignalSemaphore
+            : default;
+
+
+        Silk.NET.Vulkan.Semaphore[] waitSems = null;
+        PipelineStageFlags[] waitStages = null;
+        if (renderFinishedSemaphore != null)
+        {
+            waitSems = new[] { renderFinishedSemaphoreVk };
+        }
+
+        Silk.NET.Vulkan.Semaphore[] signalSems = null;
+        if (blitSignalSemaphore != null)
+            signalSems = new[] { blitSignalSemaphoreVk };
+
+        commandBuffer.Submit(waitSems, waitStages, signalSems);
+
+        vkTexture.TransitionLayout((uint)ImageLayout.ColorAttachmentOptimal, (uint)AccessFlags.ColorAttachmentReadBit);
     }
 
     public int ExportFd()
@@ -265,6 +376,17 @@ public class VulkanImage : IDisposable, IExportable, IVkTexture
         _currentAccessFlags = destinationAccessFlags;
     }
 
+    internal void TransitionLayout(Image imageHandle, CommandBuffer commandBuffer,
+        ImageLayout fromLayout, AccessFlags fromAccessFlags,
+        ImageLayout destinationLayout, AccessFlags destinationAccessFlags)
+    {
+        VulkanMemoryHelper.TransitionLayout(Api, commandBuffer, imageHandle,
+            fromLayout,
+            fromAccessFlags,
+            destinationLayout, destinationAccessFlags,
+            MipLevels);
+    }
+
     internal void TransitionLayout(CommandBuffer commandBuffer,
         ImageLayout destinationLayout, AccessFlags destinationAccessFlags)
         => TransitionLayout(commandBuffer, _currentLayout, _currentAccessFlags, destinationLayout,
@@ -294,5 +416,11 @@ public class VulkanImage : IDisposable, IExportable, IVkTexture
         _imageView = default;
         InternalHandle = default;
         _imageMemory = default;
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
     }
 }

@@ -11,4 +11,6 @@ public interface IVkTexture : ITexture
    public uint Tiling { get; }
    public void MakeReadOnly();
    public void MakeWriteable();
+   void TransitionLayout(ulong to, ulong readBit);
+   void TransitionLayout(IntPtr commandBufferHandle, ulong to, ulong readBit);
 }
