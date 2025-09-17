@@ -6,14 +6,18 @@ namespace Drawie.Backend.Core.Rendering;
 
 public sealed class RenderThread : IDisposable
 {
+    public double RefreshRate { get; set; } = 60.0;
     private readonly Thread _thread;
     private readonly CancellationTokenSource _cts = new();
+
+    private double targetFrameMs => 1000.0 / RefreshRate;
 
 
     private readonly ConcurrentDictionary<Priority, ConcurrentQueue<Action>> _renderQueue = new();
 
-    public RenderThread()
+    public RenderThread(double targetFps)
     {
+        RefreshRate = targetFps;
         _thread = new Thread(Run) { IsBackground = true, Name = "Drawie Render Thread" };
     }
 
@@ -34,7 +38,6 @@ public sealed class RenderThread : IDisposable
     private void Run()
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        const double targetFrameMs = 1000.0 / 60.0;
 
 
         while (!_cts.IsCancellationRequested)

@@ -53,7 +53,7 @@ public class SynchronizedRequest
         }
     }
 
-    public bool TryStartPresenting()
+    /*public bool TryStartPresenting()
     {
         lock (_lock)
         {
@@ -61,7 +61,7 @@ public class SynchronizedRequest
             State = RenderState.Presenting;
             return true;
         }
-    }
+    }*/
 
     public void QueueRequestBackbufferUpdate(VecI vecI)
     {
@@ -97,16 +97,16 @@ public class SynchronizedRequest
             {
                 processingBackbufferUpdate = null;
                 requestRender();
-                /*if (queuedBackbufferUpdate.HasValue)
+                if (queuedBackbufferUpdate.HasValue)
                 {
                     QueueRequestBackbufferUpdate(queuedBackbufferUpdate.Value);
-                }*/
+                }
             }
         }
     }
 
 
-    public void SignalPresentFinished()
+    /*public void SignalPresentFinished()
     {
         lock (_lock)
         {
@@ -118,7 +118,7 @@ public class SynchronizedRequest
                 QueueRequestBackbufferUpdate(queuedBackbufferUpdate.Value);
             }
         }
-    }
+    }*/
 }
 
 public enum RenderState

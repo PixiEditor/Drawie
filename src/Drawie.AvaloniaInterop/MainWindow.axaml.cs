@@ -67,9 +67,12 @@ public partial class MainWindow : Window
         texture?.DrawingSurface.Canvas.DrawCircle(64, 64, 64,
             new Paint() { Color = new Color(255, 255, 255, 128), Style = PaintStyle.Fill });
         DrawieControl.QueueNextFrame();
-        DrawingBackendApi.Current.RenderingDispatcher.Enqueue(() =>
+        DrawieControl2.QueueNextFrame();
+        DrawieControl3.QueueNextFrame();
+        DrawieControl4.QueueNextFrame();
+        /*DrawingBackendApi.Current.RenderingDispatcher.Enqueue(() =>
         {
             UpdateDraw(texture);
-        });
+        });*/
     }
 }

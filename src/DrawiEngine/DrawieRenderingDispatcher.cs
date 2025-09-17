@@ -9,9 +9,9 @@ public class DrawieRenderingDispatcher : IRenderingDispatcher
 
     public RenderThread RenderThread { get; }
 
-    public DrawieRenderingDispatcher()
+    public DrawieRenderingDispatcher(double targetFps = 60.0)
     {
-        RenderThread = new RenderThread();
+        RenderThread = new RenderThread(targetFps);
     }
 
     public void Enqueue(Action renderAction)

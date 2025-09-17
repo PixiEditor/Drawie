@@ -23,10 +23,8 @@ public abstract class DrawieControl : InteropControl
     private ITexture backingBackbufferTexture;
 
     private SynchronizedRequest frameRequest;
-    private ConcurrentStack<PendingFrame> pendingFrames = new();
+    //private ConcurrentStack<PendingFrame> pendingFrames = new();
     private ConcurrentStack<IDisposable> pendingFrames2 = new();
-
-    private ISwapchain swapchain;
 
     /// <summary>
     ///     If true, intermediate surface will be used to render the frame. This is useful when dealing with non srgb surfaces.
@@ -38,7 +36,7 @@ public abstract class DrawieControl : InteropControl
     {
         frameRequest = new SynchronizedRequest(QueueRender,
             QueueWriteBackToFront,
-            () => Dispatcher.UIThread.Post(RequestCompositorUpdate));
+            () => Dispatcher.UIThread.Post(RequestCompositorUpdate, DispatcherPriority.Render));
     }
 
     protected override RenderApiResources? InitializeGraphicsResources(Compositor targetCompositor,
@@ -123,11 +121,15 @@ public abstract class DrawieControl : InteropControl
                 DrawingBackendApi.Current.CreateRenderSurface(size, backingBackbufferTexture, SurfaceOrigin.BottomLeft);
         }*/
 
+        if(resources == null)
+            return;
+
         if (resources.Texture == null || resources.Texture.Size != size)
         {
-            backingBackbufferTexture = resources.CreateExportableTexture(size);
+            /*backingBackbufferTexture = resources.CreateExportableTexture(size);*/
+            resources.CreateTemporalObjects(size);
             backbuffer?.Dispose();
-            backbuffer = DrawingBackendApi.Current.CreateRenderSurface(size, backingBackbufferTexture, SurfaceOrigin.BottomLeft);
+            backbuffer = DrawingBackendApi.Current.CreateRenderSurface(size, resources.Texture, SurfaceOrigin.BottomLeft);
         }
 
         using (var ctx = IDrawieInteropContext.Current.EnsureContext())
@@ -140,10 +142,10 @@ public abstract class DrawieControl : InteropControl
 
     protected override void OnCompositorRender(VecI size)
     {
-        if (!frameRequest.TryStartPresenting())
+        /*if (!frameRequest.TryStartPresenting())
         {
             return;
-        }
+        }*/
 
         lock (backingLock)
         {
@@ -157,7 +159,7 @@ public abstract class DrawieControl : InteropControl
                 frame2.Dispose();
             }
 
-            frameRequest.SignalPresentFinished();
+            //frameRequest.SignalPresentFinished();
         }
     }
 
@@ -166,7 +168,7 @@ public abstract class DrawieControl : InteropControl
     {
         lock (backingLock)
         {
-            pendingFrames2.Push(resources.Render(size, backingBackbufferTexture));
+            pendingFrames2.Push(resources.Render(size, () => { }));
             /*
             var exportTexture = resources.CreateExportableTexture(backingBackbufferTexture.Size);
             var semaphorePair = resources.CreateSemaphorePair();
