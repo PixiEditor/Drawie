@@ -24,7 +24,7 @@ public class VulkanSwapchain : SwapchainBase<VulkanSwapchainImage>
         return new VulkanSwapchainImage(_vk, size, Interop, Target);
     }
 
-    public IDisposable BeginDraw(VecI size, out VulkanImage image)
+    public (Action<VecI> present, IDisposable returnToPool) BeginDraw(VecI size, out VulkanImage image)
     {
         _vk.Pool.FreeUsedCommandBuffers();
         var rv = BeginDrawCore(size, out var swapchainImage);
@@ -108,7 +108,7 @@ public class VulkanSwapchainImage : ISwapchainImage
     }
 
 
-    public Task Present()
+    public Task Present(VecI size)
     {
         /*var buffer = _vk.Pool.CreateCommandBuffer();
         buffer.BeginRecording();
@@ -116,6 +116,9 @@ public class VulkanSwapchainImage : ISwapchainImage
 
         buffer.Submit(null, null, new[] { _semaphorePair.RenderFinishedSemaphore });*/
 
+
+        /*var exportable = _vk.CreateExportableTexture(size);*/
+        //exportable.BlitFrom(_image, _semaphorePair.RenderFinishedSemaphore, _semaphorePair.ImageAvailableSemaphore);
         _availableSemaphore ??= _interop.ImportSemaphore(_semaphorePair.Export(false));
 
         _renderCompletedSemaphore ??= _interop.ImportSemaphore(_semaphorePair.Export(true));
@@ -138,6 +141,7 @@ public class VulkanSwapchainImage : ISwapchainImage
                         Console.WriteLine("Failed to present frame: " + t.Exception?.Message);
                     }
                 });
+
         return _lastPresent;
     }
 
@@ -160,6 +164,7 @@ public class VulkanSwapchainImage : ISwapchainImage
     public uint Layout => _image.CurrentLayout;
     public uint TargetSharingMode => (uint)SharingMode.Exclusive;
     public uint Tiling => (uint)ImageTiling.Optimal;
+
     public void MakeReadOnly()
     {
         throw new NotImplementedException();

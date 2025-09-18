@@ -12,7 +12,6 @@ public sealed class RenderThread : IDisposable
 
     private double targetFrameMs => 1000.0 / RefreshRate;
 
-
     private readonly ConcurrentDictionary<Priority, ConcurrentQueue<Action>> _renderQueue = new();
 
     public RenderThread(double targetFps)
@@ -39,13 +38,13 @@ public sealed class RenderThread : IDisposable
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
 
-
         while (!_cts.IsCancellationRequested)
         {
             var frameStart = sw.Elapsed.TotalMilliseconds;
 
             ProcessQueue(Priority.Render);
             DrawingBackendApi.Current.Flush();
+            ProcessQueue(Priority.BackbufferUpdate);
             ProcessQueue(Priority.UI);
 
             var elapsed = sw.Elapsed.TotalMilliseconds - frameStart;

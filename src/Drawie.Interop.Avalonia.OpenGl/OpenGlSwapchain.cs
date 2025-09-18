@@ -39,11 +39,11 @@ public class OpenGlSwapchain : SwapchainBase<IGlSwapchainImage>
         return new DxgiMutexOpenGlSwapChainImage(Interop, Target, _externalObjectsFeature!, size);
     }
 
-    public IDisposable BeginDraw(VecI size, out IOpenGlTexture texture)
+    public Frame BeginDraw(VecI size, out IOpenGlTexture texture)
     {
         var rv = BeginDrawCore(size, out var tex);
         texture = tex;
-        return rv;
+        return new Frame() { PresentFrame = rv.present, ReturnFrame = rv.returnToPool, Size = size, Texture = tex };
     }
 }
 
@@ -106,7 +106,7 @@ internal class DxgiMutexOpenGlSwapChainImage : IGlSwapchainImage
     public Task? LastPresent => _lastPresent;
     public void BeginDraw() => _texture.AcquireKeyedMutex(0);
 
-    public Task Present()
+    public Task Present(VecI size)
     {
         _texture.ReleaseKeyedMutex(1);
         _imported ??= _interop.ImportImage(_texture.GetHandle(), _texture.Properties);
@@ -181,7 +181,7 @@ internal class CompositionOpenGlSwapChainImage : IGlSwapchainImage
         // No-op for texture sharing
     }
 
-    public Task Present()
+    public Task Present(VecI size)
     {
         _imported ??= _interop.ImportImage(_texture);
         LastPresent = _target.UpdateAsync(_imported);

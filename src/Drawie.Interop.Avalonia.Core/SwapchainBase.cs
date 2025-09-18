@@ -58,12 +58,12 @@ public abstract class SwapchainBase<TImage> : ISwapchain, IAsyncDisposable where
 
     public abstract TImage CreateImage(VecI size);
 
-    protected IDisposable BeginDrawCore(VecI size, out TImage image)
+    protected (Action<VecI> present, IDisposable returnToPool) BeginDrawCore(VecI size, out TImage image)
     {
         if (isDisposed)
         {
             image = null;
-            return Disposable.Create(() => { });
+            return (i => {}, Backend.Core.Utils.Disposable.Empty);
         }
 
         var img = CleanupAndFindNextImage(size) ?? CreateImage(size);
@@ -71,14 +71,21 @@ public abstract class SwapchainBase<TImage> : ISwapchain, IAsyncDisposable where
         img.BeginDraw();
         _pendingImages.Remove(img);
         image = img;
-        return Disposable.Create(() =>
+        var present = (VecI size) =>
         {
             if (isDisposed)
                 return;
 
-            img.Present();
-            _pendingImages.Add(img);
+            img.Present(size);
+        };
+
+        var returnToPool = Disposable.Create(() =>
+        {
+            if (!_pendingImages.Contains(img))
+                _pendingImages.Add(img);
         });
+
+        return (present, returnToPool);
     }
 
     public async ValueTask DisposeAsync()
@@ -100,6 +107,6 @@ public interface ISwapchainImage : IAsyncDisposable
     VecI Size { get; }
     Task? LastPresent { get; }
     void BeginDraw();
-    Task Present();
+    Task Present(VecI size);
     FrameHandle ExportFrame();
 }

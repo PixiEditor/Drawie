@@ -23,7 +23,7 @@ public abstract class InteropControl : Control
     private readonly Action update;
     protected bool updateQueued;
 
-    private CompositionDrawingSurface? surface;
+    protected CompositionDrawingSurface? surface;
 
     private string info = string.Empty;
     private bool initialized = false;

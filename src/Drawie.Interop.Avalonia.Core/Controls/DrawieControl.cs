@@ -1,8 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics;
 using Avalonia;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
@@ -10,9 +7,7 @@ using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Rendering;
 using Drawie.Backend.Core.Surfaces;
-using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Numerics;
-using Drawie.RenderApi;
 
 namespace Drawie.Interop.Avalonia.Core.Controls;
 
@@ -20,11 +15,11 @@ public abstract class DrawieControl : InteropControl
 {
     private object backingLock = new object();
     private DrawingSurface? backbuffer;
-    private ITexture backingBackbufferTexture;
 
     private SynchronizedRequest frameRequest;
-    //private ConcurrentStack<PendingFrame> pendingFrames = new();
-    private ConcurrentStack<IDisposable> pendingFrames2 = new();
+
+    private Frame lastFrame;
+    private ConcurrentStack<Frame> pendingFrames = new ConcurrentStack<Frame>();
 
     /// <summary>
     ///     If true, intermediate surface will be used to render the frame. This is useful when dealing with non srgb surfaces.
@@ -36,7 +31,7 @@ public abstract class DrawieControl : InteropControl
     {
         frameRequest = new SynchronizedRequest(QueueRender,
             QueueWriteBackToFront,
-            () => Dispatcher.UIThread.Post(RequestCompositorUpdate, DispatcherPriority.Render));
+            QueueCompositorUpdate);
     }
 
     protected override RenderApiResources? InitializeGraphicsResources(Compositor targetCompositor,
@@ -92,6 +87,14 @@ public abstract class DrawieControl : InteropControl
             UpdateBackbuffer(size);
             frameRequest.SignalBackbufferUpdated();
         });
+
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            RequestCompositorUpdate();
+            return;
+        }
+
+        Dispatcher.UIThread.Post(RequestCompositorUpdate, DispatcherPriority.Render);
     }
 
     private void QueueWriteBackToFront(VecI size)
@@ -99,6 +102,14 @@ public abstract class DrawieControl : InteropControl
         DrawingBackendApi.Current.RenderingDispatcher.Enqueue(() =>
         {
             WriteBackToFront(size);
+        }, Priority.BackbufferUpdate);
+    }
+
+    private void QueueCompositorUpdate()
+    {
+        DrawingBackendApi.Current.RenderingDispatcher.Enqueue(() =>
+        {
+            Dispatcher.UIThread.Post(RequestCompositorUpdate, DispatcherPriority.Render);
         }, Priority.UI);
     }
 
@@ -110,26 +121,16 @@ public abstract class DrawieControl : InteropControl
 
     protected void UpdateBackbuffer(VecI size)
     {
-        /*if (backbuffer == null || backbuffer.IsDisposed || backbuffer.DeviceClipBounds.Size != size)
-        {
-            lock (backingLock)
-            {
-                backingBackbufferTexture = resources.CreateExportableTexture(size);
-            }
-            backbuffer?.Dispose();
-            backbuffer =
-                DrawingBackendApi.Current.CreateRenderSurface(size, backingBackbufferTexture, SurfaceOrigin.BottomLeft);
-        }*/
-
-        if(resources == null)
+        if (resources == null)
             return;
 
         if (resources.Texture == null || resources.Texture.Size != size)
         {
-            /*backingBackbufferTexture = resources.CreateExportableTexture(size);*/
             resources.CreateTemporalObjects(size);
+
             backbuffer?.Dispose();
-            backbuffer = DrawingBackendApi.Current.CreateRenderSurface(size, resources.Texture, SurfaceOrigin.BottomLeft);
+            backbuffer =
+                DrawingBackendApi.Current.CreateRenderSurface(size, resources.Texture, SurfaceOrigin.BottomLeft);
         }
 
         using (var ctx = IDrawieInteropContext.Current.EnsureContext())
@@ -140,115 +141,33 @@ public abstract class DrawieControl : InteropControl
         }
     }
 
-    protected override void OnCompositorRender(VecI size)
-    {
-        /*if (!frameRequest.TryStartPresenting())
-        {
-            return;
-        }*/
-
-        lock (backingLock)
-        {
-            /*if (pendingFrames.TryPop(out var frame))
-            {
-                Present(frame);
-            }*/
-
-            if (pendingFrames2.TryPop(out var frame2))
-            {
-                frame2.Dispose();
-            }
-
-            //frameRequest.SignalPresentFinished();
-        }
-    }
-
-
     public void WriteBackToFront(VecI size)
     {
         lock (backingLock)
         {
-            pendingFrames2.Push(resources.Render(size, () => { }));
-            /*
-            var exportTexture = resources.CreateExportableTexture(backingBackbufferTexture.Size);
-            var semaphorePair = resources.CreateSemaphorePair();
-
-            exportTexture.BlitFrom(backingBackbufferTexture, null, semaphorePair.AvailableSemaphore);
-
-            FrameHandle frameHandle = ExportFrameForDisplay(exportTexture, semaphorePair, size);
-
-            pendingFrames.Push(new PendingFrame()
-            {
-                Handle = frameHandle, NativeTexture = exportTexture, SemaphorePair = semaphorePair
-            });
-            */
-
-            frameRequest.SignalSwapFinished();
+            pendingFrames.Push(resources?.Render(size, () => { }) ?? default);
         }
+
+        frameRequest.SignalSwapFinished();
     }
 
-    protected FrameHandle ExportFrameForDisplay(IExportableTexture exportableTexture, ISemaphorePair semaphorePair,
-        VecI size)
+
+    protected override void OnCompositorRender(VecI size)
     {
-        var img = exportableTexture.Export();
-        return new FrameHandle()
+        lock (backingLock)
         {
-            ImageHandle = img,
-            Size = size,
-            MemorySize = exportableTexture.MemorySize,
-            RenderCompletedSemaphore = semaphorePair.Export(true),
-            AvailableSemaphore = semaphorePair.Export(false),
-        };
-    }
-
-    private void Present(PendingFrame frame)
-    {
-        try
-        {
-            frame.NativeTexture.PrepareForImport(frame.SemaphorePair.AvailableSemaphore, frame.SemaphorePair.RenderFinishedSemaphore);
-            var imported = resources.GpuInterop.ImportImage(frame.Handle.ImageHandle,
-                new PlatformGraphicsExternalImageProperties()
-                {
-                    Format = PlatformGraphicsExternalImageFormat.R8G8B8A8UNorm,
-                    Width = frame.Handle.Size.X,
-                    Height = frame.Handle.Size.Y,
-                    MemorySize = frame.Handle.MemorySize,
-                });
-
-            var renderCompletedSem = frame.Handle.RenderCompletedSemaphore != null
-                ? resources.GpuInterop.ImportSemaphore(frame.Handle.RenderCompletedSemaphore)
-                : null;
-
-            var availableSem = frame.Handle.AvailableSemaphore != null
-                ? resources.GpuInterop.ImportSemaphore(frame.Handle.AvailableSemaphore)
-                : null;
-
-            var task = resources.Surface.UpdateWithSemaphoresAsync(imported, renderCompletedSem,
-                availableSem).ContinueWith(t =>
+            if (pendingFrames.TryPop(out var frame) && frame.PresentFrame != null)
             {
-                if (t.IsFaulted)
+                if (size == frame.Size)
                 {
-                    Console.WriteLine("Failed to present frame: " + t.Exception?.Message);
+                    frame.PresentFrame(size);
+                    frame.ReturnFrame?.Dispose();
                 }
-
-                /*Dispatcher.UIThread.Post(() =>
+                else
                 {
-                    imported.DisposeAsync();
-                    renderCompletedSem.DisposeAsync();
-                    availableSem.DisposeAsync();
-                    FreePendingFrame(frame);
-                }, DispatcherPriority.Background);*/
-            });
+                    frame.Texture?.DisposeAsync(); // Dont return to pool, size mismatch
+                }
+            }
         }
-        catch
-        {
-            Console.WriteLine("Failed to present frame");
-        }
-    }
-
-    private void FreePendingFrame(PendingFrame frame)
-    {
-        frame.NativeTexture.DisposeAsync();
-        frame.SemaphorePair.Dispose();
     }
 }

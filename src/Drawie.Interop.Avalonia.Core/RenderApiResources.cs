@@ -24,12 +24,12 @@ public abstract class RenderApiResources : IAsyncDisposable
 
     public abstract void CreateTemporalObjects(VecI size);
 
-    public abstract IDisposable Render(VecI size, Action renderAction);
+    public abstract Frame Render(VecI size, Action renderAction);
 
     public abstract ITexture CreateTexture(VecI size);
 
     public abstract IExportableTexture CreateExportableTexture(VecI size);
     public abstract ISemaphorePair CreateSemaphorePair();
 
-    public abstract IDisposable Render(VecI size, ITexture toBlit);
+    public abstract Frame Render(VecI size, ITexture toBlit);
 }

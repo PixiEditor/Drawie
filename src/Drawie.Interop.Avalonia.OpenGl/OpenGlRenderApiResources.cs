@@ -66,10 +66,10 @@ public class OpenGlRenderApiResources : RenderApiResources
     {
     }
 
-    public override IDisposable? Render(VecI size, Action renderAction)
+    public override Frame Render(VecI size, Action renderAction)
     {
         if (isDisposed)
-            return null;
+            return default;
 
         Context.GlInterface.GetIntegerv((int)GLEnum.FramebufferBinding, out var oldFbo);
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, fbo);
@@ -103,7 +103,7 @@ public class OpenGlRenderApiResources : RenderApiResources
         throw new NotImplementedException();
     }
 
-    public override IDisposable Render(VecI size, ITexture toBlit)
+    public override Frame Render(VecI size, ITexture toBlit)
     {
         throw new NotImplementedException();
     }

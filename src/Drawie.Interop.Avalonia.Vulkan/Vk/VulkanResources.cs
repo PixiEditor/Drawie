@@ -46,15 +46,15 @@ public class VulkanResources : RenderApiResources
         Content.CreateTemporalObjects(size);
     }
 
-    public override IDisposable? Render(VecI size, Action renderAction)
+    public override Frame Render(VecI size, Action renderAction)
     {
         if (isDisposed)
-            return null;
+            return default;
 
-        var present = Swapchain.BeginDraw(size, out var image);
+        var draw = Swapchain.BeginDraw(size, out var image);
         renderAction();
         Content.Render(image);
-        return present;
+        return new Frame() { PresentFrame = draw.present, ReturnFrame = draw.returnToPool, Size = size, Texture = image };
     }
 
     public override ITexture CreateTexture(VecI size)
@@ -81,13 +81,13 @@ public class VulkanResources : RenderApiResources
         return new VulkanSemaphorePair(Context, GpuInterop.SupportedImageHandleTypes, true);
     }
 
-    public override IDisposable Render(VecI size, ITexture toBlit)
+    public override Frame Render(VecI size, ITexture toBlit)
     {
         if (isDisposed || toBlit is not IVkTexture img)
-            return null;
+            return default;
 
         var present = Swapchain.BeginDraw(size, out var image);
         Content.Render(image, img);
-        return present;
+        return new Frame() { PresentFrame = present.present, ReturnFrame = present.returnToPool, Size = size, Texture = image };
     }
 }

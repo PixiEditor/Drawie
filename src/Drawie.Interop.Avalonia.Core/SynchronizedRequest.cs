@@ -57,7 +57,7 @@ public class SynchronizedRequest
     {
         lock (_lock)
         {
-            if (State != RenderState.Idle) return false;
+            if (State != RenderState.Idle && State != RenderState.Presenting) return false;
             State = RenderState.Presenting;
             return true;
         }
@@ -66,7 +66,7 @@ public class SynchronizedRequest
     public void QueueRequestBackbufferUpdate(VecI vecI)
     {
         queuedBackbufferUpdate = vecI;
-        if (State is RenderState.Idle or RenderState.Presenting)
+        if (State is RenderState.Idle)
         {
             if (TryStartRendering())
             {
@@ -81,7 +81,6 @@ public class SynchronizedRequest
     {
         lock (_lock)
         {
-
             if (TryStartSwapping())
             {
                 _blit(processingBackbufferUpdate!.Value);
@@ -126,5 +125,7 @@ public enum RenderState
     Idle, // Backbuffer is idle, waiting to be rendered to
     Rendering, // Backbuffer is being rendered to, unable to swap with frontbuffer
     Swapping, // Backbuffer is rendering onto frontbuffer. Backbuffer can't be rendered onto and frontbuffer can't be presented,
+    /*
     Presenting // Frontbuffer is being presented, unable to swap
+*/
 }

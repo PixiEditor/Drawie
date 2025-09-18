@@ -12,5 +12,6 @@ public interface IRenderingDispatcher
 public enum Priority
 {
     Render,
+    BackbufferUpdate,
     UI
 }
