@@ -122,7 +122,7 @@ namespace Drawie.Backend.Core.Surfaces
 
         public void DrawPath(VectorPath path, Paint paint)
         {
-            var reset = ApplyPaintable(path.Bounds, paint);
+            var reset = ApplyPaintable(path.TightBounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawPath(ObjectPointer, path, paint);
             reset.Dispose();
             Changed?.Invoke(path.Bounds);
@@ -141,6 +141,14 @@ namespace Drawie.Backend.Core.Surfaces
         {
             RectD? rect = RectD.FromPoints(points);
             var reset = ApplyPaintable(rect, paint);
+            DrawingBackendApi.Current.CanvasImplementation.DrawPoints(ObjectPointer, pointMode, points, paint);
+            reset.Dispose();
+            Changed?.Invoke(RectD.FromPoints(points));
+        }
+
+        public void DrawPoints(PointMode pointMode, VecF[] points, Paint paint, RectD paintableBounds)
+        {
+            var reset = ApplyPaintable(paintableBounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawPoints(ObjectPointer, pointMode, points, paint);
             reset.Dispose();
             Changed?.Invoke(RectD.FromPoints(points));
