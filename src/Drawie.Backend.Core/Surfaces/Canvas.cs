@@ -65,7 +65,9 @@ namespace Drawie.Backend.Core.Surfaces
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, samplingOptions);
 
         public void DrawImage(Image image, float x, float y, SamplingOptions samplingOptions, Paint? paint) =>
-            DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, samplingOptions, paint);
+            DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, samplingOptions,
+                paint);
+
         public void DrawImage(Image image, float x, float y, Paint paint) =>
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, paint);
 
@@ -120,7 +122,7 @@ namespace Drawie.Backend.Core.Surfaces
 
         public void DrawPath(VectorPath path, Paint paint)
         {
-            var reset = ApplyPaintable(path.Bounds, paint);
+            var reset = ApplyPaintable(path.TightBounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawPath(ObjectPointer, path, paint);
             reset.Dispose();
             Changed?.Invoke(path.Bounds);
@@ -139,6 +141,14 @@ namespace Drawie.Backend.Core.Surfaces
         {
             RectD? rect = RectD.FromPoints(points);
             var reset = ApplyPaintable(rect, paint);
+            DrawingBackendApi.Current.CanvasImplementation.DrawPoints(ObjectPointer, pointMode, points, paint);
+            reset.Dispose();
+            Changed?.Invoke(RectD.FromPoints(points));
+        }
+
+        public void DrawPoints(PointMode pointMode, VecF[] points, Paint paint, RectD paintableBounds)
+        {
+            var reset = ApplyPaintable(paintableBounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawPoints(ObjectPointer, pointMode, points, paint);
             reset.Dispose();
             Changed?.Invoke(RectD.FromPoints(points));
@@ -345,6 +355,22 @@ namespace Drawie.Backend.Core.Surfaces
                     using Paint paint = new Paint() { Shader = shader, BlendMode = blendMode };
                     DrawPaint(paint);
                 }
+            }
+        }
+
+        public void DrawPaintable(Paintable paintable, BlendMode blendMode, RectD rect)
+        {
+            if (paintable is ColorPaintable colorPaintable)
+            {
+                DrawColor(colorPaintable.Color, blendMode);
+            }
+            else
+            {
+                using Paint paint = new Paint() { Paintable = paintable, BlendMode = blendMode };
+                IDisposable reset = ApplyPaintable(rect, paint);
+                DrawPaint(paint);
+
+                reset.Dispose();
             }
         }
 

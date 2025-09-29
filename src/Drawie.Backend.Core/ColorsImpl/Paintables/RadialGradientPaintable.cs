@@ -33,6 +33,11 @@ public class RadialGradientPaintable : GradientPaintable, IPositionPaintable
             finalMatrix = matrix.Concat(Transform.Value);
         }
 
+        if (Bounds != null)
+        {
+            bounds = Bounds.Value;
+        }
+
         VecD center = AbsoluteValues
             ? Center
             : new VecD(Center.X * bounds.Width + bounds.X, Center.Y * bounds.Height + bounds.Y);
