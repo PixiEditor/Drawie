@@ -37,9 +37,14 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         throw new InvalidOperationException("Native font object not found");
     }
 
-    public Font FromStream(Stream stream, float fontSize = 12f, float scaleX = 1f, float skewY = 0f)
+    public Font? FromStream(Stream stream, float fontSize = 12f, float scaleX = 1f, float skewY = 0f)
     {
         SKTypeface typeface = SKTypeface.FromStream(stream);
+
+        if(typeface == null)
+        {
+            return null;
+        }
 
         SKFont font = new(typeface, fontSize, scaleX, skewY);
         int handle = Interlocked.Increment(ref fontCounter);
