@@ -1,5 +1,6 @@
 ﻿using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.Mesh;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
@@ -20,16 +21,19 @@ namespace Drawie.Skia.Implementations
         private readonly SkObjectImplementation<SKBitmap> _bitmapImpl;
         private readonly SkObjectImplementation<SKPath> _pathImpl;
         private readonly SkObjectImplementation<SKFont> _fontImpl;
+        private readonly SkObjectImplementation<SKVertices> _verticesImpl;
 
         public SkiaCanvasImplementation(SkObjectImplementation<SKPaint> paintImpl,
             SkObjectImplementation<SKImage> imageImpl, SkObjectImplementation<SKBitmap> bitmapImpl,
-            SkObjectImplementation<SKPath> pathImpl, SkObjectImplementation<SKFont> fontImpl)
+            SkObjectImplementation<SKPath> pathImpl, SkObjectImplementation<SKFont> fontImpl,
+            SkObjectImplementation<SKVertices> verticesImpl)
         {
             _paintImpl = paintImpl;
             _imageImpl = imageImpl;
             _bitmapImpl = bitmapImpl;
             _pathImpl = pathImpl;
             _fontImpl = fontImpl;
+            _verticesImpl = verticesImpl;
         }
 
         public void SetSurfaceImplementation(SkiaSurfaceImplementation surfaceImpl)
@@ -327,6 +331,14 @@ namespace Drawie.Skia.Implementations
         {
             var clipBounds = this[objectPointer].DeviceClipBounds;
             return new RectI(clipBounds.Left, clipBounds.Top, clipBounds.Width, clipBounds.Height);
+        }
+
+        public void DrawVertices(IntPtr objectPointer, Vertices vertices, BlendMode blendMode, Paint paint)
+        {
+            this[objectPointer].DrawVertices(
+                _verticesImpl[vertices.ObjectPointer],
+                (SKBlendMode)blendMode,
+                _paintImpl[paint.ObjectPointer]);
         }
 
         public void Dispose(IntPtr objectPointer)

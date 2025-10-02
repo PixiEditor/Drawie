@@ -52,6 +52,7 @@ namespace Drawie.Skia
         public IImageFilterImplementation ImageFilterImplementation { get; }
         public IShaderImplementation ShaderImplementation { get; set; }
         public IFontImplementation FontImplementation { get; set; }
+        public IMeshImplementation MeshImplementation { get; }
 
         private GRContext _grContext;
 
@@ -105,10 +106,14 @@ namespace Drawie.Skia
             SkiaFontImplementation fontImpl = new SkiaFontImplementation(pathImpl);
             FontImplementation = fontImpl;
 
+            var meshImplementation = new SkiaMeshImplementation();
+            MeshImplementation = meshImplementation;
+
             SkiaCanvasImplementation canvasImpl =
-                new SkiaCanvasImplementation(paintImpl, imgImpl, bitmapImpl, pathImpl, fontImpl);
+                new SkiaCanvasImplementation(paintImpl, imgImpl, bitmapImpl, pathImpl, fontImpl, meshImplementation);
 
             SurfaceImplementation = new SkiaSurfaceImplementation(GraphicsContext, pixmapImpl, canvasImpl, paintImpl);
+
 
             canvasImpl.SetSurfaceImplementation(SurfaceImplementation);
             imgImpl.SetSurfaceImplementation(SurfaceImplementation);
