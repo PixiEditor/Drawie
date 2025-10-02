@@ -1,4 +1,5 @@
-﻿using Drawie.Backend.Core.Shaders;
+﻿using Drawie.Backend.Core.Numerics;
+using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Numerics;
@@ -24,5 +25,6 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public ImageInfo GetImageInfo(IntPtr objectPointer);
         public Shader ToShader(IntPtr objectPointer);
         public Shader ToRawShader(IntPtr objectPointer);
+        public Shader? ToShader(IntPtr objectPointer, TileMode clamp, TileMode tileMode, Matrix3X3 fillMatrixValue);
     }
 }
