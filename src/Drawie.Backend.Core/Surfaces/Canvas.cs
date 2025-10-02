@@ -77,6 +77,9 @@ namespace Drawie.Backend.Core.Surfaces
         public void DrawImage(Image image, RectD sourceRect, RectD destRect, Paint paint) =>
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, sourceRect, destRect, paint);
 
+        public void DrawImage(Image image, RectD sourceRect, RectD destRect, Paint paint, SamplingOptions samplingOptions) =>
+            DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, sourceRect, destRect, samplingOptions, paint);
+
         public int Save()
         {
             return DrawingBackendApi.Current.CanvasImplementation.Save(ObjectPointer);
