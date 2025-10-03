@@ -24,16 +24,19 @@ public class OpenGlRenderApiResources : RenderApiResources
 
     private bool isDisposed;
 
-    public OpenGlRenderApiResources(CompositionDrawingSurface surface, ICompositionGpuInterop gpuInterop) : base(
-        surface, gpuInterop)
+    public OpenGlRenderApiResources(InteropData data) : base(data)
     {
+        if (data.GpuInterop == null || data.Surface == null)
+            throw new ArgumentException("Invalid interop data for OpenGL resources");
+
         IOpenGlTextureSharingRenderInterfaceContextFeature sharingFeature =
-            surface.Compositor.TryGetRenderInterfaceFeature(typeof(IOpenGlTextureSharingRenderInterfaceContextFeature))
+            data.Surface.Compositor
+                    .TryGetRenderInterfaceFeature(typeof(IOpenGlTextureSharingRenderInterfaceContextFeature))
                     .Result
                 as IOpenGlTextureSharingRenderInterfaceContextFeature;
 
         Context = sharingFeature.CreateSharedContext();
-        Swapchain = new OpenGlSwapchain(Context, gpuInterop, surface, sharingFeature);
+        Swapchain = new OpenGlSwapchain(Context, data.GpuInterop, data.Surface, sharingFeature);
 
         globalContext = OpenGlInteropContext.Current.Context;
 

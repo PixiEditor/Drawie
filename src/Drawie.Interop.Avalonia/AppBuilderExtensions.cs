@@ -40,13 +40,20 @@ public static class AppBuilderExtensions
                     IDisposable? ctxDisposablePostRun = null;
                     if (isOpenGl)
                     {
-                        var ctx = sharingFeature!.CreateSharedContext();
-                        OpenGlInteropContext context = new OpenGlInteropContext(ctx);
-                        ctxDisposablePostRun = ctx.MakeCurrent();
+                        if (!sharingFeature.CanCreateSharedContext)
+                        {
+                            renderApi = new SoftwareRenderApi();
+                            IDrawieInteropContext.SetCurrent(new SoftwareDrawieInteropContext());
+                        }
+                        else
+                        {
+                            var ctx = sharingFeature!.CreateSharedContext();
+                            OpenGlInteropContext context = new OpenGlInteropContext(ctx);
+                            ctxDisposablePostRun = ctx.MakeCurrent();
 
-                        renderApi = new OpenGlRenderApi(context);
-
-                        IDrawieInteropContext.SetCurrent(context);
+                            renderApi = new OpenGlRenderApi(context);
+                            IDrawieInteropContext.SetCurrent(context);
+                        }
                     }
                     else
                     {

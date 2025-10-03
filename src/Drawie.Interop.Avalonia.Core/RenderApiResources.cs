@@ -6,17 +6,15 @@ namespace Drawie.Interop.Avalonia.Core;
 
 public abstract class RenderApiResources : IAsyncDisposable
 {
-    public CompositionDrawingSurface Surface { get; }
-    public ICompositionGpuInterop GpuInterop { get; }
+    protected InteropData Interop { get; }
 
     public abstract ITexture Texture { get; }
 
     public abstract bool IsDisposed { get; }
 
-    public RenderApiResources(CompositionDrawingSurface surface, ICompositionGpuInterop gpuInterop)
+    public RenderApiResources(InteropData data)
     {
-        Surface = surface;
-        GpuInterop = gpuInterop;
+        Interop = data;
     }
 
     public abstract ValueTask DisposeAsync();

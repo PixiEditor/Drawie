@@ -130,6 +130,10 @@ namespace Drawie.Skia
             {
                 SetupWebGl(webGlRenderApi.WebGlContext);
             }
+            else if (renderApi is SoftwareRenderApi)
+            {
+
+            }
             else
             {
                 throw new UnsupportedRenderApiException(renderApi);
@@ -182,22 +186,32 @@ namespace Drawie.Skia
 
                 return DrawingSurface.FromNative(surface);
             }
-            else if (renderTexture is IWebGlTexture or IOpenGlTexture)
+            else
             {
-                uint textureId = renderTexture switch
+                if (renderTexture is IWebGlTexture or IOpenGlTexture)
                 {
-                    IWebGlTexture wgl => wgl.TextureId,
-                    IOpenGlTexture ogl => ogl.TextureId,
-                    _ => throw new ArgumentException("Unsupported texture type.")
-                };
+                    uint textureId = renderTexture switch
+                    {
+                        IWebGlTexture wgl => wgl.TextureId,
+                        IOpenGlTexture ogl => ogl.TextureId,
+                        _ => throw new ArgumentException("Unsupported texture type.")
+                    };
 
-                GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
-                    new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
+                    GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
+                        new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
 
-                var surface = SKSurface.Create(GraphicsContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
-                    SKColorType.Rgba8888);
+                    var surface = SKSurface.Create(GraphicsContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
+                        SKColorType.Rgba8888);
 
-                return DrawingSurface.FromNative(surface);
+                    return DrawingSurface.FromNative(surface);
+                }
+
+                if (!IsHardwareAccelerated)
+                {
+                    SKImageInfo info = new SKImageInfo(size.X, size.Y, SKColorType.Rgba8888, SKAlphaType.Premul);
+                    var surface = SKSurface.Create(info);
+                    return DrawingSurface.FromNative(surface);
+                }
             }
 
             throw new ArgumentException("Unsupported texture type.");

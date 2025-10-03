@@ -7,14 +7,10 @@ namespace Drawie.Backend.Core.Bridge
     {
         private static IDrawingBackend? _current;
 
-        public static IDrawingBackend Current
+        public static IDrawingBackend? Current
         {
             get
             {
-                if (_current == null)
-                    throw new NullReferenceException(
-                        "Either drawing backend was not yet initialized or reference was somehow lost.");
-
                 return _current;
             }
         }

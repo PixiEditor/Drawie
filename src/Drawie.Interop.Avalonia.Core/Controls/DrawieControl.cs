@@ -1,4 +1,6 @@
-﻿using Avalonia;
+﻿using System.Runtime.InteropServices;
+using Avalonia;
+using Avalonia.Media;
 using Avalonia.Rendering.Composition;
 using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
@@ -28,7 +30,7 @@ public abstract class DrawieControl : InteropControl
     {
         try
         {
-            resources = IDrawieInteropContext.Current.CreateResources(compositionDrawingSurface, interop);
+            resources = IDrawieInteropContext.Current.CreateResources(new InteropData(compositionDrawingSurface, interop));
         }
         catch (Exception e)
         {
@@ -36,6 +38,34 @@ public abstract class DrawieControl : InteropControl
         }
 
         return (true, string.Empty);
+    }
+
+    protected override void InitializeSoftwareComposition()
+    {
+        resources = IDrawieInteropContext.Current.CreateResources(new InteropData());
+    }
+
+    protected override void RenderSoftware(DrawingContext context)
+    {
+        if(double.IsNaN(Bounds.Width) || double.IsNaN(Bounds.Height) || Bounds.Width <= 0 || Bounds.Height <= 0)
+            return;
+        RenderFrame(new PixelSize((int)Bounds.Width, (int)Bounds.Height));
+        if (resources?.Texture is AvaloniaBitmapTexture bmp)
+        {
+            unsafe
+            {
+                using var locked = bmp.Bitmap.Lock();
+                // copy drawie framebuffer to locked framebuffer
+
+                using var pixmap = framebuffer.PeekPixels();
+                Buffer.MemoryCopy(pixmap.GetPixels().ToPointer(),
+                    locked.Address.ToPointer(),
+                    locked.Size.Width * locked.Size.Height * 4,
+                    pixmap.BytesSize);
+
+                context.DrawImage(bmp.Bitmap, new Rect(0, 0, bmp.Bitmap.PixelSize.Width, bmp.Bitmap.PixelSize.Height));
+            }
+        }
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)

@@ -4,15 +4,17 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Rendering.Composition;
 using Avalonia.VisualTree;
+using Drawie.Backend.Core.Bridge;
 
 namespace Drawie.Interop.Avalonia.Core.Controls;
 
 public abstract class InteropControl : Control
 {
-    private CompositionSurfaceVisual surfaceVisual;
-    private Compositor compositor;
+    private CompositionSurfaceVisual? surfaceVisual;
+    private Compositor? compositor;
 
     private readonly Action update;
     private bool updateQueued;
@@ -29,7 +31,15 @@ public abstract class InteropControl : Control
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
-        InitializeComposition();
+        if (DrawingBackendApi.Current.IsHardwareAccelerated)
+        {
+            InitializeGpuComposition();
+        }
+        else
+        {
+            InitializeSoftwareComposition();
+        }
+
         base.OnLoaded(e);
     }
 
@@ -37,7 +47,7 @@ public abstract class InteropControl : Control
     {
         if (initialized)
         {
-            surface.Dispose();
+            surface?.Dispose();
             FreeGraphicsResources();
         }
 
@@ -45,7 +55,7 @@ public abstract class InteropControl : Control
         base.OnDetachedFromLogicalTree(e);
     }
 
-    private async void InitializeComposition()
+    private async void InitializeGpuComposition()
     {
         try
         {
@@ -85,6 +95,9 @@ public abstract class InteropControl : Control
             context.DrawText(new FormattedText(info, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface.Default, 12, Brushes.White),
                 new Point(0, 0));
         }
+
+        if (DrawingBackendApi.Current != null && !DrawingBackendApi.Current.IsHardwareAccelerated)
+            RenderSoftware(context);
     }
 
     void UpdateFrame()
@@ -150,6 +163,9 @@ public abstract class InteropControl : Control
     protected abstract (bool success, string info) InitializeGraphicsResources(Compositor targetCompositor,
         CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop);
 
+    protected abstract void InitializeSoftwareComposition();
+
     protected abstract void FreeGraphicsResources();
     protected abstract void RenderFrame(PixelSize size);
+    protected abstract void RenderSoftware(DrawingContext context);
 }

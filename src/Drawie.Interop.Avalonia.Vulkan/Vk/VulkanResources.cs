@@ -16,11 +16,10 @@ public class VulkanResources : RenderApiResources
 
     private bool isDisposed;
 
-    public VulkanResources(CompositionDrawingSurface compositionDrawingSurface, ICompositionGpuInterop interop) : base(
-        compositionDrawingSurface, interop)
+    public VulkanResources(InteropData data) : base(data)
     {
         Context = DrawieInterop.VulkanInteropContext;
-        Swapchain = new VulkanSwapchain(Context, interop, compositionDrawingSurface);
+        Swapchain = new VulkanSwapchain(Context, data.GpuInterop, data.Surface);
         Content = new VulkanContent(Context);
     }
 

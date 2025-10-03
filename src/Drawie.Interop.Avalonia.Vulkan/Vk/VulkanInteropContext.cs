@@ -194,9 +194,9 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
         Api!.Dispose();
     }
 
-    public RenderApiResources CreateResources(CompositionDrawingSurface surface, ICompositionGpuInterop interop)
+    public RenderApiResources CreateResources(InteropData data)
     {
-        return new VulkanResources(surface, interop);
+        return new VulkanResources(data);
     }
 
     public GpuDiagnostics GetGpuDiagnostics()

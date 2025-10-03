@@ -30,9 +30,9 @@ public class OpenGlInteropContext : IOpenGlContext, IDrawieInteropContext
         return Context.GlInterface.GetProcAddress(name);
     }
 
-    public RenderApiResources CreateResources(CompositionDrawingSurface surface, ICompositionGpuInterop interop)
+    public RenderApiResources CreateResources(InteropData data)
     {
-        return new OpenGlRenderApiResources(surface, interop);
+        return new OpenGlRenderApiResources(data);
     }
 
     public GpuDiagnostics GetGpuDiagnostics()

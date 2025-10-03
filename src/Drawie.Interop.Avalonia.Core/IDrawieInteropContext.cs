@@ -6,8 +6,7 @@ namespace Drawie.Interop.Avalonia.Core;
 public interface IDrawieInteropContext
 {
     public static IDrawieInteropContext Current { get; private set; }
-    public RenderApiResources CreateResources(CompositionDrawingSurface surface,
-        ICompositionGpuInterop interop);
+    public RenderApiResources CreateResources(InteropData data);
 
     public static void SetCurrent(IDrawieInteropContext context)
     {
