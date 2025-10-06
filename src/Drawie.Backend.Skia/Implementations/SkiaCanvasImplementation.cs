@@ -75,6 +75,15 @@ namespace Drawie.Skia.Implementations
             canvas.DrawImage(_imageImpl[image.ObjectPointer], x, y, samplingOptions.ToSkSamplingOptions(), skPaint);
         }
 
+        public void DrawImage(IntPtr objectPointer, Image image, RectD sourceRect, RectD destRect, SamplingOptions samplingOptions,
+            Paint? paint)
+        {
+            var canvas = this[objectPointer];
+            var skPaint = paint != null ? _paintImpl[paint.ObjectPointer] : null;
+            canvas.DrawImage(_imageImpl[image.ObjectPointer], sourceRect.ToSKRect(), destRect.ToSKRect(),
+                samplingOptions.ToSkSamplingOptions(), skPaint);
+        }
+
         public void DrawImage(IntPtr objPtr, Image image, float x, float y, Paint paint)
         {
             if (!TryGetInstance(objPtr, out var canvas))

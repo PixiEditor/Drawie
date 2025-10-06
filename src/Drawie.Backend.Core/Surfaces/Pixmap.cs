@@ -56,4 +56,9 @@ public class Pixmap : NativeObject
     {
         return DrawingBackendApi.Current.PixmapImplementation.GetPixelSpan<T>(this);
     }
+
+    public ColorF GetPixelColorPrecise(VecI pos)
+    {
+        return DrawingBackendApi.Current.PixmapImplementation.GetPixelColorF(ObjectPointer, pos);
+    }
 }

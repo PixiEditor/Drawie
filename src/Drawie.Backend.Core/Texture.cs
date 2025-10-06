@@ -249,6 +249,18 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
     }
 
 
+    public ColorF GetRawPixelPrecise(VecI pos)
+    {
+        if (pos.X < 0 || pos.X >= Size.X || pos.Y < 0 || pos.Y >= Size.Y)
+            return Color.Empty;
+
+        using var ctx = EnsureContext();
+        SyncBitmap();
+
+        return bitmap.PeekPixels().GetPixelColorPrecise(pos);
+    }
+
+
     public Pixmap PeekPixels()
     {
         SyncBitmap();
