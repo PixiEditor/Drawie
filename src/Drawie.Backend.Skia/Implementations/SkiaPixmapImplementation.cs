@@ -26,6 +26,11 @@ namespace Drawie.Skia.Implementations
             return this[objectPointer].GetPixelColor(position.X, position.Y).ToBackendColor();
         }
 
+        public ColorF GetPixelColorF(IntPtr objectPointer, VecI position)
+        {
+            return this[objectPointer].GetPixelColorF(position.X, position.Y).ToBackendColorF();
+        }
+
         public IntPtr GetPixels(IntPtr objectPointer)
         {
             return this[objectPointer].GetPixels();

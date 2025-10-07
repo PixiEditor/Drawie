@@ -25,6 +25,11 @@ public class SweepGradientPaintable : GradientPaintable, IPositionPaintable
 
     public override Shader? GetShader(RectD bounds, Matrix3X3 matrix)
     {
+        if (Bounds != null)
+        {
+            bounds = Bounds.Value;
+        }
+
         VecD finalCenter = AbsoluteValues
             ? Center
             : new VecD(Center.X * bounds.Width + bounds.X, Center.Y * bounds.Height + bounds.Y);

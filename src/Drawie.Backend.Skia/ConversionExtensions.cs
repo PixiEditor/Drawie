@@ -72,6 +72,11 @@ namespace Drawie.Skia
             return new Color(color.Red, color.Green, color.Blue, color.Alpha);
         }
 
+        public static ColorF ToBackendColorF(this SKColorF color)
+        {
+            return new ColorF(color.Red, color.Green, color.Blue, color.Alpha);
+        }
+
         public static ImageInfo ToImageInfo(this SKImageInfo info)
         {
             ColorSpace? cs = null;

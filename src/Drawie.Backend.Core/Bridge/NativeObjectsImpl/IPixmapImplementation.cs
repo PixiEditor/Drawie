@@ -10,7 +10,8 @@ public interface IPixmapImplementation
     public void Dispose(IntPtr objectPointer);
 
     public Color GetPixelColor(IntPtr objectPointer, VecI position);
-    
+
+    public ColorF GetPixelColorF(IntPtr objectPointer, VecI position);
     public IntPtr GetPixels(IntPtr objectPointer);
 
     public Span<T> GetPixelSpan<T>(Pixmap pixmap)

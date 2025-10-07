@@ -8,7 +8,7 @@ using Drawie.Numerics;
 
 namespace Drawie.Backend.Core;
 
-public class Texture : IDisposable, ICloneable
+public class Texture : IDisposable, ICloneable, IPixelsMap
 {
     public VecI Size { get; }
     public DrawingSurface DrawingSurface { get; private set; }
@@ -20,7 +20,7 @@ public class Texture : IDisposable, ICloneable
 
     public ColorSpace ColorSpace { get; }
 
-    public ImageInfo Info { get; }
+    public ImageInfo ImageInfo { get; }
 
     private Bitmap? bitmap;
     private bool cpuSynced;
@@ -82,20 +82,20 @@ public class Texture : IDisposable, ICloneable
         return tex;
     }
 
-    public Texture(ImageInfo imageInfo)
+    public Texture(ImageInfo imageImageInfo)
     {
-        Info = imageInfo;
-        Size = new VecI(imageInfo.Width, imageInfo.Height);
-        if (!imageInfo.GpuBacked)
+        ImageInfo = imageImageInfo;
+        Size = new VecI(imageImageInfo.Width, imageImageInfo.Height);
+        if (!imageImageInfo.GpuBacked)
             throw new ArgumentException(
                 "Textures are GPU backed, add GpuBacked = true or use Surface for CPU backed surfaces.");
 
-        ColorSpace = imageInfo.ColorSpace;
+        ColorSpace = imageImageInfo.ColorSpace;
 
-        DrawingBackendApi.Current.RenderingDispatcher.Invoke(
-            () =>
-                DrawingSurface =
-                    DrawingSurface.Create(imageInfo)
+        // TODO: Fallback to CPU if GPU call fails
+        DrawingBackendApi.Current.RenderingDispatcher.Invoke(() =>
+            DrawingSurface =
+                DrawingSurface.Create(imageImageInfo)
         );
 
         DrawingSurface.Changed += DrawingSurfaceOnChanged;
@@ -226,9 +226,9 @@ public class Texture : IDisposable, ICloneable
         return newSurface;
     }
 
-    public Color GetSRGBPixel(VecI vecI)
+    public Color GetSrgbPixel(VecI vecI)
     {
-        var color = GetPixel(vecI);
+        var color = GetRawPixel(vecI);
         if (color is { R: 0, G: 0, B: 0, A: 0 })
             return Color.Empty;
 
@@ -241,7 +241,7 @@ public class Texture : IDisposable, ICloneable
         return color;
     }
 
-    public Color GetPixel(VecI at)
+    public Color GetRawPixel(VecI at)
     {
         if (at.X < 0 || at.X >= Size.X || at.Y < 0 || at.Y >= Size.Y)
             return Color.Empty;
@@ -252,16 +252,35 @@ public class Texture : IDisposable, ICloneable
         return bitmap.PeekPixels().GetPixelColor(at);
     }
 
+
+    public ColorF GetRawPixelPrecise(VecI pos)
+    {
+        if (pos.X < 0 || pos.X >= Size.X || pos.Y < 0 || pos.Y >= Size.Y)
+            return Color.Empty;
+
+        using var ctx = EnsureContext();
+        SyncBitmap();
+
+        return bitmap.PeekPixels().GetPixelColorPrecise(pos);
+    }
+
+
+    public Pixmap PeekPixels()
+    {
+        SyncBitmap();
+        return bitmap.PeekPixels();
+    }
+
     private void SyncBitmap()
     {
         if (!cpuSynced)
         {
             if (bitmap == null)
             {
-                bitmap = new Bitmap(Info);
+                bitmap = new Bitmap(ImageInfo);
             }
 
-            DrawingSurface.ReadPixels(Info, bitmap.Address, bitmap.Info.RowBytes, 0, 0);
+            DrawingSurface.ReadPixels(ImageInfo, bitmap.Address, bitmap.Info.RowBytes, 0, 0);
 
             cpuSynced = true;
         }
@@ -283,6 +302,7 @@ public class Texture : IDisposable, ICloneable
             return;
         }
 
+        using var ctx = EnsureContext();
         isDisposed = true;
         DrawingSurface.Changed -= DrawingSurfaceOnChanged;
         DrawingSurface.Dispose();
@@ -320,5 +340,19 @@ public class Texture : IDisposable, ICloneable
         {
             Dispose();
         }
+    }
+    
+    public unsafe bool IsFullyTransparent()
+    {
+        ulong* ptr = (ulong*)PeekPixels().GetPixels();
+        for (int i = 0; i < Size.X * Size.Y; i++)
+        {
+            // ptr[i] actually contains 4 16-bit floats. We only care about the first one which is alpha.
+            // An empty pixel can have alpha of 0 or -0 (not sure if -0 actually ever comes up). 0 in hex is 0x0, -0 in hex is 0x8000
+            if ((ptr[i] & 0x1111_0000_0000_0000) != 0 && (ptr[i] & 0x1111_0000_0000_0000) != 0x8000_0000_0000_0000)
+                return false;
+        }
+
+        return true;
     }
 }

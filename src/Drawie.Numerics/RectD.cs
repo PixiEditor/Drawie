@@ -394,4 +394,9 @@ public struct RectD : IEquatable<RectD>
     {
         return $"{{X: {X}, Y: {Y}, W: {Width}, H: {Height}}}";
     }
+
+    public bool IsFullyInside(RectD other)
+    {
+        return left >= other.left && right <= other.right && top >= other.top && bottom <= other.bottom;
+    }
 }

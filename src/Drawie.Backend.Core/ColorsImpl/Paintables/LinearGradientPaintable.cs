@@ -24,6 +24,11 @@ public class LinearGradientPaintable : GradientPaintable, IStartEndPaintable
             finalMatrix = matrix.Concat(Transform.Value);
         }
 
+        if (Bounds != null)
+        {
+            bounds = Bounds.Value;
+        }
+
         VecD start = AbsoluteValues
             ? Start
             : new VecD(Start.X * bounds.Width + bounds.X, Start.Y * bounds.Height + bounds.Y);

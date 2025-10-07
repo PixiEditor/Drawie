@@ -10,6 +10,8 @@ public abstract class Paintable : IDisposable, ICloneable
     public abstract bool AnythingVisible { get; }
     public bool AbsoluteValues { get; set; } = false;
     public bool IsOneTimeUse { get; set; } = false;
+    public RectD? Bounds { get; set; }
+
     public abstract Shader? GetShader(RectD bounds, Matrix3X3 matrix);
 
     public static implicit operator Paintable(Color color) => new ColorPaintable(color);

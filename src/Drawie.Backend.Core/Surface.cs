@@ -178,6 +178,13 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
         return (Color)new ColorF((float)ptr[0] / a, (float)ptr[1] / a, (float)ptr[2] / a, (float)ptr[3]);
     }
 
+    public unsafe ColorF GetRawPixelPrecise(VecI pos)
+    {
+        Half* ptr = (Half*)(PixelBuffer + (pos.X + pos.Y * Size.X) * BytesPerPixel);
+        float a = (float)ptr[3];
+        return new ColorF((float)ptr[0] / a, (float)ptr[1] / a, (float)ptr[2] / a, (float)ptr[3]);
+    }
+
     /// <summary>
     /// Consider getting a pixmap from SkiaSurface.PeekPixels().GetPixels() and writing into it's buffer for bulk pixel get/set. Don't forget to dispose the pixmap afterwards.
     /// </summary>
