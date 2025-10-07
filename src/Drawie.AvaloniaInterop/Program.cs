@@ -2,7 +2,9 @@
 using System;
 using System.Threading.Tasks;
 using Avalonia.Logging;
+using Avalonia.OpenGL;
 using Avalonia.Vulkan;
+using Avalonia.Win32;
 using Drawie.Interop.Avalonia.Vulkan;
 using Drawie.Interop.VulkanAvalonia;
 
@@ -29,7 +31,7 @@ class Program
             {
                 RenderingMode = new[]
                 {
-                    Win32RenderingMode.Vulkan
+                    Win32RenderingMode.AngleEgl
                 },
             })
             .With(new X11PlatformOptions() { RenderingMode = new[] { X11RenderingMode.Vulkan, X11RenderingMode.Glx } })

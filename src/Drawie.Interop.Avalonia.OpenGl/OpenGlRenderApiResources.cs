@@ -32,7 +32,15 @@ public class OpenGlRenderApiResources : RenderApiResources
                     .Result
                 as IOpenGlTextureSharingRenderInterfaceContextFeature;
 
-        Context = sharingFeature.CreateSharedContext();
+        if (sharingFeature.CanCreateSharedContext)
+        {
+            Context = sharingFeature.CreateSharedContext();
+        }
+        else
+        {
+            Context = OpenGlInteropContext.Current.Context;
+        }
+
         Swapchain = new OpenGlSwapchain(Context, gpuInterop, surface, sharingFeature);
 
         globalContext = OpenGlInteropContext.Current.Context;

@@ -126,6 +126,10 @@ namespace Drawie.Skia
             {
                 SetupOpenGl(openGlRenderApi.OpenGlContext);
             }
+            else if(renderApi is IDirectXRenderApi directXRenderApi)
+            {
+                SetupDirectX(directXRenderApi.DirectXContext);
+            }
             else if (renderApi is IWebGlRenderApi webGlRenderApi)
             {
                 SetupWebGl(webGlRenderApi.WebGlContext);
@@ -136,10 +140,25 @@ namespace Drawie.Skia
             }
         }
 
+        private void SetupDirectX(IDirectXContext directXContext)
+        {
+            var d3dBackendContext = new GRD3DBackendContext
+            {
+                Adapter = directXContext.Adapter,
+                Device = directXContext.Device,
+                Queue = directXContext.Queue,
+                ProtectedContext = false,
+            };
+
+            GraphicsContext = GRContext.CreateDirect3D(d3dBackendContext);
+            SurfaceImplementation.GrContext = GraphicsContext;
+        }
+
         private void SetupOpenGl(IOpenGlContext openGlContext)
         {
             GRGlInterface glInterface = GRGlInterface.CreateOpenGl(openGlContext.GetGlInterface);
             GraphicsContext = GRContext.CreateGl(glInterface);
+
             SurfaceImplementation.GrContext = GraphicsContext;
         }
 

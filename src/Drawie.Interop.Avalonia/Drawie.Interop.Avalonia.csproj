@@ -7,8 +7,10 @@
     </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Drawie.Interop.Avalonia.D3D11\Drawie.Interop.Avalonia.D3D11.csproj" />
     <ProjectReference Include="..\Drawie.Interop.Avalonia.OpenGl\Drawie.Interop.Avalonia.OpenGl.csproj" />
     <ProjectReference Include="..\Drawie.Interop.Avalonia.Vulkan\Drawie.Interop.Avalonia.Vulkan.csproj" />
+    <ProjectReference Include="..\Drawie.RenderApi.D3D11\Drawie.RenderApi.D3D11.csproj" />
     <ProjectReference Include="..\Drawie.RenderApi.OpenGl\Drawie.RenderApi.OpenGl.csproj" />
   </ItemGroup>
 </Project>

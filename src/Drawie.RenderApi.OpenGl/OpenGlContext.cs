@@ -13,4 +13,9 @@ public class OpenGlContext : IOpenGlContext
     {
         return getGlInterface(name);
     }
+
+    public object? TryGetGrContext()
+    {
+        return null;
+    }
 }
