@@ -341,7 +341,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
             Dispose();
         }
     }
-    
+
     public unsafe bool IsFullyTransparent()
     {
         ulong* ptr = (ulong*)PeekPixels().GetPixels();
@@ -355,4 +355,13 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
 
         return true;
     }
+
+#if DEBUG
+    public void SaveToDesktop()
+    {
+        using Surface surf = Surface.ForDisplay(Size);
+        surf.DrawingSurface.Canvas.DrawSurface(DrawingSurface, 0, 0);
+        surf.SaveToDesktop();
+    }
+#endif
 }
