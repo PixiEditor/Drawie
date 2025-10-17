@@ -115,6 +115,14 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
 
         public Paintable? Paintable { get; set; }
 
+        public bool IsOpaqueStandardNonBlendingPaint =>
+            Paintable == null &&
+            Shader == null &&
+            ColorFilter == null &&
+            ImageFilter == null &&
+            Color.A == 255
+            && BlendMode == BlendMode.SrcOver;
+
         public Paint(IntPtr objPtr) : base(objPtr)
         {
         }
