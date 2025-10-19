@@ -47,24 +47,39 @@ namespace Drawie.Skia.Implementations
             instance.Draw(canvas, x, y, paint);
         }
 
-        public DrawingSurface Create(ImageInfo imageInfo, IntPtr pixels, int rowBytes)
+        public DrawingSurface? Create(ImageInfo imageInfo, IntPtr pixels, int rowBytes)
         {
-            SKSurface skSurface = CreateSkiaSurface(imageInfo.ToSkImageInfo(), imageInfo.GpuBacked, pixels, rowBytes);
+            SKSurface? skSurface = CreateSkiaSurface(imageInfo.ToSkImageInfo(), imageInfo.GpuBacked, pixels, rowBytes);
+            if (skSurface == null)
+            {
+                return null;
+            }
+
             return CreateDrawingSurface(skSurface);
         }
 
-        public DrawingSurface Create(ImageInfo imageInfo, IntPtr pixelBuffer)
+        public DrawingSurface? Create(ImageInfo imageInfo, IntPtr pixelBuffer)
         {
             SKImageInfo info = imageInfo.ToSkImageInfo();
-            SKSurface skSurface = CreateSkiaSurface(info, imageInfo.GpuBacked, pixelBuffer);
+            SKSurface? skSurface = CreateSkiaSurface(info, imageInfo.GpuBacked, pixelBuffer);
+            if (skSurface == null)
+            {
+                return null;
+            }
+
             return CreateDrawingSurface(skSurface);
         }
 
-        private SKSurface CreateSkiaSurface(SKImageInfo imageInfo, bool isGpuBacked, IntPtr pixels, int rowBytes)
+        private SKSurface? CreateSkiaSurface(SKImageInfo imageInfo, bool isGpuBacked, IntPtr pixels, int rowBytes)
         {
             if (isGpuBacked)
             {
                 SKSurface skSurface = CreateSkiaSurface(imageInfo, true);
+                if (skSurface == null)
+                {
+                    return null;
+                }
+
                 using var image = SKImage.FromPixelCopy(imageInfo, pixels, rowBytes);
 
                 var canvas = skSurface.Canvas;
@@ -76,11 +91,16 @@ namespace Drawie.Skia.Implementations
             return SKSurface.Create(imageInfo, pixels, rowBytes);
         }
 
-        private SKSurface CreateSkiaSurface(SKImageInfo imageInfo, bool isGpuBacked, IntPtr pixels)
+        private SKSurface? CreateSkiaSurface(SKImageInfo imageInfo, bool isGpuBacked, IntPtr pixels)
         {
             if (isGpuBacked)
             {
                 SKSurface skSurface = CreateSkiaSurface(imageInfo, true);
+                if (skSurface == null)
+                {
+                    return null;
+                }
+
                 using var image = SKImage.FromPixelCopy(imageInfo, pixels);
 
                 var canvas = skSurface.Canvas;
@@ -92,27 +112,37 @@ namespace Drawie.Skia.Implementations
             return SKSurface.Create(imageInfo, pixels);
         }
 
-        public DrawingSurface Create(Pixmap pixmap)
+        public DrawingSurface? Create(Pixmap pixmap)
         {
             SKPixmap skPixmap = _pixmapImplementation[pixmap.ObjectPointer];
             var skSurface = CreateSkiaSurface(skPixmap);
 
+            if (skSurface == null)
+            {
+                return null;
+            }
+
             return CreateDrawingSurface(skSurface);
         }
 
-        private SKSurface CreateSkiaSurface(SKPixmap skPixmap)
+        private SKSurface? CreateSkiaSurface(SKPixmap skPixmap)
         {
             SKSurface skSurface = SKSurface.Create(skPixmap);
             return skSurface;
         }
 
-        public DrawingSurface Create(ImageInfo imageInfo)
+        public DrawingSurface? Create(ImageInfo imageInfo)
         {
-            SKSurface skSurface = CreateSkiaSurface(imageInfo.ToSkImageInfo(), imageInfo.GpuBacked);
+            SKSurface? skSurface = CreateSkiaSurface(imageInfo.ToSkImageInfo(), imageInfo.GpuBacked);
+            if (skSurface == null)
+            {
+                return null;
+            }
+
             return CreateDrawingSurface(skSurface);
         }
 
-        private SKSurface CreateSkiaSurface(SKImageInfo info, bool gpu)
+        private SKSurface? CreateSkiaSurface(SKImageInfo info, bool gpu)
         {
             if (!gpu || GrContext == null)
             {
@@ -132,8 +162,12 @@ namespace Drawie.Skia.Implementations
             return this[objectPointer];
         }
 
-        private DrawingSurface CreateDrawingSurface(SKSurface skSurface)
+        private DrawingSurface? CreateDrawingSurface(SKSurface? skSurface)
         {
+            if (skSurface == null)
+            {
+                return null;
+            }
 #if DRAWIE_TRACE
             Trace(skSurface);
 #endif

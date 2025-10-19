@@ -62,17 +62,17 @@ namespace Drawie.Backend.Core.Surfaces
                 srcX, srcY);
         }
 
-        public static DrawingSurface Create(ImageInfo imageInfo)
+        public static DrawingSurface? Create(ImageInfo imageInfo)
         {
             return DrawingBackendApi.Current.SurfaceImplementation.Create(imageInfo);
         }
 
-        public static DrawingSurface Create(ImageInfo imageInfo, IntPtr pixels, int rowBytes)
+        public static DrawingSurface? Create(ImageInfo imageInfo, IntPtr pixels, int rowBytes)
         {
             return DrawingBackendApi.Current.SurfaceImplementation.Create(imageInfo, pixels, rowBytes);
         }
 
-        public static DrawingSurface Create(ImageInfo imageInfo, IntPtr pixelBuffer)
+        public static DrawingSurface? Create(ImageInfo imageInfo, IntPtr pixelBuffer)
         {
             return DrawingBackendApi.Current.SurfaceImplementation.Create(imageInfo, pixelBuffer);
         }
