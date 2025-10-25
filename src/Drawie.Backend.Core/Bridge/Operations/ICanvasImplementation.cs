@@ -67,5 +67,6 @@ namespace Drawie.Backend.Core.Bridge.Operations
 
         public RectD GetLocalClipBounds(IntPtr objectPointer);
         public RectI GetDeviceClipBounds(IntPtr objectPointer);
+        public DrawingSurface? GetSurface(Canvas canvas);
     }
 }

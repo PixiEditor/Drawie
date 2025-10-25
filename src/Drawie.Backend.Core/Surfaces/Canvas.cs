@@ -25,6 +25,7 @@ namespace Drawie.Backend.Core.Surfaces
             DrawingBackendApi.Current.CanvasImplementation.GetDeviceClipBounds(ObjectPointer);
 
         public bool IsDisposed { get; private set; }
+        public DrawingSurface? Surface => DrawingBackendApi.Current.CanvasImplementation.GetSurface(this);
 
         public event SurfaceChangedEventHandler? Changed;
 

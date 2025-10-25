@@ -52,6 +52,8 @@ namespace Drawie.Skia
         public IImageFilterImplementation ImageFilterImplementation { get; }
         public IShaderImplementation ShaderImplementation { get; set; }
         public IFontImplementation FontImplementation { get; set; }
+        public IRecorderImplementation RecorderImplementation { get; }
+        public IPictureImplementation PictureImplementation { get; }
 
         private GRContext _grContext;
 
@@ -112,6 +114,11 @@ namespace Drawie.Skia
 
             canvasImpl.SetSurfaceImplementation(SurfaceImplementation);
             imgImpl.SetSurfaceImplementation(SurfaceImplementation);
+            
+            var pictureImplementation = new SkiaPictureImplementation(shader);
+            PictureImplementation = pictureImplementation;
+
+            RecorderImplementation = new SkiaRecorderImplementation(canvasImpl, pictureImplementation);
 
             CanvasImplementation = canvasImpl;
         }

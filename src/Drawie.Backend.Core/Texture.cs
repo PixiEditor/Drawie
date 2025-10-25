@@ -81,6 +81,18 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
 
         return tex;
     }
+    
+    public static Texture ForProcessing(Canvas copySizeAndMatrixFrom, ColorSpace colorSpace)
+    {
+        Texture tex = new Texture(
+            new ImageInfo(
+                copySizeAndMatrixFrom.DeviceClipBounds.Size.X + copySizeAndMatrixFrom.DeviceClipBounds.Pos.X,
+                copySizeAndMatrixFrom.DeviceClipBounds.Size.Y + copySizeAndMatrixFrom.DeviceClipBounds.Pos.Y,
+                ColorType.RgbaF16, AlphaType.Premul, colorSpace) { GpuBacked = true });
+        tex.DrawingSurface.Canvas.SetMatrix(copySizeAndMatrixFrom.TotalMatrix);
+
+        return tex;
+    }
 
     public Texture(ImageInfo imageImageInfo)
     {
