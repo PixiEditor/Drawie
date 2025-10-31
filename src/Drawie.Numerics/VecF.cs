@@ -323,4 +323,9 @@ public struct VecF : IEquatable<VecF>
         hashCode.Add(Y);
         return hashCode.ToHashCode();
     }
+
+    public VecF Divide(float by)
+    {
+        return new VecF(X / by, Y / by);
+    }
 }
