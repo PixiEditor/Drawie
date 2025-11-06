@@ -80,7 +80,6 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
 
     public Texture(ImageInfo imageImageInfo)
     {
-        ImageInfo = imageImageInfo;
         Size = new VecI(imageImageInfo.Width, imageImageInfo.Height);
         if (!imageImageInfo.GpuBacked)
             throw new ArgumentException(
@@ -88,12 +87,22 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
 
         ColorSpace = imageImageInfo.ColorSpace;
 
-        // TODO: Fallback to CPU if GPU call fails
         DrawingBackendApi.Current.RenderingDispatcher.Invoke(() =>
-            DrawingSurface =
-                DrawingSurface.Create(imageImageInfo)
+            {
+                DrawingSurface = DrawingSurface.Create(imageImageInfo);
+                if (DrawingSurface == null)
+                {
+                    imageImageInfo.GpuBacked = false;
+                    DrawingSurface = DrawingSurface.Create(imageImageInfo);
+                    if (DrawingSurface == null)
+                    {
+                        throw new Exception("Could not create DrawingSurface for Texture.");
+                    }
+                }
+            }
         );
 
+        ImageInfo = imageImageInfo;
         DrawingSurface.Changed += DrawingSurfaceOnChanged;
         Changed += OnChanged;
     }
