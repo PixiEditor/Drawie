@@ -47,20 +47,20 @@ namespace Drawie.Skia.Implementations
             instance.Draw(canvas, x, y, paint);
         }
 
-        public DrawingSurface Create(ImageInfo imageInfo, IntPtr pixels, int rowBytes)
+        public DrawingSurface? Create(ImageInfo imageInfo, IntPtr pixels, int rowBytes)
         {
-            SKSurface skSurface = CreateSkiaSurface(imageInfo.ToSkImageInfo(), imageInfo.GpuBacked, pixels, rowBytes);
+            SKSurface? skSurface = CreateSkiaSurface(imageInfo.ToSkImageInfo(), imageInfo.GpuBacked, pixels, rowBytes);
             return CreateDrawingSurface(skSurface);
         }
 
-        public DrawingSurface Create(ImageInfo imageInfo, IntPtr pixelBuffer)
+        public DrawingSurface? Create(ImageInfo imageInfo, IntPtr pixelBuffer)
         {
             SKImageInfo info = imageInfo.ToSkImageInfo();
-            SKSurface skSurface = CreateSkiaSurface(info, imageInfo.GpuBacked, pixelBuffer);
+            SKSurface? skSurface = CreateSkiaSurface(info, imageInfo.GpuBacked, pixelBuffer);
             return CreateDrawingSurface(skSurface);
         }
 
-        private SKSurface CreateSkiaSurface(SKImageInfo imageInfo, bool isGpuBacked, IntPtr pixels, int rowBytes)
+        private SKSurface? CreateSkiaSurface(SKImageInfo imageInfo, bool isGpuBacked, IntPtr pixels, int rowBytes)
         {
             if (isGpuBacked)
             {
@@ -76,7 +76,7 @@ namespace Drawie.Skia.Implementations
             return SKSurface.Create(imageInfo, pixels, rowBytes);
         }
 
-        private SKSurface CreateSkiaSurface(SKImageInfo imageInfo, bool isGpuBacked, IntPtr pixels)
+        private SKSurface? CreateSkiaSurface(SKImageInfo imageInfo, bool isGpuBacked, IntPtr pixels)
         {
             if (isGpuBacked)
             {
@@ -92,7 +92,7 @@ namespace Drawie.Skia.Implementations
             return SKSurface.Create(imageInfo, pixels);
         }
 
-        public DrawingSurface Create(Pixmap pixmap)
+        public DrawingSurface? Create(Pixmap pixmap)
         {
             SKPixmap skPixmap = _pixmapImplementation[pixmap.ObjectPointer];
             var skSurface = CreateSkiaSurface(skPixmap);
@@ -100,19 +100,19 @@ namespace Drawie.Skia.Implementations
             return CreateDrawingSurface(skSurface);
         }
 
-        private SKSurface CreateSkiaSurface(SKPixmap skPixmap)
+        private SKSurface? CreateSkiaSurface(SKPixmap skPixmap)
         {
             SKSurface skSurface = SKSurface.Create(skPixmap);
             return skSurface;
         }
 
-        public DrawingSurface Create(ImageInfo imageInfo)
+        public DrawingSurface? Create(ImageInfo imageInfo)
         {
             SKSurface skSurface = CreateSkiaSurface(imageInfo.ToSkImageInfo(), imageInfo.GpuBacked);
             return CreateDrawingSurface(skSurface);
         }
 
-        private SKSurface CreateSkiaSurface(SKImageInfo info, bool gpu)
+        private SKSurface? CreateSkiaSurface(SKImageInfo info, bool gpu)
         {
             if (!gpu || GrContext == null)
             {
@@ -132,8 +132,13 @@ namespace Drawie.Skia.Implementations
             return this[objectPointer];
         }
 
-        private DrawingSurface CreateDrawingSurface(SKSurface skSurface)
+        private DrawingSurface? CreateDrawingSurface(SKSurface? skSurface)
         {
+            if (skSurface == null)
+            {
+                return null;
+            }
+
 #if DRAWIE_TRACE
             Trace(skSurface);
 #endif
@@ -152,7 +157,7 @@ namespace Drawie.Skia.Implementations
             this[drawingSurface.ObjectPointer].Flush(true, true);
         }
 
-        public DrawingSurface FromNative(object native)
+        public DrawingSurface? FromNative(object native)
         {
             if (native is not SKSurface skSurface)
             {
