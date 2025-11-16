@@ -11,7 +11,7 @@ public sealed class RenderThread : IDisposable
 
     private double targetFrameMs => 1000.0 / RefreshRate;
 
-    private readonly ConcurrentQueue<Action> _renderQueue = new();
+    private readonly ConcurrentDictionary<Priority, ConcurrentQueue<Action>> _renderQueue = new();
 
     public RenderThread(double targetFps)
     {
@@ -26,11 +26,11 @@ public sealed class RenderThread : IDisposable
     }
 
 
-    public void Enqueue(Action renderAction)
+    public void Enqueue(Action renderAction, Priority priority)
     {
         if (renderAction == null) return;
 
-        _renderQueue.Enqueue(renderAction);
+        _renderQueue.GetOrAdd(priority, _ => new ConcurrentQueue<Action>()).Enqueue(renderAction);
     }
 
     private void Run()
@@ -41,8 +41,10 @@ public sealed class RenderThread : IDisposable
         {
             var frameStart = sw.Elapsed.TotalMilliseconds;
 
-            ProcessQueue();
-            //DrawingBackendApi.Current.Flush();
+            ProcessQueue(Priority.Render);
+            // DrawingBackendApi.Current.Flush();
+            ProcessQueue(Priority.BackbufferUpdate);
+            ProcessQueue(Priority.UI);
 
             var elapsed = sw.Elapsed.TotalMilliseconds - frameStart;
             var wait = targetFrameMs - elapsed;
@@ -53,10 +55,9 @@ public sealed class RenderThread : IDisposable
         }
     }
 
-    private void ProcessQueue()
+    private void ProcessQueue(Priority priority)
     {
-        var queueToProcess = new Queue<Action>(_renderQueue);
-        _renderQueue.Clear();
+        var queueToProcess = PopQueueToProcess(priority);
 
         if (queueToProcess == null) return;
 
@@ -73,7 +74,7 @@ public sealed class RenderThread : IDisposable
         }
     }
 
-    /*private Queue<Action>? PopQueueToProcess(Priority priority)
+    private Queue<Action>? PopQueueToProcess(Priority priority)
     {
         if (_renderQueue.TryGetValue(priority, out var queue))
         {
@@ -83,19 +84,19 @@ public sealed class RenderThread : IDisposable
         }
 
         return null;
-    }*/
+    }
+
+    public async Task WaitForIdleAsync()
+    {
+        TaskCompletionSource<bool> tcs = new();
+        Enqueue(() => tcs.SetResult(true), Priority.UI);
+        await tcs.Task;
+    }
 
     public void Dispose()
     {
         _cts.Cancel();
         _thread.Join();
         _cts.Dispose();
-    }
-
-    public async Task WaitForIdleAsync()
-    {
-        var tcs = new TaskCompletionSource();
-        Enqueue(() => tcs.SetResult());
-        await tcs.Task;
     }
 }

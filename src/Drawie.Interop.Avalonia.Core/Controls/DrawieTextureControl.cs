@@ -1,8 +1,10 @@
 ﻿using Avalonia;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Surfaces;
+using Drawie.Numerics;
 using Drawie.RenderApi;
 using Colors = Drawie.Backend.Core.ColorsImpl.Colors;
 
@@ -30,11 +32,25 @@ public class DrawieTextureControl : DrawieControl
         set => SetValue(TextureProperty, value);
     }
 
+    private Texture texture;
+    private IExportedTexture next;
+    private IExportedTexture? lastExportedTexture;
+
     static DrawieTextureControl()
     {
         AffectsRender<DrawieTextureControl>(TextureProperty, StretchProperty);
         AffectsMeasure<DrawieTextureControl>(TextureProperty, StretchProperty);
+        TextureProperty.Changed.AddClassHandler<DrawieTextureControl>(OnTextureChanged);
     }
+
+    private static void OnTextureChanged(DrawieTextureControl drawieTextureControl, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (e.NewValue is Texture newTexture)
+        {
+            drawieTextureControl.texture = newTexture;
+        }
+    }
+
 
     /// <summary>
     /// Measures the control.
@@ -93,9 +109,34 @@ public class DrawieTextureControl : DrawieControl
         surface.Canvas.Restore();
     }
 
+    public void UpdateTexture()
+    {
+        if (texture == null || texture.IsDisposed)
+        {
+            return;
+        }
+
+        DrawingBackendApi.Current.RenderingDispatcher.Enqueue(() =>
+        {
+            if (next != null)
+            {
+                next.Dispose();
+                next = null;
+            }
+
+            next = DrawingBackendApi.Current.CreateTextureToExport(texture);
+        });
+    }
+
     public override IExportedTexture GetTexture()
     {
-        return DrawingBackendApi.Current.CreateTextureToExport(Texture);
+        if (next != null)
+        {
+            lastExportedTexture = next;
+            next = null;
+        }
+
+        return lastExportedTexture;
     }
 
     private void ScaleCanvas(Canvas canvas)

@@ -72,6 +72,9 @@ public class VulkanResources : RenderApiResources
         renderCompletedSemaphore ??= interop.ImportSemaphore(semaphorePair.Export(true));
 
         IExportedTexture texture = renderAction();
+        if(texture == null)
+            return;
+
         var imported = interop.ImportImage(new PlatformHandle(texture.NativeHandle, texture.Descriptor),
             new PlatformGraphicsExternalImageProperties
             {
@@ -85,7 +88,7 @@ public class VulkanResources : RenderApiResources
 
         target.UpdateWithSemaphoresAsync(imported, renderCompletedSemaphore!, availableSemaphore!).ContinueWith(async (t) =>
         {
-            texture.Dispose();
+            //texture.Dispose();
             await imported.DisposeAsync();
         });
         /*using (Swapchain.BeginDraw(size, out var image))

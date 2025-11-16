@@ -16,7 +16,12 @@ public class DrawieRenderingDispatcher : IRenderingDispatcher
 
     public void Enqueue(Action renderAction)
     {
-        RenderThread.Enqueue(renderAction);
+        RenderThread.Enqueue(renderAction, Priority.Render);
+    }
+
+    public void Enqueue(Action renderAction, Priority priority)
+    {
+        RenderThread.Enqueue(renderAction, priority);
     }
 
     public IDisposable EnsureContext()
