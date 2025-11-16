@@ -1,7 +1,9 @@
 ﻿using Avalonia;
 using Avalonia.Media;
 using Drawie.Backend.Core;
+using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Surfaces;
+using Drawie.RenderApi;
 using Colors = Drawie.Backend.Core.ColorsImpl.Colors;
 
 namespace Drawie.Interop.Avalonia.Core.Controls;
@@ -89,6 +91,11 @@ public class DrawieTextureControl : DrawieControl
         surface.Canvas.DrawSurface(Texture.DrawingSurface, 0, 0);
 
         surface.Canvas.Restore();
+    }
+
+    public override IExportedTexture GetTexture()
+    {
+        return DrawingBackendApi.Current.CreateTextureToExport(Texture);
     }
 
     private void ScaleCanvas(Canvas canvas)

@@ -69,7 +69,10 @@ public static class AppBuilderExtensions
                         VulkanInteropContext context = new VulkanInteropContext(interop);
                         context.Initialize(contextInfo);
 
-                        renderApi = new VulkanRenderApi(context);
+                        var offscreenCtx = new VulkanOffscreenContext();
+                        offscreenCtx.Initialize(new OffscreenVulkanContextInfo());
+
+                        renderApi = new VulkanRenderApi(offscreenCtx);
                         DrawieInterop.VulkanInteropContext = context;
                         IDrawieInteropContext.SetCurrent(context);
                         disposableContext = context;
@@ -77,7 +80,7 @@ public static class AppBuilderExtensions
 
                     SkiaDrawingBackend drawingBackend = new SkiaDrawingBackend();
                     DrawingEngine drawingEngine =
-                        new DrawingEngine(renderApi, null, drawingBackend, new AvaloniaRenderingDispatcher());
+                        new DrawingEngine(renderApi, null, drawingBackend, new DrawieRenderingDispatcher());
 
                     // It's very likely that this is not needed and may cause issues when reopening main window without
                     // proper reinitialization.

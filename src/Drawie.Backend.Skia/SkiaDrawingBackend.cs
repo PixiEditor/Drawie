@@ -15,6 +15,7 @@ namespace Drawie.Skia
 {
     public class SkiaDrawingBackend : IDrawingBackend
     {
+        private IRenderApi renderApi;
         private IVulkanRenderApi? vulkanRenderApi;
 
         public GRContext? GraphicsContext
@@ -118,6 +119,7 @@ namespace Drawie.Skia
 
         public void Setup(IRenderApi renderApi)
         {
+            this.renderApi = renderApi;
             if (renderApi is IVulkanRenderApi vulkanRenderApi)
             {
                 SetupVulkan(vulkanRenderApi.VulkanContext);
@@ -288,6 +290,31 @@ namespace Drawie.Skia
             Debug.WriteLine("ImgData: " + (totalCount - lastCount));
             lastCount = totalCount;
             return totalCount;
+        }
+
+        public void Flush()
+        {
+            GraphicsContext?.Flush(true, true);
+        }
+
+        public IExportedTexture CreateTextureToExport(Texture texture)
+        {
+            var export = renderApi.CreateExportableTexture(texture.Size);
+            var renderTexture = CreateRenderSurface(texture.Size, export, SurfaceOrigin.BottomLeft);
+            renderTexture.Canvas.DrawSurface(texture.DrawingSurface, 0, 0);
+            renderTexture.Flush();
+            renderTexture.Dispose();
+
+            if(export is IVkTexture vkTexture)
+            {
+                return new SkiaVkExportedTexture(vkTexture);
+            }
+            /*else if(export is IWebGlTexture or IOpenGlTexture)
+            {
+                return new SkiaGlExportedTexture(renderTexture, export);
+            }*/
+
+            throw new ArgumentException("Unsupported texture type for export.");
         }
 
         private void DisposeImpl<T>(SkObjectImplementation<T> impl) where T : SKObject

@@ -14,7 +14,7 @@ using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
-public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
+public class VulkanInteropContext : VulkanOffscreenContext, IDrawieInteropContext
 {
     public VulkanCommandBufferPool Pool { get; private set; }
 

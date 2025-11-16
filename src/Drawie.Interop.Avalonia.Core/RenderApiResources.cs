@@ -23,5 +23,6 @@ public abstract class RenderApiResources : IAsyncDisposable
 
     public abstract void CreateTemporalObjects(PixelSize size);
 
-    public abstract void Render(PixelSize size, Action renderAction);
+    public abstract void Render(PixelSize size, Func<IExportedTexture> renderAction);
+
 }

@@ -94,7 +94,7 @@ public class VulkanCommandBufferPool : IDisposable
 
         public IntPtr Handle => InternalHandle.Handle;
 
-        internal CommandBuffer InternalHandle { get; }
+        public CommandBuffer InternalHandle { get; }
 
         internal unsafe VulkanCommandBuffer(Silk.NET.Vulkan.Vk api, Device device, Queue queue,
             VulkanCommandBufferPool commandBufferPool)

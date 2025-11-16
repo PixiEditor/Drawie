@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Drawie.Numerics;
 using Drawie.RenderApi.Vulkan.ContextObjects;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Helpers;
@@ -25,6 +26,11 @@ public class VulkanWindowContext : VulkanContext
             throw new NotSupportedException("KHR_surface extension not found.");
 
         surface = new VkNonDispatchableHandle(vkContext.GetSurfaceHandle(Instance.Handle)).ToSurface();
+    }
+
+    public override ITexture CreateExportableTexture(VecI textureSize)
+    {
+        throw new NotImplementedException();
     }
 
     public override void Initialize(IVulkanContextInfo contextInfo)

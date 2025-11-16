@@ -1,4 +1,6 @@
-﻿namespace Drawie.RenderApi.OpenGL;
+﻿using Drawie.Numerics;
+
+namespace Drawie.RenderApi.OpenGL;
 
 public class OpenGlRenderApi : IOpenGlRenderApi
 {
@@ -38,5 +40,10 @@ public class OpenGlRenderApi : IOpenGlRenderApi
         windowRenderApis.Add(renderApi);
 
         return renderApi;
+    }
+
+    public ITexture CreateExportableTexture(VecI textureSize)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -1,4 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Drawie.Interop.Avalonia.Vulkan.Vk;
+using Drawie.Numerics;
+using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.RenderApi.Vulkan.ContextObjects;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Silk.NET.Core.Native;
@@ -8,11 +12,37 @@ namespace Drawie.RenderApi.Vulkan;
 
 public class VulkanOffscreenContext : VulkanContext
 {
+    private VulkanCommandBufferPool Pool { get; set; }
+    private string[] supportedImageHandleTypes;
+
+    private static string[] s_requiredCommonDeviceExtensions =
+    {
+        "VK_KHR_external_memory",
+        "VK_KHR_external_semaphore",
+        "VK_KHR_dedicated_allocation",
+    };
+
+    private static string[] s_requiredLinuxDeviceExtensions =
+        s_requiredCommonDeviceExtensions.Concat(new[] { "VK_KHR_external_semaphore_fd", "VK_KHR_external_memory_fd" })
+            .ToArray();
+
+    private static string[] s_requiredWin32DeviceExtensions = s_requiredCommonDeviceExtensions.Concat(new[]
+    {
+        "VK_KHR_external_semaphore_win32", "VK_KHR_external_memory_win32"
+    }).ToArray();
+
+    public static string[] RequiredDeviceExtensions = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        ? s_requiredWin32DeviceExtensions
+        : s_requiredLinuxDeviceExtensions;
+
+
     public override void Initialize(IVulkanContextInfo contextInfo)
     {
         Api = Vk.GetApi();
 
         TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
+
+        deviceExtensions.AddRange(RequiredDeviceExtensions);
 
         SetupInstance(contextInfo);
         SetupDebugMessenger();
@@ -20,6 +50,30 @@ public class VulkanOffscreenContext : VulkanContext
         GpuInfo = PickPhysicalDevice();
 
         CreateLogicalDevice();
+        CreatePool();
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            //TODO: keyed muted
+            supportedImageHandleTypes = new[] { "VulkanOpaqueNtHandle", "VulkanOpaqueKmtHandle", };
+            /*
+            SupportedSemaphoreTypes = new[]
+            {
+                KnownPlatformGraphicsExternalSemaphoreHandleTypes.VulkanOpaqueNtHandle,
+                KnownPlatformGraphicsExternalSemaphoreHandleTypes.VulkanOpaqueKmtHandle
+            };
+        */
+        }
+        else
+        {
+            supportedImageHandleTypes = new[] { "VulkanOpaquePosixFileDescriptor", };
+            /*
+            SupportedSemaphoreTypes = new[]
+            {
+                KnownPlatformGraphicsExternalSemaphoreHandleTypes.VulkanOpaquePosixFileDescriptor
+            };
+        */
+        }
     }
 
     protected override unsafe void CreateLogicalDevice()
@@ -43,21 +97,16 @@ public class VulkanOffscreenContext : VulkanContext
             };
         }
 
-        PhysicalDeviceFeatures deviceFeatures = new()
-        {
-            SamplerAnisotropy = false
-        };
+        PhysicalDeviceFeatures deviceFeatures = new() { SamplerAnisotropy = false };
 
         DeviceCreateInfo createInfo = new()
         {
             SType = StructureType.DeviceCreateInfo,
             QueueCreateInfoCount = (uint)uniqueQueueFamilies.Length,
             PQueueCreateInfos = queueCreateInfos,
-
             PEnabledFeatures = &deviceFeatures,
-
-            EnabledExtensionCount = 0,
-            PpEnabledExtensionNames = null
+            EnabledExtensionCount = (uint)deviceExtensions.Count,
+            PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions.ToArray()),
         };
 
         if (EnableValidationLayers)
@@ -84,8 +133,7 @@ public class VulkanOffscreenContext : VulkanContext
         if (graphicsIndex < 0)
             return false;
 
-        // No extension requirements, no swapchain requirements
-        return true;
+        return CheckDeviceExtensionSupport(device);
     }
 
     public override unsafe void Dispose()
@@ -120,5 +168,19 @@ public class VulkanOffscreenContext : VulkanContext
         }
 
         return -1;
+    }
+
+    public override ITexture CreateExportableTexture(VecI textureSize)
+    {
+        return new VulkanTexture(Api!, Instance, LogicalDevice.Device, PhysicalDevice, Pool.CommandPool,
+            GraphicsQueue, (uint)GraphicsQueueFamilyIndex, textureSize, supportedImageHandleTypes);
+    }
+
+    private unsafe void CreatePool()
+    {
+        Api!.GetDeviceQueue(LogicalDevice.Device, GraphicsQueueFamilyIndex, 0, out var queue);
+        GraphicsQueue = queue;
+
+        Pool = new VulkanCommandBufferPool(Api, LogicalDevice.Device, queue, (uint)GraphicsQueueFamilyIndex);
     }
 }

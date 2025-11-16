@@ -1,14 +1,18 @@
+using System.Runtime.InteropServices;
 using Drawie.Numerics;
 using Drawie.RenderApi.Vulkan.Exceptions;
+using Drawie.RenderApi.Vulkan.Extensions;
 using Drawie.RenderApi.Vulkan.Helpers;
 using Silk.NET.Vulkan;
+using Silk.NET.Vulkan.Extensions.KHR;
 using Buffer = Silk.NET.Vulkan.Buffer;
 using Image = Silk.NET.Vulkan.Image;
 
 namespace Drawie.RenderApi.Vulkan.Buffers;
 
-public class VulkanTexture : IDisposable, IVkTexture
+public class VulkanTexture : IVkTexture
 {
+    public Instance Instance { get; }
     public ImageView ImageView { get; private set; }
     public Sampler Sampler => sampler;
     public Image VkImage => textureImage;
@@ -23,6 +27,7 @@ public class VulkanTexture : IDisposable, IVkTexture
     public uint ImageFormat { get; private set; }
     public ulong ImageHandle => textureImage.Handle;
     public uint Tiling { get; }
+    public ulong MemorySize { get; set; }
     public uint UsageFlags { get; set; }
     public uint Layout => ColorAttachmentOptimal;
     public uint TargetSharingMode { get; } = (uint)SharingMode.Exclusive;
@@ -32,16 +37,19 @@ public class VulkanTexture : IDisposable, IVkTexture
     private Image textureImage;
     private DeviceMemory textureImageMemory;
     private Sampler sampler;
-    
-    public unsafe VulkanTexture(Vk vk, Device logicalDevice, PhysicalDevice physicalDevice, CommandPool commandPool,
-        Queue graphicsQueue, uint queueFamily, VecI size)
+
+    public unsafe VulkanTexture(Vk vk, Instance contextInstance, Device logicalDevice, PhysicalDevice physicalDevice,
+        CommandPool commandPool,
+        Queue graphicsQueue, uint queueFamily, VecI size, IReadOnlyCollection<string> supportedHandleTypes)
     {
         Vk = vk;
+        Instance = contextInstance;
         LogicalDevice = logicalDevice;
         PhysicalDevice = physicalDevice;
         CommandPool = commandPool;
         GraphicsQueue = graphicsQueue;
         QueueFamily = queueFamily;
+        Size = size;
 
         /*var imageSize = (ulong)size.X * (ulong)size.Y * 4;
 
@@ -54,24 +62,28 @@ public class VulkanTexture : IDisposable, IVkTexture
 
         ImageFormat = (uint)Format.R8G8B8A8Unorm;
         Tiling = (uint)ImageTiling.Optimal;
-        UsageFlags = (uint)(ImageUsageFlags.SampledBit | ImageUsageFlags.TransferSrcBit | ImageUsageFlags.TransferDstBit | ImageUsageFlags.ColorAttachmentBit);
+        UsageFlags = (uint)(ImageUsageFlags.SampledBit | ImageUsageFlags.TransferSrcBit |
+                            ImageUsageFlags.TransferDstBit | ImageUsageFlags.ColorAttachmentBit);
 
         CreateImage((uint)size.X, (uint)size.Y, (Format)ImageFormat, (ImageTiling)Tiling,
-            (ImageUsageFlags)UsageFlags, MemoryPropertyFlags.DeviceLocalBit);
+            (ImageUsageFlags)UsageFlags, MemoryPropertyFlags.DeviceLocalBit, supportedHandleTypes);
 
         /*TransitionImageLayout(textureImage, Format.R8G8B8A8Srgb, ImageLayout.Undefined, ImageLayout.TransferDstOptimal);
         CopyBufferToImage(stagingBuffer.VkBuffer, textureImage, (uint)size.X, (uint)size.Y);
         TransitionImageLayout(textureImage, Format.R8G8B8A8Srgb, ImageLayout.TransferDstOptimal,
             ImageLayout.ShaderReadOnlyOptimal);*/
-        
-        TransitionImageLayout(textureImage, (Format)ImageFormat, ImageLayout.Undefined, ImageLayout.ColorAttachmentOptimal);
+
+        TransitionImageLayout(textureImage, (Format)ImageFormat, ImageLayout.Undefined,
+            ImageLayout.ColorAttachmentOptimal);
 
         ImageView = ImageUtility.CreateViewForImage(Vk, LogicalDevice, textureImage, Format.R8G8B8A8Unorm);
-        
+
         CreateSampler();
     }
-    
-    
+
+
+    public VecI Size { get; }
+
     public void MakeReadOnly()
     {
         TransitionLayoutTo(ColorAttachmentOptimal, ShaderReadOnlyOptimal);
@@ -79,7 +91,54 @@ public class VulkanTexture : IDisposable, IVkTexture
 
     public void MakeWriteable()
     {
-        TransitionLayoutTo(ShaderReadOnlyOptimal, ColorAttachmentOptimal); 
+        TransitionLayoutTo(ShaderReadOnlyOptimal, ColorAttachmentOptimal);
+    }
+
+    public (IntPtr handle, string? descriptor) Export()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            /*if (_d3dTexture2D != null)
+            {
+                using var dxgi = _d3dTexture2D!.QueryInterface<Resource1>();
+                return new PlatformHandle(
+                    dxgi.CreateSharedHandle(null, SharedResourceFlags.Read | SharedResourceFlags.Write),
+                    KnownPlatformGraphicsExternalImageHandleTypes.D3D11TextureNtHandle);
+            }*/
+
+            return new (ExportOpaqueNtHandle(), "VulkanOpaqueNtHandle");
+        }
+
+        return (new IntPtr(ExportFd()), "VulkanOpaquePosixFileDescriptor");
+    }
+
+    public int ExportFd()
+    {
+        if (!Vk.TryGetDeviceExtension<KhrExternalMemoryFd>(Instance, LogicalDevice, out var ext))
+            throw new InvalidOperationException();
+        var info = new MemoryGetFdInfoKHR
+        {
+            Memory = textureImageMemory,
+            SType = StructureType.MemoryGetFDInfoKhr,
+            HandleType = ExternalMemoryHandleTypeFlags.OpaqueFDBit
+        };
+        ext.GetMemoryF(LogicalDevice, info, out var fd).ThrowOnError("Failed to get memory fd");
+        return fd;
+    }
+
+    public unsafe IntPtr ExportOpaqueNtHandle()
+    {
+        if (!Vk.TryGetDeviceExtension<KhrExternalMemoryWin32>(Instance, LogicalDevice, out var ext))
+            throw new InvalidOperationException();
+
+        var info = new MemoryGetWin32HandleInfoKHR()
+        {
+            Memory = textureImageMemory,
+            SType = StructureType.MemoryGetWin32HandleInfoKhr,
+            HandleType = ExternalMemoryHandleTypeFlags.OpaqueWin32Bit,
+        };
+        ext.GetMemoryWin32Handle(LogicalDevice, info, out var fd).ThrowOnError("Failed to get memory handle");
+        return fd;
     }
 
     private unsafe void CreateSampler()
@@ -93,7 +152,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             AddressModeV = SamplerAddressMode.Repeat,
             AddressModeW = SamplerAddressMode.Repeat,
             AnisotropyEnable = false,
-            MaxAnisotropy = 1, 
+            MaxAnisotropy = 1,
             BorderColor = BorderColor.IntOpaqueBlack,
             UnnormalizedCoordinates = false,
             CompareEnable = false,
@@ -103,7 +162,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             MinLod = 0,
             MaxLod = 0
         };
-        
+
         fixed (Sampler* samplerPtr = &sampler)
         {
             if (Vk.CreateSampler(LogicalDevice, &samplerCreateInfo, null, samplerPtr) != Result.Success)
@@ -112,8 +171,26 @@ public class VulkanTexture : IDisposable, IVkTexture
     }
 
     private unsafe void CreateImage(uint width, uint height, Format format, ImageTiling tiling, ImageUsageFlags usage,
-        MemoryPropertyFlags properties)
+        MemoryPropertyFlags properties, IReadOnlyCollection<string> supportedHandleTypes)
     {
+        ExternalMemoryImageCreateInfo externalMemoryCreateInfo;
+        bool hasExternalMemory = false;
+        if (supportedHandleTypes != null)
+        {
+            var handleType = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? (supportedHandleTypes.Contains("D3D11TextureNtHandle")
+                   && !supportedHandleTypes.Contains("VulkanOpaqueNtHandle")
+                    ? ExternalMemoryHandleTypeFlags.D3D11TextureBit
+                    : ExternalMemoryHandleTypeFlags.OpaqueWin32Bit)
+                : ExternalMemoryHandleTypeFlags.OpaqueFDBit;
+
+            externalMemoryCreateInfo = new ExternalMemoryImageCreateInfo
+            {
+                SType = StructureType.ExternalMemoryImageCreateInfo, HandleTypes = handleType
+            };
+            hasExternalMemory = true;
+        }
+
         ImageCreateInfo imageInfo = new()
         {
             SType = StructureType.ImageCreateInfo,
@@ -126,7 +203,9 @@ public class VulkanTexture : IDisposable, IVkTexture
             InitialLayout = ImageLayout.Undefined,
             Usage = usage,
             Samples = SampleCountFlags.Count1Bit,
-            SharingMode = SharingMode.Exclusive
+            SharingMode = SharingMode.Exclusive,
+            Flags = ImageCreateFlags.CreateMutableFormatBit,
+            PNext = hasExternalMemory ? &externalMemoryCreateInfo : null
         };
 
         fixed (Image* imagePtr = &textureImage)
@@ -137,12 +216,19 @@ public class VulkanTexture : IDisposable, IVkTexture
 
         Vk.GetImageMemoryRequirements(LogicalDevice, textureImage, out var memRequirements);
 
+        var exportAllocInfo = new ExportMemoryAllocateInfo
+        {
+            SType = StructureType.ExportMemoryAllocateInfo,
+            HandleTypes = ExternalMemoryHandleTypeFlags.OpaqueWin32Bit
+        };
+
         MemoryAllocateInfo allocInfo = new()
         {
             SType = StructureType.MemoryAllocateInfo,
             AllocationSize = memRequirements.Size,
             MemoryTypeIndex =
-                BufferObject.FindMemoryType(Vk, PhysicalDevice, memRequirements.MemoryTypeBits, properties)
+                BufferObject.FindMemoryType(Vk, PhysicalDevice, memRequirements.MemoryTypeBits, properties),
+            PNext = hasExternalMemory ? &exportAllocInfo : null
         };
 
         fixed (DeviceMemory* memoryPtr = &textureImageMemory)
@@ -152,6 +238,8 @@ public class VulkanTexture : IDisposable, IVkTexture
         }
 
         Vk.BindImageMemory(LogicalDevice, textureImage, textureImageMemory, 0);
+
+        MemorySize = memRequirements.Size;
     }
 
     private unsafe void TransitionImageLayout(Image image, Format format, ImageLayout oldLayout, ImageLayout newLayout)
@@ -205,7 +293,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             barrier.SrcAccessMask = AccessFlags.MemoryReadBit;
             sourceStage = PipelineStageFlags.BottomOfPipeBit;
         }
-        
+
         if (newLayout == ImageLayout.ColorAttachmentOptimal)
         {
             barrier.DstAccessMask = AccessFlags.ColorAttachmentWriteBit;
@@ -237,10 +325,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             BufferImageHeight = 0,
             ImageSubresource = new ImageSubresourceLayers()
             {
-                AspectMask = ImageAspectFlags.ColorBit,
-                MipLevel = 0,
-                BaseArrayLayer = 0,
-                LayerCount = 1
+                AspectMask = ImageAspectFlags.ColorBit, MipLevel = 0, BaseArrayLayer = 0, LayerCount = 1
             },
             ImageOffset = new Offset3D(0, 0, 0),
             ImageExtent = new Extent3D(width, height, 1)
@@ -260,7 +345,7 @@ public class VulkanTexture : IDisposable, IVkTexture
 
     public void TransitionLayoutTo(uint from, uint to)
     {
-        TransitionImageLayout(textureImage, (Format)ImageFormat, (ImageLayout)from, (ImageLayout)to); 
+        TransitionImageLayout(textureImage, (Format)ImageFormat, (ImageLayout)from, (ImageLayout)to);
     }
 
     public void TransitionLayoutTo(CommandBuffer buffer, ImageLayout from, ImageLayout to)

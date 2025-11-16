@@ -1,4 +1,5 @@
 using Drawie.Backend.Core;
+using Drawie.Backend.Core.Rendering;
 
 namespace DrawiEngine;
 
@@ -6,24 +7,31 @@ public class DrawieRenderingDispatcher : IRenderingDispatcher
 {
     public Action<Action> Invoke { get; } = action => action();
 
-    public async Task<TResult> InvokeAsync<TResult>(Func<TResult> func)
+    public RenderThread RenderThread { get; }
+
+    public DrawieRenderingDispatcher(double targetFps = 60.0)
     {
-        return await Task.Run(func);
+        RenderThread = new RenderThread(targetFps);
     }
 
-    public async Task<TResult> InvokeInBackgroundAsync<TResult>(Func<TResult> function)
+    public void Enqueue(Action renderAction)
     {
-        return await Task.Run(function);
-    }
-
-    public Task InvokeInBackgroundAsync(Action function)
-    {
-        return Task.Run(function);
+        RenderThread.Enqueue(renderAction);
     }
 
     public IDisposable EnsureContext()
     {
         return new EmptyDisposable();
+    }
+
+    public void StartRenderThread()
+    {
+        RenderThread.Start();
+    }
+
+    public async Task WaitForIdleAsync()
+    {
+        await RenderThread.WaitForIdleAsync();
     }
 }
 
@@ -33,3 +41,4 @@ public class EmptyDisposable : IDisposable
     {
     }
 }
+

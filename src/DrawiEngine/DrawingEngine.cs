@@ -56,4 +56,9 @@ public class DrawingEngine
     {
         await DrawingBackend.DisposeAsync();
     }
+
+    public async Task WaitForIdleAsync()
+    {
+        await RenderingDispatcher.WaitForIdleAsync();
+    }
 }

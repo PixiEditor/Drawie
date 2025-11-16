@@ -1,4 +1,6 @@
-﻿namespace Drawie.RenderApi;
+﻿using Drawie.Numerics;
+
+namespace Drawie.RenderApi;
 
 public interface IVulkanContext
 {
@@ -8,4 +10,5 @@ public interface IVulkanContext
     public IntPtr GraphicsQueueHandle { get; }
     public uint GraphicsQueueFamilyIndex { get; }
     public IntPtr GetProcedureAddress(string name, IntPtr instance, IntPtr device);
+    public ITexture CreateExportableTexture(VecI textureSize);
 }

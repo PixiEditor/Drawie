@@ -1,3 +1,5 @@
+using Drawie.Numerics;
+using Drawie.RenderApi.Vulkan.Buffers;
 using Silk.NET.Vulkan;
 
 namespace Drawie.RenderApi.Vulkan;
@@ -39,5 +41,11 @@ public class VulkanRenderApi : IVulkanRenderApi
 
         windowRenderApis.Add(windowRenderApi);
         return windowRenderApi;
+    }
+
+    public ITexture CreateExportableTexture(VecI textureSize)
+    {
+        var texture = VulkanContext.CreateExportableTexture(textureSize);
+        return texture;
     }
 }

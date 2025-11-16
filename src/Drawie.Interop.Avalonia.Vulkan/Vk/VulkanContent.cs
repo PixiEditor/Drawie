@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Drawie.Numerics;
+using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan.Buffers;
 using Silk.NET.Vulkan;
 
@@ -23,7 +24,7 @@ public class VulkanContent : IDisposable
         var api = context.Api;
 
         if (image.Size != _previousImageSize)
-            CreateTemporalObjects(image.Size);
+            CreateTemporalObjects(image.Size, null);
 
         _previousImageSize = image.Size;
 
@@ -69,11 +70,18 @@ public class VulkanContent : IDisposable
             (uint)ImageLayout.ColorAttachmentOptimal);
     }
 
-    public void CreateTextureImage(VecI size)
+    public void CreateTextureImage(VecI size, IReadOnlyList<string> interopSupportedImageHandleTypes)
     {
-        texture = new VulkanTexture(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice,
+        texture = new VulkanTexture(context.Api!, context.Instance, context.LogicalDevice.Device, context.PhysicalDevice,
             context.Pool.CommandPool,
-            context.GraphicsQueue, context.GraphicsQueueFamilyIndex, size);
+            context.GraphicsQueue, context.GraphicsQueueFamilyIndex, size, interopSupportedImageHandleTypes);
+    }
+
+    public ITexture CreateTextureImageForExport(VecI size, IReadOnlyList<string> interopSupportedImageHandleTypes)
+    {
+        return new VulkanTexture(context.Api!, context.Instance, context.LogicalDevice.Device, context.PhysicalDevice,
+            context.Pool.CommandPool,
+            context.GraphicsQueue, context.GraphicsQueueFamilyIndex, size, interopSupportedImageHandleTypes);
     }
 
     public void Dispose()
@@ -87,13 +95,13 @@ public class VulkanContent : IDisposable
         _previousImageSize = PixelSize.Empty;
     }
 
-    public void CreateTemporalObjects(PixelSize size)
+    public void CreateTemporalObjects(PixelSize size, IReadOnlyList<string> interopSupportedImageHandleTypes)
     {
         DestroyTemporalObjects();
 
         VecI vecSize = new VecI(size.Width, size.Height);
 
-        CreateTextureImage(vecSize);
+        CreateTextureImage(vecSize, interopSupportedImageHandleTypes);
 
         _previousImageSize = size;
     }

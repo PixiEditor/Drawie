@@ -65,7 +65,12 @@ public class OpenGlRenderApiResources : RenderApiResources
     {
     }
 
-    public override void Render(PixelSize size, Action renderAction)
+    public override void Render(PixelSize size, Func<IExportedTexture> renderAction)
+    {
+        throw new NotImplementedException();
+    }
+
+    /*public override void Render(PixelSize size, Action renderAction)
     {
         if (isDisposed)
             return;
@@ -86,5 +91,5 @@ public class OpenGlRenderApiResources : RenderApiResources
         }
 
         Context.GlInterface.BindFramebuffer((int)GLEnum.Framebuffer, oldFbo);
-    }
+    }*/
 }

@@ -192,8 +192,8 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
 
     public void CreateTextureImage()
     {
-        texture = new VulkanTexture(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, commandPool,
-            context.GraphicsQueue, context.GraphicsQueueFamilyIndex, framebufferSize);
+        texture = new VulkanTexture(context.Api!, context.Instance, context.LogicalDevice.Device, context.PhysicalDevice, commandPool,
+            context.GraphicsQueue, context.GraphicsQueueFamilyIndex, framebufferSize, null);
         texture.MakeReadOnly();
     }
 

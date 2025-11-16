@@ -1,5 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Drawie.Numerics;
+using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.RenderApi.Vulkan.ContextObjects;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Extensions;
@@ -56,6 +58,8 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
     {
         return Api!.GetInstanceProcAddr(Instance, name);
     }
+
+    public abstract ITexture CreateExportableTexture(VecI textureSize);
 
     public VulkanContext()
     {
