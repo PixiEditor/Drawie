@@ -22,6 +22,16 @@ public class DrawieTextureControl : DrawieControl
         AvaloniaProperty.Register<DrawieTextureControl, Texture>(
             nameof(Texture));
 
+    public static readonly StyledProperty<SampleQuality> SamplingOptionsProperty =
+        AvaloniaProperty.Register<DrawieTextureControl, SampleQuality>(
+            nameof(SamplingOptions), SampleQuality.Bilinear);
+
+    public SampleQuality SamplingOptions
+    {
+        get => GetValue(SamplingOptionsProperty);
+        set => SetValue(SamplingOptionsProperty, value);
+    }
+
     public Texture Texture
     {
         get => GetValue(TextureProperty);
@@ -30,7 +40,7 @@ public class DrawieTextureControl : DrawieControl
 
     static DrawieTextureControl()
     {
-        AffectsRender<DrawieTextureControl>(TextureProperty, StretchProperty);
+        AffectsRender<DrawieTextureControl>(TextureProperty, StretchProperty, SamplingOptionsProperty);
         AffectsMeasure<DrawieTextureControl>(TextureProperty, StretchProperty);
     }
 
@@ -86,7 +96,15 @@ public class DrawieTextureControl : DrawieControl
         surface.Canvas.Save();
 
         ScaleCanvas(surface.Canvas);
-        surface.Canvas.DrawSurface(Texture.DrawingSurface, 0, 0);
+        if (SamplingOptions == SampleQuality.Nearest)
+        {
+            surface.Canvas.DrawSurface(Texture.DrawingSurface, 0, 0);
+        }
+        else
+        {
+            using var snapshot = Texture.DrawingSurface.Snapshot();
+            surface.Canvas.DrawImage(snapshot, 0, 0, Backend.Core.Surfaces.SamplingOptions.Bilinear);
+        }
 
         surface.Canvas.Restore();
     }
@@ -121,4 +139,10 @@ public class DrawieTextureControl : DrawieControl
             canvas.Translate(dX, dY);
         }
     }
+}
+
+public enum SampleQuality
+{
+    Nearest,
+    Bilinear,
 }
