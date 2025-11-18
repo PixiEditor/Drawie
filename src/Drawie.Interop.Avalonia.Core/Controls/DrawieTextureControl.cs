@@ -40,8 +40,10 @@ public class DrawieTextureControl : DrawieControl
 
     static DrawieTextureControl()
     {
-        AffectsRender<DrawieTextureControl>(TextureProperty, StretchProperty, SamplingOptionsProperty);
         AffectsMeasure<DrawieTextureControl>(TextureProperty, StretchProperty);
+        TextureProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) => x.QueueNextFrame());
+        SamplingOptionsProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) => x.QueueNextFrame());
+        StretchProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) => x.QueueNextFrame());
     }
 
     /// <summary>
