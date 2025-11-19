@@ -59,27 +59,49 @@ namespace Drawie.Backend.Core.Surfaces
             DrawSurface(surfaceToDraw, (float)size.X, (float)size.Y, paint);
         }
 
-        public void DrawImage(Image image, float x, float y) =>
+        public void DrawImage(Image image, float x, float y)
+        {
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y);
+            Changed?.Invoke(new RectD(x, y, image.Width, image.Height));
+        }
 
-        public void DrawImage(Image image, float x, float y, SamplingOptions samplingOptions) =>
+        public void DrawImage(Image image, float x, float y, SamplingOptions samplingOptions)
+        {
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, samplingOptions);
+            Changed?.Invoke(new RectD(x, y, image.Width, image.Height));
+        }
 
-        public void DrawImage(Image image, float x, float y, SamplingOptions samplingOptions, Paint? paint) =>
+        public void DrawImage(Image image, float x, float y, SamplingOptions samplingOptions, Paint? paint)
+        {
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, samplingOptions,
                 paint);
+            Changed?.Invoke(new RectD(x, y, image.Width, image.Height));
+        }
 
-        public void DrawImage(Image image, float x, float y, Paint paint) =>
+        public void DrawImage(Image image, float x, float y, Paint paint)
+        {
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, paint);
+            Changed?.Invoke(new RectD(x, y, image.Width, image.Height));
+        }
 
-        public void DrawImage(Image image, RectD destRect, Paint paint) =>
+        public void DrawImage(Image image, RectD destRect, Paint paint)
+        {
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, destRect, paint);
+            Changed?.Invoke(destRect);
+        }
 
-        public void DrawImage(Image image, RectD sourceRect, RectD destRect, Paint paint) =>
+        public void DrawImage(Image image, RectD sourceRect, RectD destRect, Paint paint)
+        {
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, sourceRect, destRect, paint);
+            Changed?.Invoke(destRect);
+        }
 
-        public void DrawImage(Image image, RectD sourceRect, RectD destRect, Paint paint, SamplingOptions samplingOptions) =>
-            DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, sourceRect, destRect, samplingOptions, paint);
+        public void DrawImage(Image image, RectD sourceRect, RectD destRect, Paint paint, SamplingOptions samplingOptions)
+        {
+            DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, sourceRect, destRect,
+                samplingOptions, paint);
+            Changed?.Invoke(destRect);
+        }
 
         public int Save()
         {

@@ -2,6 +2,7 @@
 using Avalonia.Media;
 using Drawie.Backend.Core;
 using Drawie.Backend.Core.Surfaces;
+using Drawie.Numerics;
 using Colors = Drawie.Backend.Core.ColorsImpl.Colors;
 
 namespace Drawie.Interop.Avalonia.Core.Controls;
@@ -11,6 +12,15 @@ public class DrawieTextureControl : DrawieControl
     public static readonly StyledProperty<Stretch> StretchProperty =
         AvaloniaProperty.Register<DrawieTextureControl, Stretch>(
             nameof(Stretch), Stretch.Uniform);
+
+    public static readonly StyledProperty<bool> RepaintOnChangedProperty = AvaloniaProperty.Register<DrawieTextureControl, bool>(
+        nameof(RepaintOnChanged));
+
+    public bool RepaintOnChanged
+    {
+        get => GetValue(RepaintOnChangedProperty);
+        set => SetValue(RepaintOnChangedProperty, value);
+    }
 
     public Stretch Stretch
     {
@@ -41,9 +51,30 @@ public class DrawieTextureControl : DrawieControl
     static DrawieTextureControl()
     {
         AffectsMeasure<DrawieTextureControl>(TextureProperty, StretchProperty);
-        TextureProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) => x.QueueNextFrame());
+        TextureProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) =>
+        {
+            x.QueueNextFrame();
+            if (e.OldValue is Texture oldTexture && x.RepaintOnChanged)
+                oldTexture.Changed -= x.Texture_Changed;
+            if (e.NewValue is Texture newTexture && x.RepaintOnChanged)
+                newTexture.Changed += x.Texture_Changed;
+        });
         SamplingOptionsProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) => x.QueueNextFrame());
         StretchProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) => x.QueueNextFrame());
+        RepaintOnChangedProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) =>
+        {
+            if (e.NewValue is true)
+            {
+                x.QueueNextFrame();
+                if(x.Texture != null)
+                    x.Texture.Changed += x.Texture_Changed;
+            }
+            else
+            {
+                if(x.Texture != null)
+                    x.Texture.Changed -= x.Texture_Changed;
+            }
+        });
     }
 
     /// <summary>
@@ -85,6 +116,11 @@ public class DrawieTextureControl : DrawieControl
         }
 
         return new Size();
+    }
+
+    private void Texture_Changed(RectD? changedRect)
+    {
+        QueueNextFrame();
     }
 
     public override void Draw(DrawingSurface surface)
