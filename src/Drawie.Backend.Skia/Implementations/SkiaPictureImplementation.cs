@@ -54,4 +54,15 @@ public class SkiaPictureImplementation : SkObjectImplementation<SKPicture>, IPic
 
         return new Shader(shader.Handle);
     }
+
+    public void Serialize(Picture picture, Stream stream)
+    {
+        if (!TryGetInstance(picture.ObjectPointer, out var skPicture) || skPicture is null)
+        {
+            throw new InvalidOperationException("No SKPicture found for the given pointer.");
+        }
+
+        using var skStream = new SKManagedWStream(stream);
+        skPicture.Serialize(skStream);
+    }
 }

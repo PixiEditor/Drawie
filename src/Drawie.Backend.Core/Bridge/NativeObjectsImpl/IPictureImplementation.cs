@@ -13,4 +13,5 @@ public interface IPictureImplementation
     RectD GetCullRect(Picture picture);
 
     Shader? ToShader(Picture picture, TileMode tileModeX, TileMode tileModeY, FilterMode filterMode, Matrix3X3 localMatrix, RectD tile);
+    public void Serialize(Picture picture, System.IO.Stream stream);
 }

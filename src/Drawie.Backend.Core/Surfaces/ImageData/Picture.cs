@@ -24,4 +24,9 @@ public class Picture : NativeObject
     {
         return DrawingBackendApi.Current.PictureImplementation.ToShader(this, tileModeX, tileModeY, filterMode, localMatrix, tile);
     }
+
+    public void Serialize(System.IO.Stream stream)
+    {
+        DrawingBackendApi.Current.PictureImplementation.Serialize(this, stream);
+    }
 }
