@@ -34,7 +34,7 @@ public class DrawieTextureControl : DrawieControl
 
     public static readonly StyledProperty<SampleQuality> SamplingOptionsProperty =
         AvaloniaProperty.Register<DrawieTextureControl, SampleQuality>(
-            nameof(SamplingOptions), SampleQuality.Bilinear);
+            nameof(SamplingOptions));
 
     public SampleQuality SamplingOptions
     {
