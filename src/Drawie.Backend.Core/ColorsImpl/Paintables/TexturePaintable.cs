@@ -37,24 +37,25 @@ public class TexturePaintable : Paintable
             return null;
         }
 
-        lastSnapshot = Image.DrawingSurface.Snapshot();
-
         Matrix3X3 scalingMatrix = Matrix3X3.CreateScaleTranslation(
             (float)bounds.Width / Image.Size.X,
             (float)bounds.Height / Image.Size.Y,
             (float)bounds.X,
             (float)bounds.Y);
 
+        lastSnapshot = Image.DrawingSurface.Snapshot();
 
         // TODO: Figure out if we need to change bilinear in any case
         var shader = lastSnapshot.ToShader(TileMode.Clamp, TileMode.Clamp, SamplingOptions.Bilinear, scalingMatrix.PostConcat(matrix));
+        lastSnapshot?.Dispose();
 
         return shader;
     }
 
     public override void DisposeShaderElements()
     {
-        lastSnapshot?.Dispose();
+        // Remove disposal from GetShader and uncomment in case something breaks
+        //lastSnapshot?.Dispose();
     }
 
     public override Paintable? Clone()
@@ -113,6 +114,9 @@ public class TexturePaintable : Paintable
     {
         base.Dispose();
         Image?.UnlockDispose(this);
+        lastSnapshot?.Dispose();
+        lastSnapshot = null;
+
         if (disposeAfterUse)
         {
             Image?.Dispose();
