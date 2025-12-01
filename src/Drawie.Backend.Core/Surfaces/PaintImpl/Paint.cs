@@ -123,6 +123,12 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             Color.A == 255
             && BlendMode == BlendMode.SrcOver;
 
+        public Blender? Blender
+        {
+            get => DrawingBackendApi.Current.PaintImplementation.GetBlender(this);
+            set => DrawingBackendApi.Current.PaintImplementation.SetBlender(this, value);
+        }
+
         public Paint(IntPtr objPtr) : base(objPtr)
         {
         }

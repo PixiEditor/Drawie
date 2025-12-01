@@ -54,6 +54,7 @@ namespace Drawie.Skia
         public IFontImplementation FontImplementation { get; set; }
         public IRecorderImplementation RecorderImplementation { get; }
         public IPictureImplementation PictureImplementation { get; }
+        public IBlenderImplementation BlenderImplementation { get; }
 
         private GRContext _grContext;
 
@@ -78,8 +79,11 @@ namespace Drawie.Skia
             SkiaPathEffectImplementation pathEffectImpl = new SkiaPathEffectImplementation();
             PathEffectImplementation = pathEffectImpl;
 
+            var blenderImpl = new SkiaBlenderImplementation();
+            BlenderImplementation = blenderImpl;
+
             SkiaPaintImplementation paintImpl =
-                new SkiaPaintImplementation(colorFilterImpl, imageFilterImpl, shader, pathEffectImpl);
+                new SkiaPaintImplementation(colorFilterImpl, imageFilterImpl, shader, pathEffectImpl, blenderImpl);
             PaintImplementation = paintImpl;
 
             SkiaPathImplementation pathImpl = new SkiaPathImplementation();
