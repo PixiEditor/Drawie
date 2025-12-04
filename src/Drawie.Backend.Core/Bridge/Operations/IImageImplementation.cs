@@ -28,5 +28,6 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public Shader ToShader(IntPtr objectPointer, TileMode tileX, TileMode tileY, SamplingOptions samplingOptions,
             Matrix3X3 localMatrix);
         public Shader ToRawShader(IntPtr objectPointer);
+        public Shader? ToShader(IntPtr objectPointer, TileMode clamp, TileMode tileMode, Matrix3X3 fillMatrixValue);
     }
 }

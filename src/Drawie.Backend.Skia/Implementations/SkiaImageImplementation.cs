@@ -192,6 +192,17 @@ namespace Drawie.Skia.Implementations
             return new Shader(shader.Handle);
         }
 
+        public Shader? ToShader(IntPtr objectPointer, TileMode clamp, TileMode tileMode, Matrix3X3 fillMatrixValue)
+        {
+            var shader = this[objectPointer].ToShader((SKShaderTileMode)clamp, (SKShaderTileMode)tileMode,
+                fillMatrixValue.ToSkMatrix());
+            if (shader is null)
+                return null;
+
+            shaderImpl.AddManagedInstance(shader);
+            return new Shader(shader.Handle);
+        }
+
         public object GetNativeImage(IntPtr objectPointer)
         {
             return this[objectPointer];

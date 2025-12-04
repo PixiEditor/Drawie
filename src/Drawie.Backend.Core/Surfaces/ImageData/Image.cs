@@ -90,5 +90,10 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
         {
             return DrawingBackendApi.Current.ImageImplementation.ToRawShader(ObjectPointer);
         }
+
+        public Shader? ToShader(TileMode clamp, TileMode tileMode, Matrix3X3 fillMatrixValue)
+        {
+            return DrawingBackendApi.Current.ImageImplementation.ToShader(ObjectPointer, clamp, tileMode, fillMatrixValue);
+        }
     }
 }

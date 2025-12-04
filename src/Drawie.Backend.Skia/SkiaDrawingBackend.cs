@@ -55,6 +55,7 @@ namespace Drawie.Skia
         public IRecorderImplementation RecorderImplementation { get; }
         public IPictureImplementation PictureImplementation { get; }
         public IBlenderImplementation BlenderImplementation { get; }
+        public IMeshImplementation MeshImplementation { get; }
 
         private GRContext _grContext;
 
@@ -111,14 +112,18 @@ namespace Drawie.Skia
             SkiaFontImplementation fontImpl = new SkiaFontImplementation(pathImpl);
             FontImplementation = fontImpl;
 
+            var meshImplementation = new SkiaMeshImplementation();
+            MeshImplementation = meshImplementation;
+
             SkiaCanvasImplementation canvasImpl =
-                new SkiaCanvasImplementation(paintImpl, imgImpl, bitmapImpl, pathImpl, fontImpl);
+                new SkiaCanvasImplementation(paintImpl, imgImpl, bitmapImpl, pathImpl, fontImpl, meshImplementation);
 
             SurfaceImplementation = new SkiaSurfaceImplementation(GraphicsContext, pixmapImpl, canvasImpl, paintImpl);
 
+
             canvasImpl.SetSurfaceImplementation(SurfaceImplementation);
             imgImpl.SetSurfaceImplementation(SurfaceImplementation);
-            
+
             var pictureImplementation = new SkiaPictureImplementation(shader);
             PictureImplementation = pictureImplementation;
 

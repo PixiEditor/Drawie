@@ -1,6 +1,7 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
+using Drawie.Backend.Core.Mesh;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
@@ -474,6 +475,15 @@ namespace Drawie.Backend.Core.Surfaces
             }
 
             return Disposable.Empty;
+        }
+
+        public void DrawVertices(Vertices vertices, BlendMode blendMode, Paint paint)
+        {
+            RectD? rect = RectD.FromPoints(vertices.Points.ToArray());
+            var reset = ApplyPaintable(rect, paint);
+            DrawingBackendApi.Current.CanvasImplementation.DrawVertices(ObjectPointer, vertices, blendMode, paint);
+            reset.Dispose();
+            Changed?.Invoke(rect);
         }
     }
 }
