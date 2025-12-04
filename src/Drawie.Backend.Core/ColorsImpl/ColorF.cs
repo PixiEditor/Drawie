@@ -394,6 +394,12 @@ namespace Drawie.Backend.Core.ColorsImpl
             hashCode.Add(A);
             return hashCode.ToHashCode();
         }
+
+        public ColorF Premultiplied()
+        {
+            float a = A;
+            return new ColorF(R * a, G * a, B * a, a);
+        }
     }
 }
 
