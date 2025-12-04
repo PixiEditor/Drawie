@@ -1,5 +1,6 @@
 ﻿using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
+using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.ColorsImpl.Paintables;
@@ -17,6 +18,11 @@ public class ColorPaintable : Paintable
     public override Shader? GetShader(RectD bounds, Matrix3X3 matrix)
     {
         return null;
+    }
+
+    public override void ModifyPaint(Paint paint)
+    {
+        paint.Color = Color;
     }
 
     public override Paintable? Clone()

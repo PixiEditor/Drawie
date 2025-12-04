@@ -17,6 +17,7 @@ public interface IImageFilterImplementation
     object GetNativeImageFilter(IntPtr objPtr);
 
     public IntPtr CreateBlur(float sigmaX, float sigmaY);
+    public IntPtr CreateBlendMode(BlendMode blendMode, ImageFilter? background, ImageFilter? foreground);
 
     public IntPtr CreateDropShadow(float dx, float dy, float sigmaX, float sigmaY, Color color,
         ImageFilter? input);
@@ -25,4 +26,5 @@ public interface IImageFilterImplementation
     public IntPtr CreateImage(Image image);
     public IntPtr CreateTile(RectD source, RectD dest, ImageFilter input);
     public void DisposeObject(IntPtr objectPointer);
+    public IntPtr CreateBlendMode(Blender blendMode, ImageFilter? background, ImageFilter? foreground);
 }

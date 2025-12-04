@@ -1,5 +1,6 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Exceptions;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
@@ -13,6 +14,8 @@ public class Shader : NativeObject
     public override object Native => DrawingBackendApi.Current.ShaderImplementation.GetNativeShader(ObjectPointer);
 
     public IReadOnlyList<UniformDeclaration> UniformDeclarations { get; }
+
+    public HashSet<object> LockedDisposeTargets { get; } = new();
 
     public Shader(IntPtr objPtr, List<UniformDeclaration> declarations = null) : base(objPtr)
     {
@@ -61,6 +64,11 @@ public class Shader : NativeObject
 
     public override void Dispose()
     {
+        if (LockedDisposeTargets.Count > 0)
+        {
+            return;
+        }
+
         DrawingBackendApi.Current.ShaderImplementation.Dispose(ObjectPointer);
     }
 
@@ -129,9 +137,9 @@ public class Shader : NativeObject
             numOctaves, seed);
     }
 
-    public void SetLocalMatrix(Matrix3X3 matrix)
+    public Shader SetLocalMatrix(Matrix3X3 matrix)
     {
-        DrawingBackendApi.Current.ShaderImplementation.SetLocalMatrix(ObjectPointer, matrix);
+        return DrawingBackendApi.Current.ShaderImplementation.SetLocalMatrix(ObjectPointer, matrix);
     }
 
     public static Shader? CreateBitmap(Bitmap bitmap, TileMode tileX, TileMode tileY, Matrix3X3 matrix)
@@ -147,5 +155,15 @@ public class Shader : NativeObject
     public static UniformDeclaration[]? GetUniformDeclarations(string shaderCode)
     {
         return DrawingBackendApi.Current.ShaderImplementation.GetUniformDeclarations(shaderCode);
+    }
+
+    public void LockDispose(object locker)
+    {
+        LockedDisposeTargets.Add(locker);
+    }
+
+    public void UnlockDispose(object locker)
+    {
+        LockedDisposeTargets.Remove(locker);
     }
 }

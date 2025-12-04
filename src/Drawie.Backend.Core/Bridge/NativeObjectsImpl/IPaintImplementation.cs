@@ -41,5 +41,7 @@ namespace Drawie.Backend.Core.Bridge.NativeObjectsImpl
         public void SetStrokeMiter(Paint paint, float value);
         public StrokeJoin GetStrokeJoin(Paint paint);
         public void SetStrokeJoin(Paint paint, StrokeJoin value);
+        public Blender? GetBlender(Paint paint);
+        public void SetBlender(Paint paint, Blender? value);
     }
 }

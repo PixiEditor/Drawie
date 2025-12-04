@@ -1,4 +1,5 @@
-﻿using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
+﻿using Drawie.Backend.Core.Bridge;
+using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
@@ -39,6 +40,26 @@ namespace Drawie.Skia.Implementations
             AddManagedInstance(compose);
 
             return compose.Handle;
+        }
+
+        public IntPtr CreateBlendMode(BlendMode blendMode, ImageFilter? background, ImageFilter? foreground)
+        {
+            SKImageFilter? bgFilter = null;
+            SKImageFilter? fgFilter = null;
+
+            if (background != null)
+            {
+                bgFilter = this[background.ObjectPointer];
+            }
+
+            if (foreground != null)
+            {
+                fgFilter = this[foreground.ObjectPointer];
+            }
+
+            var skImageFilter = SKImageFilter.CreateBlendMode((SKBlendMode)blendMode, fgFilter, bgFilter);
+            AddManagedInstance(skImageFilter);
+            return skImageFilter.Handle;
         }
 
         public object GetNativeImageFilter(IntPtr objPtr) => this[objPtr];
@@ -102,6 +123,29 @@ namespace Drawie.Skia.Implementations
         public void DisposeObject(IntPtr objectPointer)
         {
             UnmanageAndDispose(objectPointer);
+        }
+
+        public IntPtr CreateBlendMode(Blender blendMode, ImageFilter? background, ImageFilter? foreground)
+        {
+            SKImageFilter? bgFilter = null;
+            SKImageFilter? fgFilter = null;
+
+            if (background != null)
+            {
+                bgFilter = this[background.ObjectPointer];
+            }
+
+            if (foreground != null)
+            {
+                fgFilter = this[foreground.ObjectPointer];
+            }
+
+            var skBlender = DrawingBackendApi.Current.BlenderImplementation
+                .GetNativeObject(blendMode.ObjectPointer) as SKBlender;
+
+            var skImageFilter = SKImageFilter.CreateBlendMode(skBlender, fgFilter, bgFilter);
+            AddManagedInstance(skImageFilter);
+            return skImageFilter.Handle;
         }
     }
 }

@@ -16,5 +16,5 @@ public class Float1(string name) : ShaderExpressionVariable<double>(name)
 
     public static explicit operator double(Float1 value) => value.ConstantValue;
 
-    public byte AsConstantColorByte() => (byte)(Math.Clamp(ConstantValue, 0, 1) * 255);
+    public byte AsConstantColorByte() => (byte)Math.Clamp(ConstantValue, 0, 255);
 }

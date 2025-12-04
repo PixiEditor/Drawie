@@ -1,5 +1,6 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
@@ -25,6 +26,9 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
     private bool cpuSynced;
 
     private bool isDisposed;
+    private bool disposePending;
+
+    private HashSet<object> lockDisposes = new();
 
     private Paint nearestNeighborReplacingPaint =
         new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
@@ -74,6 +78,18 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
                 copySizeAndMatrixFrom.DeviceClipBounds.Size.Y + copySizeAndMatrixFrom.DeviceClipBounds.Pos.Y,
                 ColorType.RgbaF16, AlphaType.Premul, colorSpace) { GpuBacked = true });
         tex.DrawingSurface.Canvas.SetMatrix(copySizeAndMatrixFrom.Canvas.TotalMatrix);
+
+        return tex;
+    }
+    
+    public static Texture ForProcessing(Canvas copySizeAndMatrixFrom, ColorSpace colorSpace)
+    {
+        Texture tex = new Texture(
+            new ImageInfo(
+                copySizeAndMatrixFrom.DeviceClipBounds.Size.X + copySizeAndMatrixFrom.DeviceClipBounds.Pos.X,
+                copySizeAndMatrixFrom.DeviceClipBounds.Size.Y + copySizeAndMatrixFrom.DeviceClipBounds.Pos.Y,
+                ColorType.RgbaF16, AlphaType.Premul, colorSpace) { GpuBacked = true });
+        tex.DrawingSurface.Canvas.SetMatrix(copySizeAndMatrixFrom.TotalMatrix);
 
         return tex;
     }
@@ -301,6 +317,12 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         if (isDisposed)
             return;
 
+        if (lockDisposes.Count > 0)
+        {
+            disposePending = true;
+            return;
+        }
+
         using var ctx = EnsureContext();
         isDisposed = true;
         DrawingSurface.Changed -= DrawingSurfaceOnChanged;
@@ -320,6 +342,27 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         return DrawingBackendApi.Current.RenderingDispatcher.EnsureContext();
     }
 
+    public void LockDispose(object locker)
+    {
+        if (lockDisposes.Contains(locker) || isDisposed)
+            return;
+
+        lockDisposes.Add(locker);
+    }
+
+    public void UnlockDispose(object locker)
+    {
+        if (!lockDisposes.Contains(locker))
+            return;
+
+        lockDisposes.Remove(locker);
+
+        if (lockDisposes.Count == 0 && disposePending)
+        {
+            Dispose();
+        }
+    }
+
     public unsafe bool IsFullyTransparent()
     {
         ulong* ptr = (ulong*)PeekPixels().GetPixels();
@@ -333,4 +376,13 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
 
         return true;
     }
+
+#if DEBUG
+    public void SaveToDesktop()
+    {
+        using Surface surf = Surface.ForDisplay(Size);
+        surf.DrawingSurface.Canvas.DrawSurface(DrawingSurface, 0, 0);
+        surf.SaveToDesktop();
+    }
+#endif
 }

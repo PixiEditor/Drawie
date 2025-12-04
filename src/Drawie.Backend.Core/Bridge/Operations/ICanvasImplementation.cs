@@ -1,4 +1,5 @@
 ﻿using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.Mesh;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
@@ -67,5 +68,7 @@ namespace Drawie.Backend.Core.Bridge.Operations
 
         public RectD GetLocalClipBounds(IntPtr objectPointer);
         public RectI GetDeviceClipBounds(IntPtr objectPointer);
+        public void DrawVertices(IntPtr objectPointer, Vertices vertices, BlendMode blendMode, Paint paint);
+        public DrawingSurface? GetSurface(Canvas canvas);
     }
 }

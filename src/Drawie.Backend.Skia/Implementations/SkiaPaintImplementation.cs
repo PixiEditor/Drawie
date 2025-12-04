@@ -14,15 +14,17 @@ namespace Drawie.Skia.Implementations
         private readonly SkiaImageFilterImplementation imageFilterImplementation;
         private readonly SkiaShaderImplementation shaderImplementation;
         private readonly SkiaPathEffectImplementation pathEffectImplementation;
+        private readonly SkiaBlenderImplementation blenderImplementation;
 
         public SkiaPaintImplementation(SkiaColorFilterImplementation colorFilterImpl,
             SkiaImageFilterImplementation imageFilterImpl, SkiaShaderImplementation shaderImpl,
-            SkiaPathEffectImplementation pathEffectImpl)
+            SkiaPathEffectImplementation pathEffectImpl, SkiaBlenderImplementation blenderImpl)
         {
             colorFilterImplementation = colorFilterImpl;
             imageFilterImplementation = imageFilterImpl;
             shaderImplementation = shaderImpl;
             pathEffectImplementation = pathEffectImpl;
+            blenderImplementation = blenderImpl;
         }
 
         public IntPtr CreatePaint()
@@ -114,6 +116,27 @@ namespace Drawie.Skia.Implementations
         {
             SKPaint skPaint = this[paint.ObjectPointer];
             skPaint.StrokeJoin = (SKStrokeJoin)value;
+        }
+
+        public Blender? GetBlender(Paint paint)
+        {
+            if (TryGetInstance(paint.ObjectPointer, out var skPaint))
+            {
+                if (skPaint.Blender == null)
+                {
+                    return null;
+                }
+
+                return new Blender(skPaint.Blender.Handle);
+            }
+
+            return null;
+        }
+
+        public void SetBlender(Paint paint, Blender? value)
+        {
+            SKPaint skPaint = this[paint.ObjectPointer];
+            skPaint.Blender = value != null ? blenderImplementation[value.ObjectPointer] : null;
         }
 
         public void SetStyle(Paint paint, PaintStyle value)

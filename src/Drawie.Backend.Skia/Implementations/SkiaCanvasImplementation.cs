@@ -1,5 +1,6 @@
 ﻿using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.Mesh;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
@@ -20,16 +21,19 @@ namespace Drawie.Skia.Implementations
         private readonly SkObjectImplementation<SKBitmap> _bitmapImpl;
         private readonly SkObjectImplementation<SKPath> _pathImpl;
         private readonly SkObjectImplementation<SKFont> _fontImpl;
+        private readonly SkObjectImplementation<SKVertices> _verticesImpl;
 
         public SkiaCanvasImplementation(SkObjectImplementation<SKPaint> paintImpl,
             SkObjectImplementation<SKImage> imageImpl, SkObjectImplementation<SKBitmap> bitmapImpl,
-            SkObjectImplementation<SKPath> pathImpl, SkObjectImplementation<SKFont> fontImpl)
+            SkObjectImplementation<SKPath> pathImpl, SkObjectImplementation<SKFont> fontImpl,
+            SkObjectImplementation<SKVertices> verticesImpl)
         {
             _paintImpl = paintImpl;
             _imageImpl = imageImpl;
             _bitmapImpl = bitmapImpl;
             _pathImpl = pathImpl;
             _fontImpl = fontImpl;
+            _verticesImpl = verticesImpl;
         }
 
         public void SetSurfaceImplementation(SkiaSurfaceImplementation surfaceImpl)
@@ -64,14 +68,16 @@ namespace Drawie.Skia.Implementations
             canvas.DrawImage(_imageImpl[image.ObjectPointer], x, y, samplingOptions.ToSkSamplingOptions());
         }
 
-        public void DrawImage(IntPtr objPtr, Image image, float x, float y, SamplingOptions samplingOptions, Paint? paint)
+        public void DrawImage(IntPtr objPtr, Image image, float x, float y, SamplingOptions samplingOptions,
+            Paint? paint)
         {
             var canvas = this[objPtr];
             var skPaint = paint != null ? _paintImpl[paint.ObjectPointer] : null;
             canvas.DrawImage(_imageImpl[image.ObjectPointer], x, y, samplingOptions.ToSkSamplingOptions(), skPaint);
         }
 
-        public void DrawImage(IntPtr objectPointer, Image image, RectD sourceRect, RectD destRect, SamplingOptions samplingOptions,
+        public void DrawImage(IntPtr objectPointer, Image image, RectD sourceRect, RectD destRect,
+            SamplingOptions samplingOptions,
             Paint? paint)
         {
             var canvas = this[objectPointer];
@@ -281,7 +287,8 @@ namespace Drawie.Skia.Implementations
             this[objPtr].DrawText(text, x, y, skFont, _paintImpl[paint.ObjectPointer]);
         }
 
-        public void DrawText(IntPtr objectPointer, string text, float x, float y, TextAlign align, Font font, Paint paint)
+        public void DrawText(IntPtr objectPointer, string text, float x, float y, TextAlign align, Font font,
+            Paint paint)
         {
             SKFont skFont = _fontImpl[font.ObjectPointer];
             this[objectPointer].DrawText(text, x, y, (SKTextAlign)align, skFont, _paintImpl[paint.ObjectPointer]);
@@ -314,7 +321,8 @@ namespace Drawie.Skia.Implementations
             this[objectPointer].RotateDegrees(degrees);
         }
 
-        public void DrawTextOnPath(IntPtr objectPointer, VectorPath path, string text, float offsetX, float offsetY, Font font,
+        public void DrawTextOnPath(IntPtr objectPointer, VectorPath path, string text, float offsetX, float offsetY,
+            Font font,
             Paint paint)
         {
             this[objectPointer].DrawTextOnPath(
@@ -336,6 +344,35 @@ namespace Drawie.Skia.Implementations
         {
             var clipBounds = this[objectPointer].DeviceClipBounds;
             return new RectI(clipBounds.Left, clipBounds.Top, clipBounds.Width, clipBounds.Height);
+        }
+
+        public void DrawVertices(IntPtr objectPointer, Vertices vertices, BlendMode blendMode, Paint paint)
+        {
+            this[objectPointer].DrawVertices(
+                _verticesImpl[vertices.ObjectPointer],
+                (SKBlendMode)blendMode,
+                _paintImpl[paint.ObjectPointer]);
+        }
+
+        public DrawingSurface? GetSurface(Canvas canvas)
+        {
+            if (TryGetInstance(canvas.ObjectPointer, out var skCanvas))
+            {
+                var skSurface = skCanvas.Surface;
+                if (skSurface != null)
+                {
+                    var surfaceImpl = _surfaceImpl;
+                    if (!surfaceImpl.TryGetInstance(skSurface.Handle, out var surface))
+                    {
+                        surfaceImpl.AddManagedInstance(skSurface.Handle, skSurface);
+                        surface = skSurface;
+                    }
+
+                    return surface != null ? new DrawingSurface(surface.Handle, canvas) : null;
+                }
+            }
+
+            throw new ObjectDisposedException(nameof(canvas));
         }
 
         public void Dispose(IntPtr objectPointer)

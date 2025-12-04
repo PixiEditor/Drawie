@@ -27,6 +27,10 @@ namespace Drawie.Backend.Core.Bridge
         public bool IsHardwareAccelerated { get; }
         public IRenderingDispatcher RenderingDispatcher { get; set; }
         public IFontImplementation FontImplementation { get; }
+        public IRecorderImplementation RecorderImplementation { get; }
+        public IPictureImplementation PictureImplementation { get; }
+        public IBlenderImplementation BlenderImplementation { get; }
+        public IMeshImplementation MeshImplementation { get; }
         public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture, SurfaceOrigin origin);
         public int GetNativeInstancesTotalCount();
     }

@@ -5,6 +5,8 @@ namespace Drawie.Backend.Core.Bridge
 {
     public static class DrawingBackendApi
     {
+        public static event Action OnBackendInitialized;
+
         private static IDrawingBackend? _current;
 
         public static IDrawingBackend Current
@@ -30,6 +32,8 @@ namespace Drawie.Backend.Core.Bridge
 
             _current = backend;
             _current.RenderingDispatcher = dispatcher;
+
+            OnBackendInitialized?.Invoke();
         }
 
         public static void InitializeBackend(IRenderApi renderApi)

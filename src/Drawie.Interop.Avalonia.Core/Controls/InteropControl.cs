@@ -45,6 +45,18 @@ public abstract class InteropControl : Control
         base.OnDetachedFromLogicalTree(e);
     }
 
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        if (initialized)
+        {
+            surface.Dispose();
+            FreeGraphicsResources();
+        }
+
+        initialized = false;
+        base.OnDetachedFromVisualTree(e);
+    }
+
     private async void InitializeComposition()
     {
         try

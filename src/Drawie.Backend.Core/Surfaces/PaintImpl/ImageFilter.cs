@@ -45,6 +45,12 @@ public class ImageFilter : NativeObject
     public static ImageFilter CreateCompose(ImageFilter outer, ImageFilter inner) =>
         new(DrawingBackendApi.Current.ImageFilterImplementation.CreateCompose(outer, inner));
 
+    public static ImageFilter CreateBlendMode(BlendMode mode, ImageFilter? background, ImageFilter? foreground)
+    {
+        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateBlendMode(mode, background,
+            foreground));
+    }
+
     public override object Native =>
         DrawingBackendApi.Current.ImageFilterImplementation.GetNativeImageFilter(ObjectPointer);
 
@@ -78,5 +84,11 @@ public class ImageFilter : NativeObject
     public static ImageFilter CreateTile(RectD source, RectD destination, ImageFilter input)
     {
         return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateTile(source, destination, input));
+    }
+
+    public static ImageFilter? CreateBlendMode(Blender blender, ImageFilter? background, ImageFilter? blurFilter)
+    {
+        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateBlendMode(blender, background,
+            blurFilter));
     }
 }

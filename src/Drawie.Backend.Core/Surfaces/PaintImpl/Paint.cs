@@ -115,6 +115,20 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
 
         public Paintable? Paintable { get; set; }
 
+        public bool IsOpaqueStandardNonBlendingPaint =>
+            Paintable == null &&
+            Shader == null &&
+            ColorFilter == null &&
+            ImageFilter == null &&
+            Color.A == 255
+            && BlendMode == BlendMode.SrcOver;
+
+        public Blender? Blender
+        {
+            get => DrawingBackendApi.Current.PaintImplementation.GetBlender(this);
+            set => DrawingBackendApi.Current.PaintImplementation.SetBlender(this, value);
+        }
+
         public Paint(IntPtr objPtr) : base(objPtr)
         {
         }
@@ -139,6 +153,11 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
         public override void Dispose()
         {
             DrawingBackendApi.Current.PaintImplementation.Dispose(ObjectPointer);
+            if (Paintable != null && Paintable.IsOneTimeUse)
+            {
+                Paintable.Dispose();
+                Paintable = null;
+            }
         }
 
         internal IDisposable ApplyPaintable(RectD bounds, Matrix3X3 matrix)
@@ -153,18 +172,17 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
 
             Shaders.Shader? createdShader = null;
 
-            if (Paintable is ColorPaintable colorPaintable)
+            createdShader = Paintable.GetShader(bounds, matrix);
+            if (createdShader != null)
             {
-                Color = colorPaintable.Color;
-            }
-            else
-            {
-                createdShader = Paintable.GetShader(bounds, matrix);
                 Shader = createdShader;
             }
 
+            Paintable.ModifyPaint(this);
+
             return Disposable.Create(() =>
             {
+                Paintable?.DisposeShaderElements();
                 createdShader?.Dispose();
                 Shader = lastShader;
                 Color = lastColor;

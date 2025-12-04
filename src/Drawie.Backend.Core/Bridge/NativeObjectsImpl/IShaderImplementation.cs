@@ -27,7 +27,7 @@ public interface IShaderImplementation
     public Shader CreatePerlinFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed);
     public object GetNativeShader(IntPtr objectPointer);
     public Shader WithUpdatedUniforms(IntPtr objectPointer, Uniforms uniforms);
-    public void SetLocalMatrix(IntPtr objectPointer, Matrix3X3 matrix);
+    public Shader SetLocalMatrix(IntPtr objectPointer, Matrix3X3 matrix);
     public Shader? CreateBitmap(Bitmap bitmap, TileMode tileX, TileMode tileY, Matrix3X3 matrix);
     public UniformDeclaration[] GetUniformDeclarations(string shaderCode);
     public Shader? CreateCreate(Image image, TileMode tileX, TileMode tileY, Matrix3X3 matrix);

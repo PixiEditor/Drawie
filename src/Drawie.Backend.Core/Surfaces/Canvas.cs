@@ -1,6 +1,7 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
+using Drawie.Backend.Core.Mesh;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
@@ -25,6 +26,7 @@ namespace Drawie.Backend.Core.Surfaces
             DrawingBackendApi.Current.CanvasImplementation.GetDeviceClipBounds(ObjectPointer);
 
         public bool IsDisposed { get; private set; }
+        public DrawingSurface? Surface => DrawingBackendApi.Current.CanvasImplementation.GetSurface(this);
 
         public event SurfaceChangedEventHandler? Changed;
 
@@ -58,27 +60,49 @@ namespace Drawie.Backend.Core.Surfaces
             DrawSurface(surfaceToDraw, (float)size.X, (float)size.Y, paint);
         }
 
-        public void DrawImage(Image image, float x, float y) =>
+        public void DrawImage(Image image, float x, float y)
+        {
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y);
+            Changed?.Invoke(new RectD(x, y, image.Width, image.Height));
+        }
 
-        public void DrawImage(Image image, float x, float y, SamplingOptions samplingOptions) =>
+        public void DrawImage(Image image, float x, float y, SamplingOptions samplingOptions)
+        {
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, samplingOptions);
+            Changed?.Invoke(new RectD(x, y, image.Width, image.Height));
+        }
 
-        public void DrawImage(Image image, float x, float y, SamplingOptions samplingOptions, Paint? paint) =>
+        public void DrawImage(Image image, float x, float y, SamplingOptions samplingOptions, Paint? paint)
+        {
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, samplingOptions,
                 paint);
+            Changed?.Invoke(new RectD(x, y, image.Width, image.Height));
+        }
 
-        public void DrawImage(Image image, float x, float y, Paint paint) =>
+        public void DrawImage(Image image, float x, float y, Paint paint)
+        {
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, x, y, paint);
+            Changed?.Invoke(new RectD(x, y, image.Width, image.Height));
+        }
 
-        public void DrawImage(Image image, RectD destRect, Paint paint) =>
+        public void DrawImage(Image image, RectD destRect, Paint paint)
+        {
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, destRect, paint);
+            Changed?.Invoke(destRect);
+        }
 
-        public void DrawImage(Image image, RectD sourceRect, RectD destRect, Paint paint) =>
+        public void DrawImage(Image image, RectD sourceRect, RectD destRect, Paint paint)
+        {
             DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, sourceRect, destRect, paint);
+            Changed?.Invoke(destRect);
+        }
 
-        public void DrawImage(Image image, RectD sourceRect, RectD destRect, Paint paint, SamplingOptions samplingOptions) =>
-            DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, sourceRect, destRect, samplingOptions, paint);
+        public void DrawImage(Image image, RectD sourceRect, RectD destRect, Paint paint, SamplingOptions samplingOptions)
+        {
+            DrawingBackendApi.Current.CanvasImplementation.DrawImage(ObjectPointer, image, sourceRect, destRect,
+                samplingOptions, paint);
+            Changed?.Invoke(destRect);
+        }
 
         public int Save()
         {
@@ -346,18 +370,18 @@ namespace Drawie.Backend.Core.Surfaces
 
         public void DrawPaintable(Paintable paintable, BlendMode blendMode)
         {
-            if (paintable is ColorPaintable colorPaintable)
+            var shader = paintable.GetShader(LocalClipBounds, Matrix3X3.Identity);
+            if (shader != null)
             {
-                DrawColor(colorPaintable.Color, blendMode);
+                using Paint paint = new Paint() { Shader = shader, BlendMode = blendMode };
+                DrawPaint(paint);
+                shader.Dispose();
             }
             else
             {
-                var shader = paintable.GetShader(LocalClipBounds, Matrix3X3.Identity);
-                if (shader != null)
-                {
-                    using Paint paint = new Paint() { Shader = shader, BlendMode = blendMode };
-                    DrawPaint(paint);
-                }
+                using Paint paint = new Paint() { BlendMode = blendMode };
+                paintable.ModifyPaint(paint);
+                DrawPaint(paint);
             }
         }
 
@@ -451,6 +475,15 @@ namespace Drawie.Backend.Core.Surfaces
             }
 
             return Disposable.Empty;
+        }
+
+        public void DrawVertices(Vertices vertices, BlendMode blendMode, Paint paint)
+        {
+            RectD? rect = RectD.FromPoints(vertices.Points.ToArray());
+            var reset = ApplyPaintable(rect, paint);
+            DrawingBackendApi.Current.CanvasImplementation.DrawVertices(ObjectPointer, vertices, blendMode, paint);
+            reset.Dispose();
+            Changed?.Invoke(rect);
         }
     }
 }
