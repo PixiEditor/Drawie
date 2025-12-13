@@ -1,4 +1,5 @@
-﻿using Drawie.Windowing;
+﻿using Drawie.Backend.Core.Bridge;
+using Drawie.Windowing;
 
 namespace DrawiEngine;
 
@@ -20,7 +21,14 @@ public abstract class DrawieApp
 
     public void Run()
     {
-        OnInitialize();
+        if (DrawingBackendApi.HasBackend)
+        {
+            OnInitialize();
+        }
+        else
+        {
+            DrawingBackendApi.OnBackendInitialized += OnInitialize;
+        }
     }
 
     protected abstract void OnInitialize();

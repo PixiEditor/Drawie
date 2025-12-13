@@ -27,4 +27,7 @@ public interface IImageFilterImplementation
     public IntPtr CreateTile(RectD source, RectD dest, ImageFilter input);
     public void DisposeObject(IntPtr objectPointer);
     public IntPtr CreateBlendMode(Blender blendMode, ImageFilter? background, ImageFilter? foreground);
+    public IntPtr CreateBlur(float sigmaX, float sigmaY, TileMode timeMode);
+    public IntPtr CreateDilate(float radiusX, float radiusY);
+    public IntPtr CreateMerge(ImageFilter[] filters);
 }

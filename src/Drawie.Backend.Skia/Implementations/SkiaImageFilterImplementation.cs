@@ -147,5 +147,32 @@ namespace Drawie.Skia.Implementations
             AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
+
+        public IntPtr CreateBlur(float sigmaX, float sigmaY, TileMode timeMode)
+        {
+            var skImageFilter = SKImageFilter.CreateBlur(sigmaX, sigmaY, (SKShaderTileMode)timeMode);
+            AddManagedInstance(skImageFilter);
+            return skImageFilter.Handle;
+        }
+
+        public IntPtr CreateDilate(float radiusX, float radiusY)
+        {
+            var skImageFilter = SKImageFilter.CreateDilate(radiusX, radiusY);
+            AddManagedInstance(skImageFilter);
+            return skImageFilter.Handle;
+        }
+
+        public IntPtr CreateMerge(ImageFilter[] filters)
+        {
+            SKImageFilter[] skFilters = new SKImageFilter[filters.Length];
+            for (int i = 0; i < filters.Length; i++)
+            {
+                skFilters[i] = this[filters[i].ObjectPointer];
+            }
+
+            var skImageFilter = SKImageFilter.CreateMerge(skFilters);
+            AddManagedInstance(skImageFilter);
+            return skImageFilter.Handle;
+        }
     }
 }
