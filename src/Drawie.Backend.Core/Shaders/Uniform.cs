@@ -123,6 +123,30 @@ public struct Uniform
         UniformName = "float3x3";
     }
 
+    public int GetContentHash()
+    {
+        return DataType switch
+        {
+            UniformValueType.Float => FloatValue.GetHashCode(),
+            UniformValueType.Int => IntValue.GetHashCode(),
+            UniformValueType.FloatArray => HashCode.Combine(FloatArrayValue.Length,
+                FloatArrayValue.Aggregate(0, (a, b) => HashCode.Combine(a, b.GetHashCode()))),
+            UniformValueType.IntArray => HashCode.Combine(IntArrayValue.Length,
+                IntArrayValue.Aggregate(0, (a, b) => HashCode.Combine(a, b.GetHashCode()))),
+            UniformValueType.Shader => (int)(ShaderValue?.ObjectPointer ?? 0),
+            UniformValueType.Color => ColorValue.GetHashCode(),
+            UniformValueType.Vector2 => Vector2Value.GetHashCode(),
+            UniformValueType.Vector3 => Vector3Value.GetHashCode(),
+            UniformValueType.Vector4 => Vector4Value.GetHashCode(),
+            UniformValueType.Vector2Int => Vector2IntValue.GetHashCode(),
+            UniformValueType.Vector3Int => 0, // TODO: implement
+            UniformValueType.Vector4Int => 0, // TODO: implement
+            UniformValueType.Matrix3X3 => HashCode.Combine(FloatArrayValue.Length,
+                FloatArrayValue.Aggregate(0, (a, b) => HashCode.Combine(a, b.GetHashCode()))),
+            _ => 0
+        };
+    }
+
     public void Dispose()
     {
         ShaderValue?.Dispose();
