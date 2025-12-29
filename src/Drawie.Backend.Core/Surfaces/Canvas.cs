@@ -155,7 +155,9 @@ namespace Drawie.Backend.Core.Surfaces
             Changed?.Invoke(path.Bounds);
         }
 
-        public void DrawPoint(VecD pos, Paint paint)
+        // Draw Point and Draw Points do not work correctly on GPU surfaces. Seems like a Skia issue.
+
+        /*public void DrawPoint(VecD pos, Paint paint)
         {
             RectD rect = new RectD(pos.X, pos.Y, 1, 1);
             var reset = ApplyPaintable(rect, paint);
@@ -179,7 +181,7 @@ namespace Drawie.Backend.Core.Surfaces
             DrawingBackendApi.Current.CanvasImplementation.DrawPoints(ObjectPointer, pointMode, points, paint);
             reset.Dispose();
             Changed?.Invoke(RectD.FromPoints(points));
-        }
+        }*/
 
         public void DrawRect(float x, float y, float width, float height, Paint paint)
         {
