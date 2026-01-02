@@ -4,10 +4,12 @@ using Avalonia.OpenGL;
 using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
 using Drawie.Interop.Avalonia.Core;
+using Drawie.Interop.Avalonia.DirectX;
 using Drawie.Interop.Avalonia.OpenGl;
 using Drawie.Interop.Avalonia.Vulkan;
 using Drawie.Interop.Avalonia.Vulkan.Vk;
 using Drawie.RenderApi;
+using Drawie.RenderApi.D3D11;
 using Drawie.RenderApi.OpenGL;
 using Drawie.RenderApi.Vulkan;
 using Drawie.Skia;
@@ -50,13 +52,23 @@ public static class AppBuilderExtensions
                         IDisposable? ctxDisposablePostRun = null;
                         if (isOpenGl)
                         {
-                            var ctx = sharingFeature!.CreateSharedContext();
-                            OpenGlInteropContext context = new OpenGlInteropContext(ctx);
-                            ctxDisposablePostRun = ctx.MakeCurrent();
+                            if (sharingFeature.CanCreateSharedContext)
+                            {
+                                var ctx = sharingFeature!.CreateSharedContext();
+                                OpenGlInteropContext context = new OpenGlInteropContext(ctx);
+                                ctxDisposablePostRun = ctx.MakeCurrent();
 
-                            renderApi = new OpenGlRenderApi(context);
+                                renderApi = new OpenGlRenderApi(context);
 
-                            IDrawieInteropContext.SetCurrent(context);
+                                IDrawieInteropContext.SetCurrent(context);
+                            }
+                            else if(OperatingSystem.IsWindows())
+                            {
+                                D3D11InteropContext context = new D3D11InteropContext();
+                                renderApi = new D3D11RenderApi(context);
+
+                                IDrawieInteropContext.SetCurrent(context);
+                            }
                         }
                         else
                         {

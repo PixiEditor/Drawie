@@ -146,6 +146,10 @@ namespace Drawie.Skia
             {
                 SetupWebGl(webGlRenderApi.WebGlContext);
             }
+            else if (renderApi is ID3D11RenderApi d3d11RenderApi)
+            {
+                SetupDirect3D11(d3d11RenderApi);
+            }
             else
             {
                 throw new UnsupportedRenderApiException(renderApi);
@@ -156,6 +160,21 @@ namespace Drawie.Skia
         {
             GRGlInterface glInterface = GRGlInterface.CreateOpenGl(openGlContext.GetGlInterface);
             GraphicsContext = GRContext.CreateGl(glInterface);
+            SurfaceImplementation.GrContext = GraphicsContext;
+        }
+
+        private void SetupDirect3D11(ID3D11RenderApi d3d11RenderApi)
+        {
+            var d3d11Context = d3d11RenderApi.D3D11Context;
+
+            var d3dBackendContext = new GRD3DBackendContext()
+            {
+                Device = d3d11Context.Device,
+                Adapter = d3d11Context.Adapter,
+                ProtectedContext = false,
+            };
+
+            GraphicsContext = GRContext.CreateDirect3D(d3dBackendContext);
             SurfaceImplementation.GrContext = GraphicsContext;
         }
 

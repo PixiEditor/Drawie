@@ -24,8 +24,8 @@ public class OpenGlRenderApiResources : RenderApiResources
 
     private bool isDisposed;
 
-    public OpenGlRenderApiResources(CompositionDrawingSurface surface, ICompositionGpuInterop gpuInterop) : base(
-        surface, gpuInterop)
+    public OpenGlRenderApiResources(CompositionDrawingSurface surface, ICompositionGpuInterop interop) : base(
+        surface, interop)
     {
         IOpenGlTextureSharingRenderInterfaceContextFeature sharingFeature =
             surface.Compositor.TryGetRenderInterfaceFeature(typeof(IOpenGlTextureSharingRenderInterfaceContextFeature))
@@ -33,7 +33,7 @@ public class OpenGlRenderApiResources : RenderApiResources
                 as IOpenGlTextureSharingRenderInterfaceContextFeature;
 
         Context = sharingFeature.CreateSharedContext();
-        Swapchain = new OpenGlSwapchain(Context, gpuInterop, surface, sharingFeature);
+        Swapchain = new OpenGlSwapchain(Context, interop, surface, sharingFeature);
 
         globalContext = OpenGlInteropContext.Current.Context;
 

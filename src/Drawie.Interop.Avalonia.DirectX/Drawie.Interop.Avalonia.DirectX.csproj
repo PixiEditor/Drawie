@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Drawie.Interop.Avalonia.DirectX</RootNamespace>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Drawie.Interop.Avalonia.Core\Drawie.Interop.Avalonia.Core.csproj" />
+      <ProjectReference Include="..\Drawie.RenderApi.DirectX\Drawie.RenderApi.DirectX.csproj" />
+      <ProjectReference Include="..\Drawie.RenderApi\Drawie.RenderApi.csproj" />
+    </ItemGroup>
+
+</Project>

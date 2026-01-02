@@ -7,6 +7,7 @@
     </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Drawie.Interop.Avalonia.DirectX\Drawie.Interop.Avalonia.DirectX.csproj" />
     <ProjectReference Include="..\Drawie.Interop.Avalonia.OpenGl\Drawie.Interop.Avalonia.OpenGl.csproj" />
     <ProjectReference Include="..\Drawie.Interop.Avalonia.Vulkan\Drawie.Interop.Avalonia.Vulkan.csproj" />
     <ProjectReference Include="..\Drawie.RenderApi.OpenGl\Drawie.RenderApi.OpenGl.csproj" />
