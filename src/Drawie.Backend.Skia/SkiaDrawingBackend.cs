@@ -140,7 +140,14 @@ namespace Drawie.Skia
             }
             else if (renderApi is IOpenGlRenderApi openGlRenderApi)
             {
-                SetupOpenGl(openGlRenderApi.OpenGlContext);
+                if (openGlRenderApi.OpenGlContext.IsGlViaAngle)
+                {
+                    SetupAngleOpenGl(openGlRenderApi.OpenGlContext);
+                }
+                else
+                {
+                    SetupOpenGl(openGlRenderApi.OpenGlContext);
+                }
             }
             else if (renderApi is IWebGlRenderApi webGlRenderApi)
             {
@@ -155,6 +162,13 @@ namespace Drawie.Skia
         private void SetupOpenGl(IOpenGlContext openGlContext)
         {
             GRGlInterface glInterface = GRGlInterface.CreateOpenGl(openGlContext.GetGlInterface);
+            GraphicsContext = GRContext.CreateGl(glInterface);
+            SurfaceImplementation.GrContext = GraphicsContext;
+        }
+
+        private void SetupAngleOpenGl(IOpenGlContext openGlContext)
+        {
+            GRGlInterface glInterface = GRGlInterface.CreateAngle(openGlContext.GetGlInterface);
             GraphicsContext = GRContext.CreateGl(glInterface);
             SurfaceImplementation.GrContext = GraphicsContext;
         }

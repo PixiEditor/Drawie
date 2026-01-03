@@ -9,13 +9,15 @@ namespace Drawie.Interop.Avalonia.OpenGl;
 
 public class OpenGlInteropContext : IOpenGlContext, IDrawieInteropContext
 {
+    public bool IsGlViaAngle { get; }
     public static OpenGlInteropContext? Current { get; private set; }
 
     public IGlContext Context { get; }
 
-    public OpenGlInteropContext(IGlContext context)
+    public OpenGlInteropContext(IGlContext context, bool isGlViaAngle)
     {
         Context = context;
+        IsGlViaAngle = isGlViaAngle;
 
         if (Current != null)
         {

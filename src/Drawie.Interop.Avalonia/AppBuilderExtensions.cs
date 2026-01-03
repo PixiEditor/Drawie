@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.OpenGL;
+using Avalonia.OpenGL.Egl;
 using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
 using Drawie.Interop.Avalonia.Core;
@@ -51,7 +52,7 @@ public static class AppBuilderExtensions
                         if (isOpenGl)
                         {
                             var ctx = sharingFeature!.CreateSharedContext();
-                            OpenGlInteropContext context = new OpenGlInteropContext(ctx);
+                            OpenGlInteropContext context = new OpenGlInteropContext(ctx, ctx is EglContext);
                             ctxDisposablePostRun = ctx.MakeCurrent();
 
                             renderApi = new OpenGlRenderApi(context);

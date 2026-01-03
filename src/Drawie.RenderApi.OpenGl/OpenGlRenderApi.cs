@@ -13,7 +13,7 @@ public class OpenGlRenderApi : IOpenGlRenderApi
             if (context == null)
             {
                 context = new OpenGlContext(s =>
-                    windowRenderApis[0].Context.TryGetProcAddress(s, out IntPtr ptr) ? ptr : IntPtr.Zero);
+                    windowRenderApis[0].Context.TryGetProcAddress(s, out IntPtr ptr) ? ptr : IntPtr.Zero, false);
             }
 
             return context;

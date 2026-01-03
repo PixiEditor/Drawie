@@ -6,6 +6,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Rendering.Composition;
 using Avalonia.VisualTree;
+using Drawie.Backend.Core.Bridge;
 
 namespace Drawie.Interop.Avalonia.Core.Controls;
 
@@ -29,7 +30,15 @@ public abstract class InteropControl : Control
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
-        InitializeComposition();
+        if (IDrawieInteropContext.Current != null)
+        {
+            InitializeComposition();
+        }
+        else
+        {
+            DrawingBackendApi.OnBackendInitialized += InitializeComposition;
+        }
+
         base.OnLoaded(e);
     }
 
