@@ -169,7 +169,10 @@ namespace Drawie.Skia
         private void SetupAngleOpenGl(IOpenGlContext openGlContext)
         {
             GRGlInterface glInterface = GRGlInterface.CreateAngle(openGlContext.GetGlInterface);
-            GraphicsContext = GRContext.CreateGl(glInterface);
+            GraphicsContext = GRContext.CreateGl(glInterface, new GRContextOptions()
+            {
+                AvoidStencilBuffers = true
+            });
             SurfaceImplementation.GrContext = GraphicsContext;
         }
 
@@ -247,6 +250,11 @@ namespace Drawie.Skia
 
             GraphicsContext = GRContext.CreateVulkan(vkBackendContext);
             SurfaceImplementation.GrContext = GraphicsContext;
+        }
+
+        public void Flush()
+        {
+            GraphicsContext?.Flush();
         }
 
         public override string ToString()

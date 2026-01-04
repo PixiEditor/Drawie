@@ -1,5 +1,6 @@
 ﻿using Avalonia.Threading;
 using Drawie.Backend.Core;
+using Drawie.Backend.Core.Bridge;
 
 namespace Drawie.Interop.Avalonia.Core;
 
