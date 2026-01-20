@@ -223,6 +223,20 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
         return true;
     }
 
+    public void SaveTo(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentException("Path cannot be null or whitespace", nameof(path));
+
+        using var final = DrawingSurface.Create(new ImageInfo(Size.X, Size.Y, ColorType.Rgba8888, AlphaType.Premul,
+            ColorSpace.CreateSrgb()));
+        final.Canvas.DrawSurface(DrawingSurface, 0, 0);
+        using var snapshot = final.Snapshot();
+        using var stream = File.Create(path);
+        using var png = snapshot.Encode();
+        png.SaveTo(stream);
+    }
+
 #if DEBUG
     public void SaveToDesktop(string filename = "savedSurface.png")
     {
