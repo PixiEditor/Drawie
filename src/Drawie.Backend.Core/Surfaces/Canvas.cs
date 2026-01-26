@@ -413,9 +413,9 @@ namespace Drawie.Backend.Core.Surfaces
             DrawingBackendApi.Current.CanvasImplementation.RotateDegrees(ObjectPointer, degrees, centerX, centerY);
         }
 
-        public void DrawBitmap(Bitmap bitmap, int x, int y)
+        public void DrawBitmap(Bitmap bitmap, int x, int y, Paint? paint = null)
         {
-            DrawingBackendApi.Current.CanvasImplementation.DrawBitmap(ObjectPointer, bitmap, x, y);
+            DrawingBackendApi.Current.CanvasImplementation.DrawBitmap(ObjectPointer, bitmap, x, y, paint);
             Changed?.Invoke(null);
         }
 

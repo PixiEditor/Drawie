@@ -305,6 +305,11 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
         return DrawingSurface.PeekPixels();
     }
 
+    void IPixelsMap.MarkPixelsChanged()
+    {
+        // noop
+    }
+
     public object Clone()
     {
         return new Surface(this);

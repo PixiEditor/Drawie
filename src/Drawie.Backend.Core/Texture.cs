@@ -22,7 +22,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
 
     public ImageInfo ImageInfo { get; }
 
-    private Bitmap? bitmap;
+    private DrawingSurface? cpuSurface;
     private bool cpuSynced;
 
     private bool isDisposed;
@@ -270,7 +270,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         using var ctx = EnsureContext();
         SyncBitmap();
 
-        return bitmap.PeekPixels().GetPixelColor(at);
+        return cpuSurface.PeekPixels().GetPixelColor(at);
     }
 
 
@@ -282,26 +282,42 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         using var ctx = EnsureContext();
         SyncBitmap();
 
-        return bitmap.PeekPixels().GetPixelColorPrecise(pos);
+        return cpuSurface.PeekPixels().GetPixelColorPrecise(pos);
     }
 
 
     public Pixmap PeekPixels()
     {
         SyncBitmap();
-        return bitmap.PeekPixels();
+        return cpuSurface.PeekPixels();
+    }
+
+    void IPixelsMap.MarkPixelsChanged()
+    {
+        if (isDisposed)
+            throw new ObjectDisposedException("Texture");
+
+        if(cpuSurface == null)
+            return;
+
+        using var ctx = EnsureContext();
+        using Paint srcPaint = new() { BlendMode = BlendMode.Src };
+        DrawingSurface.Canvas.DrawSurface(cpuSurface, 0, 0, srcPaint);
+        cpuSynced = true;
     }
 
     private void SyncBitmap()
     {
         if (!cpuSynced)
         {
-            if (bitmap == null)
+            if (cpuSurface == null)
             {
-                bitmap = new Bitmap(ImageInfo);
+                cpuSurface = DrawingSurface.Create(ImageInfo with { GpuBacked = false });
             }
 
-            DrawingSurface.ReadPixels(ImageInfo, bitmap.Address, bitmap.Info.RowBytes, 0, 0);
+            using var ctx = EnsureContext();
+            using Paint srcPaint = new() { BlendMode = BlendMode.Src };
+            cpuSurface.Canvas.DrawSurface(DrawingSurface, 0, 0, srcPaint);
 
             cpuSynced = true;
         }
@@ -327,7 +343,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         isDisposed = true;
         DrawingSurface.Changed -= DrawingSurfaceOnChanged;
         DrawingSurface.Dispose();
-        bitmap?.Dispose();
+        cpuSurface?.Dispose();
         nearestNeighborReplacingPaint.Dispose();
     }
 

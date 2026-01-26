@@ -42,7 +42,7 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public void RotateDegrees(IntPtr objectPointer, float degrees, float centerX, float centerY);
         public void DrawImage(IntPtr objPtr, Image image, RectD destRect, Paint paint);
         public void DrawImage(IntPtr objPtr, Image image, RectD sourceRect, RectD destRect, Paint paint);
-        public void DrawBitmap(IntPtr objPtr, Bitmap bitmap, float x, float y);
+        public void DrawBitmap(IntPtr objPtr, Bitmap bitmap, float x, float y, Paint? paint);
         public void Dispose(IntPtr objectPointer);
         public object GetNativeCanvas(IntPtr objectPointer);
         public void DrawPaint(IntPtr objectPointer, Paint paint);

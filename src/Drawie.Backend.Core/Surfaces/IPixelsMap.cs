@@ -3,4 +3,5 @@
 public interface IPixelsMap
 {
     public Pixmap PeekPixels();
+    public void MarkPixelsChanged();
 }

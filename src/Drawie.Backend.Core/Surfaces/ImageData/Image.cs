@@ -71,6 +71,11 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
             return DrawingBackendApi.Current.ImageImplementation.PeekPixels(ObjectPointer);
         }
 
+        void IPixelsMap.MarkPixelsChanged()
+        {
+            // no-op
+        }
+
         public object Clone()
         {
             return DrawingBackendApi.Current.ImageImplementation.Clone(this);

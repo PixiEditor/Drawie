@@ -56,6 +56,11 @@ namespace Drawie.Backend.Core.Surfaces
             return DrawingBackendApi.Current.SurfaceImplementation.PeekPixels(this);
         }
 
+        void IPixelsMap.MarkPixelsChanged()
+        {
+            // noop
+        }
+
         public bool ReadPixels(ImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
         {
             return DrawingBackendApi.Current.SurfaceImplementation.ReadPixels(this, dstInfo, dstPixels, dstRowBytes,

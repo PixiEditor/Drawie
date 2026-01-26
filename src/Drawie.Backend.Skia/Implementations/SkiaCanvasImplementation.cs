@@ -271,7 +271,7 @@ namespace Drawie.Skia.Implementations
                 paint == null ? null : _paintImpl[paint.ObjectPointer]);
         }
 
-        public void DrawBitmap(IntPtr objPtr, Bitmap bitmap, float x, float y)
+        public void DrawBitmap(IntPtr objPtr, Bitmap bitmap, float x, float y, Paint? paint)
         {
             this[objPtr].DrawBitmap(_bitmapImpl[bitmap.ObjectPointer], x, y);
         }
