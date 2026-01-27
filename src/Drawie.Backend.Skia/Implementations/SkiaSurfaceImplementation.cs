@@ -64,7 +64,12 @@ namespace Drawie.Skia.Implementations
         {
             if (isGpuBacked)
             {
-                SKSurface skSurface = CreateSkiaSurface(imageInfo, true);
+                SKSurface? skSurface = CreateSkiaSurface(imageInfo, true);
+                if (skSurface == null)
+                {
+                    return null;
+                }
+
                 using var image = SKImage.FromPixelCopy(imageInfo, pixels, rowBytes);
 
                 var canvas = skSurface.Canvas;
@@ -80,7 +85,12 @@ namespace Drawie.Skia.Implementations
         {
             if (isGpuBacked)
             {
-                SKSurface skSurface = CreateSkiaSurface(imageInfo, true);
+                SKSurface? skSurface = CreateSkiaSurface(imageInfo, true);
+                if (skSurface == null)
+                {
+                    return null;
+                }
+
                 using var image = SKImage.FromPixelCopy(imageInfo, pixels);
 
                 var canvas = skSurface.Canvas;
@@ -108,7 +118,7 @@ namespace Drawie.Skia.Implementations
 
         public DrawingSurface? Create(ImageInfo imageInfo)
         {
-            SKSurface skSurface = CreateSkiaSurface(imageInfo.ToSkImageInfo(), imageInfo.GpuBacked);
+            SKSurface? skSurface = CreateSkiaSurface(imageInfo.ToSkImageInfo(), imageInfo.GpuBacked);
             return CreateDrawingSurface(skSurface);
         }
 
