@@ -2,6 +2,7 @@
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Vector;
 using Drawie.Numerics;
+using Drawie.Skia.Extensions;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations
@@ -254,13 +255,10 @@ namespace Drawie.Skia.Implementations
 
         public PathVerb IteratorNextVerb(IntPtr objectPointer, VecF[] points)
         {
-            // TODO: maybe there is a way to unsafely cast the array directly
             ResetIntermediatePoints();
+            
             var next = (PathVerb)managedIterators[objectPointer].Next(intermediatePoints);
-            for (int i = 0; i < points.Length; i++)
-            {
-                points[i] = new VecF(intermediatePoints[i].X, intermediatePoints[i].Y);
-            }
+            intermediatePoints.AsSpan().CopyTo(points);
 
             return next;
         }
@@ -276,11 +274,9 @@ namespace Drawie.Skia.Implementations
         {
             SKPath.RawIterator iterator = managedRawIterators[objectPointer];
             ResetIntermediatePoints();
+            
             var next = (PathVerb)iterator.Next(intermediatePoints);
-            for (int i = 0; i < points.Length; i++)
-            {
-                points[i] = new VecF(intermediatePoints[i].X, intermediatePoints[i].Y);
-            }
+            intermediatePoints.AsSpan().CopyTo(points);
 
             return next;
         }
@@ -348,10 +344,7 @@ namespace Drawie.Skia.Implementations
 
         private void ResetIntermediatePoints()
         {
-            for (int i = 0; i < intermediatePoints.Length; i++)
-            {
-                intermediatePoints[i] = new SKPoint();
-            }
+            intermediatePoints.AsSpan().Clear();
         }
     }
 }
