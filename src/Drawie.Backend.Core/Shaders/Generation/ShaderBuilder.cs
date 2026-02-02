@@ -257,6 +257,15 @@ public class ShaderBuilder
         return result;
     }
 
+    public Float1 AssignNewFloat1(Expression expression)
+    {
+        string name = $"float_{GetUniqueNameNumber()}";
+        Float1 result = new Float1(name);
+        _variables.Add(result);
+
+        _bodyBuilder.AppendLine($"float {name} = {expression.ExpressionValue};");
+        return result;
+    }
 
     public Float3x3 AssignNewFloat3x3(Expression matrixExpression)
     {
@@ -266,6 +275,16 @@ public class ShaderBuilder
 
         _bodyBuilder.AppendLine($"float3x3 {name} = {matrixExpression.ExpressionValue};");
         return result;
+    }
+
+    public Float1 ConditionalVariable(Bool value, Float1 onTrue, Float1 onFalse)
+    {
+       return AssignNewFloat1(new Expression($"bool({value.ExpressionValue}) ? {onTrue.ExpressionValue} : {onFalse.ExpressionValue}"));
+    }
+
+    public Half4 ConditionalVariable(Bool value, Half4 onTrue, Half4 onFalse)
+    {
+        return AssignNewHalf4(new Expression($"bool({value.ExpressionValue}) ? {onTrue.ExpressionValue} : {onFalse.ExpressionValue}"));
     }
 
     public void Dispose()
