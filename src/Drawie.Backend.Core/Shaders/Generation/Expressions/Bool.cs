@@ -11,7 +11,6 @@ public class Bool(string name) : ShaderExpressionVariable<bool>(name)
         ConstantValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     public override Expression? OverrideExpression { get; set; }
-    public override string ReturnType => "bool";
 
     public static implicit operator Bool(bool value) => new("") { ConstantValue = value };
 
