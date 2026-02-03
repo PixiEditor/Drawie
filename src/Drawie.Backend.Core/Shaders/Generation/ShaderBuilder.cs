@@ -139,6 +139,12 @@ public class ShaderBuilder
         Uniforms[uniformName] = new Uniform(uniformName, matrixValue);
     }
 
+
+    public void AddUniform(string name, Vec3D value)
+    {
+        Uniforms[name] = new Uniform(name, value);
+    }
+
     public void Set<T>(T contextPosition, T coordinateValue) where T : ShaderExpressionVariable
     {
         if (contextPosition.VariableName == coordinateValue.VariableName)
@@ -277,6 +283,66 @@ public class ShaderBuilder
         return result;
     }
 
+    public Int1 AssignNewInt1(Expression assignment)
+    {
+        string name = $"int_{GetUniqueNameNumber()}";
+        Int1 result = new Int1(name);
+        _variables.Add(result);
+
+        _bodyBuilder.AppendLine($"int {name} = {assignment.ExpressionValue};");
+        return result;
+    }
+
+    public Bool AssignNewBool(Expression assignment)
+    {
+        string name = $"bool_{GetUniqueNameNumber()}";
+        Bool result = new Bool(name);
+        _variables.Add(result);
+
+        _bodyBuilder.AppendLine($"bool {name} = {assignment.ExpressionValue};");
+        return result;
+    }
+
+    public Half3 AssignNewHalf3(Expression assignment)
+    {
+        string name = $"vec3_{GetUniqueNameNumber()}";
+        Half3 result = new Half3(name);
+        _variables.Add(result);
+
+        _bodyBuilder.AppendLine($"half3 {name} = {assignment.ExpressionValue};");
+        return result;
+    }
+
+    public Int2 AssignNewInt2(Expression assignment)
+    {
+        string name = $"int2_{GetUniqueNameNumber()}";
+        Int2 result = new Int2(name);
+        _variables.Add(result);
+
+        _bodyBuilder.AppendLine($"int2 {name} = {assignment.ExpressionValue};");
+        return result;
+    }
+
+    public Float2 ConditionalVariable(Bool value, Float2 onTrue, Float2 onFalse)
+    {
+        return AssignNewFloat2(new Expression($"bool({value.ExpressionValue}) ? {onTrue.ExpressionValue} : {onFalse.ExpressionValue}"));
+    }
+
+    public Float3 ConditionalVariable(Bool value, Float3 onTrue, Float3 onFalse)
+    {
+        return AssignNewFloat3(new Expression($"bool({value.ExpressionValue}) ? {onTrue.ExpressionValue} : {onFalse.ExpressionValue}"));
+    }
+
+    public Bool ConditionalVariable(Bool value, Bool onTrue, Bool onFalse)
+    {
+        return AssignNewBool(new Expression($"bool({value.ExpressionValue}) ? {onTrue.ExpressionValue} : {onFalse.ExpressionValue}"));
+    }
+
+    public Half3 ConditionalVariable(Bool value, Half3 onTrue, Half3 onFalse)
+    {
+        return AssignNewHalf3(new Expression($"bool({value.ExpressionValue}) ? {onTrue.ExpressionValue} : {onFalse.ExpressionValue}"));
+    }
+
     public Float1 ConditionalVariable(Bool value, Float1 onTrue, Float1 onFalse)
     {
        return AssignNewFloat1(new Expression($"bool({value.ExpressionValue}) ? {onTrue.ExpressionValue} : {onFalse.ExpressionValue}"));
@@ -285,6 +351,21 @@ public class ShaderBuilder
     public Half4 ConditionalVariable(Bool value, Half4 onTrue, Half4 onFalse)
     {
         return AssignNewHalf4(new Expression($"bool({value.ExpressionValue}) ? {onTrue.ExpressionValue} : {onFalse.ExpressionValue}"));
+    }
+
+    public Int1 ConditionalVariable(Bool value, Int1 getValue, Int1 onFalse)
+    {
+        return AssignNewInt1(new Expression($"bool({value.ExpressionValue}) ? {getValue.ExpressionValue} : {onFalse.ExpressionValue}"));
+    }
+
+    public Int2 ConditionalVariable(Bool value, Int2 getValue, Int2 onFalse)
+    {
+        return AssignNewInt2(new Expression($"bool({value.ExpressionValue}) ? {getValue.ExpressionValue} : {onFalse.ExpressionValue}"));
+    }
+
+    public Float3x3 ConditionalVariable(Bool value, Float3x3 onTrue, Float3x3 onFalse)
+    {
+        return AssignNewFloat3x3(new Expression($"bool({value.ExpressionValue}) ? {onTrue.ExpressionValue} : {onFalse.ExpressionValue}"));
     }
 
     public void Dispose()
