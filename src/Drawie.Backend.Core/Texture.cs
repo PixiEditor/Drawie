@@ -323,9 +323,9 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         }
     }
 
-    public void AddDirtyRect(RectI dirtyRect)
+    public void AddDirtyRect(RectD? dirtyRect)
     {
-        Changed?.Invoke(new RectD(dirtyRect.X, dirtyRect.Y, dirtyRect.Width, dirtyRect.Height));
+        Changed?.Invoke(dirtyRect);
     }
 
     public void Dispose()
