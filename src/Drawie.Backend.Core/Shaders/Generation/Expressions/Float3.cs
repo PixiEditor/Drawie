@@ -104,4 +104,31 @@ public class Float3(string name) : ShaderExpressionVariable<Vec3D>(name), IMulti
     {
         return new Expression($"float3({X.ExpressionValue}, {Y.ExpressionValue}, {Z.ExpressionValue})");
     }
+
+    public void OverrideConstantValueAt(int i, object constant)
+    {
+        switch (i)
+        {
+            case 0:
+                if (constant is float x)
+                {
+                    ConstantValue = new Vec3D(x, ConstantValue.Y, ConstantValue.Z);
+                }
+                break;
+            case 1:
+                if (constant is float y)
+                {
+                    ConstantValue = new Vec3D(ConstantValue.X, y, ConstantValue.Z);
+                }
+                break;
+            case 2:
+                if (constant is float z)
+                {
+                    ConstantValue = new Vec3D(ConstantValue.X, ConstantValue.Y, z);
+                }
+                break;
+            default:
+                throw new IndexOutOfRangeException();
+        }
+    }
 }

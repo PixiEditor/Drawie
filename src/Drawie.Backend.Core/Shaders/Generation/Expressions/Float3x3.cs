@@ -142,4 +142,26 @@ public class Float3x3(string name) : ShaderExpressionVariable<Matrix3X3>(name), 
     {
         return new Expression($"float3x3({M11}, {M12}, {M13}, {M21}, {M22}, {M23}, {M31}, {M32}, {M33})");
     }
+
+    public void OverrideConstantValueAt(int i, object constant)
+    {
+        if (constant is double doubleValue)
+        {
+            var values = ConstantValue.Values;
+            values[i] = (float)doubleValue;
+            ConstantValue = new Matrix3X3(values);
+        }
+        else if (constant is float floatValue)
+        {
+            var values = ConstantValue.Values;
+            values[i] = floatValue;
+            ConstantValue = new Matrix3X3(values);
+        }
+        else if (constant is int intValue)
+        {
+            var values = ConstantValue.Values;
+            values[i] = intValue;
+            ConstantValue = new Matrix3X3(values);
+        }
+    }
 }

@@ -87,4 +87,22 @@ public class Float2(string name) : ShaderExpressionVariable<VecD>(name), IMultiV
     {
         return new Expression($"float2({X.ExpressionValue}, {Y.ExpressionValue})");
     }
+
+    public void OverrideConstantValueAt(int i, object constant)
+    {
+        if (constant is double doubleValue)
+        {
+            switch (i)
+            {
+                case 0:
+                    ConstantValue = new VecD(doubleValue, ConstantValue.Y);
+                    break;
+                case 1:
+                    ConstantValue = new VecD(ConstantValue.X, doubleValue);
+                    break;
+                default:
+                    throw new IndexOutOfRangeException();
+            }
+        }
+    }
 }

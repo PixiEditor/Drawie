@@ -77,6 +77,33 @@ public class Half3(string name) : ShaderExpressionVariable<Vec3D>(name), IMultiV
         return Constructor(R, G, B);
     }
 
+    public void OverrideConstantValueAt(int i, object constant)
+    {
+        switch (i)
+        {
+            case 0:
+                if (constant is float r)
+                {
+                    ConstantValue = new Vec3D(r, ConstantValue.Y, ConstantValue.Z);
+                }
+                break;
+            case 1:
+                if (constant is float g)
+                {
+                    ConstantValue = new Vec3D(ConstantValue.X, g, ConstantValue.Z);
+                }
+                break;
+            case 2:
+                if (constant is float b)
+                {
+                    ConstantValue = new Vec3D(ConstantValue.X, ConstantValue.Y, b);
+                }
+                break;
+            default:
+                throw new IndexOutOfRangeException();
+        }
+    }
+
     public static string ConstructorText(Expression r, Expression g, Expression b) =>
         $"half3({r.ExpressionValue}, {g.ExpressionValue}, {b.ExpressionValue})";
 

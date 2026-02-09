@@ -66,4 +66,25 @@ public class Int2(string name) : ShaderExpressionVariable<VecI>(name), IMultiVal
     {
         return new Expression($"int2({X.ExpressionValue}, {Y.ExpressionValue})");
     }
+
+    public void OverrideConstantValueAt(int i, object constant)
+    {
+        switch (i)
+        {
+            case 0:
+                if (constant is int x)
+                {
+                    ConstantValue = new VecI(x, ConstantValue.Y);
+                }
+                break;
+            case 1:
+                if (constant is int y)
+                {
+                    ConstantValue = new VecI(ConstantValue.X, y);
+                }
+                break;
+            default:
+                throw new IndexOutOfRangeException();
+        }
+    }
 }

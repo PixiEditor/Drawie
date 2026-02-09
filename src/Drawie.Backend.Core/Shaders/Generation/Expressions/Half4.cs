@@ -88,6 +88,29 @@ public class Half4(string name) : ShaderExpressionVariable<Color>(name), IMultiV
     }
 
     public Expression? GetWholeNestedExpression() => Constructor(R, G, B, A);
+    public void OverrideConstantValueAt(int i, object constant)
+    {
+        if (constant is byte byteValue)
+        {
+            switch (i)
+            {
+                case 0:
+                    ConstantValue = new Color(byteValue, ConstantValue.G, ConstantValue.B, ConstantValue.A);
+                    break;
+                case 1:
+                    ConstantValue = new Color(ConstantValue.R, byteValue, ConstantValue.B, ConstantValue.A);
+                    break;
+                case 2:
+                    ConstantValue = new Color(ConstantValue.R, ConstantValue.G, byteValue, ConstantValue.A);
+                    break;
+                case 3:
+                    ConstantValue = new Color(ConstantValue.R, ConstantValue.G, ConstantValue.B, byteValue);
+                    break;
+                default:
+                    throw new IndexOutOfRangeException();
+            }
+        }
+    }
 
     public static string ConstructorText(Expression r, Expression g, Expression b, Expression a) =>
         $"half4({r.ExpressionValue}, {g.ExpressionValue}, {b.ExpressionValue}, {a.ExpressionValue})";
