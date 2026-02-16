@@ -464,16 +464,16 @@ namespace Drawie.Backend.Core.Surfaces
             Changed?.Invoke(bounds);
         }
 
-        private IDisposable ApplyPaintable(RectD? rect, Paint paint)
+        private IDisposable ApplyPaintable(RectD? rect, Paint paint, Matrix3X3? matrix = null)
         {
             if (paint?.Paintable != null)
             {
                 if (paint.Paintable.AbsoluteValues || rect == null)
                 {
-                    return paint.ApplyPaintable(LocalClipBounds, Matrix3X3.Identity);
+                    return paint.ApplyPaintable(LocalClipBounds, matrix);
                 }
 
-                return paint.ApplyPaintable(rect.Value, Matrix3X3.Identity);
+                return paint.ApplyPaintable(rect.Value, matrix);
             }
 
             return Disposable.Empty;

@@ -115,6 +115,8 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
 
         public Paintable? Paintable { get; set; }
 
+        public Matrix3X3 PaintableMatrix { get; set; } = Matrix3X3.Identity;
+
         public bool IsOpaqueStandardNonBlendingPaint =>
             Paintable == null &&
             Shader == null &&
@@ -160,7 +162,7 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             }
         }
 
-        internal IDisposable ApplyPaintable(RectD bounds, Matrix3X3 matrix)
+        internal IDisposable ApplyPaintable(RectD bounds, Matrix3X3? matrix = null)
         {
             if (Paintable == null)
             {
@@ -172,7 +174,7 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
 
             Shaders.Shader? createdShader = null;
 
-            createdShader = Paintable.GetShader(bounds, matrix);
+            createdShader = Paintable.GetShader(bounds, matrix ?? PaintableMatrix);
             if (createdShader != null)
             {
                 Shader = createdShader;
