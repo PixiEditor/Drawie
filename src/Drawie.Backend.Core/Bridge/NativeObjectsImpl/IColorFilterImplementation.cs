@@ -14,4 +14,6 @@ public interface IColorFilterImplementation
     public IntPtr CreateLumaColor();
     public IntPtr CreateHighContrast(bool grayscale, ContrastInvertMode invert, float contrast);
     public IntPtr CreateLighting(Color mul, Color add);
+    public IntPtr CreateSrgbToLinearGamma();
+    public IntPtr CreateLinearToSrgbGamma();
 }

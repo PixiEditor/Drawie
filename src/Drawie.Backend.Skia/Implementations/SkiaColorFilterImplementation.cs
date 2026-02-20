@@ -68,5 +68,21 @@ namespace Drawie.Skia.Implementations
 
             return skColorFilter.Handle;
         }
+
+        public IntPtr CreateSrgbToLinearGamma()
+        {
+            var skColorFilter = SKColorFilter.CreateSrgbToLinearGamma();
+            AddManagedInstance(skColorFilter);
+
+            return skColorFilter.Handle;
+        }
+
+        public IntPtr CreateLinearToSrgbGamma()
+        {
+            var skColorFilter = SKColorFilter.CreateLinearToSrgbGamma();
+            AddManagedInstance(skColorFilter);
+
+            return skColorFilter.Handle;
+        }
     }
 }

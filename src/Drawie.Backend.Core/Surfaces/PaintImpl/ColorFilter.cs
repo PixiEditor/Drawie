@@ -68,4 +68,14 @@ public class ColorFilter : NativeObject
     {
         return new ColorFilter(DrawingBackendApi.Current.ColorFilterImplementation.CreateLighting(mul, add));
     }
+
+    public static ColorFilter CreateSrgbToLinearGamma()
+    {
+        return new ColorFilter(DrawingBackendApi.Current.ColorFilterImplementation.CreateSrgbToLinearGamma());
+    }
+
+    public static ColorFilter CreateLinearToSrgbGamma()
+    {
+        return new ColorFilter(DrawingBackendApi.Current.ColorFilterImplementation.CreateLinearToSrgbGamma());
+    }
 }

@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Drawie.Skia</RootNamespace>
-    <SkiaSharpVersion>3.119.0</SkiaSharpVersion>
+    <SkiaSharpVersion>3.119.2</SkiaSharpVersion>
   </PropertyGroup>
 
   <ItemGroup>
