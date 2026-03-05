@@ -30,6 +30,12 @@ public class SweepGradientPaintable : GradientPaintable, IPositionPaintable
             bounds = Bounds.Value;
         }
 
+        Matrix3X3 finalMatrix = matrix;
+        if (Transform != null)
+        {
+            finalMatrix = matrix.Concat(Transform.Value);
+        }
+
         VecD finalCenter = AbsoluteValues
             ? Center
             : new VecD(Center.X * bounds.Width + bounds.X, Center.Y * bounds.Height + bounds.Y);
@@ -38,7 +44,7 @@ public class SweepGradientPaintable : GradientPaintable, IPositionPaintable
             GradientStops.Select(x => (float)x.Offset).ToArray(),
             TileMode.Clamp,
             (float)Angle,
-            matrix);
+            finalMatrix);
     }
 
     public override Paintable? Clone()

@@ -178,4 +178,40 @@ public static class ShaderMath
         return new Expression(
             $"{angleExpressionValue.ExpressionValue} * 0.017453292519943295"); // π / 180
     }
+
+    public static Expression RadiansToDegrees(ShaderExpressionVariable angleExpressionValue)
+    {
+        return new Expression(
+            $"{angleExpressionValue.ExpressionValue} * 57.29577951308232"); // 180 / π
+    }
+
+    public static Expression Asin(ShaderExpressionVariable a)
+    {
+        return new Expression($"asin({a.ExpressionValue})");
+    }
+
+    public static Expression Acos(ShaderExpressionVariable a)
+    {
+        return new Expression($"acos({a.ExpressionValue})");
+    }
+
+    public static Expression Atan(ShaderExpressionVariable a)
+    {
+        return new Expression($"atan({a.ExpressionValue})");
+    }
+
+    public static Expression Atan2(ShaderExpressionVariable y, ShaderExpressionVariable x)
+    {
+        return new Expression($"atan({y.ExpressionValue}, {x.ExpressionValue})");
+    }
+
+    public static Expression Atan2Deg(ShaderExpressionVariable y, ShaderExpressionVariable x)
+    {
+        return new Expression($"atan({y.ExpressionValue}, {x.ExpressionValue}) * 57.29577951308232");
+    }
+
+    public static Expression Distance(ShaderExpressionVariable a, ShaderExpressionVariable b)
+    {
+        return new Expression($"distance({a.ExpressionValue}, {b.ExpressionValue})");
+    }
 }
