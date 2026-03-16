@@ -11,6 +11,7 @@ public class TexturePaintable : Paintable
 {
     public Texture Image { get; private set; }
     public override bool AnythingVisible => Image is { Size: {X: > 0, Y: > 0 }};
+    public SamplingOptions SamplingOptions { get; set; } = SamplingOptions.Bilinear;
 
     private Image lastSnapshot;
 
@@ -46,7 +47,7 @@ public class TexturePaintable : Paintable
         lastSnapshot = Image.DrawingSurface.Snapshot();
 
         // TODO: Figure out if we need to change bilinear in any case
-        var shader = lastSnapshot.ToShader(TileMode.Clamp, TileMode.Clamp, SamplingOptions.Bilinear, scalingMatrix.PostConcat(matrix));
+        var shader = lastSnapshot.ToShader(TileMode.Clamp, TileMode.Clamp, SamplingOptions, scalingMatrix.PostConcat(matrix));
         lastSnapshot?.Dispose();
 
         return shader;
