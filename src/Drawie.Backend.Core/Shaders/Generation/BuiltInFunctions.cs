@@ -102,8 +102,8 @@ public partial class BuiltInFunctions
         $"""
          half3 rgb = {HueToRgb.Call("hsva.r")};
          half4 K = half4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-         half3 p = abs(fract(c.rrr + K.rgb) * 6.0 - K.aaa);
-         return c.z * mix(K.rrr, clamp(p - K.rrr, 0.0, 1.0), c.y);
+         half3 p = abs(fract(hsva.rrr + K.rgb) * 6.0 - K.aaa);
+         return half4((hsva.z * mix(K.rrr, clamp(p - K.rrr, 0.0, 1.0), hsva.y)).rgb, hsva.w);
          """,
         HueToRgb);
 
