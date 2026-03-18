@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Rendering.Composition;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Drawie.Backend.Core.Bridge;
 
@@ -46,10 +47,16 @@ public abstract class InteropControl : Control
     {
         if (initialized)
         {
-            surface.Dispose();
+            var toDispose = surface;
+            surface = null;
+            Dispatcher.UIThread.Post(() =>
+            {
+                toDispose?.Dispose();
+            });
+            
             FreeGraphicsResources();
         }
-
+    
         initialized = false;
         base.OnDetachedFromLogicalTree(e);
     }
@@ -58,7 +65,13 @@ public abstract class InteropControl : Control
     {
         if (initialized)
         {
-            surface.Dispose();
+            var toDispose = surface;
+            surface = null;
+            Dispatcher.UIThread.Post(() =>
+            {
+                toDispose?.Dispose();
+            });
+            
             FreeGraphicsResources();
         }
 
