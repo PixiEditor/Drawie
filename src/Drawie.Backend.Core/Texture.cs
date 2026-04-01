@@ -23,6 +23,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
     public ImageInfo ImageInfo { get; }
 
     private DrawingSurface? cpuSurface;
+    private Pixmap? cpuPixmap;
     private bool cpuSynced;
 
     private bool isDisposed;
@@ -270,7 +271,8 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         using var ctx = EnsureContext();
         SyncBitmap();
 
-        return cpuSurface.PeekPixels().GetPixelColor(at);
+        var pixmap = cpuPixmap ??= cpuSurface.PeekPixels();
+        return pixmap.GetPixelColor(at);
     }
 
 
@@ -282,7 +284,8 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         using var ctx = EnsureContext();
         SyncBitmap();
 
-        return cpuSurface.PeekPixels().GetPixelColorPrecise(pos);
+        var pixmap = cpuPixmap ??= cpuSurface.PeekPixels();
+        return pixmap.GetPixelColorPrecise(pos);
     }
 
 
@@ -318,6 +321,8 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
             using var ctx = EnsureContext();
             using Paint srcPaint = new() { BlendMode = BlendMode.Src };
             cpuSurface.Canvas.DrawSurface(DrawingSurface, 0, 0, srcPaint);
+            cpuPixmap?.Dispose();
+            cpuPixmap = null;
 
             cpuSynced = true;
         }
@@ -344,6 +349,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         DrawingSurface.Changed -= DrawingSurfaceOnChanged;
         DrawingSurface.Dispose();
         cpuSurface?.Dispose();
+        cpuPixmap?.Dispose();
         nearestNeighborReplacingPaint.Dispose();
     }
 
