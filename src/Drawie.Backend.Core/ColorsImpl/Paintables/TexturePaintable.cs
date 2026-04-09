@@ -44,10 +44,16 @@ public class TexturePaintable : Paintable
             (float)bounds.X,
             (float)bounds.Y);
 
+        var finalMatrix = scalingMatrix.PostConcat(matrix);
+        if (Transform != null)
+        {
+            finalMatrix = finalMatrix.Concat(Transform.Value);
+        }
+
         lastSnapshot = Image.DrawingSurface.Snapshot();
 
         // TODO: Figure out if we need to change bilinear in any case
-        var shader = lastSnapshot.ToShader(TileMode.Clamp, TileMode.Clamp, SamplingOptions, scalingMatrix.PostConcat(matrix));
+        var shader = lastSnapshot.ToShader(TileMode.Clamp, TileMode.Clamp, SamplingOptions, finalMatrix);
         lastSnapshot?.Dispose();
 
         return shader;
