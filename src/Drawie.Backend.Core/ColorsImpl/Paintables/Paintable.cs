@@ -11,6 +11,7 @@ public abstract class Paintable : IDisposable, ICloneable
     public bool AbsoluteValues { get; set; } = false;
     public bool IsOneTimeUse { get; set; } = false;
     public RectD? Bounds { get; set; }
+    public abstract RectD LocalBounds { get; }
     public Matrix3X3? Transform { get; set; }
 
     public abstract Shader? GetShader(RectD bounds, Matrix3X3 matrix);

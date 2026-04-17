@@ -13,6 +13,8 @@ public class TexturePaintable : Paintable
     public override bool AnythingVisible => Image is { Size: {X: > 0, Y: > 0 }};
     public SamplingOptions SamplingOptions { get; set; } = SamplingOptions.Bilinear;
 
+    public override RectD LocalBounds => new RectD(0, 0, Image.Size.X, Image.Size.Y);
+
     private Image lastSnapshot;
 
     private bool disposeAfterUse;

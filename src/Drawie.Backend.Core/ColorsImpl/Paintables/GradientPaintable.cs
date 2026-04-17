@@ -1,5 +1,6 @@
 ﻿using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.ColorsImpl.Paintables;
 
@@ -7,6 +8,7 @@ public abstract class GradientPaintable : Paintable, ISrgbPaintable
 {
     public override bool AnythingVisible => GradientStops is { Count: > 0 } && GradientStops.Any(x => x.Color.A > 0);
     public List<GradientStop> GradientStops { get; }
+    public override RectD LocalBounds => new RectD(0, 0, 1, 1);
 
     public GradientPaintable(IEnumerable<GradientStop> gradientStops)
     {

@@ -15,6 +15,8 @@ public class ColorPaintable : Paintable
         Color = color;
     }
 
+    public override RectD LocalBounds => new RectD(0, 0, 1, 1);
+
     public override Shader? GetShader(RectD bounds, Matrix3X3 matrix)
     {
         return null;

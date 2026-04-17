@@ -127,6 +127,11 @@ namespace Drawie.Skia.Implementations
                     return null;
                 }
 
+                if(!blenderImplementation.TryGetInstance(skPaint.Blender.Handle, out _))
+                {
+                    blenderImplementation.AddManagedInstance(skPaint.Blender.Handle, skPaint.Blender);
+                }
+
                 return new Blender(skPaint.Blender.Handle);
             }
 
