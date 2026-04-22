@@ -317,7 +317,11 @@ namespace Drawie.Skia.Implementations
 
         public Shader? CreateBitmap(Bitmap bitmap, TileMode tileX, TileMode tileY, Matrix3X3 matrix)
         {
-            SKBitmap skBitmap = bitmapImplementation[bitmap.ObjectPointer];
+            if(!bitmapImplementation.TryGetInstance(bitmap.ObjectPointer, out var skBitmap))
+            {
+                return null;
+            }
+
             SKShader shader = SKShader.CreateBitmap(skBitmap, (SKShaderTileMode)tileX, (SKShaderTileMode)tileY,
                 matrix.ToSkMatrix());
             AddManagedInstance(shader);
