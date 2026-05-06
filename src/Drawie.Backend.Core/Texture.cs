@@ -71,12 +71,16 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
             new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, colorSpace) { GpuBacked = true });
     }
 
-    public static Texture ForProcessing(DrawingSurface copySizeAndMatrixFrom, ColorSpace colorSpace)
+    public static Texture? ForProcessing(DrawingSurface copySizeAndMatrixFrom, ColorSpace colorSpace)
     {
+        VecI size = new VecI(
+            copySizeAndMatrixFrom.DeviceClipBounds.Size.X + copySizeAndMatrixFrom.DeviceClipBounds.Pos.X,
+            copySizeAndMatrixFrom.DeviceClipBounds.Size.Y + copySizeAndMatrixFrom.DeviceClipBounds.Pos.Y);
+        if (size.X <= 0 || size.Y <= 0)
+            return null;
+
         Texture tex = new Texture(
-            new ImageInfo(
-                copySizeAndMatrixFrom.DeviceClipBounds.Size.X + copySizeAndMatrixFrom.DeviceClipBounds.Pos.X,
-                copySizeAndMatrixFrom.DeviceClipBounds.Size.Y + copySizeAndMatrixFrom.DeviceClipBounds.Pos.Y,
+            new ImageInfo(size.X, size.Y,
                 ColorType.RgbaF16, AlphaType.Premul, colorSpace) { GpuBacked = true });
         tex.DrawingSurface.Canvas.SetMatrix(copySizeAndMatrixFrom.Canvas.TotalMatrix);
 
