@@ -507,7 +507,7 @@ namespace Drawie.Skia.Implementations
 
                 if (codeChar == ';')
                 {
-                    if (lastString.Contains(uniformName) &&
+                    if (lastString.Split(" ").LastOrDefault()?.Trim() == uniformName &&
                         TryDetectType(lastString, uniformName, out var detectedType))
                     {
                         return detectedType.Value;
