@@ -263,6 +263,8 @@ namespace Drawie.Skia.Implementations
                 numOctaves,
                 seed);
 
+            if (shader == null) return null;
+
             AddManagedInstance(shader);
 
 #if DRAWIE_TRACE
@@ -324,6 +326,9 @@ namespace Drawie.Skia.Implementations
 
             SKShader shader = SKShader.CreateBitmap(skBitmap, (SKShaderTileMode)tileX, (SKShaderTileMode)tileY,
                 matrix.ToSkMatrix());
+
+            if (shader == null) return null;
+
             AddManagedInstance(shader);
 
 #if DRAWIE_TRACE
@@ -342,6 +347,9 @@ namespace Drawie.Skia.Implementations
             SKImage target = ImageImplementation[image.ObjectPointer];
             SKShader shader = SKShader.CreateImage(target, (SKShaderTileMode)tileX, (SKShaderTileMode)tileY,
                 matrix.ToSkMatrix());
+
+            if (shader == null) return null;
+
             AddManagedInstance(shader);
             return new Shader(shader.Handle);
         }
