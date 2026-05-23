@@ -257,9 +257,10 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     private DrawingSurface CreateDrawingSurface(ImageInfo info)
     {
         var surface = DrawingSurface.Create(info, PixelBuffer);
-        surface.Changed += DrawingSurfaceChanged;
         if (surface is null)
             throw new InvalidOperationException($"Could not create surface (Size:{Size})");
+        
+        surface.Changed += DrawingSurfaceChanged;
         return surface;
     }
 
