@@ -9,33 +9,36 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl;
 public class ImageFilter : NativeObject
 {
     public ImageFilterType WellKnownType { get; init; }
+
     public ImageFilter(IntPtr objPtr) : base(objPtr)
     {
     }
 
-    public static ImageFilter CreateMatrixConvolution(VecI size, ReadOnlySpan<float> kernel, float gain, float bias,
+    public static ImageFilter? CreateMatrixConvolution(VecI size, ReadOnlySpan<float> kernel, float gain, float bias,
         VecI kernelOffset,
         TileMode tileMode, bool convolveAlpha)
     {
-        var filter = new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateMatrixConvolution(
+        var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateMatrixConvolution(
             size,
             kernel,
             gain,
             bias,
             kernelOffset,
             tileMode,
-            convolveAlpha))
-        { WellKnownType = ImageFilterType.MatrixConvolution };
+            convolveAlpha);
 
-        return filter;
+        if (filter == null)
+            return null;
+
+        return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.MatrixConvolution };
     }
 
-    public static ImageFilter CreateMatrixConvolution(Kernel kernel, float gain, float bias, VecI kernelOffset,
+    public static ImageFilter? CreateMatrixConvolution(Kernel kernel, float gain, float bias, VecI kernelOffset,
         TileMode tileMode, bool convolveAlpha) =>
         CreateMatrixConvolution(new VecI(kernel.Width, kernel.Height), kernel.AsSpan(), gain, bias, kernelOffset,
             tileMode, convolveAlpha);
 
-    public static ImageFilter CreateMatrixConvolution(KernelArray kernel, float gain, float bias, VecI kernelOffset,
+    public static ImageFilter? CreateMatrixConvolution(KernelArray kernel, float gain, float bias, VecI kernelOffset,
         TileMode tileMode, bool convolveAlpha) =>
         CreateMatrixConvolution(new VecI(kernel.Width, kernel.Height), kernel.AsSpan(), gain, bias, kernelOffset,
             tileMode, convolveAlpha);
@@ -44,13 +47,22 @@ public class ImageFilter : NativeObject
     /// <param name="inner">The inner (first) filter to apply.</param>
     /// <summary>Creates an image filter, whose effect is to first apply the inner filter and then apply the outer filter to the result of the inner.</summary>
     /// <returns>Returns the new <see cref="T:Drawie.Backend.Core.Surface.PaintImpl.ImageFilter" />, or null on error.</returns>
-    public static ImageFilter CreateCompose(ImageFilter outer, ImageFilter inner) =>
-        new(DrawingBackendApi.Current.ImageFilterImplementation.CreateCompose(outer, inner)) { WellKnownType = ImageFilterType.Compose };
-
-    public static ImageFilter CreateBlendMode(BlendMode mode, ImageFilter? background, ImageFilter? foreground)
+    public static ImageFilter? CreateCompose(ImageFilter outer, ImageFilter inner)
     {
-        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateBlendMode(mode, background,
-            foreground)) { WellKnownType = ImageFilterType.BlendMode };
+        var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateCompose(outer, inner);
+        if (filter == null)
+            return null;
+
+        return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.Compose };
+    }
+
+    public static ImageFilter? CreateBlendMode(BlendMode mode, ImageFilter? background, ImageFilter? foreground)
+    {
+        var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateBlendMode(mode, background, foreground);
+        if (filter == null)
+            return null;
+
+        return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.BlendMode };
     }
 
     public override object Native =>
@@ -62,52 +74,102 @@ public class ImageFilter : NativeObject
         DrawingBackendApi.Current.ImageFilterImplementation.DisposeObject(ObjectPointer);
     }
 
-    public static ImageFilter CreateBlur(float sigmaX, float sigmaY)
+    public static ImageFilter? CreateBlur(float sigmaX, float sigmaY)
     {
-        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateBlur(sigmaX, sigmaY)) { WellKnownType = ImageFilterType.Blur };
+        var blur = DrawingBackendApi.Current.ImageFilterImplementation.CreateBlur(sigmaX, sigmaY);
+        if (blur == null)
+        {
+            return null;
+        }
+
+        return new ImageFilter(blur.Value) { WellKnownType = ImageFilterType.Blur };
     }
 
-    public static ImageFilter CreateDropShadow(float dx, float dy, float sigmaX, float sigmaY, Color color,
+    public static ImageFilter? CreateDropShadow(float dx, float dy, float sigmaX, float sigmaY, Color color,
         ImageFilter? input)
     {
-        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateDropShadow(dx, dy, sigmaX,
-            sigmaY, color, input)) { WellKnownType = ImageFilterType.DropShadow };
+        var shadow = DrawingBackendApi.Current.ImageFilterImplementation.CreateDropShadow(dx, dy, sigmaX,
+            sigmaY, color, input);
+
+        if (shadow == null)
+            return null;
+
+        return new ImageFilter(shadow.Value) { WellKnownType = ImageFilterType.DropShadow };
     }
 
-    public static ImageFilter CreateShader(Shader? shader, bool dither)
+    public static ImageFilter? CreateShader(Shader? shader, bool dither)
     {
-        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateShader(shader, dither)) { WellKnownType = ImageFilterType.Shader };
+        var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateShader(shader, dither);
+
+        if (filter == null)
+            return null;
+
+        return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.Shader };
     }
 
     public static ImageFilter? CreateImage(Image image)
     {
-        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateImage(image)) { WellKnownType = ImageFilterType.Image };
+        var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateImage(image);
+
+        if (filter == null)
+            return null;
+
+        return new ImageFilter(filter.Value)
+        {
+            WellKnownType = ImageFilterType.Image
+        };
     }
 
-    public static ImageFilter CreateTile(RectD source, RectD destination, ImageFilter input)
+    public static ImageFilter? CreateTile(RectD source, RectD destination, ImageFilter input)
     {
-        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateTile(source, destination, input)) { WellKnownType = ImageFilterType.Tile };
+        var filter =
+            DrawingBackendApi.Current.ImageFilterImplementation.CreateTile(source, destination, input);
+
+        if (filter == null)
+            return null;
+
+        return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.Tile };
     }
 
-    public static ImageFilter? CreateBlendMode(Blender blender, ImageFilter? background, ImageFilter? blurFilter)
+    public static ImageFilter? CreateBlendMode(Blender blender, ImageFilter? background, ImageFilter? foreground)
     {
-        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateBlendMode(blender, background,
-            blurFilter)) { WellKnownType = ImageFilterType.BlendMode };
+        var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateBlendMode(blender, background,
+            foreground);
+
+        if (filter == null)
+            return null;
+
+        return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.BlendMode };
     }
 
     public static ImageFilter? CreateBlur(float sigmaX, float sigmaY, TileMode repeat)
     {
-        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateBlur(sigmaX, sigmaY, repeat)) { WellKnownType = ImageFilterType.Blur };
+        var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateBlur(sigmaX, sigmaY, repeat);
+
+        if (filter == null)
+            return null;
+
+        return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.Blur };
     }
 
     public static ImageFilter? CreateDilate(float radiusX, float radiusY)
     {
-        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateDilate(radiusX, radiusY)) { WellKnownType = ImageFilterType.Dilate };
+        var dilate = DrawingBackendApi.Current.ImageFilterImplementation.CreateDilate(radiusX, radiusY);
+
+        if (dilate == null)
+            return null;
+
+        return new ImageFilter(dilate.Value) { WellKnownType = ImageFilterType.Dilate };
     }
 
     public static ImageFilter? CreateMerge(params ImageFilter[] filters)
     {
-        return new ImageFilter(DrawingBackendApi.Current.ImageFilterImplementation.CreateMerge(filters)) { WellKnownType = ImageFilterType.Merge };
+        var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateMerge(filters);
+
+        if (filter == null)
+            return null;
+
+        return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.Merge };
     }
 }
 

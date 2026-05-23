@@ -15,7 +15,7 @@ namespace Drawie.Skia.Implementations
         public SkiaShaderImplementation ShaderImplementation { get; set; }
         public SkiaImageImplementation ImageImplementation { get; set; }
 
-        public IntPtr CreateMatrixConvolution(VecI size, ReadOnlySpan<float> kernel, float gain, float bias,
+        public IntPtr? CreateMatrixConvolution(VecI size, ReadOnlySpan<float> kernel, float gain, float bias,
             VecI kernelOffset, TileMode mode, bool convolveAlpha)
         {
             var skImageFilter = SKImageFilter.CreateMatrixConvolution(
@@ -27,22 +27,29 @@ namespace Drawie.Skia.Implementations
                 (SKShaderTileMode)mode,
                 convolveAlpha);
 
+            if (skImageFilter == null)
+                return null;
+
             AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
-        public IntPtr CreateCompose(ImageFilter outer, ImageFilter inner)
+        public IntPtr? CreateCompose(ImageFilter outer, ImageFilter inner)
         {
             var skOuter = this[outer.ObjectPointer];
             var skInner = this[inner.ObjectPointer];
 
             var compose = SKImageFilter.CreateCompose(skOuter, skInner);
+
+            if (compose == null)
+                return null;
+
             AddManagedInstance(compose);
 
             return compose.Handle;
         }
 
-        public IntPtr CreateBlendMode(BlendMode blendMode, ImageFilter? background, ImageFilter? foreground)
+        public IntPtr? CreateBlendMode(BlendMode blendMode, ImageFilter? background, ImageFilter? foreground)
         {
             SKImageFilter? bgFilter = null;
             SKImageFilter? fgFilter = null;
@@ -58,20 +65,29 @@ namespace Drawie.Skia.Implementations
             }
 
             var skImageFilter = SKImageFilter.CreateBlendMode((SKBlendMode)blendMode, fgFilter, bgFilter);
+
+            if (skImageFilter == null)
+                return null;
+
             AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
         public object GetNativeImageFilter(IntPtr objPtr) => this[objPtr];
 
-        public IntPtr CreateBlur(float sigmaX, float sigmaY)
+        public IntPtr? CreateBlur(float sigmaX, float sigmaY)
         {
             var skImageFilter = SKImageFilter.CreateBlur(sigmaX, sigmaY);
+            if (skImageFilter == null)
+            {
+                return null;
+            }
+
             AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
-        public IntPtr CreateDropShadow(float dx, float dy, float sigmaX, float sigmaY, Color color,
+        public IntPtr? CreateDropShadow(float dx, float dy, float sigmaX, float sigmaY, Color color,
             ImageFilter? input)
         {
             SKImageFilter? inputFilter = null;
@@ -81,19 +97,27 @@ namespace Drawie.Skia.Implementations
             }
 
             var skImageFilter = SKImageFilter.CreateDropShadow(dx, dy, sigmaX, sigmaY, color.ToSKColor(), inputFilter);
+
+            if (skImageFilter == null)
+                return null;
+
             AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
-        public IntPtr CreateShader(Shader shader, bool dither)
+        public IntPtr? CreateShader(Shader shader, bool dither)
         {
             var skShader = ShaderImplementation[shader.ObjectPointer];
             var skImageFilter = SKImageFilter.CreateShader(skShader, dither);
+
+            if (skImageFilter == null)
+                return null;
+
             AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
-        public IntPtr CreateImage(Image image)
+        public IntPtr? CreateImage(Image image)
         {
             if (image == null)
             {
@@ -103,11 +127,15 @@ namespace Drawie.Skia.Implementations
 
             SKImage target = ImageImplementation[image.ObjectPointer];
             var skImageFilter = SKImageFilter.CreateImage(target);
+
+            if (skImageFilter == null)
+                return null;
+
             AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
-        public IntPtr CreateTile(RectD source, RectD dest, ImageFilter input)
+        public IntPtr? CreateTile(RectD source, RectD dest, ImageFilter input)
         {
             if (input == null)
             {
@@ -116,6 +144,10 @@ namespace Drawie.Skia.Implementations
 
             var skImageFilter = SKImageFilter.CreateTile(source.ToSKRect(), dest.ToSKRect(),
                 this[input.ObjectPointer]);
+
+            if (skImageFilter == null)
+                return null;
+
             AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
@@ -125,7 +157,7 @@ namespace Drawie.Skia.Implementations
             UnmanageAndDispose(objectPointer);
         }
 
-        public IntPtr CreateBlendMode(Blender blendMode, ImageFilter? background, ImageFilter? foreground)
+        public IntPtr? CreateBlendMode(Blender blendMode, ImageFilter? background, ImageFilter? foreground)
         {
             SKImageFilter? bgFilter = null;
             SKImageFilter? fgFilter = null;
@@ -143,26 +175,45 @@ namespace Drawie.Skia.Implementations
             var skBlender = DrawingBackendApi.Current.BlenderImplementation
                 .GetNativeObject(blendMode.ObjectPointer) as SKBlender;
 
+            if (skBlender == null)
+                return null;
+
             var skImageFilter = SKImageFilter.CreateBlendMode(skBlender, fgFilter, bgFilter);
+
+            if (skImageFilter == null)
+                return null;
+
             AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
-        public IntPtr CreateBlur(float sigmaX, float sigmaY, TileMode timeMode)
+        public IntPtr? CreateBlur(float sigmaX, float sigmaY, TileMode timeMode)
         {
             var skImageFilter = SKImageFilter.CreateBlur(sigmaX, sigmaY, (SKShaderTileMode)timeMode);
+
+            if (skImageFilter == null)
+            {
+                return null;
+            }
+
             AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
-        public IntPtr CreateDilate(float radiusX, float radiusY)
+        public IntPtr? CreateDilate(float radiusX, float radiusY)
         {
             var skImageFilter = SKImageFilter.CreateDilate(radiusX, radiusY);
+
+            if (skImageFilter == null)
+            {
+                return null;
+            }
+
             AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
 
-        public IntPtr CreateMerge(ImageFilter[] filters)
+        public IntPtr? CreateMerge(ImageFilter[] filters)
         {
             SKImageFilter[] skFilters = new SKImageFilter[filters.Length];
             for (int i = 0; i < filters.Length; i++)
@@ -171,6 +222,10 @@ namespace Drawie.Skia.Implementations
             }
 
             var skImageFilter = SKImageFilter.CreateMerge(skFilters);
+
+            if (skImageFilter == null)
+                return null;
+
             AddManagedInstance(skImageFilter);
             return skImageFilter.Handle;
         }
