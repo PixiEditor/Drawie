@@ -1,4 +1,5 @@
 ﻿using Drawie.Backend.Core.Bridge;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.ColorsImpl
 {
@@ -322,6 +323,16 @@ namespace Drawie.Backend.Core.ColorsImpl
             h *= 360f;
             s *= 100f;
             v *= 100f;
+        }
+
+        public static ColorF FromVec4D(Vec4D value)
+        {
+            return new ColorF((float)value.X, (float)value.Y, (float)value.Z, (float)value.W);
+        }
+        
+        public Vec4D ToVec4D()
+        {
+            return new Vec4D(this.R, this.G, this.B, this.A);
         }
 
         /// <summary>Returns the color as a string in the format: #AARRGGBB.</summary>

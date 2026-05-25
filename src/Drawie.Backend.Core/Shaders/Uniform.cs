@@ -10,11 +10,11 @@ public struct Uniform
     public float FloatValue { get; }
 
     public int IntValue { get; }
-    public float[] FloatArrayValue { get; }
+    public float[]? FloatArrayValue { get; }
 
-    public int[] IntArrayValue { get; }
-    public Shader ShaderValue { get; }
-    public Color ColorValue { get; }
+    public int[]? IntArrayValue { get; }
+    public Shader? ShaderValue { get; }
+    public ColorF ColorValue { get; }
     public VecD Vector2Value { get; }
     public VecI Vector2IntValue { get; }
     public Vec3D Vector3Value { get; }
@@ -72,10 +72,10 @@ public struct Uniform
         UniformName = "shader";
     }
 
-    public Uniform(string name, Color color)
+    public Uniform(string name, ColorF color)
     {
         Name = name;
-        FloatArrayValue = new float[] { color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f };
+        FloatArrayValue = new float[] { color.R, color.G, color.B, color.A };
         ColorValue = color;
         DataType = UniformValueType.Color;
         LayoutOf = "color";

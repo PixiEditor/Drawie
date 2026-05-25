@@ -24,6 +24,7 @@ public struct Vec4D
     public double LengthSquared => X * X + Y * Y + Z * Z + W * W;
 
     public static Vec4D Zero { get; } = new(0, 0, 0, 0);
+    public static Vec4D One { get; } = new(1, 1, 1, 1);
 
     public Vec4D(double x, double y, double z, double w)
     {
