@@ -217,12 +217,17 @@ public static class ShaderMath
 
     public static Expression? MultiplyAdd(ShaderExpressionVariable a, ShaderExpressionVariable b, ShaderExpressionVariable c)
     {
-        return new Expression($"fma({a.ExpressionValue}, {b.ExpressionValue}, {c.ExpressionValue})");
+        return new Expression($"({a.ExpressionValue} * {b.ExpressionValue} + {c.ExpressionValue})");
     }
 
     public static Expression? Dot(Float2 a, Float2 b)
     {
         return new Expression($"dot({a.ExpressionValue}, {b.ExpressionValue})");
+    }
+
+    public static Expression? Cross(Float2 a, Float2 b)
+    {
+        return new Expression($"({a.ExpressionValue}.x * {b.ExpressionValue}.y - {a.ExpressionValue}.y * {b.ExpressionValue}.x)");
     }
 
     public static Expression? Scale(Float2 a, Float1 b)
