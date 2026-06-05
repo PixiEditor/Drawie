@@ -256,6 +256,16 @@ namespace Drawie.Backend.Core.ColorsImpl
             double a = this.A / 255.0;
             return new Vec4D(r, g, b, a);
         }
+        
+        public static Color FromVec4D(Vec4D value)
+        {
+            return new Color(
+                (byte)(value.X * byte.MaxValue), 
+                (byte)(value.Y * byte.MaxValue), 
+                (byte)(value.Z * byte.MaxValue), 
+                (byte)(value.W * byte.MaxValue)
+            );
+        }
 
         public static Color FromArgb(byte a, byte r, byte g, byte b)
         {
