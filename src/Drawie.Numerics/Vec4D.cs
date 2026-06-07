@@ -164,7 +164,7 @@ public struct Vec4D
 
     public override string ToString()
     {
-        return $"({X}; {Y}; {Z}; {W})";
+        return $"({X:F3}; {Y:F3}; {Z:F3}; {W:F3})";
     }
 
     public override bool Equals(object? obj)
