@@ -63,6 +63,15 @@ public struct Vec4D
         return new Vec4D(X / Length, Y / Length, Z / Length, W / Length);
     }
 
+    public Vec4D Clamp(double from, double to)
+    {
+        double newX = Math.Min(Math.Max(from, X), to);
+        double newY = Math.Min(Math.Max(from, Y), to);
+        double newZ = Math.Min(Math.Max(from, Z), to);
+        double newW = Math.Min(Math.Max(from, W), to);
+        return new Vec4D(newX, newY, newZ, newW);
+    }
+
     public Vec4D Abs()
     {
         return new Vec4D(Math.Abs(X), Math.Abs(Y), Math.Abs(Z), Math.Abs(W));
@@ -87,7 +96,7 @@ public struct Vec4D
 
     public static Vec4D operator +(Vec4D a, Vec4D b)
     {
-        return new Vec4D(a.X * b.X, a.Y * b.Y, a.Z * b.Z, a.W * b.W);
+        return new Vec4D(a.X + b.X, a.Y + b.Y, a.Z + b.Z, a.W + b.W);
     }
 
     public static Vec4D operator -(Vec4D a, Vec4D b)
