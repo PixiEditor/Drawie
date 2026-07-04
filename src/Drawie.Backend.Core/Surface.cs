@@ -26,7 +26,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     private Paint drawingPaint = new Paint() { BlendMode = BlendMode.Src };
 
     private Paint nearestNeighborReplacingPaint =
-        new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
+        new() { BlendMode = BlendMode.Src };
 
     public ImageInfo ImageInfo { get; }
 
@@ -128,17 +128,14 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
             ImageInfo.ColorSpace ?? ColorSpace.CreateSrgb()));
         using Paint paint = new();
 
-        FilterQuality filterQuality = resizeMethod switch
+        SamplingOptions filterQuality = resizeMethod switch
         {
-            ResizeMethod.HighQuality => FilterQuality.High,
-            ResizeMethod.MediumQuality => FilterQuality.Medium,
-            ResizeMethod.LowQuality => FilterQuality.Low,
-            _ => FilterQuality.None
+            ResizeMethod.HighQuality => SamplingOptions.Bilinear,
+            ResizeMethod.MediumQuality => SamplingOptions.Bicubic,
+            _ => SamplingOptions.Default,
         };
 
-        paint.FilterQuality = filterQuality;
-
-        newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y), paint);
+        newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, Size.X, Size.Y), new RectD(0, 0, newSize.X, newSize.Y), paint, filterQuality);
         return newSurface;
     }
 

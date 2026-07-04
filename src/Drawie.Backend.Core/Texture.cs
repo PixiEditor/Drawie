@@ -32,7 +32,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
     private HashSet<object> lockDisposes = new();
 
     private Paint nearestNeighborReplacingPaint =
-        new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
+        new() { BlendMode = BlendMode.Src };
 
     public Texture(VecI size)
         : this(new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb())
@@ -194,28 +194,6 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         return surface;
     }
 
-    public Texture CreateResized(VecI newSize, ResizeMethod method)
-    {
-        using var ctx = EnsureContext();
-        using Image image = DrawingSurface.Snapshot();
-        Texture newTexture = new(newSize);
-        using Paint paint = new();
-
-        FilterQuality filterQuality = method switch
-        {
-            ResizeMethod.HighQuality => FilterQuality.High,
-            ResizeMethod.MediumQuality => FilterQuality.Medium,
-            ResizeMethod.LowQuality => FilterQuality.Low,
-            _ => FilterQuality.None
-        };
-
-        paint.FilterQuality = filterQuality;
-
-        newTexture.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y), paint);
-
-        return newTexture;
-    }
-
     public void CopyTo(Texture destination)
     {
         destination.DrawingSurface.Canvas.DrawSurface(DrawingSurface, 0, 0);
@@ -240,15 +218,14 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         return newSurface;
     }
 
-    public Texture Resize(VecI newSize, FilterQuality quality)
+    public Texture Resize(VecI newSize, SamplingOptions quality)
     {
         using var ctx = EnsureContext();
         using Image image = DrawingSurface.Snapshot();
         using Paint paint = new();
-        paint.FilterQuality = quality;
         Texture newSurface = new(newSize);
-        newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y),
-            paint);
+        newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, Size.X, Size.Y), new RectD(0, 0, newSize.X, newSize.Y),
+            paint, quality);
         return newSurface;
     }
 

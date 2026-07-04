@@ -23,6 +23,8 @@ namespace Drawie.Skia.Implementations
         private readonly SkObjectImplementation<SKFont> _fontImpl;
         private readonly SkObjectImplementation<SKVertices> _verticesImpl;
 
+        private static SKFont defaultFont = new SKFont(SKTypeface.Default);
+
         public SkiaCanvasImplementation(SkObjectImplementation<SKPaint> paintImpl,
             SkObjectImplementation<SKImage> imageImpl, SkObjectImplementation<SKBitmap> bitmapImpl,
             SkObjectImplementation<SKPath> pathImpl, SkObjectImplementation<SKFont> fontImpl,
@@ -53,6 +55,15 @@ namespace Drawie.Skia.Implementations
             canvas.DrawSurface(
                 _surfaceImpl[drawingSurface.ObjectPointer],
                 x, y,
+                paint != null ? _paintImpl[paint.ObjectPointer] : null);
+        }
+
+        public void DrawSurface(IntPtr objPtr, DrawingSurface drawingSurface, float x, float y, Paint? paint, SamplingOptions sampling)
+        {
+            var canvas = this[objPtr];
+            canvas.DrawSurface(
+                _surfaceImpl[drawingSurface.ObjectPointer],
+                x, y, sampling.ToSkSamplingOptions(),
                 paint != null ? _paintImpl[paint.ObjectPointer] : null);
         }
 
@@ -278,7 +289,7 @@ namespace Drawie.Skia.Implementations
 
         public void DrawText(IntPtr objPtr, string text, float x, float y, Paint paint)
         {
-            this[objPtr].DrawText(text, x, y, _paintImpl[paint.ObjectPointer]);
+            this[objPtr].DrawText(text, new SKPoint(x, y), SKTextAlign.Left, defaultFont, _paintImpl[paint.ObjectPointer]);
         }
         
         public void DrawText(IntPtr objPtr, string text, float x, float y, Font font, Paint paint)
