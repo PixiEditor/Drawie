@@ -1,10 +1,18 @@
 ﻿using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
+using Drawie.Backend.Core.Shaders;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations;
 
 public class SkiaBlenderImplementation : SkObjectImplementation<SKBlender>, IBlenderImplementation
 {
+    private SkiaShaderImplementation shaderImpl;
+
+    public SkiaBlenderImplementation(SkiaShaderImplementation shaderImpl)
+    {
+        this.shaderImpl = shaderImpl;
+    }
+
     public IntPtr CreateFromString(string blenderCode, out string? errors)
     {
         using var effect = SKRuntimeEffect.CreateBlender(blenderCode, out errors);
@@ -14,6 +22,27 @@ public class SkiaBlenderImplementation : SkObjectImplementation<SKBlender>, IBle
         }
 
         var blender = effect.ToBlender();
+        if (blender == null)
+        {
+            return IntPtr.Zero;
+        }
+
+        AddManagedInstance(blender);
+
+        return blender.Handle;
+    }
+
+    public IntPtr CreateFromString(string blenderCode, Uniforms uniforms, out string? errors)
+    {
+        using var effect = SKRuntimeEffect.CreateBlender(blenderCode, out errors);
+        if (!string.IsNullOrEmpty(errors) || effect == null)
+        {
+            return IntPtr.Zero;
+        }
+        var declaration = SkiaShaderImplementation.DeclarationsFromEffect(blenderCode, effect);
+        SKRuntimeEffectUniforms effectUniforms = SkiaShaderImplementation.UniformsToSkUniforms(uniforms, declaration, effect);
+        SKRuntimeEffectChildren effectChildren = SkiaShaderImplementation.UniformsToSkChildren(uniforms, effect, shaderImpl);
+        var blender = effect.ToBlender(effectUniforms, effectChildren);
         AddManagedInstance(blender);
 
         return blender.Handle;

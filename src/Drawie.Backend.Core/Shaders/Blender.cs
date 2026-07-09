@@ -21,6 +21,18 @@ public class Blender : NativeObject
         return new Blender(objPtr);
     }
 
+    public static Blender? CreateFromString(string blenderCode, Uniforms uniforms, out string? errors)
+    {
+        var objPtr =
+            DrawingBackendApi.Current.BlenderImplementation.CreateFromString(blenderCode, uniforms, out errors);
+        if (objPtr == IntPtr.Zero)
+        {
+            return null;
+        }
+
+        return new Blender(objPtr);
+    }
+
     public override void Dispose()
     {
         DrawingBackendApi.Current.BlenderImplementation.Dispose(ObjectPointer);

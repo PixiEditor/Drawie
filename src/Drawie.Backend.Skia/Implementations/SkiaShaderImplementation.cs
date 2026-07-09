@@ -377,7 +377,7 @@ namespace Drawie.Skia.Implementations
             declarations.Remove(shaderObjPointer, out var declaration);
         }
 
-        private SKRuntimeEffectUniforms UniformsToSkUniforms(Uniforms uniforms, List<UniformDeclaration> declarations,
+        internal static SKRuntimeEffectUniforms UniformsToSkUniforms(Uniforms uniforms, List<UniformDeclaration> declarations,
             SKRuntimeEffect effect)
         {
             SKRuntimeEffectUniforms skUniforms = new SKRuntimeEffectUniforms(effect);
@@ -441,7 +441,7 @@ namespace Drawie.Skia.Implementations
             return skUniforms;
         }
 
-        private SKRuntimeEffectChildren UniformsToSkChildren(Uniforms uniforms, SKRuntimeEffect effect)
+        internal static SKRuntimeEffectChildren UniformsToSkChildren(Uniforms uniforms, SKRuntimeEffect effect, SkiaShaderImplementation impl)
         {
             SKRuntimeEffectChildren skChildren = new SKRuntimeEffectChildren(effect);
             foreach (var uniform in uniforms)
@@ -454,14 +454,19 @@ namespace Drawie.Skia.Implementations
                 if (uniform.Value.DataType == UniformValueType.Shader)
                 {
                     skChildren.Add(uniform.Value.Name,
-                        uniform.Value.ShaderValue == null ? null : this[uniform.Value.ShaderValue.ObjectPointer]);
+                        uniform.Value.ShaderValue == null ? null : impl[uniform.Value.ShaderValue.ObjectPointer]);
                 }
             }
 
             return skChildren;
         }
 
-        private static List<UniformDeclaration> DeclarationsFromEffect(string code, SKRuntimeEffect effect)
+        internal SKRuntimeEffectChildren UniformsToSkChildren(Uniforms uniforms, SKRuntimeEffect effect)
+        {
+            return UniformsToSkChildren(uniforms, effect, this);
+        }
+
+        internal static List<UniformDeclaration> DeclarationsFromEffect(string code, SKRuntimeEffect effect)
         {
             List<UniformDeclaration> declarations = new();
             foreach (var uniform in effect.Uniforms)
