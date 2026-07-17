@@ -72,43 +72,43 @@ public class Shader : NativeObject
         DrawingBackendApi.Current.ShaderImplementation.Dispose(ObjectPointer);
     }
 
-    public static Shader CreateLinearGradient(VecD p1, VecD p2, Color[] colors)
+    public static Shader? CreateLinearGradient(VecD p1, VecD p2, Color[] colors)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateLinearGradient(p1, p2, colors);
     }
 
 
-    public static Shader CreateLinearGradient(VecD p1, VecD p2, Color[] colors, float[] offsets, Matrix3X3 localMatrix)
+    public static Shader? CreateLinearGradient(VecD p1, VecD p2, Color[] colors, float[] offsets, Matrix3X3 localMatrix)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateLinearGradient(p1, p2, colors, offsets,
             localMatrix);
     }
 
-    public static Shader CreateLinearGradient(VecD p1, VecD p2, Color[] colors, float[] offsets)
+    public static Shader? CreateLinearGradient(VecD p1, VecD p2, Color[] colors, float[] offsets)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateLinearGradient(p1, p2, colors, offsets);
     }
 
-    public static Shader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves,
+    public static Shader? CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves,
         float seed)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreatePerlinNoiseTurbulence(baseFrequencyX,
             baseFrequencyY, numOctaves, seed);
     }
 
-    public static Shader CreateRadialGradient(VecD center, float radius, Color[] colors)
+    public static Shader? CreateRadialGradient(VecD center, float radius, Color[] colors)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateRadialGradient(center, radius, colors);
     }
 
-    public static Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
+    public static Shader? CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
         Matrix3X3 localMatrix)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateRadialGradient(center, radius, colors, colorPos,
             localMatrix);
     }
 
-    public static Shader CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
+    public static Shader? CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
         TileMode tileMode)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreateRadialGradient(center, radius, colors, colorPos,
@@ -130,7 +130,7 @@ public class Shader : NativeObject
             angle, localMatrix);
     }
 
-    public static Shader CreatePerlinFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves,
+    public static Shader? CreatePerlinFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves,
         float seed)
     {
         return DrawingBackendApi.Current.ShaderImplementation.CreatePerlinFractalNoise(baseFrequencyX, baseFrequencyY,

@@ -214,4 +214,44 @@ public static class ShaderMath
     {
         return new Expression($"distance({a.ExpressionValue}, {b.ExpressionValue})");
     }
+
+    public static Expression? MultiplyAdd(ShaderExpressionVariable a, ShaderExpressionVariable b, ShaderExpressionVariable c)
+    {
+        return new Expression($"({a.ExpressionValue} * {b.ExpressionValue} + {c.ExpressionValue})");
+    }
+
+    public static Expression? Dot(Float2 a, Float2 b)
+    {
+        return new Expression($"dot({a.ExpressionValue}, {b.ExpressionValue})");
+    }
+
+    public static Expression? Cross(Float2 a, Float2 b)
+    {
+        return new Expression($"({a.ExpressionValue}.x * {b.ExpressionValue}.y - {a.ExpressionValue}.y * {b.ExpressionValue}.x)");
+    }
+
+    public static Expression? Scale(Float2 a, Float1 b)
+    {
+        return new Expression($"({a.ExpressionValue} * {b.ExpressionValue})");
+    }
+
+    public static Expression? Normalize(Float2 float2)
+    {
+        return new Expression($"normalize({float2.ExpressionValue})");
+    }
+
+    public static Expression? Sign(Float2 float2)
+    {
+        return new Expression($"sign({float2.ExpressionValue})");
+    }
+
+    public static Expression? Wrap(Float2 value, Float2 min, Float2 max)
+    {
+        return new Expression($"mod({value.ExpressionValue} - {min.ExpressionValue}, {max.ExpressionValue} - {min.ExpressionValue}) + {min.ExpressionValue}");
+    }
+
+    public static Expression? Snap(Float2 float2, Float2 float3)
+    {
+        return new Expression($"floor({float2.ExpressionValue} / {float3.ExpressionValue}) * {float3.ExpressionValue}");
+    }
 }

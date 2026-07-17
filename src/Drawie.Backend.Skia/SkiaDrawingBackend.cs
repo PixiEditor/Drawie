@@ -80,7 +80,7 @@ namespace Drawie.Skia
             SkiaPathEffectImplementation pathEffectImpl = new SkiaPathEffectImplementation();
             PathEffectImplementation = pathEffectImpl;
 
-            var blenderImpl = new SkiaBlenderImplementation();
+            var blenderImpl = new SkiaBlenderImplementation(shader);
             BlenderImplementation = blenderImpl;
 
             SkiaPaintImplementation paintImpl =
