@@ -119,6 +119,11 @@ public class ShaderBuilder
         _bodyBuilder.AppendLine($"return {colorValue.ConstantValueString};");
     }
 
+    public void AddUniform(string uniformName, Color color)
+    {
+        Uniforms[uniformName] = new Uniform(uniformName, color);
+    }
+
     public void AddUniform(string uniformName, Vec4D vec4dValue)
     {
         Uniforms[uniformName] = new Uniform(uniformName, vec4dValue);
