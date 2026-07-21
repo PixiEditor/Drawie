@@ -399,4 +399,26 @@ public struct RectD : IEquatable<RectD>
     {
         return left >= other.left && right <= other.right && top >= other.top && bottom <= other.bottom;
     }
+
+    public RectD? Difference(RectD other)
+    {
+        if (!IntersectsWithInclusive(other))
+            return this;
+
+        if (other.IsFullyInside(this))
+            return null;
+
+        double newLeft = Math.Max(left, other.left);
+        double newTop = Math.Max(top, other.top);
+        double newRight = Math.Min(right, other.right);
+        double newBottom = Math.Min(bottom, other.bottom);
+
+        return new RectD()
+        {
+            Left = newLeft,
+            Top = newTop,
+            Right = newRight,
+            Bottom = newBottom
+        };
+    }
 }
