@@ -19,6 +19,11 @@ namespace Drawie.Skia
         {
             return new SKColor(color.R, color.G, color.B, color.A);
         }
+        
+        public static SKColorF ToSKColorF(this ColorF color)
+        {
+            return new SKColorF(color.R, color.G, color.B, color.A);
+        }
 
         public static SKMatrix ToSkMatrix(this Matrix3X3 matrix)
         {

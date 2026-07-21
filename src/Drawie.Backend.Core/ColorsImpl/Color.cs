@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 using Drawie.Backend.Core.Numerics;
-using Drawie.Backend.Core.Surfaces.ImageData;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.ColorsImpl
 {
@@ -248,13 +248,23 @@ namespace Drawie.Backend.Core.ColorsImpl
             return $"#{this._colorValue:X8}";
         }
 
-        public static Color Lerp(Color from, Color to, double t)
+        public Vec4D ToVec4D()
         {
-            byte r = (byte)(from.R + (to.R - from.R) * t);
-            byte g = (byte)(from.G + (to.G - from.G) * t);
-            byte b = (byte)(from.B + (to.B - from.B) * t);
-            byte a = (byte)(from.A + (to.A - from.A) * t);
-            return new Color(r, g, b, a);
+            double r = this.R / 255.0;
+            double g = this.G / 255.0;
+            double b = this.B / 255.0;
+            double a = this.A / 255.0;
+            return new Vec4D(r, g, b, a);
+        }
+        
+        public static Color FromVec4D(Vec4D value)
+        {
+            return new Color(
+                (byte)(value.X * byte.MaxValue), 
+                (byte)(value.Y * byte.MaxValue), 
+                (byte)(value.Z * byte.MaxValue), 
+                (byte)(value.W * byte.MaxValue)
+            );
         }
 
         public static Color FromArgb(byte a, byte r, byte g, byte b)

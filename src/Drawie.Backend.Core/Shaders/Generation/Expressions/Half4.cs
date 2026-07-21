@@ -1,8 +1,9 @@
 ﻿using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Shaders.Generation.Expressions;
 
-public class Half4(string name) : ShaderExpressionVariable<Color>(name), IMultiValueVariable
+public class Half4(string name) : ShaderExpressionVariable<Vec4D>(name), IMultiValueVariable
 {
     private Expression? _overrideExpression;
     private Expression? _rOverrideExpression;
@@ -10,35 +11,37 @@ public class Half4(string name) : ShaderExpressionVariable<Color>(name), IMultiV
     private Expression? _bOverrideExpression;
     private Expression? _aOverrideExpression;
 
+    public Half4(Vec4D constantValue) : this("")
+    {
+        this.ConstantValue = constantValue;
+    }
+    
     public override string ConstantValueString =>
-        $"half4({ConstantValue.R}, {ConstantValue.G}, {ConstantValue.B}, {ConstantValue.A})";
+        $"half4({ConstantValue.X}, {ConstantValue.Y}, {ConstantValue.Z}, {ConstantValue.W})";
 
     public Float1 R =>
         new Half4Float1Accessor(this, 'r')
         {
-            ConstantValue = ConstantValue.R, OverrideExpression = _rOverrideExpression
+            ConstantValue = ConstantValue.X, OverrideExpression = _rOverrideExpression
         };
 
     public Float1 G =>
         new Half4Float1Accessor(this, 'g')
         {
-            ConstantValue = ConstantValue.G, OverrideExpression = _gOverrideExpression
+            ConstantValue = ConstantValue.Y, OverrideExpression = _gOverrideExpression
         };
 
     public Float1 B =>
         new Half4Float1Accessor(this, 'b')
         {
-            ConstantValue = ConstantValue.B, OverrideExpression = _bOverrideExpression
+            ConstantValue = ConstantValue.Z, OverrideExpression = _bOverrideExpression
         };
 
     public Float1 A =>
         new Half4Float1Accessor(this, 'a')
         {
-            ConstantValue = ConstantValue.A, OverrideExpression = _aOverrideExpression
+            ConstantValue = ConstantValue.W, OverrideExpression = _aOverrideExpression
         };
-
-    public static implicit operator Half4(Color value) => new("") { ConstantValue = value };
-    public static explicit operator Color(Half4 value) => value.ConstantValue;
 
     public override Expression? OverrideExpression
     {
@@ -95,16 +98,16 @@ public class Half4(string name) : ShaderExpressionVariable<Color>(name), IMultiV
             switch (i)
             {
                 case 0:
-                    ConstantValue = new Color(byteValue, ConstantValue.G, ConstantValue.B, ConstantValue.A);
+                    ConstantValue = new Vec4D(byteValue, ConstantValue.Y, ConstantValue.Z, ConstantValue.W);
                     break;
                 case 1:
-                    ConstantValue = new Color(ConstantValue.R, byteValue, ConstantValue.B, ConstantValue.A);
+                    ConstantValue = new Vec4D(ConstantValue.X, byteValue, ConstantValue.Z, ConstantValue.W);
                     break;
                 case 2:
-                    ConstantValue = new Color(ConstantValue.R, ConstantValue.G, byteValue, ConstantValue.A);
+                    ConstantValue = new Vec4D(ConstantValue.X, ConstantValue.Y, byteValue, ConstantValue.W);
                     break;
                 case 3:
-                    ConstantValue = new Color(ConstantValue.R, ConstantValue.G, ConstantValue.B, byteValue);
+                    ConstantValue = new Vec4D(ConstantValue.X, ConstantValue.Y, ConstantValue.Z, byteValue);
                     break;
                 default:
                     throw new IndexOutOfRangeException();

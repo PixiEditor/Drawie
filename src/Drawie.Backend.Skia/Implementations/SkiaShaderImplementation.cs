@@ -396,7 +396,7 @@ namespace Drawie.Skia.Implementations
                 }
                 else if (declaration.DataType == UniformValueType.Color)
                 {
-                    skUniforms.Add(uniform.Value.Name, uniform.Value.ColorValue.ToSKColor());
+                    skUniforms.Add(uniform.Value.Name, uniform.Value.ColorValue.ToSKColorF());
                 }
                 else if (declaration.DataType == UniformValueType.Vector2)
                 {

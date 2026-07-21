@@ -124,6 +124,11 @@ public class ShaderBuilder
         Uniforms[uniformName] = new Uniform(uniformName, color);
     }
 
+    public void AddUniform(string uniformName, Vec4D vec4dValue)
+    {
+        Uniforms[uniformName] = new Uniform(uniformName, vec4dValue);
+    }
+
     public void AddUniform(string coords, VecD constCoordsConstantValue)
     {
         Uniforms[coords] = new Uniform(coords, constCoordsConstantValue);
