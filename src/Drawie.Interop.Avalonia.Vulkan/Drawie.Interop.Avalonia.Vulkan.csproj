@@ -23,6 +23,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)"/>
+        <PackageReference Include="Avalonia" Version="12.1.1" />
     </ItemGroup>
 </Project>

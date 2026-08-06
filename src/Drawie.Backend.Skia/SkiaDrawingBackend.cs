@@ -171,7 +171,7 @@ namespace Drawie.Skia
 
         private void SetupAngleOpenGl(IOpenGlContext openGlContext)
         {
-            GRGlInterface glInterface = GRGlInterface.CreateAngle(openGlContext.GetGlInterface);
+            GRGlInterface glInterface = GRGlInterface.Create(openGlContext.GetGlInterface);
             GraphicsContext = GRContext.CreateGl(glInterface, new GRContextOptions()
             {
                 AvoidStencilBuffers = true
