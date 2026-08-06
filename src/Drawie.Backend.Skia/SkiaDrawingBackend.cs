@@ -61,6 +61,9 @@ namespace Drawie.Skia
 
         public SkiaDrawingBackend()
         {
+            SKColorSpace.CreateSrgb();
+            SKColorSpace.CreateSrgbLinear();
+
             ColorImplementation = new SkiaColorImplementation();
 
             SkiaImgDataImplementation dataImpl = new SkiaImgDataImplementation();
