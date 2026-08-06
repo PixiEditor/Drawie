@@ -26,7 +26,7 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
     private Paint drawingPaint = new Paint() { BlendMode = BlendMode.Src };
 
     private Paint nearestNeighborReplacingPaint =
-        new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
+        new() { BlendMode = BlendMode.Src };
 
     public ImageInfo ImageInfo { get; }
 
@@ -135,8 +135,6 @@ public class Surface : IDisposable, ICloneable, IPixelsMap
             ResizeMethod.LowQuality => FilterQuality.Low,
             _ => FilterQuality.None
         };
-
-        paint.FilterQuality = filterQuality;
 
         newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y), paint);
         return newSurface;

@@ -10,12 +10,12 @@
 
   <ItemGroup>
     <PackageReference Include="BmpSharp" Version="0.2.0" />
-    <PackageReference Include="SkiaSharp" Version="$(SkiaSharpVersion)" />
-    <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="$(SkiaSharpVersion)" />
+    <PackageReference Include="SkiaSharp" Version="4.151.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="4.151.1" />
   </ItemGroup>
 
   <ItemGroup Condition="$([MSBuild]::IsOsPlatform('Linux'))">
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="$(SkiaSharpVersion)" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="4.151.1" />
   </ItemGroup>
 
   <ItemGroup Condition="$([MSBuild]::IsOsPlatform('OSX'))">

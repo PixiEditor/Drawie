@@ -32,7 +32,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap
     private HashSet<object> lockDisposes = new();
 
     private Paint nearestNeighborReplacingPaint =
-        new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
+        new() { BlendMode = BlendMode.Src };
 
     public NativeTexture(VecI size)
         : this(new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb())
@@ -209,8 +209,6 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap
             _ => FilterQuality.None
         };
 
-        paint.FilterQuality = filterQuality;
-
         newNativeTexture.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y), paint);
 
         return newNativeTexture;
@@ -245,7 +243,6 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap
         using var ctx = EnsureContext();
         using Image image = DrawingSurface.Snapshot();
         using Paint paint = new();
-        paint.FilterQuality = quality;
         NativeTexture newSurface = new(newSize);
         newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y),
             paint);
