@@ -36,7 +36,7 @@ public class RichText
         FormattedText = text.Replace('\n', ' ');
         Lines = text.Split('\n');
     }
-
+    
     public void Paint(Canvas canvas, VecD position, Font font, Paint paint, VectorPath? onPath, VecD? pathOffset = null)
     {
         if (pathOffset == null)

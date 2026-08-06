@@ -2,7 +2,7 @@
 
 namespace Drawie.RenderApi.WebGl;
 
-public class WebGlTexture : IWebGlTexture, IDisposable
+public class WebGlTexture : IWebGlTexture
 {
     public int Gl { get; private set; }
     public int TextureId { get; private set; }
@@ -13,10 +13,5 @@ public class WebGlTexture : IWebGlTexture, IDisposable
     {
         TextureId = textureId;
         Gl = gl;
-    }
-
-    public void Dispose()
-    {
-        JSRuntime.DeleteTexture(Gl, TextureId);
     }
 }

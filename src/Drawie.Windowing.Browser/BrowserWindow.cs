@@ -46,6 +46,7 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
     public event Action<TextureFramebuffer, double>? Render;
 
     private Texture renderTexture;
+    private VecI? pendingResize = null;
     private GraphicsStore store;
 
     public void Initialize()
@@ -59,8 +60,7 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
 
     private void FramebufferResized()
     {
-        store.Dispose();
-        renderTexture = CreateRenderTexture();
+        pendingResize = UsableWindowSize;
     }
 
     public void Show()
@@ -74,12 +74,31 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
     {
         double deltaTime = dt / 1000.0;
         Update?.Invoke(deltaTime);
+        if (pendingResize.HasValue)
+        {
+            if (pendingResize.Value != renderTexture.Size)
+            {
+                var newRenderTexture = CreateRenderTexture();
+                
+                var oldTexture = renderTexture;
+                renderTexture = newRenderTexture;
+                
+                store.DisposeTexture(oldTexture);
+            }
+
+            pendingResize = null;
+        }
+
         RenderApi.PrepareTextureToWrite();
-        RenderingContext ctx = new RenderingContext();
-        using var renderingScope = ctx.Open();
-        using var fbo = ctx.Edit(renderTexture);
+        RenderingContext ctx = new RenderingContext(RenderApi.GraphicsContext);
+        var renderingScope = ctx.Open();
+        var fbo = ctx.Edit(renderTexture);
         fbo.Clear();
         Render?.Invoke(fbo, dt);
+        fbo.Dispose();
+        renderingScope.Dispose();
+        ctx.Dispose();
+        RenderApi.Render(dt);
         BrowserInterop.RequestAnimationFrame(OnRender);
     }
 
@@ -90,7 +109,6 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
     private void OnWindowResized(int width, int height)
     {
         RenderApi?.UpdateFramebufferSize(width, height);
-        BrowserInterop.RequestAnimationFrame(OnRender);
     }
 
     private Texture CreateRenderTexture()

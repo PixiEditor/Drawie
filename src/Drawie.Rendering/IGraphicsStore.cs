@@ -1,3 +1,4 @@
+using System.Text;
 using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Numerics;
@@ -10,23 +11,43 @@ namespace Drawie.Rendering;
 /// </summary>
 public class GraphicsStore : IDisposable
 {
+#if DEBUG
+    public static List<GraphicsStore> AllStores = new List<GraphicsStore>();
+#endif
     public IGraphicsContext GraphicsContext { get; set; }
     private List<Texture> textures = new List<Texture>();
-    
+
+    public bool IsDisposed { get; private set; }
+
     public GraphicsStore(IGraphicsContext graphicsContext)
     {
         GraphicsContext = graphicsContext;
+#if DEBUG
+        AllStores.Add(this);
+#endif
     }
-    
+
     public Texture CreateNativeRenderSurface(VecI size, ITexture nativeTexture, SurfaceOrigin origin)
     {
         if (!GraphicsContext.OwnsTexture(nativeTexture))
         {
             throw new ArgumentException("The given native texture is not owned by this graphics store.");
         }
-        
-        textures.Add(new Texture(NativeTexture.FromExisting(DrawingBackendApi.Current.CreateRenderSurface(size, nativeTexture, origin))));
+
+        textures.Add(new Texture(
+            NativeTexture.FromExisting(DrawingBackendApi.Current.CreateRenderSurface(size, nativeTexture, origin))));
         return textures[^1];
+    }
+    
+    public void DisposeTexture(Texture toDispose)
+    {
+        if(!textures.Contains(toDispose))
+        {
+            throw new ArgumentException("The given texture is not owned by this graphics store.");
+        }
+        
+        textures.Remove(toDispose);
+        toDispose.NativeTexture.Dispose();
     }
 
     public void Dispose()
@@ -35,5 +56,32 @@ public class GraphicsStore : IDisposable
         {
             texture.NativeTexture.Dispose();
         }
+
+        textures.Clear();
+        IsDisposed = true;
     }
+
+#if DEBUG
+    public string GetDebugText()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.AppendLine("GraphicsStore Debug Info:");
+        sb.AppendLine("Textures Count: " + textures.Count);
+        int totalMemoryMb = CountMemoryUsed(textures);
+        sb.AppendLine("Total Memory Used: " + totalMemoryMb + "MB");
+        return sb.ToString();
+    }
+
+    private int CountMemoryUsed(List<Texture> list)
+    {
+        int bytes = 0;
+        foreach (var texture in list)
+        {
+            bytes += texture.NativeTexture.ImageInfo.BytesSize;
+        }
+
+        return bytes / (1024 * 1024);
+    }
+#endif
 }

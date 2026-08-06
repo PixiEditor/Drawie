@@ -11,7 +11,12 @@ public class OpenGlGraphicsContext(GL Api, IGLContext GlContext) : IGraphicsCont
     {
         return nativeTexture is OpenGlTexture glTexture && ownedTextures.Contains(glTexture.TextureId);
     }
-    
+
+    public void MakeCurrent()
+    {
+        GlContext.MakeCurrent();
+    }
+
     public OpenGlTexture CreateTexture(uint id)
     {
         ownedTextures.Add(id);

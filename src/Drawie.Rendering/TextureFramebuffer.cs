@@ -1,4 +1,5 @@
 using Drawie.Backend.Core.ColorsImpl.Paintables;
+using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
 using Drawie.Rendering.Exceptions;
@@ -10,6 +11,8 @@ public class TextureFramebuffer : IDisposable
     internal Texture UnderlyingTexture { get; }
     public bool IsOpen { get; private set; }
     public VecI Size { get; }
+    public Canvas? Canvas => IsOpen ? UnderlyingTexture?.NativeTexture?.DrawingSurface?.Canvas : null;
+
 
     internal TextureFramebuffer(Texture texture)
     {

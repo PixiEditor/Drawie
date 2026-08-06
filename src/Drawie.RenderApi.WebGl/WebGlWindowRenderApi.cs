@@ -8,46 +8,18 @@ namespace Drawie.RenderApi.WebGl;
 
 public class WebGlWindowRenderApi : IWindowRenderApi
 {
-    private const string vertexSource = """
-                                        #version 300 es
-                                            in vec4 position;
-                                            in vec2 aTextureCoord;
-                                            
-                                            out highp vec2 vTextureCoord;
-                                            void main() {
-                                                gl_Position = position;
-                                                vTextureCoord = aTextureCoord;
-                                            }
-                                        """;
-
-    private const string fragSource = """
-                                      #version 300 es
-                                        precision highp float;
-                                        in highp vec2 vTextureCoord;
-                                      
-                                         uniform sampler2D uSampler;
-                                         out vec4 fragColor;
-                                      
-                                         void main(void) {
-                                           fragColor = texture(uSampler, vTextureCoord);
-                                         }
-                                      """;
-
     private HtmlCanvas canvasObject;
     public event Action? FramebufferResized;
     public ITexture RenderTexture => texture;
 
     public string CanvasId { get; private set; }
     
-    private int posBuffer;
-    private int program;
     public int gl;
 
     private WebGlTexture texture;
+    private int framebuffer;
     
-    private int vertexPosAttrib;
-    private int texCoordAttrib;
-    private int uSamplerUniform;
+    private VecI fbSize;
 
     public IGraphicsContext GraphicsContext => webglGraphicsContext;
     private WebGlGraphicsContext webglGraphicsContext;
@@ -65,19 +37,8 @@ public class WebGlWindowRenderApi : IWindowRenderApi
         
         JSRuntime.MakeContextCurrent(gl);
 
-        var vertexShader = LoadShader(gl, vertexSource, WebGlShaderType.Vertex);
-        var fragmentShader = LoadShader(gl, fragSource, WebGlShaderType.Fragment);
-        
-        program = InitProgram(gl, vertexShader, fragmentShader);
-        
-        posBuffer = InitBuffers(gl);
-        texture = CreateTexture(gl, framebufferSize.X, framebufferSize.Y);
-        InitTextureBuffer(gl);
-        
-        vertexPosAttrib = JSRuntime.GetAttribLocation(gl, program, "position");
-        texCoordAttrib = JSRuntime.GetAttribLocation(gl, program, "aTextureCoord");
-        uSamplerUniform = JSRuntime.GetUniformLocation(gl, program, "uSampler");
-
+        texture = CreateFramebuffer(gl, framebufferSize.X, framebufferSize.Y);
+        fbSize = framebufferSize;
     }
 
     public void DestroyInstance()
@@ -88,8 +49,7 @@ public class WebGlWindowRenderApi : IWindowRenderApi
     {
         canvasObject.SetAttribute("width", width.ToString());
         canvasObject.SetAttribute("height", height.ToString());
-        DisposeTexture();
-        texture = CreateTexture(gl, width, height);
+        fbSize = new VecI(width, height);
         FramebufferResized?.Invoke();
     }
 
@@ -99,88 +59,42 @@ public class WebGlWindowRenderApi : IWindowRenderApi
 
     public void Render(double deltaTime)
     {
-        JSRuntime.ClearColor(gl, 0.0f, 0.0f, 0.0f, 1.0f);
-        JSRuntime.Clear(gl, (int)WebGlBufferMask.ColorBufferBit);
-
-        JSRuntime.BindBuffer(gl, (int)WebGlBufferType.Array, posBuffer);
-        JSRuntime.VertexAttribPointer(gl, vertexPosAttrib, 2, (int)WebGlArrayType.Float, false, 0, 0);
-        JSRuntime.EnableVertexAttribArray(gl, vertexPosAttrib);
-        
-        SetTextureData();
-        
-        JSRuntime.UseProgram(gl, program);
-        
-        JSRuntime.ActiveTexture(gl, 0);
-        JSRuntime.BindTexture(gl, (int)WebGlTextureType.Texture2D, texture.TextureId);
-        JSRuntime.Uniform1i(gl, uSamplerUniform, 0);
-        
-        JSRuntime.DrawArrays(gl, (int)WebGlDrawMode.TriangleStrip, 0, 4);
     }
 
-    private int LoadShader(int handle, string shader, WebGlShaderType type)
+    private WebGlTexture CreateFramebuffer(int handle, int width, int height)
     {
-        int shaderHandle = JSRuntime.CreateShader(handle, (int)type);
-        JSRuntime.ShaderSource(handle, shaderHandle, shader);
-        string? error = JSRuntime.CompileShader(handle, shaderHandle);
+        var tex = webglGraphicsContext.CreateTexture(handle, width, height);
+        framebuffer = JSRuntime.CreateFramebuffer(gl);
 
-        if (error != null)
+        JSRuntime.BindFramebuffer(
+            gl,
+            framebuffer);
+        
+        JSRuntime.FramebufferTexture2D(
+            gl,
+            (int)WebGlFramebufferTarget.Framebuffer,
+            (int)WebGlFramebufferAttachment.ColorAttachment0,
+            (int)WebGlTextureType.Texture2D,
+            tex.TextureId,
+            0);
+        
+        var status = JSRuntime.CheckFramebufferStatus(gl, (int)WebGlFramebufferTarget.Framebuffer);
+        
+        if (status != (int)WebGlFramebufferStatus.FramebufferComplete)
         {
-            Console.WriteLine(error);
-            throw new ShaderCompilationException(type, shader, error);
+            WebGlError error = (WebGlError)JSRuntime.GetError(gl);
+            throw new Exception($"Framebuffer invalid: {status}, Error: {error}");
         }
 
-        return shaderHandle;
-    }
-
-    private int InitProgram(int handle, int vertexShader, int fragmentShader)
-    {
-        int program = JSRuntime.CreateProgram(handle);
-        JSRuntime.AttachShader(handle, program, vertexShader);
-        JSRuntime.AttachShader(handle, program, fragmentShader);
-        string? error = JSRuntime.LinkProgram(handle, program);
-
-        if (error != null)
-        {
-            throw new WebGlException(error);
-        }
-
-        return program;
-    }
-
-    private int InitBuffers(int handle)
-    {
-        int positionBuffer = JSRuntime.CreateBuffer(handle);
-        JSRuntime.BindBuffer(handle, (int)WebGlBufferType.Array, positionBuffer);
-        double[] vertices = new double[] { 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, -1.0f };
-
-        JSRuntime.BufferData(handle, (int)WebGlBufferType.Array, vertices, (int)WebGlBufferUsage.StaticDraw);
-
-        return positionBuffer;
-    }
-    
-    private WebGlTexture CreateTexture(int handle, int width, int height)
-    {
-        return webglGraphicsContext.CreateTexture(handle, width, height);
+        return tex;
     }
     
     private void DisposeTexture()
     {
-        texture?.Dispose();
-        texture = null;
-    }
-    
-    private void InitTextureBuffer(int handle)
-    {
-        int texCoordBuffer = JSRuntime.CreateBuffer(handle);
-        JSRuntime.BindBuffer(handle, (int)WebGlBufferType.Array, texCoordBuffer);
-        double[] texCoords = new double[] { 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f };
-        JSRuntime.BufferData(handle, (int)WebGlBufferType.Array, texCoords, (int)WebGlBufferUsage.StaticDraw);
-    }
-    
-    private void SetTextureData()
-    {
-        JSRuntime.BindBuffer(gl, (int)WebGlBufferType.Array, texCoordAttrib);
-        JSRuntime.VertexAttribPointer(gl, texCoordAttrib, 2, (int)WebGlArrayType.Float, false, 0, 0);
-        JSRuntime.EnableVertexAttribArray(gl, texCoordAttrib);
+        JSRuntime.BindFramebuffer(gl, 0);
+        
+        JSRuntime.DeleteFramebuffer(gl, framebuffer);
+        framebuffer = 0;
+        webglGraphicsContext.DisposeTexture(texture);
     }
 }

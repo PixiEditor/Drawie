@@ -165,7 +165,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
     private void CreateRenderTarget(VecI size, ITexture nativeRenderTexture)
     {
-        renderTexture = store.CreateNativeRenderSurface(size, nativeRenderTexture, SurfaceOrigin.TopLeft);
+        renderTexture = store.CreateNativeRenderSurface(size, nativeRenderTexture, SurfaceOrigin.BottomLeft);
     }
 
     private void WindowOnFramebufferResize(Vector2D<int> newSize)
@@ -181,7 +181,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     private void OnRender(double dt)
     {
         RenderApi.PrepareTextureToWrite();
-        RenderingContext ctx = new RenderingContext();
+        RenderingContext ctx = new RenderingContext(RenderApi.GraphicsContext);
         using var renderingScope = ctx.Open();
         using var fbo = ctx.Edit(renderTexture);
         fbo.Clear();

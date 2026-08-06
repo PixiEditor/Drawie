@@ -1,4 +1,5 @@
 using Drawie.Backend.Core;
+using Drawie.Numerics;
 
 namespace Drawie.Rendering;
 
@@ -11,6 +12,7 @@ public class Texture
     public TextureState State { get; internal set; } = TextureState.Submitted;
     public int Width { get; }
     public int Height { get; }
+    public VecI Size => new VecI(Width, Height);
 
     internal Texture(NativeTexture native)
     {

@@ -1,3 +1,5 @@
+using Drawie.RenderApi;
+
 namespace Drawie.Rendering;
 
 /// <summary>
@@ -5,9 +7,15 @@ namespace Drawie.Rendering;
 /// </summary>
 public class RenderingContext : IDisposable
 {
+    public IGraphicsContext? GraphicsContext { get; }
     public bool IsOpen { get; private set; } = false;
     private List<TextureFramebuffer> ownedFramebuffers = new List<TextureFramebuffer>();
 
+    public RenderingContext(IGraphicsContext? ctx)
+    {
+        GraphicsContext = ctx;
+    }
+    
     public TextureFramebuffer Edit(Texture texture)
     {
         if (!IsOpen) throw new InvalidOperationException("Rendering Context is not open.");
@@ -21,6 +29,7 @@ public class RenderingContext : IDisposable
     {
         if (IsOpen) throw new InvalidOperationException("Rendering Context is already open.");
         IsOpen = true;
+        GraphicsContext?.MakeCurrent();
         return this;
     }
 
@@ -29,7 +38,6 @@ public class RenderingContext : IDisposable
         foreach (var textureFramebuffer in ownedFramebuffers)
         {
             if (textureFramebuffer.IsOpen) throw new InvalidOperationException("Framebuffer is in use");
-            textureFramebuffer.Dispose();
         }
         
         IsOpen = false;

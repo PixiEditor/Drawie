@@ -16,6 +16,9 @@
     uniformLocationHandleIds = 0;
     uniformLocationHandles = {};
     
+    framebufferHandleIds = 0;
+    framebufferHandles = {};
+    
     exports = {};
 
     addDrawieImports() {
@@ -197,6 +200,40 @@
 
                     delete this.textureHandles[textureId];
                 },
+                viewport: (glHandle, x, y, width, height) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    gl.viewport(x, y, width, height);
+                },
+                bindFramebuffer: (glHandle, framebuffer) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebufferHandles[framebuffer]);
+                },
+                createFramebuffer: (glHandle) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const fb = gl.createFramebuffer();
+                    this.framebufferHandleIds++;
+                    this.framebufferHandles[this.framebufferHandleIds] = fb;
+                    
+                    return this.framebufferHandleIds;
+                },
+                framebufferTexture2D: (glHandle, target, attachment, textarget, texture, level) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const targetTexture = this.textureHandles[texture]
+                    gl.framebufferTexture2D(target, attachment, textarget, targetTexture, level);
+                },
+                checkFramebufferStatus: (glHandle, target) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    return gl.checkFramebufferStatus(target);
+                },
+                getError: (glHandle) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    return gl.getError();
+                },
+                deleteFramebuffer: (glHandle, framebuffer) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    gl.deleteFramebuffer(this.framebufferHandles[framebuffer]);
+                    delete this.framebufferHandles[framebuffer];
+                }
             },
             window: {
                 innerWidth: () => window.innerWidth,

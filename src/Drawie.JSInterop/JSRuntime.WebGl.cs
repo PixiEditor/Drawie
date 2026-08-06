@@ -88,4 +88,25 @@ public partial class JSRuntime
 
     [JSImport("webgl.deleteTexture", "drawie.js")]
     public static partial void DeleteTexture(int gl, int textureId);
+
+    [JSImport("webgl.viewport", "drawie.js")]
+    public static partial void Viewport(int gl, int x, int y, int width, int height);
+
+    [JSImport("webgl.bindFramebuffer", "drawie.js")]
+    public static partial void BindFramebuffer(int gl, int framebuffer);
+
+    [JSImport("webgl.createFramebuffer", "drawie.js")]
+    public static partial int CreateFramebuffer(int gl);
+
+    [JSImport("webgl.framebufferTexture2D", "drawie.js")]
+    public static partial void FramebufferTexture2D(int gl, int target, int attachment, int textarget, int texture, int level);
+    
+    [JSImport("webgl.checkFramebufferStatus", "drawie.js")]
+    public static partial int CheckFramebufferStatus(int gl, int target);
+
+    [JSImport("webgl.getError", "drawie.js")]
+    public static partial int GetError(int gl);
+
+    [JSImport("webgl.deleteFramebuffer", "drawie.js")]
+    public static partial void DeleteFramebuffer(int gl, int framebuffer);
 }
