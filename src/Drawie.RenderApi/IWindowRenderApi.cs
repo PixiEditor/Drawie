@@ -4,6 +4,7 @@ namespace Drawie.RenderApi;
 
 public interface IWindowRenderApi
 {
+    public IGraphicsContext GraphicsContext { get; }
     public void CreateInstance(object contextObject, VecI framebufferSize);
     public void DestroyInstance();
 

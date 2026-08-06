@@ -75,6 +75,8 @@ public class VulkanWindowRenderApi : IVulkanWindowRenderApi
         texture.TransitionLayoutTo(VulkanTexture.ShaderReadOnlyOptimal, VulkanTexture.ColorAttachmentOptimal);
     }
 
+    public IGraphicsContext GraphicsContext { get; }
+
     public void CreateInstance(object contextObject, VecI framebufferSize)
     {
         if (contextObject is not IVulkanContextInfo vkContext) throw new VulkanNotSupportedException();

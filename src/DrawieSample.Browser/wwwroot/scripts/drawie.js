@@ -114,7 +114,7 @@
                 },
                 useProgram: (glHandle, programId) => {
                     const gl = this.canvasContextHandles[glHandle];
-                    const program = programHandles[programId];
+                    const program = this.programHandles[programId];
                     gl.useProgram(program);
                 },
                 drawArrays: (glHandle, mode, first, count) => {
@@ -202,7 +202,16 @@
                 innerWidth: () => window.innerWidth,
                 innerHeight: () => window.innerHeight,
                 requestAnimationFrame: () => this.invokeRequestAnimationFrame(),
-                subscribeWindowResize: () => window.addEventListener('resize', this.invokeWindowResize)
+                subscribeWindowResize: () => window.addEventListener('resize', (evt) => this.exports.Drawie.JSInterop.JSRuntime.WindowResized(window.innerWidth, window.innerHeight))
+
+            },
+            input: {
+                subscribeKeyDown: () => {
+                    window.addEventListener('keydown', (evt) => this.exports.Drawie.JSInterop.JSRuntime.OnKeyDown(evt.code));
+                },
+                subscribeKeyUp: () => {
+                    window.addEventListener('keyup', (evt) => this.exports.Drawie.JSInterop.JSRuntime.OnKeyUp(evt.code));
+                }
             }
         });
     }
@@ -216,12 +225,6 @@
         });
 
         return requestId;
-    }
-
-    invokeWindowResize() {
-        if(this.exports) {
-            this.exports.Drawie.JSInterop.JSRuntime.WindowResized(window.innerWidth, window.innerHeight);
-        }
     }
 
     async addDrawieExports() {

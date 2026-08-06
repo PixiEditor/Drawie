@@ -24,15 +24,15 @@ public class DrawieSampleApp : DrawieApp
     {
         Paint paint = new Paint() { IsAntiAliased = true };
 
-        Texture testTexture = new Texture(new VecI(800, 600));
-        DrawHorizontalColorStrips(testTexture, paint);
+        NativeTexture testNativeTexture = new NativeTexture(new VecI(800, 600));
+        DrawHorizontalColorStrips(testNativeTexture, paint);
 
-        DrawBlendTestHorizontalStrips(testTexture, paint);
+        DrawBlendTestHorizontalStrips(testNativeTexture, paint);
         
-        DrawingSurface srgbSurface = DrawingSurface.Create(new ImageInfo(testTexture.Size.X, testTexture.Size.Y,
+        DrawingSurface srgbSurface = DrawingSurface.Create(new ImageInfo(testNativeTexture.Size.X, testNativeTexture.Size.Y,
             ColorType.Rgba8888, AlphaType.Premul, ColorSpace.CreateSrgb()) { GpuBacked = true });
         
-        srgbSurface.Canvas.DrawSurface(testTexture.DrawingSurface, 0, 0);
+        srgbSurface.Canvas.DrawSurface(testNativeTexture.DrawingSurface, 0, 0);
 
         window.Render += (targetTexture, deltaTime) =>
         {
@@ -42,25 +42,25 @@ public class DrawieSampleApp : DrawieApp
         };
     }
 
-    private void DrawReferenceColors(Texture targetTexture, Paint paint)
+    private void DrawReferenceColors(NativeTexture targetNativeTexture, Paint paint)
     {
         using Paint referencePaint = new Paint() { IsAntiAliased = true };
         referencePaint.Color = Colors.Black;
-        targetTexture.DrawingSurface.Canvas.DrawRect(0, 0, 5, 5, referencePaint);
+        targetNativeTexture.DrawingSurface.Canvas.DrawRect(0, 0, 5, 5, referencePaint);
         referencePaint.Color = Colors.White;
-        targetTexture.DrawingSurface.Canvas.DrawRect(5, 0, 5, 5, referencePaint);
+        targetNativeTexture.DrawingSurface.Canvas.DrawRect(5, 0, 5, 5, referencePaint);
         referencePaint.Color = Color.FromRgb(255, 0, 0);
-        targetTexture.DrawingSurface.Canvas.DrawRect(10, 0, 5, 5, referencePaint);
+        targetNativeTexture.DrawingSurface.Canvas.DrawRect(10, 0, 5, 5, referencePaint);
         referencePaint.Color = Color.FromRgb(0, 255, 0);
-        targetTexture.DrawingSurface.Canvas.DrawRect(15, 0, 5, 5, referencePaint);
+        targetNativeTexture.DrawingSurface.Canvas.DrawRect(15, 0, 5, 5, referencePaint);
         referencePaint.Color = Color.FromRgb(0, 0, 255);
-        targetTexture.DrawingSurface.Canvas.DrawRect(20, 0, 5, 5, referencePaint);
+        targetNativeTexture.DrawingSurface.Canvas.DrawRect(20, 0, 5, 5, referencePaint);
     }
 
-    private void DrawHorizontalColorStrips(Texture targetTexture, Paint paint)
+    private void DrawHorizontalColorStrips(NativeTexture targetNativeTexture, Paint paint)
     {
-        int stripWidth = targetTexture.Size.X / 4;
-        int stripHeight = targetTexture.Size.Y;
+        int stripWidth = targetNativeTexture.Size.X / 4;
+        int stripHeight = targetNativeTexture.Size.Y;
 
         int spacing = 10;
 
@@ -69,15 +69,15 @@ public class DrawieSampleApp : DrawieApp
         for (int i = 0; i < 4; i++)
         {
             paint.Color = colors[i];
-            targetTexture.DrawingSurface.Canvas.DrawRect(i * stripWidth + spacing, spacing, stripWidth - 2 * spacing,
+            targetNativeTexture.DrawingSurface.Canvas.DrawRect(i * stripWidth + spacing, spacing, stripWidth - 2 * spacing,
                 stripHeight, paint);
         }
     }
 
-    private void DrawBlendTestHorizontalStrips(Texture targetTexture, Paint paint)
+    private void DrawBlendTestHorizontalStrips(NativeTexture targetNativeTexture, Paint paint)
     {
-        int stripWidth = targetTexture.Size.X;
-        int stripHeight = targetTexture.Size.Y / 3;
+        int stripWidth = targetNativeTexture.Size.X;
+        int stripHeight = targetNativeTexture.Size.Y / 3;
 
         int spacing = 50;
 
@@ -87,7 +87,7 @@ public class DrawieSampleApp : DrawieApp
         {
             paint.Color = colors[i].WithAlpha(128);
             paint.Style = PaintStyle.Fill;
-            targetTexture.DrawingSurface.Canvas.DrawRect(0, i * stripHeight + spacing, stripWidth,
+            targetNativeTexture.DrawingSurface.Canvas.DrawRect(0, i * stripHeight + spacing, stripWidth,
                 stripHeight - 2 * spacing, paint);
         }
     }

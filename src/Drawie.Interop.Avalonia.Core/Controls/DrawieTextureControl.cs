@@ -28,9 +28,9 @@ public class DrawieTextureControl : DrawieControl
         set => SetValue(StretchProperty, value);
     }
 
-    public static readonly StyledProperty<Texture> TextureProperty =
-        AvaloniaProperty.Register<DrawieTextureControl, Texture>(
-            nameof(Texture));
+    public static readonly StyledProperty<NativeTexture> TextureProperty =
+        AvaloniaProperty.Register<DrawieTextureControl, NativeTexture>(
+            nameof(NativeTexture));
 
     public static readonly StyledProperty<SampleQuality> SamplingOptionsProperty =
         AvaloniaProperty.Register<DrawieTextureControl, SampleQuality>(
@@ -42,7 +42,7 @@ public class DrawieTextureControl : DrawieControl
         set => SetValue(SamplingOptionsProperty, value);
     }
 
-    public Texture Texture
+    public NativeTexture NativeTexture
     {
         get => GetValue(TextureProperty);
         set => SetValue(TextureProperty, value);
@@ -54,10 +54,10 @@ public class DrawieTextureControl : DrawieControl
         TextureProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) =>
         {
             x.QueueNextFrame();
-            if (e.OldValue is Texture oldTexture && x.RepaintOnChanged)
-                oldTexture.Changed -= x.Texture_Changed;
-            if (e.NewValue is Texture newTexture && x.RepaintOnChanged)
-                newTexture.Changed += x.Texture_Changed;
+            if (e.OldValue is NativeTexture oldTexture && x.RepaintOnChanged)
+                oldTexture.Changed -= x.NativeTextureChanged;
+            if (e.NewValue is NativeTexture newTexture && x.RepaintOnChanged)
+                newTexture.Changed += x.NativeTextureChanged;
         });
         SamplingOptionsProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) => x.QueueNextFrame());
         StretchProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) => x.QueueNextFrame());
@@ -66,13 +66,13 @@ public class DrawieTextureControl : DrawieControl
             if (e.NewValue is true)
             {
                 x.QueueNextFrame();
-                if(x.Texture != null)
-                    x.Texture.Changed += x.Texture_Changed;
+                if(x.NativeTexture != null)
+                    x.NativeTexture.Changed += x.NativeTextureChanged;
             }
             else
             {
-                if(x.Texture != null)
-                    x.Texture.Changed -= x.Texture_Changed;
+                if(x.NativeTexture != null)
+                    x.NativeTexture.Changed -= x.NativeTextureChanged;
             }
         });
     }
@@ -84,7 +84,7 @@ public class DrawieTextureControl : DrawieControl
     /// <returns>The desired size of the control.</returns>
     protected override Size MeasureOverride(Size availableSize)
     {
-        var source = Texture;
+        var source = NativeTexture;
         var result = new Size();
 
         if (source != null)
@@ -102,7 +102,7 @@ public class DrawieTextureControl : DrawieControl
     /// <inheritdoc/>
     protected override Size ArrangeOverride(Size finalSize)
     {
-        var source = Texture;
+        var source = NativeTexture;
 
         if (source != null)
         {
@@ -118,14 +118,14 @@ public class DrawieTextureControl : DrawieControl
         return new Size();
     }
 
-    private void Texture_Changed(RectD? changedRect)
+    private void NativeTextureChanged(RectD? changedRect)
     {
         QueueNextFrame();
     }
 
     public override void Draw(DrawingSurface surface)
     {
-        if (Texture == null || Texture.IsDisposed)
+        if (NativeTexture == null || NativeTexture.IsDisposed)
         {
             return;
         }
@@ -136,11 +136,11 @@ public class DrawieTextureControl : DrawieControl
         ScaleCanvas(surface.Canvas);
         if (SamplingOptions == SampleQuality.Nearest)
         {
-            surface.Canvas.DrawSurface(Texture.DrawingSurface, 0, 0);
+            surface.Canvas.DrawSurface(NativeTexture.DrawingSurface, 0, 0);
         }
         else
         {
-            using var snapshot = Texture.DrawingSurface.Snapshot();
+            using var snapshot = NativeTexture.DrawingSurface.Snapshot();
             surface.Canvas.DrawImage(snapshot, 0, 0, Backend.Core.Surfaces.SamplingOptions.Bilinear);
         }
 
@@ -149,8 +149,8 @@ public class DrawieTextureControl : DrawieControl
 
     private void ScaleCanvas(Canvas canvas)
     {
-        float x = (float)Texture.Size.X;
-        float y = (float)Texture.Size.Y;
+        float x = (float)NativeTexture.Size.X;
+        float y = (float)NativeTexture.Size.Y;
 
         if (Stretch == Stretch.Fill)
         {

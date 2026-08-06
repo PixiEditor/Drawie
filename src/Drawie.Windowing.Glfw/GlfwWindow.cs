@@ -2,6 +2,7 @@ using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Numerics;
 using Drawie.RenderApi;
+using Drawie.Rendering;
 using Drawie.Silk.Extensions;
 using Drawie.Silk.Input;
 using Drawie.Skia;
@@ -16,6 +17,7 @@ namespace Drawie.Silk;
 
 public class GlfwWindow : Drawie.Windowing.IWindow
 {
+    private GraphicsStore store;
     private IWindow? window;
     private bool isRunning;
 
@@ -60,11 +62,10 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     }
 
     public event Action<double> Update;
-    public event Action<Texture, double> Render;
+    public event Action<TextureFramebuffer, double> Render;
 
     private SKSurface? surface;
     private Texture renderTexture;
-    private GRContext context;
     private bool initialized;
 
     public GlfwWindow(string name, VecI size, IWindowRenderApi renderApi)
@@ -105,6 +106,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             RenderApi.CreateInstance(window.Native, window.Size.ToVecI());
         }
 
+        store = new GraphicsStore(RenderApi.GraphicsContext);
         initialized = true;
     }
 
@@ -155,8 +157,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
     private void RenderApiOnFramebufferResized()
     {
-        renderTexture.Dispose();
-        renderTexture = null!;
+        store.Dispose();
         surface = null!;
 
         CreateRenderTarget(window!.FramebufferSize.ToVecI(), RenderApi.RenderTexture);
@@ -164,9 +165,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
     private void CreateRenderTarget(VecI size, ITexture nativeRenderTexture)
     {
-        var drawingSurface =
-            DrawingBackendApi.Current.CreateRenderSurface(size, nativeRenderTexture, SurfaceOrigin.TopLeft);
-        renderTexture = Texture.FromExisting(drawingSurface);
+        renderTexture = store.CreateNativeRenderSurface(size, nativeRenderTexture, SurfaceOrigin.TopLeft);
     }
 
     private void WindowOnFramebufferResize(Vector2D<int> newSize)
@@ -182,16 +181,18 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     private void OnRender(double dt)
     {
         RenderApi.PrepareTextureToWrite();
-        renderTexture.DrawingSurface?.Canvas.Clear();
-        Render?.Invoke(renderTexture, dt);
-        renderTexture.DrawingSurface?.Flush();
+        RenderingContext ctx = new RenderingContext();
+        using var renderingScope = ctx.Open();
+        using var fbo = ctx.Edit(renderTexture);
+        fbo.Clear();
+        Render?.Invoke(fbo, dt);
     }
 
     public void Close()
     {
         window.Update -= OnUpdate;
         window.Render -= OnRender;
-        renderTexture.Dispose();
+        store.Dispose();
         RenderApi.DestroyInstance();
 
         window?.Close();

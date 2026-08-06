@@ -2,6 +2,7 @@
 using Drawie.Backend.Core.Bridge;
 using Drawie.Numerics;
 using Drawie.RenderApi;
+using Drawie.Rendering;
 using Drawie.Windowing.Browser.Input;
 using Drawie.Windowing.Input;
 
@@ -42,9 +43,10 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
     }
 
     public event Action<double>? Update;
-    public event Action<Texture, double>? Render;
+    public event Action<TextureFramebuffer, double>? Render;
 
     private Texture renderTexture;
+    private GraphicsStore store;
 
     public void Initialize()
     {
@@ -52,11 +54,12 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
         RenderApi.FramebufferResized += FramebufferResized;
 
         InputController = new InputController(new [] { new BrowserKeyboard() }, []);
+        store = new GraphicsStore(RenderApi.GraphicsContext);
     }
 
     private void FramebufferResized()
     {
-        renderTexture?.Dispose();
+        store.Dispose();
         renderTexture = CreateRenderTexture();
     }
 
@@ -72,9 +75,11 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
         double deltaTime = dt / 1000.0;
         Update?.Invoke(deltaTime);
         RenderApi.PrepareTextureToWrite();
-        renderTexture.DrawingSurface?.Canvas.Clear();
-        Render?.Invoke(renderTexture, deltaTime);
-        renderTexture.DrawingSurface?.Flush();
+        RenderingContext ctx = new RenderingContext();
+        using var renderingScope = ctx.Open();
+        using var fbo = ctx.Edit(renderTexture);
+        fbo.Clear();
+        Render?.Invoke(fbo, dt);
         BrowserInterop.RequestAnimationFrame(OnRender);
     }
 
@@ -90,9 +95,6 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
 
     private Texture CreateRenderTexture()
     {
-        var drawingSurface =
-            DrawingBackendApi.Current.CreateRenderSurface(UsableWindowSize, RenderApi.RenderTexture,
-                SurfaceOrigin.BottomLeft);
-        return Texture.FromExisting(drawingSurface);
+        return store.CreateNativeRenderSurface(UsableWindowSize, RenderApi.RenderTexture, SurfaceOrigin.BottomLeft);
     }
 }

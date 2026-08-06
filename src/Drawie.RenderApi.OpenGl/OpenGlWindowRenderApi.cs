@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-using Drawie.Numerics;
-using Drawie.RenderApi.OpenGL.Exceptions;
+﻿using Drawie.Numerics;
 using Silk.NET.Core.Contexts;
 using Silk.NET.OpenGL;
 
@@ -17,6 +15,8 @@ public class OpenGlWindowRenderApi : IOpenGlWindowRenderApi
     
     private OpenGlTexture texture;
 
+    public IGraphicsContext GraphicsContext { get; private set; }
+
     public unsafe void CreateInstance(object contextObject, VecI framebufferSize)
     {
         if (contextObject is not IGLContext glContext)
@@ -24,12 +24,15 @@ public class OpenGlWindowRenderApi : IOpenGlWindowRenderApi
 
         Context = glContext;
         Api = GL.GetApi(glContext);
-        texture = new OpenGlTexture(0, Api); // default framebuffer texture
+        var graphicsContext = new OpenGlGraphicsContext(Api, glContext);
+        texture = graphicsContext.CreateTexture(0); // default framebuffer texture
+        GraphicsContext = graphicsContext;
     }
 
     public void DestroyInstance()
     {
         Api = null;
+        GraphicsContext = null;
     }
 
     public void UpdateFramebufferSize(int width, int height)

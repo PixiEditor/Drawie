@@ -23,15 +23,15 @@ public partial class MainWindow : Window
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
-        Texture texture = new Texture(new VecI(128, 128));
+        NativeTexture nativeTexture = new NativeTexture(new VecI(128, 128));
         using Paint paint = new Paint();
         paint.Color = Colors.Red;
 
-        texture.DrawingSurface.Canvas.DrawRect(0, 0, 128, 128, paint);
+        nativeTexture.DrawingSurface.Canvas.DrawRect(0, 0, 128, 128, paint);
         paint.Color = Colors.Blue;
-        texture.DrawingSurface.Canvas.DrawCircle(64, 64, 64, paint);
+        nativeTexture.DrawingSurface.Canvas.DrawCircle(64, 64, 64, paint);
 
-        DrawieControl.Texture = texture;
+        DrawieControl.NativeTexture = nativeTexture;
         base.OnLoaded(e);
     }
 
@@ -45,7 +45,7 @@ public partial class MainWindow : Window
         byte green = (byte)(Math.Sin(time / 1000.0 + 2) * 127 + 128);
         byte blue = (byte)(Math.Sin(time / 1000.0 + 4) * 127 + 128);
 
-        DrawieControl.Texture?.DrawingSurface.Canvas.DrawRect(0, 0, 128, 128, new Paint()
+        DrawieControl.NativeTexture?.DrawingSurface.Canvas.DrawRect(0, 0, 128, 128, new Paint()
         {
             Color = new Color(red, green, blue, 255),
             Style = PaintStyle.StrokeAndFill
@@ -53,7 +53,7 @@ public partial class MainWindow : Window
 
         // test transparency
 
-        DrawieControl.Texture?.DrawingSurface.Canvas.DrawCircle(64, 64, 64, new Paint()
+        DrawieControl.NativeTexture?.DrawingSurface.Canvas.DrawCircle(64, 64, 64, new Paint()
         {
             Color = new Color(255, 255, 255, 128),
             Style = PaintStyle.Fill

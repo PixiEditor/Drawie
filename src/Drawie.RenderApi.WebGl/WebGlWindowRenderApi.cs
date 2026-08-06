@@ -49,6 +49,9 @@ public class WebGlWindowRenderApi : IWindowRenderApi
     private int texCoordAttrib;
     private int uSamplerUniform;
 
+    public IGraphicsContext GraphicsContext => webglGraphicsContext;
+    private WebGlGraphicsContext webglGraphicsContext;
+
     public void CreateInstance(object contextObject, VecI framebufferSize)
     {
         JSRuntime.InterceptGLObject();
@@ -58,6 +61,7 @@ public class WebGlWindowRenderApi : IWindowRenderApi
         canvasObject.SetAttribute("height", framebufferSize.Y.ToString());
 
         gl = JSRuntime.OpenSkiaContext(canvasObject.Id);
+        webglGraphicsContext = new WebGlGraphicsContext(gl);
         
         JSRuntime.MakeContextCurrent(gl);
 
@@ -67,12 +71,13 @@ public class WebGlWindowRenderApi : IWindowRenderApi
         program = InitProgram(gl, vertexShader, fragmentShader);
         
         posBuffer = InitBuffers(gl);
-        CreateTexture(gl, framebufferSize.X, framebufferSize.Y);
+        texture = CreateTexture(gl, framebufferSize.X, framebufferSize.Y);
         InitTextureBuffer(gl);
         
         vertexPosAttrib = JSRuntime.GetAttribLocation(gl, program, "position");
         texCoordAttrib = JSRuntime.GetAttribLocation(gl, program, "aTextureCoord");
         uSamplerUniform = JSRuntime.GetUniformLocation(gl, program, "uSampler");
+
     }
 
     public void DestroyInstance()
@@ -84,7 +89,7 @@ public class WebGlWindowRenderApi : IWindowRenderApi
         canvasObject.SetAttribute("width", width.ToString());
         canvasObject.SetAttribute("height", height.ToString());
         DisposeTexture();
-        CreateTexture(gl, width, height);
+        texture = CreateTexture(gl, width, height);
         FramebufferResized?.Invoke();
     }
 
@@ -153,15 +158,9 @@ public class WebGlWindowRenderApi : IWindowRenderApi
         return positionBuffer;
     }
     
-    private void CreateTexture(int handle, int width, int height)
+    private WebGlTexture CreateTexture(int handle, int width, int height)
     {
-        texture = new WebGlTexture(gl, JSRuntime.CreateTexture(handle));
-        JSRuntime.BindTexture(handle, (int)WebGlTextureType.Texture2D, texture.TextureId);
-        JSRuntime.TexImage2D(handle, (int)WebGlTextureType.Texture2D, 0, (int)WebGlTextureFormat.Rgba, width, height, 0, (int)WebGlTextureFormat.Rgba, (int)WebGlArrayType.UnsignedByte, 0);
-        JSRuntime.TexParameteri(handle, (int)WebGlTextureType.Texture2D, (int)WebGlTextureParameterName.TextureMinFilter, (int)WebGlTextureFilter.Nearest);
-        JSRuntime.TexParameteri(handle, (int)WebGlTextureType.Texture2D, (int)WebGlTextureParameterName.TextureMagFilter, (int)WebGlTextureFilter.Nearest);
-        JSRuntime.TexParameteri(handle, (int)WebGlTextureType.Texture2D, (int)WebGlTextureParameterName.TextureWrapS, (int)WebGlTextureWrap.ClampToEdge);
-        JSRuntime.TexParameteri(handle, (int)WebGlTextureType.Texture2D, (int)WebGlTextureParameterName.TextureWrapT, (int)WebGlTextureWrap.ClampToEdge);
+        return webglGraphicsContext.CreateTexture(handle, width, height);
     }
     
     private void DisposeTexture()
