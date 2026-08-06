@@ -24,4 +24,8 @@ public interface IWindow
     public void Initialize();
     public void Show();
     public void Close();
+    public void AddLayer(ILayer layer);
+    public object NativeWindow { get; }
+    public event Action Loaded;
+    public void SubscribeToRender(string name, string renderAfter, Action<double> render);
 }

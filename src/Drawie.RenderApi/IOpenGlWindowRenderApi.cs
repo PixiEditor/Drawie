@@ -2,5 +2,5 @@
 
 public interface IOpenGlWindowRenderApi : IWindowRenderApi
 {
-    
+    Func<string, nint> GetGlInterface();
 }

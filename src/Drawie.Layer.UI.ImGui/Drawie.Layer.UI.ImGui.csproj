@@ -4,12 +4,14 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>Drawie2Sample</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Drawie.Layer.UI.ImGui\Drawie.Layer.UI.ImGui.csproj" />
-        <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
+      <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.23.0" />
     </ItemGroup>
-    
+
+    <ItemGroup>
+      <ProjectReference Include="..\Drawie.Windowing\Drawie.Windowing.csproj" />
+    </ItemGroup>
+
 </Project>

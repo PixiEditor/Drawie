@@ -6,12 +6,14 @@ using Drawie.Rendering;
 using Drawie.Silk.Extensions;
 using Drawie.Silk.Input;
 using Drawie.Skia;
+using Drawie.Windowing;
 using Drawie.Windowing.Input;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
 using SkiaSharp;
 using IKeyboard = Drawie.Windowing.Input.IKeyboard;
+using IWindow = Silk.NET.Windowing.IWindow;
 
 namespace Drawie.Silk;
 
@@ -55,11 +57,11 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     public bool ShowOnTop
     {
         get => window?.TopMost ?? false;
-        set
-        {
-            if (window != null) window.TopMost = value;
-        }
+        set => window?.TopMost = value;
     }
+    
+    public object NativeWindow => window;
+    public event Action? Loaded;
 
     public event Action<double> Update;
     public event Action<TextureFramebuffer, double> Render;
@@ -67,6 +69,9 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     private SKSurface? surface;
     private Texture renderTexture;
     private bool initialized;
+    
+    private List<ILayer> layers = new List<ILayer>();
+    private List<RenderOrder> renderStack = new List<RenderOrder>();
 
     public GlfwWindow(string name, VecI size, IWindowRenderApi renderApi)
     {
@@ -76,8 +81,14 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             Size = size.ToVector2DInt(),
             API = renderApi is IVulkanWindowRenderApi ? GraphicsAPI.DefaultVulkan : GraphicsAPI.Default
         });
+        window.Load += () => Loaded?.Invoke();
         RenderApi = renderApi;
+
+        renderStack.Add(new RenderOrder("Init", _ => { }));
+        renderStack.Add(new RenderOrder("Render", RenderContent));
+        renderStack.Add(new RenderOrder("RenderApi", RenderApi.Render));
     }
+
 
     public void Initialize()
     {
@@ -107,12 +118,19 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         }
 
         store = new GraphicsStore(RenderApi.GraphicsContext);
+        
+        foreach (var layer in layers)
+        {
+            layer.Initialize(this);
+        }
+        
         initialized = true;
     }
 
     private void InitInput()
     {
         var input = window.CreateInput();
+        
         GlfwKeyboard[] keyboards = new GlfwKeyboard[input.Keyboards.Count];
         for (var i = 0; i < input.Keyboards.Count; i++)
         {
@@ -129,7 +147,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             pointers[i] = new GlfwPointer(pointer);
         }
 
-        InputController = new InputController(keyboards, pointers);
+        InputController = new InputController(keyboards, pointers, input);
     }
 
     public void Show()
@@ -147,7 +165,6 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             CreateRenderTarget(window.FramebufferSize.ToVecI(), RenderApi.RenderTexture);
 
             window.Render += OnRender;
-            window.Render += RenderApi.Render;
 
             window.Update += OnUpdate;
             isRunning = true;
@@ -180,6 +197,14 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
     private void OnRender(double dt)
     {
+        foreach (var layer in renderStack)
+        {
+            layer.Render(dt);
+        }
+    }
+    
+    private void RenderContent(double dt)
+    {
         RenderApi.PrepareTextureToWrite();
         RenderingContext ctx = new RenderingContext(RenderApi.GraphicsContext);
         using var renderingScope = ctx.Open();
@@ -197,5 +222,19 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
         window?.Close();
         window?.Dispose();
+    }
+
+    public void AddLayer(ILayer layer)
+    {
+        layers.Add(layer);
+    }
+
+    public void SubscribeToRender(string name, string renderAfter, Action<double> render)
+    {
+        var foundRenderAfter = renderStack.FindIndex(r => r.Name == renderAfter);
+        if (foundRenderAfter != -1)
+        {
+            renderStack.Insert(foundRenderAfter + 1, new RenderOrder(name, render));
+        }
     }
 }

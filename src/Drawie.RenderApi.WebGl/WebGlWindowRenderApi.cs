@@ -1,6 +1,6 @@
 ﻿using Drawie.JSInterop;
 using Drawie.Numerics;
-using Drawie.RenderApi.Html5Canvas;
+using Drawie.RenderApi.Web.Common;
 using Drawie.RenderApi.WebGl.Enums;
 using Drawie.RenderApi.WebGl.Exceptions;
 
@@ -26,8 +26,9 @@ public class WebGlWindowRenderApi : IWindowRenderApi
 
     public void CreateInstance(object contextObject, VecI framebufferSize)
     {
-        JSRuntime.InterceptGLObject();
-        canvasObject = JSRuntime.CreateElement<HtmlCanvas>();
+        if(contextObject is not HtmlCanvas canvas) throw new ArgumentException("Canvas not found", nameof(contextObject));
+        
+        canvasObject = canvas;
         CanvasId = canvasObject.Id;
         canvasObject.SetAttribute("width", framebufferSize.X.ToString());
         canvasObject.SetAttribute("height", framebufferSize.Y.ToString());

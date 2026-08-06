@@ -9,6 +9,11 @@ public class OpenGlWindowRenderApi : IOpenGlWindowRenderApi
     public event Action? FramebufferResized;
     public ITexture RenderTexture => texture;
 
+    Func<string, IntPtr> IOpenGlWindowRenderApi.GetGlInterface()
+    {
+        return name => Context.GetProcAddress(name);
+    }
+
     public IGLContext Context { get; private set; }
 
     private GL Api { get; set; }

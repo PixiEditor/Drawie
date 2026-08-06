@@ -8,9 +8,12 @@ public class InputController
 
     public IReadOnlyCollection<IPointer> Pointers { get; }
     
-    public InputController(IEnumerable<IKeyboard> keyboards, IEnumerable<IPointer> pointers)
+    public object NativeInputController { get; }
+    
+    public InputController(IEnumerable<IKeyboard> keyboards, IEnumerable<IPointer> pointers, object nativeInputController)
     {
         Keyboards = keyboards.ToList().AsReadOnly();
         Pointers = pointers.ToList().AsReadOnly();
+        NativeInputController = nativeInputController;
     }
 }

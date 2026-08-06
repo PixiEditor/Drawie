@@ -4,6 +4,7 @@ using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Text;
+using Drawie.Layer.UI.ImGui;
 using Drawie.Numerics;
 using Drawie.Rendering;
 using Drawie.Windowing;
@@ -17,8 +18,14 @@ public class Drawie2SampleApp : DrawieApp
 
     public override IWindow CreateMainWindow()
     {
-        window = Engine.WindowingPlatform.CreateWindow("Drawie 2 Sample", new VecI(800, 600));
+        window = Engine.WindowingPlatform.CreateWindow("Drawie 2 Sample", new VecI(1920, 1080));
+        window.AddLayer(new ImGuiLayer(RenderImGui));
         return window;
+    }
+
+    private void RenderImGui(double dt)
+    {
+        ImGuiNET.ImGui.ShowDemoWindow();
     }
 
     protected override void OnInitialize()
@@ -26,8 +33,6 @@ public class Drawie2SampleApp : DrawieApp
         window.Render += (targetTexture, deltaTime) =>
         {
             targetTexture.Clear();
-            targetTexture.DrawRectangle(0, 0, targetTexture.Size.X, targetTexture.Size.Y,
-                new ColorPaintable(Colors.Green));
             
             using Font defaultFont = Font.CreateDefault();
             Paintable color = new ColorPaintable(Colors.White);
