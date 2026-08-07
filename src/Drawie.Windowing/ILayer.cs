@@ -1,6 +1,8 @@
+using Drawie.Rendering;
+
 namespace Drawie.Windowing;
 
 public interface ILayer
 {
-    public void Initialize(IWindow window);
+    void Initialize(IWindow window);
 }

@@ -20,6 +20,7 @@ public interface IWindow
 
     public event Action<double> Update;
     public event Action<TextureFramebuffer, double> Render;
+    public event Action<VecI> Resize;
     
     public void Initialize();
     public void Show();

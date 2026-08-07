@@ -65,6 +65,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
     public event Action<double> Update;
     public event Action<TextureFramebuffer, double> Render;
+    public event Action<VecI>? Resize;
 
     private SKSurface? surface;
     private Texture renderTexture;
@@ -188,6 +189,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     private void WindowOnFramebufferResize(Vector2D<int> newSize)
     {
         RenderApi.UpdateFramebufferSize(newSize.X, newSize.Y);
+        Resize?.Invoke(newSize.ToVecI());
     }
 
     private void OnUpdate(double dt)
@@ -197,6 +199,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
 
     private void OnRender(double dt)
     {
+        // TODO: Composite framebuffers for each layer
         foreach (var layer in renderStack)
         {
             layer.Render(dt);
@@ -235,6 +238,10 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         if (foundRenderAfter != -1)
         {
             renderStack.Insert(foundRenderAfter + 1, new RenderOrder(name, render));
+        }
+        else
+        {
+            renderStack.Add(new RenderOrder(name, render));
         }
     }
 }

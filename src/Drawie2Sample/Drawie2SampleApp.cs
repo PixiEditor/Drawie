@@ -4,6 +4,7 @@ using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Text;
+using Drawie.Layer.ThreeD.Test;
 using Drawie.Layer.UI.ImGui;
 using Drawie.Numerics;
 using Drawie.Rendering;
@@ -19,6 +20,7 @@ public class Drawie2SampleApp : DrawieApp
     public override IWindow CreateMainWindow()
     {
         window = Engine.WindowingPlatform.CreateWindow("Drawie 2 Sample", new VecI(1920, 1080));
+        //window.AddLayer(new ThreeDTest());
         window.AddLayer(new ImGuiLayer(RenderImGui));
         return window;
     }

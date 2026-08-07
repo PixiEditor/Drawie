@@ -4,9 +4,9 @@ public class InputController
 {
     public IKeyboard? PrimaryKeyboard => Keyboards.FirstOrDefault();
     public IPointer? PrimaryPointer => Pointers.FirstOrDefault();
-    public IReadOnlyCollection<IKeyboard> Keyboards { get; }
+    public IReadOnlyList<IKeyboard> Keyboards { get; }
 
-    public IReadOnlyCollection<IPointer> Pointers { get; }
+    public IReadOnlyList<IPointer> Pointers { get; }
     
     public object NativeInputController { get; }
     

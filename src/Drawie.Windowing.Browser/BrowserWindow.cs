@@ -46,6 +46,7 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
 
     public event Action<double>? Update;
     public event Action<TextureFramebuffer, double>? Render;
+    public event Action<VecI>? Resize;
 
     public object NativeWindow => canvas;
     public event Action? Loaded;
@@ -153,6 +154,7 @@ public class BrowserWindow(IWindowRenderApi windowRenderApi) : IWindow
     private void OnWindowResized(int width, int height)
     {
         RenderApi?.UpdateFramebufferSize(width, height);
+        Resize?.Invoke(new VecI(width, height));
     }
 
     private Texture CreateRenderTexture()
