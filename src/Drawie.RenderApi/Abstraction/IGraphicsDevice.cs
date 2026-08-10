@@ -1,6 +1,7 @@
 using Drawie.RenderApi.Abstraction.Buffers;
 using Drawie.RenderApi.Abstraction.CommandRecording;
 using Drawie.RenderApi.Abstraction.Pipeline;
+using Drawie.RenderApi.Abstraction.RenderTargets;
 using Drawie.RenderApi.Abstraction.Shaders;
 using Drawie.RenderApi.Abstraction.Textures;
 
@@ -21,4 +22,5 @@ public interface IGraphicsDevice
     */
     void Submit(RecordedRenderPass cmdList);
     IShaderProgram CreateShaderProgram(ShaderProgramDesc shaderProgramDesc);
+    IRenderTarget CreateRenderTarget(TextureDesc textureDesc);
 }

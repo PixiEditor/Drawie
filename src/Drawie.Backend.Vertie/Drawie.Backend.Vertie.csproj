@@ -17,6 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Geometry\" />
       <Folder Include="OpenGL\" />
     </ItemGroup>
 

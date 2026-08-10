@@ -30,7 +30,7 @@ public class OpenGlWindowRenderApi : IOpenGlWindowRenderApi
         Context = glContext;
         Api = GL.GetApi(glContext);
         var graphicsContext = new OpenGlGraphicsContext(Api, glContext);
-        texture = graphicsContext.CreateTexture(0); // default framebuffer texture
+        texture = graphicsContext.CreateTexture(0, framebufferSize.X, framebufferSize.Y); // default framebuffer texture
         GraphicsContext = graphicsContext;
     }
 

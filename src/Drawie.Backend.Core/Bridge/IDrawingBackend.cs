@@ -35,5 +35,6 @@ namespace Drawie.Backend.Core.Bridge
         public DrawingSurface? CreateRenderSurface(VecI size, ITexture renderTexture, SurfaceOrigin origin);
         public int GetNativeInstancesTotalCount();
         public void Flush();
+        void ResetContext();
     }
 }

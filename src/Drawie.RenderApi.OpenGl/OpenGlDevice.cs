@@ -2,6 +2,7 @@ using Drawie.RenderApi.Abstraction;
 using Drawie.RenderApi.Abstraction.Buffers;
 using Drawie.RenderApi.Abstraction.CommandRecording;
 using Drawie.RenderApi.Abstraction.Pipeline;
+using Drawie.RenderApi.Abstraction.RenderTargets;
 using Drawie.RenderApi.Abstraction.Shaders;
 using Drawie.RenderApi.Abstraction.Textures;
 using Silk.NET.OpenGL;
@@ -129,6 +130,12 @@ public class OpenGlDevice : IGraphicsDevice
 
         return new OpenGlShaderProgram(Api, program);
     }
+
+    public IRenderTarget CreateRenderTarget(TextureDesc textureDesc)
+    {
+        return new OpenGlRenderTarget(Api, textureDesc.Width, textureDesc.Height, textureDesc.Depth);
+    }
+
 
     private Silk.NET.OpenGL.ShaderType ToOpenGlShaderType(ShaderType shaderType)
     {

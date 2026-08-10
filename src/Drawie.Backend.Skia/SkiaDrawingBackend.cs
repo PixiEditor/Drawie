@@ -234,6 +234,11 @@ namespace Drawie.Skia
             SkiaGraphicsContext?.Flush();
         }
 
+        public void ResetContext()
+        {
+            SkiaGraphicsContext?.ResetContext();
+        }
+
         public override string ToString()
         {
             return "Skia";

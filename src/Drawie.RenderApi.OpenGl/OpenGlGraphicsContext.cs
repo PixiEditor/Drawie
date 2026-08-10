@@ -19,9 +19,9 @@ public class OpenGlGraphicsContext(GL api, IGLContext glContext) : IGraphicsCont
         GlContext.MakeCurrent();
     }
 
-    public OpenGlTexture CreateTexture(uint id)
+    public OpenGlTexture CreateTexture(uint id, int width, int height)
     {
         ownedTextures.Add(id);
-        return new OpenGlTexture(id, Api);
+        return new OpenGlTexture(id, Api, width, height);
     }
 }

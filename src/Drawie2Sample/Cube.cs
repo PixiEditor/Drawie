@@ -14,8 +14,7 @@ public class Cube : Mesh
 
     private static readonly uint[] Indices =
     {
-        0, 1, 3,
-        1, 2, 3
+        0, 1, 2,
     }; 
     
     public Cube() : base(Vertices, Indices, Indices.Length)

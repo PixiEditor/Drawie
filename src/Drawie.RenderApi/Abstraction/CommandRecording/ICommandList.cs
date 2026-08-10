@@ -12,5 +12,6 @@ public interface ICommandList
     void SetIndexBuffer(IBuffer indexBuffer);
     void BindTexture(string textureName, ITexture texture);
     void DrawIndexed(int indexCount);
+    RecordedRenderPass EndRenderPass(IRenderTarget blitTo);
     RecordedRenderPass EndRenderPass();
 }

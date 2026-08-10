@@ -9,9 +9,11 @@ using Drawie.Backend.Vertie.Rendering;
 using Drawie.Layer.ThreeD.Test;
 using Drawie.Layer.UI.ImGui;
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction.RenderTargets;
 using Drawie.Rendering;
-using Drawie.Windowing;
 using DrawiEngine;
+using Silk.NET.Windowing;
+using IWindow = Drawie.Windowing.IWindow;
 
 namespace Drawie2Sample;
 
@@ -57,6 +59,8 @@ public class Drawie2SampleApp : DrawieApp
         {
             targetTexture.Clear();
             
+            targetTexture.DrawMesh(new Cube(), mat);
+            
             using Font defaultFont = Font.CreateDefault();
             Paintable color = new ColorPaintable(Colors.White);
             StringBuilder sb = new StringBuilder();
@@ -72,8 +76,19 @@ public class Drawie2SampleApp : DrawieApp
             
             rt.Paint(targetTexture.Canvas, new VecD(0, 20), defaultFont, p, null);
             
-            targetTexture.DrawMesh(new Cube(), mat);
         };
     }
 }
 
+class DefaultFramebuffer : IRenderTarget
+{
+    public DefaultFramebuffer(VecI size)
+    {
+        Size = size;
+    }
+
+    public uint FramebufferId { get; } = 0;
+    public VecI Size { get; } 
+    
+    
+}

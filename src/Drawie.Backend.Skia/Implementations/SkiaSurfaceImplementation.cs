@@ -140,8 +140,7 @@ namespace Drawie.Skia.Implementations
 
             var texture = _graphicsDevice.CreateTexture(new TextureDesc()
             {
-                Format = TextureFormat.RGBA8_Unorm, Width = info.Width, Height = info.Height,
-                Usage = TextureUsage.RenderTarget | TextureUsage.Sampled
+                Format = TextureFormat.RGBA8_Unorm, Width = info.Width, Height = info.Height
             });
 
             var surface = CreateFromNativeTexture(texture, new VecI(info.Width, info.Height), defaultSurfaceOrigin, out var framebufferInfo);
@@ -187,7 +186,7 @@ namespace Drawie.Skia.Implementations
 
                 GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
                     new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
-
+                
                 var surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
                     SKColorType.Rgba8888);
 
