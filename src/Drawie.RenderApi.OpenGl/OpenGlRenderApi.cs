@@ -1,10 +1,15 @@
-﻿namespace Drawie.RenderApi.OpenGL;
+﻿using Drawie.RenderApi.Abstraction;
+using Silk.NET.Core.Contexts;
+using Silk.NET.OpenGL;
+
+namespace Drawie.RenderApi.OpenGL;
 
 public class OpenGlRenderApi : IOpenGlRenderApi
 {
     private List<OpenGlWindowRenderApi> windowRenderApis = new List<OpenGlWindowRenderApi>();
 
     public IReadOnlyCollection<IWindowRenderApi> WindowRenderApis => windowRenderApis;
+    public IGraphicsDevice GraphicsDevice { get; private set; }
 
     public IOpenGlContext OpenGlContext
     {
@@ -30,6 +35,7 @@ public class OpenGlRenderApi : IOpenGlRenderApi
     public OpenGlRenderApi(IOpenGlContext context)
     {
         this.context = context;
+        CreateGraphicsDevice(context);
     }
 
     public IWindowRenderApi CreateWindowRenderApi()
@@ -37,6 +43,16 @@ public class OpenGlRenderApi : IOpenGlRenderApi
         OpenGlWindowRenderApi renderApi = new OpenGlWindowRenderApi();
         windowRenderApis.Add(renderApi);
 
+        if (GraphicsDevice == null)
+        {
+            CreateGraphicsDevice(OpenGlContext);
+        }
+
         return renderApi;
+    }
+
+    private void CreateGraphicsDevice(IOpenGlContext context)
+    {
+        GraphicsDevice = new OpenGlDevice(new GL(new LamdaNativeContext(context.GetGlInterface)));
     }
 }

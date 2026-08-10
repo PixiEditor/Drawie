@@ -1,9 +1,13 @@
 ﻿using System.Diagnostics;
+using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
+using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction;
+using Drawie.RenderApi.Abstraction.Textures;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations
@@ -13,12 +17,17 @@ namespace Drawie.Skia.Implementations
         private readonly SkiaPixmapImplementation _pixmapImplementation;
         private readonly SkiaCanvasImplementation _canvasImplementation;
         private readonly SkiaPaintImplementation _paintImplementation;
+        private Dictionary<IntPtr, IFramebufferInfo> framebufferInfos = new Dictionary<IntPtr, IFramebufferInfo>();
 
         internal GRContext? GrContext { get; set; }
+        private readonly IGraphicsDevice _graphicsDevice;
+        private readonly SurfaceOrigin defaultSurfaceOrigin;
 
-        public SkiaSurfaceImplementation(GRContext context, SkiaPixmapImplementation pixmapImplementation,
+        public SkiaSurfaceImplementation(GRContext context, IGraphicsDevice graphicsDevice, SurfaceOrigin surfaceOrigin,
+            SkiaPixmapImplementation pixmapImplementation,
             SkiaCanvasImplementation canvasImplementation, SkiaPaintImplementation paintImplementation)
         {
+            _graphicsDevice = graphicsDevice;
             _pixmapImplementation = pixmapImplementation;
             _canvasImplementation = canvasImplementation;
             _paintImplementation = paintImplementation;
@@ -129,12 +138,70 @@ namespace Drawie.Skia.Implementations
                 return SKSurface.Create(info);
             }
 
-            return SKSurface.Create(GrContext, false, info);
+            var texture = _graphicsDevice.CreateTexture(new TextureDesc()
+            {
+                Format = TextureFormat.RGBA8_Unorm, Width = info.Width, Height = info.Height,
+                Usage = TextureUsage.RenderTarget | TextureUsage.Sampled
+            });
+
+            var surface = CreateFromNativeTexture(texture, new VecI(info.Width, info.Height), defaultSurfaceOrigin, out var framebufferInfo);
+            if (surface == null) return null;
+            
+            framebufferInfos[surface.Handle] = framebufferInfo;
+            return surface;
+        }
+
+        internal SKSurface? CreateFromNativeTexture(ITexture renderTexture, VecI size, SurfaceOrigin surfaceOrigin, out IFramebufferInfo fbInfo)
+        {
+            if (renderTexture is IVkTexture texture)
+            {
+                var imageInfo = new GRVkImageInfo()
+                {
+                    CurrentQueueFamily = texture.QueueFamily,
+                    Format = texture.ImageFormat,
+                    Image = texture.ImageHandle,
+                    ImageLayout = texture.Layout,
+                    ImageTiling = texture.Tiling,
+                    ImageUsageFlags = texture.UsageFlags,
+                    LevelCount = 1,
+                    SampleCount = 1,
+                    Protected = false,
+                    SharingMode = texture.TargetSharingMode,
+                };
+
+                var backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, imageInfo);
+                var surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin, SKColorType.Rgba8888, new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
+
+                fbInfo = new SkiaFramebufferInfo(backendRenderTarget);
+                return surface;
+            }
+
+            if (renderTexture is IWebGlTexture or IOpenGlTexture)
+            {
+                uint textureId = renderTexture switch
+                {
+                    IWebGlTexture wgl => wgl.TextureId,
+                    IOpenGlTexture ogl => ogl.TextureId,
+                    _ => throw new ArgumentException("Unsupported texture type.")
+                };
+
+                GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
+                    new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
+
+                var surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
+                    SKColorType.Rgba8888);
+
+                fbInfo = new SkiaFramebufferInfo(backendRenderTarget);
+                return surface;
+            }
+
+            throw new ArgumentException("Unsupported texture type.");
         }
 
         public void Dispose(DrawingSurface drawingSurface)
         {
             UnmanageAndDispose(drawingSurface.ObjectPointer);
+            framebufferInfos.Remove(drawingSurface.ObjectPointer, out var framebufferInfo);
         }
 
         public object GetNativeSurface(IntPtr objectPointer)
@@ -192,6 +259,16 @@ namespace Drawie.Skia.Implementations
         {
             SKRect skRect = this[objectPointer].Canvas.LocalClipBounds;
             return new RectD(skRect.Left, skRect.Top, skRect.Width, skRect.Height);
+        }
+
+        public IFramebufferInfo? GetFramebufferInfo(IntPtr objectPointer)
+        {
+            return framebufferInfos.GetValueOrDefault(objectPointer);
+        }
+
+        public void AddManagedFramebuffer(IntPtr nativeHandle, IFramebufferInfo fbInfo)
+        {
+            framebufferInfos.Add(nativeHandle, fbInfo);
         }
     }
 }

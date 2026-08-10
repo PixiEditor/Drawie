@@ -1,12 +1,14 @@
+using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction.RenderTargets;
 using Drawie.Rendering.Exceptions;
 
 namespace Drawie.Rendering;
 
-public class TextureFramebuffer : IDisposable
+public class TextureFramebuffer : IDisposable, IRenderTarget
 {
     internal Texture UnderlyingTexture { get; }
     public bool IsOpen { get; private set; }
@@ -30,6 +32,12 @@ public class TextureFramebuffer : IDisposable
     {
         ThrowIfNotOpen();
         UnderlyingTexture.NativeTexture.DrawingSurface.Canvas.Clear();
+    }
+    
+    public void Clear(Color color)
+    {
+        ThrowIfNotOpen();
+        UnderlyingTexture.NativeTexture.DrawingSurface.Canvas.Clear(color);
     }
     
     public void DrawRectangle(float x, float y, float width, float height, Paintable paintable)
@@ -56,4 +64,5 @@ public class TextureFramebuffer : IDisposable
         UnderlyingTexture.NativeTexture.DrawingSurface.Flush();
     }
 
+    uint IRenderTarget.FramebufferId => UnderlyingTexture.NativeTexture.FramebufferId;
 }

@@ -11,15 +11,14 @@ using SilkNet.Geometry;
 using SilkNet.Geometry.Primitives;
 using SilkNet.Optimization;
 using SilkNet.Rendering;
-using Shader = SilkNet.Rendering.Shader;
 using Texture = SilkNet.Rendering.Texture;
 
 namespace Drawie.Layer.ThreeD.Test;
 
 public class ThreeDTest : ILayer
 {
-    private static Shader _lampShader;
-    private static Shader _lightingShader;
+    private static MatShader _lampShader;
+    private static MatShader _lightingShader;
     private static Texture _diffuseMap;
     private static Texture _specularMap;
     private static Gif _dogGif;
@@ -84,8 +83,8 @@ public class ThreeDTest : ILayer
         ShaderLoader.LitShader = ShaderLoader.LoadRaw("LitShader");
 
         //The lighting shader will give our main cube its colour multiplied by the lights intensity
-        _lightingShader = new Shader(GlContext, ShaderLoader.VertexShader, ShaderLoader.LitShader);
-        _lampShader = new Shader(GlContext, ShaderLoader.BasicVertexShader, ShaderLoader.UnlitShader);
+        _lightingShader = new MatShader(GlContext, ShaderLoader.VertexShader, ShaderLoader.LitShader);
+        _lampShader = new MatShader(GlContext, ShaderLoader.BasicVertexShader, ShaderLoader.UnlitShader);
 
         _diffuseMap = new Texture(GlContext, "Images/silkBoxed.png");
         _specularMap = new Texture(GlContext, "Images/silkSpecular.png");

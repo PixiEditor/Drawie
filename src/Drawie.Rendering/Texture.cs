@@ -9,7 +9,6 @@ namespace Drawie.Rendering;
 public class Texture
 {
     internal NativeTexture NativeTexture { get; }
-    public TextureState State { get; internal set; } = TextureState.Submitted;
     public int Width { get; }
     public int Height { get; }
     public VecI Size => new VecI(Width, Height);
@@ -20,12 +19,4 @@ public class Texture
         Width = native.Size.X;
         Height = native.Size.Y;
     }
-}
-
-public enum TextureState
-{
-    Editing,
-    WaitingForSubmit,
-    Submitting,
-    Submitted,
 }

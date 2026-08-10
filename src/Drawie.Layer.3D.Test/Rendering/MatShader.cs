@@ -3,9 +3,9 @@ using Silk.NET.OpenGL;
 
 namespace SilkNet.Rendering;
 
-public sealed class Shader : NativeObject
+public sealed class MatShader : NativeObject
 {
-    public Shader(GL glContext, string rawVertex, string rawFragment) : base(glContext, glContext.CreateProgram())
+    public MatShader(GL glContext, string rawVertex, string rawFragment) : base(glContext, glContext.CreateProgram())
     {
         uint vertex = InitShader(ShaderType.VertexShader, rawVertex);
         uint fragment = InitShader(ShaderType.FragmentShader, rawFragment);

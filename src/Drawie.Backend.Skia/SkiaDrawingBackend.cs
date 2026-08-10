@@ -6,6 +6,7 @@ using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Numerics;
 using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction;
 using Drawie.Skia.Exceptions;
 using Drawie.Skia.Implementations;
 using SkiaSharp;
@@ -17,7 +18,7 @@ namespace Drawie.Skia
     {
         private IVulkanRenderApi? vulkanRenderApi;
 
-        public GRContext? GraphicsContext
+        public GRContext? SkiaGraphicsContext
         {
             get => _grContext;
             private set
@@ -30,9 +31,11 @@ namespace Drawie.Skia
                 _grContext = value;
             }
         }
+        
+        public IGraphicsDevice GraphicsDevice { get; }
 
         public IPathEffectImplementation PathEffectImplementation { get; set; }
-        public bool IsHardwareAccelerated => GraphicsContext != null;
+        public bool IsHardwareAccelerated => SkiaGraphicsContext != null;
 
         public IRenderingDispatcher RenderingDispatcher { get; set; }
 
@@ -59,10 +62,12 @@ namespace Drawie.Skia
 
         private GRContext _grContext;
 
-        public SkiaDrawingBackend()
+        public SkiaDrawingBackend(IGraphicsDevice renderApiGraphicsDevice)
         {
             SKColorSpace.CreateSrgb();
             SKColorSpace.CreateSrgbLinear();
+
+            GraphicsDevice = renderApiGraphicsDevice;
 
             ColorImplementation = new SkiaColorImplementation();
 
@@ -121,8 +126,7 @@ namespace Drawie.Skia
             SkiaCanvasImplementation canvasImpl =
                 new SkiaCanvasImplementation(paintImpl, imgImpl, bitmapImpl, pathImpl, fontImpl, meshImplementation);
 
-            SurfaceImplementation = new SkiaSurfaceImplementation(GraphicsContext, pixmapImpl, canvasImpl, paintImpl);
-
+            SurfaceImplementation = new SkiaSurfaceImplementation(SkiaGraphicsContext, GraphicsDevice, SurfaceOrigin.BottomLeft, pixmapImpl, canvasImpl, paintImpl);
 
             canvasImpl.SetSurfaceImplementation(SurfaceImplementation);
             imgImpl.SetSurfaceImplementation(SurfaceImplementation);
@@ -135,8 +139,11 @@ namespace Drawie.Skia
             CanvasImplementation = canvasImpl;
         }
 
+        public IRenderApi ActiveRenderApi { get; private set; }
+
         public void Setup(IRenderApi renderApi)
         {
+            ActiveRenderApi = renderApi;
             if (renderApi is IVulkanRenderApi vulkanRenderApi)
             {
                 SetupVulkan(vulkanRenderApi.VulkanContext);
@@ -165,18 +172,18 @@ namespace Drawie.Skia
         private void SetupOpenGl(IOpenGlContext openGlContext)
         {
             GRGlInterface glInterface = GRGlInterface.CreateOpenGl(openGlContext.GetGlInterface);
-            GraphicsContext = GRContext.CreateGl(glInterface);
-            SurfaceImplementation.GrContext = GraphicsContext;
+            SkiaGraphicsContext = GRContext.CreateGl(glInterface);
+            SurfaceImplementation.GrContext = SkiaGraphicsContext;
         }
 
         private void SetupAngleOpenGl(IOpenGlContext openGlContext)
         {
             GRGlInterface glInterface = GRGlInterface.Create(openGlContext.GetGlInterface);
-            GraphicsContext = GRContext.CreateGl(glInterface, new GRContextOptions()
+            SkiaGraphicsContext = GRContext.CreateGl(glInterface, new GRContextOptions()
             {
                 AvoidStencilBuffers = true
             });
-            SurfaceImplementation.GrContext = GraphicsContext;
+            SurfaceImplementation.GrContext = SkiaGraphicsContext;
         }
 
         private void SetupWebGl(IWebGlContext webGlContext)
@@ -184,8 +191,8 @@ namespace Drawie.Skia
             try
             {
                 GRGlInterface glInterface = GRGlInterface.CreateWebGl(webGlContext.GetGlInterface);
-                GraphicsContext = GRContext.CreateGl(glInterface);
-                SurfaceImplementation.GrContext = GraphicsContext;
+                SkiaGraphicsContext = GRContext.CreateGl(glInterface);
+                SurfaceImplementation.GrContext = SkiaGraphicsContext;
             }
             catch (Exception e)
             {
@@ -194,49 +201,16 @@ namespace Drawie.Skia
             }
         }
 
-        public DrawingSurface CreateRenderSurface(VecI size, ITexture renderTexture, SurfaceOrigin surfaceOrigin)
+        public DrawingSurface? CreateRenderSurface(VecI size, ITexture renderTexture, SurfaceOrigin surfaceOrigin)
         {
-            if (renderTexture is IVkTexture texture)
+            var native = SurfaceImplementation.CreateFromNativeTexture(renderTexture, size, surfaceOrigin, out var fbInfo);
+            if (native == null)
             {
-                var imageInfo = new GRVkImageInfo()
-                {
-                    CurrentQueueFamily = texture.QueueFamily,
-                    Format = texture.ImageFormat,
-                    Image = texture.ImageHandle,
-                    ImageLayout = texture.Layout,
-                    ImageTiling = texture.Tiling,
-                    ImageUsageFlags = texture.UsageFlags,
-                    LevelCount = 1,
-                    SampleCount = 1,
-                    Protected = false,
-                    SharingMode = texture.TargetSharingMode,
-                };
-
-                var surface = SKSurface.Create(GraphicsContext, new GRBackendRenderTarget(size.X, size.Y, imageInfo),
-                    (GRSurfaceOrigin)surfaceOrigin, SKColorType.Rgba8888,
-                    new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
-
-                return DrawingSurface.FromNative(surface);
-            }
-            else if (renderTexture is IWebGlTexture or IOpenGlTexture)
-            {
-                uint textureId = renderTexture switch
-                {
-                    IWebGlTexture wgl => wgl.TextureId,
-                    IOpenGlTexture ogl => ogl.TextureId,
-                    _ => throw new ArgumentException("Unsupported texture type.")
-                };
-
-                GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
-                    new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
-
-                var surface = SKSurface.Create(GraphicsContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
-                    SKColorType.Rgba8888);
-
-                return DrawingSurface.FromNative(surface);
+                return null;
             }
 
-            throw new ArgumentException("Unsupported texture type.");
+            SurfaceImplementation.AddManagedFramebuffer(native.Handle, fbInfo);
+            return DrawingSurface.FromNative(native);
         }
 
         private void SetupVulkan(IVulkanContext vulkanContext)
@@ -251,13 +225,13 @@ namespace Drawie.Skia
                 GetProcedureAddress = vulkanContext.GetProcedureAddress,
             };
 
-            GraphicsContext = GRContext.CreateVulkan(vkBackendContext);
-            SurfaceImplementation.GrContext = GraphicsContext;
+            SkiaGraphicsContext = GRContext.CreateVulkan(vkBackendContext);
+            SurfaceImplementation.GrContext = SkiaGraphicsContext;
         }
 
         public void Flush()
         {
-            GraphicsContext?.Flush();
+            SkiaGraphicsContext?.Flush();
         }
 
         public override string ToString()

@@ -8,7 +8,7 @@ using Drawie.Numerics;
 
 namespace Drawie.Backend.Core;
 
-public class NativeTexture : IDisposable, ICloneable, IPixelsMap
+public class NativeTexture : IDisposable, ICloneable, IPixelsMap, IFramebufferInfo
 {
     public VecI Size { get; }
     public DrawingSurface DrawingSurface { get; private set; }
@@ -86,7 +86,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap
 
         return tex;
     }
-    
+
     public static NativeTexture ForProcessing(Canvas copySizeAndMatrixFrom, ColorSpace colorSpace)
     {
         NativeTexture tex = new NativeTexture(
@@ -301,7 +301,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap
         if (isDisposed)
             throw new ObjectDisposedException("Texture");
 
-        if(cpuSurface == null)
+        if (cpuSurface == null)
             return;
 
         using var ctx = EnsureContext();
@@ -408,4 +408,8 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap
         surf.SaveToDesktop();
     }
 #endif
+
+    public uint FramebufferId =>
+        DrawingBackendApi.Current.SurfaceImplementation.GetFramebufferInfo(DrawingSurface.ObjectPointer)
+            ?.FramebufferId ?? throw new Exception("Framebuffer info not available.");
 }

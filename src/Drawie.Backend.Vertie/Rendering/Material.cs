@@ -1,18 +1,20 @@
-﻿using System.Numerics;
-using Silk.NET.OpenGL;
+﻿using System.Collections;
+using System.Numerics;
+using Drawie.RenderApi;
+using SilkNet.Rendering;
 
-namespace SilkNet.Rendering;
+namespace Drawie.Backend.Vertie.Rendering;
 
-public class Material : IDisposable
+public class Material
 {
     public string Name { get; set; }
-    public MatShader Shader { get; set; }
+    public CompiledShader Shader { get; set; }
     public List<ShaderProperty> Properties { get; set; } = new List<ShaderProperty>();
-    public Texture[] Textures { get; set; } = new Texture[32];
-    
+    public TextureMaterial[] Textures { get; set; } = Array.Empty<TextureMaterial>();
+
     private int _textureCount;
     
-    public Material(string name, MatShader shader)
+    public Material(string name, CompiledShader shader)
     {
         Name = name;
         Shader = shader;
@@ -20,45 +22,22 @@ public class Material : IDisposable
         AddProperty<Matrix4x4>("uModel");
         AddProperty<Matrix4x4>("uView");
         AddProperty<Matrix4x4>("uProjection");
+        /*
         if (shader.HasUniform("viewPos"))
         {
             AddProperty<Vector3>("viewPos");
         }
+    */
     }
 
-    public void Use(Camera camera)
-    {
-        BindTextures();
-        Shader.Use();
-        
-        SetProperty("uView", camera.ViewMatrix);
-        SetProperty("uProjection", camera.ProjectionMatrix);
-        if (Shader.HasUniform("viewPos"))
-        {
-            SetProperty("viewPos", camera.Position);
-        }
-    }
-
+    /*
     public void PrepareForObject(Transform transform)
     {
         SetProperty("uModel", transform.ViewMatrix);
         UpdateShader();
     }
+    */
 
-    private void BindTextures()
-    {
-        for (var i = 0; i < _textureCount; i++)
-        {
-            TextureUnit unit = (TextureUnit)(0x84C0 + i);
-            Textures[i].Bind(unit);
-        }
-    }
-
-    public void AddTexture(Texture texture)
-    {
-        Textures[_textureCount] = texture;
-        _textureCount++;
-    }
 
     public void AddProperty<T>(string name, T defaultValue = default) where T: struct
     {
@@ -66,13 +45,13 @@ public class Material : IDisposable
         Properties.Add(property);
     }
     
-    public void UpdateShader()
+    /*public void UpdateShader()
     {
         foreach (ShaderProperty property in Properties)
         {
             ApplyToShader(property);
         }
-    }
+    }*/
     
     public void SetProperty<T>(string name, T value) where T : struct
     {
@@ -93,7 +72,7 @@ public class Material : IDisposable
         throw new Exception($"Property {name} does not exist");
     }
 
-    private void ApplyToShader(ShaderProperty prop)
+    /*private void ApplyToShader(ShaderProperty prop)
     {
         switch (prop.ObjValue)
         {
@@ -112,14 +91,11 @@ public class Material : IDisposable
             default:
                 throw new Exception($"Property {prop.UniformName} is not a supported type");
         }
-    }
-    
-    public void Dispose()
-    {
-        Shader.Dispose();
-        foreach (var texture in Textures)
-        {
-            texture?.Dispose();
-        }
-    }
+    }*/
+}
+
+public struct TextureMaterial
+{
+    public string Name { get; set; }
+    public ITexture Texture { get; set; }
 }

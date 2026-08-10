@@ -1,3 +1,4 @@
+using Drawie.RenderApi.Abstraction;
 using Silk.NET.Vulkan;
 
 namespace Drawie.RenderApi.Vulkan;
@@ -6,6 +7,7 @@ public class VulkanRenderApi : IVulkanRenderApi
 {
     private List<IWindowRenderApi> windowRenderApis = new List<IWindowRenderApi>();
     public IReadOnlyCollection<IWindowRenderApi> WindowRenderApis => windowRenderApis;
+    public IGraphicsDevice GraphicsDevice { get; private set; }
     public IVulkanContext VulkanContext { get; private set; }
 
     IReadOnlyCollection<IVulkanWindowRenderApi> IVulkanRenderApi.WindowRenderApis =>
@@ -39,5 +41,10 @@ public class VulkanRenderApi : IVulkanRenderApi
 
         windowRenderApis.Add(windowRenderApi);
         return windowRenderApi;
+    }
+    
+    private void CreateGraphicsDevice(IVulkanContext context)
+    {
+        throw new NotImplementedException();
     }
 }

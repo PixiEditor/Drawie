@@ -17,7 +17,7 @@ public static class DesktopDrawingEngine
             renderApi = new OpenGlRenderApi();
         }
 
-        return new DrawingEngine(renderApi, new GlfwWindowingPlatform(renderApi), new SkiaDrawingBackend(),
+        return new DrawingEngine(renderApi, new GlfwWindowingPlatform(renderApi), new SkiaDrawingBackend(renderApi.GraphicsDevice),
             new DrawieRenderingDispatcher());
     }
 }
