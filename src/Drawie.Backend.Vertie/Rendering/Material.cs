@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Numerics;
-using Drawie.Backend.Core.Shaders;
+﻿using System.Numerics;
 using Drawie.Backend.Vertie.Core;
-using Drawie.Numerics;
 using Drawie.RenderApi;
 using Drawie.RenderApi.Abstraction.Shaders;
 
@@ -11,16 +8,16 @@ namespace Drawie.Backend.Vertie.Rendering;
 public class Material
 {
     public string Name { get; set; }
-    public CompiledShader Shader { get; set; }
+    public CompiledShader[] Shaders { get; set; }
     public Dictionary<string, UniformBlock> Properties { get; set; } = new();
     public TextureMaterial[] Textures { get; set; } = Array.Empty<TextureMaterial>();
 
     private int _textureCount;
 
-    public Material(string name, CompiledShader shader)
+    public Material(string name, CompiledShader[] shaders)
     {
         Name = name;
-        Shader = shader;
+        Shaders = shaders;
 
         Properties.Add("Transform",
             new UniformBlock("Transform")
@@ -64,7 +61,13 @@ public class Material
 
     private void ApplyToShader(UniformBlock prop)
     {
-        Shader.SetUniformBlock(prop);
+        foreach (var shader in Shaders)
+        {
+            if (shader.HasUniformBlock(prop.Name))
+            {
+                shader.SetUniformBlock(prop);
+            }
+        }
     }
 }
 

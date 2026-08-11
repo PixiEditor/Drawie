@@ -17,47 +17,6 @@ namespace Drawie2Sample;
 
 public class Drawie2SampleApp : DrawieApp
 {
-    private string shader = """
-                            struct VertexInput
-                            {
-                                float3 vPos : POSITION;
-                            };
-                            
-                            struct VertexOutput
-                            {
-                                float4 position : SV_Position;
-                                float3 fPos : TEXCOORD0;
-                            };
-                            
-                            
-                            [[vk::binding(0, 0)]]
-                            cbuffer Transform
-                            {
-                                float4x4 uModel;
-                                float4x4 uView;
-                                float4x4 uProjection;
-                            };
-                            
-                            [shader("vertex")]
-                            VertexOutput VSMain(VertexInput input)
-                            {
-                                VertexOutput output;
-                            
-                              output.position = mul(mul(mul(uProjection, uView), uModel), float4(input.vPos, 1.0));
-                            
-                               //We want to know the fragment's position in World space, so we multiply ONLY by uModel and not uView or uProjection
-                               output.fPos = mul(uModel, float4(input.vPos, 1.0)).xyz;
-                            
-                                return output;
-                            }
-                            
-                            [shader("fragment")]
-                            float4 FSMain() : SV_Target
-                            {
-                                return float4(1, 0, 0, 1);
-                            }
-                            """;
-
     private IWindow window;
     private Material material;
 
@@ -79,9 +38,7 @@ public class Drawie2SampleApp : DrawieApp
 
     protected override void OnInitialize()
     {
-        var matShader = new ShaderDefinition(this.shader);
-        var compiled = matShader.Compile();
-        Material mat = new Material("Basic", compiled);
+        Material mat = new Material("Basic", [BuiltInShaders.BasicVertexShader, BuiltInShaders.UnlitFragmentShader]);
         camera = new Camera(Vector3.Zero, Vector3.UnitZ, Vector3.UnitY, (float)window.Size.X / window.Size.Y);
         Cube cube = new Cube();
         cube.Transform.Position = new Vector3(0, 0, 0);

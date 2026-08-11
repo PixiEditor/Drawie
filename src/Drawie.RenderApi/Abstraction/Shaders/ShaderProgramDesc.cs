@@ -2,12 +2,24 @@ namespace Drawie.RenderApi.Abstraction.Shaders;
 
 public struct ShaderProgramDesc
 {
-    public byte[] VertexShaderBytes { get; }
-    public byte[] FragmentShaderBytes { get; }
+    public List<ShaderDesc> Shaders { get; }
 
-    public ShaderProgramDesc(byte[] vertexShaderBytes, byte[] fragmentShaderBytes)
+    public ShaderProgramDesc(IEnumerable<ShaderDesc> desc)
     {
-        VertexShaderBytes = vertexShaderBytes;
-        FragmentShaderBytes = fragmentShaderBytes;
+        Shaders = new List<ShaderDesc>(desc);
+    }
+}
+
+public struct ShaderDesc
+{
+    public string EntryName { get; set; }
+    public byte[] Bytes { get; }
+    public ShaderType Type { get; }
+
+    public ShaderDesc(string entryName, byte[] bytes, ShaderType type)
+    {
+        EntryName = entryName;
+        Bytes = bytes;
+        Type = type;
     }
 }

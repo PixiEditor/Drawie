@@ -56,57 +56,33 @@ public class OpenGlDevice : IGraphicsDevice
     {
         var program = Api.CreateProgram();
 
-        uint vertex = 0;
-        uint fragment = 0;
+        uint[] shaders = new uint[desc.Shaders.Count];
 
-        if (desc.VertexShaderBytes != null)
+        for (var i = 0; i < desc.Shaders.Count; i++)
         {
-            vertex = Api.CreateShader(
-                ToOpenGlShaderType(ShaderType.Vertex));
+            var shader = desc.Shaders[i];
+            shaders[i] = Api.CreateShader(
+                ToOpenGlShaderType(shader.Type));
 
-            fixed (byte* bytes = desc.VertexShaderBytes)
+            uint shaderPtr = shaders[i];
+            fixed (byte* bytes = shader.Bytes)
             {
                 Api.ShaderBinary(
                     1,
-                    &vertex,
+                    &shaderPtr,
                     ShaderBinaryFormat.ShaderBinaryFormatSpirV,
                     bytes,
-                    (uint)desc.VertexShaderBytes.Length);
+                    (uint)shader.Bytes.Length);
             }
 
             Api.SpecializeShader(
-                vertex,
-                "VSMain",
+                shaderPtr,
+                shader.EntryName,
                 0,
                 null,
                 null);
 
-            Api.AttachShader(program, vertex);
-        }
-
-        if (desc.FragmentShaderBytes != null)
-        {
-            fragment = Api.CreateShader(
-                ToOpenGlShaderType(ShaderType.Fragment));
-
-            fixed (byte* bytes = desc.FragmentShaderBytes)
-            {
-                Api.ShaderBinary(
-                    1,
-                    &fragment,
-                    ShaderBinaryFormat.ShaderBinaryFormatSpirV,
-                    bytes,
-                    (uint)desc.FragmentShaderBytes.Length);
-            }
-
-            Api.SpecializeShader(
-                fragment,
-                "FSMain",
-                0,
-                null,
-                null);
-
-            Api.AttachShader(program, fragment);
+            Api.AttachShader(program, shaderPtr);
         }
 
         Api.LinkProgram(program);
@@ -118,16 +94,13 @@ public class OpenGlDevice : IGraphicsDevice
             throw new Exception($"Program failed to link with error: {Api.GetProgramInfoLog(program)}");
         }
 
-        if (vertex != 0)
+        for (var i = 0; i < shaders.Length; i++)
         {
-            Api.DetachShader(program, vertex);
-            Api.DeleteShader(vertex);
-        }
-
-        if (fragment != 0)
-        {
-            Api.DetachShader(program, fragment);
-            Api.DeleteShader(fragment);
+            if (shaders[i] != 0)
+            {
+                Api.DetachShader(program, shaders[i]);
+                Api.DeleteShader(shaders[i]);
+            }
         }
 
         return new OpenGlShaderProgram(Api, program);

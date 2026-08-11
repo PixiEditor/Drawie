@@ -2,7 +2,6 @@ using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Vertie.Core;
 using Drawie.Backend.Vertie.Rendering;
 using Drawie.Numerics;
-using Drawie.RenderApi;
 using Drawie.RenderApi.Abstraction;
 using Drawie.RenderApi.Abstraction.Buffers;
 using Drawie.RenderApi.Abstraction.CommandRecording;
@@ -18,8 +17,8 @@ public static class TextureFramebufferExtensions
 {
     private static Dictionary<Mesh, (IBuffer, IBuffer)> cachedMeshBuffers = new Dictionary<Mesh, (IBuffer, IBuffer)>();
 
-    private static Dictionary<CompiledShader, IShaderProgram> cachedShaderPrograms =
-        new Dictionary<CompiledShader, IShaderProgram>();
+    private static Dictionary<Material, IShaderProgram> cachedShaderPrograms =
+        new Dictionary<Material, IShaderProgram>();
 
     private static ICommandList? cmdList;
 
@@ -86,14 +85,14 @@ public static class TextureFramebufferExtensions
 
     private static IShaderProgram GetOrCreateShaderProgram(IGraphicsDevice graphicsDevice, Material material)
     {
-        if (cachedShaderPrograms.ContainsKey(material.Shader))
+        if (cachedShaderPrograms.ContainsKey(material))
         {
-            return cachedShaderPrograms[material.Shader];
+            return cachedShaderPrograms[material];
         }
 
         var program =
-            graphicsDevice.CreateShaderProgram(new ShaderProgramDesc(material.Shader.Vertex, material.Shader.Fragment));
-        cachedShaderPrograms.Add(material.Shader, program);
+            graphicsDevice.CreateShaderProgram(new ShaderProgramDesc(material.Shaders.Select(x => new ShaderDesc(x.EntryName, x.ShaderBytes, x.ShaderType))));
+        cachedShaderPrograms.Add(material, program);
 
         return program;
     }
