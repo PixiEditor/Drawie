@@ -23,15 +23,15 @@ public static class TextureFramebufferExtensions
 
     private static ICommandList? cmdList;
 
-    public static void DrawMesh(this TextureFramebuffer fb, Mesh mesh, Material material)
+    public static void DrawMesh(this TextureFramebuffer fb, Mesh mesh, Material material, Camera camera)
     {
         IGraphicsDevice device = DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice;
 
         fb.Canvas?.Flush();
-        DrawMesh(fb, mesh, material, device);
+        DrawMesh(fb, mesh, material, camera, device);
     }
 
-    public static void DrawMesh(IRenderTarget fb, Mesh mesh, Material material, IGraphicsDevice device)
+    public static void DrawMesh(IRenderTarget fb, Mesh mesh, Material material, Camera camera, IGraphicsDevice device)
     {
         var sceneTarget = device.CreateRenderTarget(new TextureDesc()
         {
@@ -40,6 +40,8 @@ public static class TextureFramebufferExtensions
             Format = TextureFormat.RGBA8_Unorm,
             Depth = DepthFormat.Depth24Stencil8
         });
+
+        var shader = GetOrCreateShaderProgram(device, material);
         
         var pipeline = device.CreatePipeline(new PipelineDesc()
         {
@@ -48,7 +50,7 @@ public static class TextureFramebufferExtensions
                 Enabled = true,
                 DepthCompare = DepthCompareType.Less,
             },
-            ShaderProgram = GetOrCreateShaderProgram(device, material),
+            ShaderProgram = shader,
             Viewport = new RectI(0, 0, fb.Size.X, fb.Size.Y),
         });
 
@@ -59,7 +61,12 @@ public static class TextureFramebufferExtensions
         (IBuffer vertex, IBuffer index) buffers = InitializeBuffers(mesh, device);
         cmdList.SetIndexBuffer(buffers.index);
         cmdList.SetVertexBuffer(buffers.vertex);
-
+        
+        material.Use(camera);
+        material.PrepareForObject(mesh.Transform);
+        
+        shader.UpdateUniforms(material.Properties.Values.ToList());
+        
         foreach (var texture in material.Textures)
         {
             cmdList.BindTexture(texture.Name, texture.Texture);

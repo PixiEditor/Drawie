@@ -56,7 +56,7 @@ public class OpenGlCommandList(GL api) : ICommandList
 
     public void DrawIndexed(int indexCount)
     {
-        RecordInstruction(() => Api.DrawArrays(PrimitiveType.Triangles, 0, 3));
+        RecordInstruction(() => Api.DrawArrays(PrimitiveType.Triangles, 0, 36));
     }
 
     public RecordedRenderPass EndRenderPass(IRenderTarget blitTo)

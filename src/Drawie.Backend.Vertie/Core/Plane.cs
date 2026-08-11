@@ -1,21 +1,21 @@
 ﻿using System.Numerics;
 using Drawie.Numerics;
 
-namespace Drawie.Backend.Vertie;
+namespace Drawie.Backend.Vertie.Core;
 
 public struct Plane
 {
-    public Vec3D Normal { get; set; }
-    public Vec3D Point { get; set; }
+    public Vector3 Normal { get; set; }
+    public Vector3 Point { get; set; }
 
-    public double GetSignedDistance(Vec3D point)
+    public float GetSignedDistance(Vector3 point)
     {
-        return Normal.Dot(point - Point);
+        return Vector3.Dot(Normal, point - Point);
     }
 
-    public Plane(Vec3D point, Vec3D normal)
+    public Plane(Vector3 point, Vector3 normal)
     {
-        Normal = normal.Normalize();
+        Normal = Vector3.Normalize(normal);
         Point = point;
     }
 }

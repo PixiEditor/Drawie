@@ -1,4 +1,4 @@
-namespace Drawie.Backend.Vertie;
+namespace Drawie.Backend.Vertie.Helpers;
 
 public static class MathEx
 {

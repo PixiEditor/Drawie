@@ -1,6 +1,7 @@
-﻿using Drawie.Numerics;
+﻿using System.Numerics;
+using Drawie.Numerics;
 
-namespace Drawie.Backend.Vertie;
+namespace Drawie.Backend.Vertie.Core;
 
 public struct Frustum
 {
@@ -20,13 +21,13 @@ public struct Frustum
     {
         float halfVerticalSize = zFar * (float)Math.Tan(fovY / 2);
         float halfHorizontalSize = halfVerticalSize * camera.AspectRatio;
-        Vec3D frontMultFar = zFar * camera.Forward;
+        Vector3 frontMultFar = zFar * camera.Forward;
         
         Near = new Plane(camera.Position + zNear * camera.Forward, camera.Forward);
         Far = new Plane(camera.Position + frontMultFar, -camera.Forward);
-        Right = new Plane(camera.Position, camera.Up.Cross(frontMultFar + camera.Right * halfHorizontalSize));
-        Left = new Plane(camera.Position, (frontMultFar - camera.Right * halfHorizontalSize).Cross(camera.Up));
-        Bottom = new Plane(camera.Position, camera.Right.Cross(frontMultFar - camera.Up * halfVerticalSize));
-        Top = new Plane(camera.Position, (frontMultFar + camera.Up * halfVerticalSize).Cross(camera.Right));
+        Right = new Plane(camera.Position, Vector3.Cross(camera.Up, frontMultFar + camera.Right * halfHorizontalSize));
+        Left = new Plane(camera.Position, Vector3.Cross(frontMultFar - camera.Right * halfHorizontalSize, camera.Up));
+        Bottom = new Plane(camera.Position, Vector3.Cross(camera.Right, frontMultFar - camera.Up * halfVerticalSize));
+        Top = new Plane(camera.Position, Vector3.Cross(frontMultFar + camera.Up * halfVerticalSize, camera.Right));
     }
 }

@@ -1,3 +1,5 @@
+using System.Numerics;
+using Drawie.Numerics;
 using Drawie.RenderApi.Abstraction;
 using Drawie.RenderApi.Abstraction.Buffers;
 using Drawie.RenderApi.Abstraction.CommandRecording;
@@ -61,7 +63,7 @@ public class OpenGlDevice : IGraphicsDevice
         {
             vertex = Api.CreateShader(
                 ToOpenGlShaderType(ShaderType.Vertex));
-            
+
             fixed (byte* bytes = desc.VertexShaderBytes)
             {
                 Api.ShaderBinary(
@@ -86,7 +88,7 @@ public class OpenGlDevice : IGraphicsDevice
         {
             fragment = Api.CreateShader(
                 ToOpenGlShaderType(ShaderType.Fragment));
-            
+
             fixed (byte* bytes = desc.FragmentShaderBytes)
             {
                 Api.ShaderBinary(
@@ -106,16 +108,16 @@ public class OpenGlDevice : IGraphicsDevice
 
             Api.AttachShader(program, fragment);
         }
-        
+
         Api.LinkProgram(program);
-        
+
         Api.GetProgram(program, GLEnum.LinkStatus, out var status);
 
         if (status == 0)
         {
             throw new Exception($"Program failed to link with error: {Api.GetProgramInfoLog(program)}");
         }
-        
+
         if (vertex != 0)
         {
             Api.DetachShader(program, vertex);
@@ -130,6 +132,7 @@ public class OpenGlDevice : IGraphicsDevice
 
         return new OpenGlShaderProgram(Api, program);
     }
+
 
     public IRenderTarget CreateRenderTarget(TextureDesc textureDesc)
     {

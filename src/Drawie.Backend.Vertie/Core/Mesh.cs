@@ -5,6 +5,7 @@ namespace Drawie.Backend.Vertie.Core;
 
 public class Mesh
 {
+    public Transform Transform { get; } = new Transform();
     public float[] Vertices { get; set; }
     public uint[] Indicies { get; set; }
     public int IndexCount { get; set; }

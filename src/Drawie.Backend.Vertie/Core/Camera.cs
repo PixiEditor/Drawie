@@ -1,14 +1,15 @@
 ﻿using System.Numerics;
+using Drawie.Backend.Vertie.Helpers;
 using Drawie.Numerics;
 
-namespace Drawie.Backend.Vertie;
+namespace Drawie.Backend.Vertie.Core;
 
 public class Camera
 {
-    public Vec3D Position { get; set; }
-    public Vec3D Forward { get; private set; }
-    public Vec3D Up { get; private set; }
-    public Vec3D Right { get; private set; }
+    public Vector3 Position { get; set; }
+    public Vector3 Forward { get; private set; }
+    public Vector3 Up { get; private set; }
+    public Vector3 Right { get; private set; }
     public float AspectRatio { get; set; }
 
     public float Yaw { get; set; } = -90f;
@@ -22,7 +23,7 @@ public class Camera
         set => _zoom = Math.Clamp(Zoom - value, 1f, 45f);
     }
 
-    public Matrix4x4 ViewMatrix => Matrix4x4.CreateLookAt(Position.ToVector3(), (Position + Forward).ToVector3(), Up.ToVector3());
+    public Matrix4x4 ViewMatrix => Matrix4x4.CreateLookAt(Position, (Position + Forward), Up);
 
     public Matrix4x4 ProjectionMatrix =>
         Matrix4x4.CreatePerspectiveFieldOfView(MathEx.DegreesToRadians * Zoom, AspectRatio, 0.1f, 100f);
@@ -30,7 +31,7 @@ public class Camera
     public Quaternion Rotation => Quaternion.CreateFromYawPitchRoll(-MathEx.DegreesToRadians * Yaw,
         MathEx.DegreesToRadians * Pitch, 0f);
 
-    public Camera(Vec3D position, Vec3D forward, Vec3D up, float aspectRatio)
+    public Camera(Vector3 position, Vector3 forward, Vector3 up, float aspectRatio)
     {
         Position = position;
         Forward = forward;
@@ -52,14 +53,14 @@ public class Camera
 
         Pitch = Math.Clamp(Pitch, -89f, 89f);
 
-        var cameraDirection = Vec3D.Zero;
+        var cameraDirection = Vector3.Zero;
         cameraDirection.X = MathF.Cos(MathEx.DegreesToRadians * Yaw) * MathF.Cos(MathEx.DegreesToRadians * Pitch);
         cameraDirection.Y = MathF.Sin(MathEx.DegreesToRadians * Pitch);
         cameraDirection.Z = MathF.Sin(MathEx.DegreesToRadians * Yaw) * MathF.Cos(MathEx.DegreesToRadians * Pitch);
-        cameraDirection = cameraDirection.Normalize();
+        cameraDirection = Vector3.Normalize(cameraDirection);
 
         Forward = cameraDirection;
-        Right = Forward.Cross(Vec3D.UnitY).Normalize();
-        Up = Right.Cross(cameraDirection).Normalize();
+        Right = Vector3.Normalize(Vector3.Cross(Forward, Vector3.UnitY));
+        Up = Vector3.Normalize(Vector3.Cross(Right, cameraDirection));
     }
 }

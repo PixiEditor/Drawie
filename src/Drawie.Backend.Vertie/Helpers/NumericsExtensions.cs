@@ -1,7 +1,7 @@
 using System.Numerics;
 using Drawie.Numerics;
 
-namespace Drawie.Backend.Vertie;
+namespace Drawie.Backend.Vertie.Helpers;
 
 public static class NumericsExtensions
 {

@@ -90,5 +90,5 @@ string code = """
               }
               """;
 
-ShaderDefiniton shaderDefiniton = new ShaderDefiniton(code);
-shaderDefiniton.Compile();
+ShaderDefinition shaderDefinition = new ShaderDefinition(code);
+shaderDefinition.Compile();

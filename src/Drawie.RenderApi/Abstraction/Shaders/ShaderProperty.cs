@@ -1,4 +1,4 @@
-﻿namespace SilkNet.Rendering;
+﻿namespace Drawie.RenderApi.Abstraction.Shaders;
 
 public class ShaderProperty
 {
@@ -12,7 +12,7 @@ public class ShaderProperty
     }
 }
 
-public class ShaderProperty<T> : ShaderProperty
+public class ShaderProperty<T> : ShaderProperty where T : unmanaged
 {
     public T Value
     {

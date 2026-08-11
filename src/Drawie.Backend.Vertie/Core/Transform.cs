@@ -1,18 +1,17 @@
 ﻿using System.Numerics;
-using Drawie.Numerics;
 
-namespace Drawie.Backend.Vertie;
+namespace Drawie.Backend.Vertie.Core;
 
 public class Transform
 {
-    private Vec3D _position = Vec3D.Zero;
+    private Vector3 _position = Vector3.Zero;
     private float _scale = 1f;
     private Quaternion _rotation = Quaternion.Identity;
     private Matrix4x4 _cachedMatrix = Matrix4x4.Identity;
     
     private bool _isDirty = true;
     
-    public Vec3D Position
+    public Vector3 Position
     {
         get => _position;
         set
@@ -22,19 +21,19 @@ public class Transform
         }
     }
     
-    public Vec3D Right
+    public Vector3 Right
     {
-        get => Vec3D.Transform(Vec3D.UnitX, _rotation);
+        get => Vector3.Transform(Vector3.UnitX, _rotation);
     }
     
-    public Vec3D Up
+    public Vector3 Up
     {
-        get => Vec3D.Transform(Vec3D.UnitY, _rotation);
+        get => Vector3.Transform(Vector3.UnitY, _rotation);
     }
     
-    public Vec3D Forward
+    public Vector3 Forward
     {
-        get => Vec3D.Transform(Vec3D.UnitZ, _rotation);
+        get => Vector3.Transform(Vector3.UnitZ, _rotation);
     }
 
     public float Scale
@@ -64,7 +63,7 @@ public class Transform
             if (_isDirty)
             {
                 _cachedMatrix = Matrix4x4.Identity * Matrix4x4.CreateFromQuaternion(Rotation) * Matrix4x4.CreateScale(Scale) *
-                       Matrix4x4.CreateTranslation(Position.ToVector3());
+                       Matrix4x4.CreateTranslation(Position);
                 _isDirty = false;
             }
 
