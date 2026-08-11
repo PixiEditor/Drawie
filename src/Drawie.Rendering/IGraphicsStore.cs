@@ -27,6 +27,12 @@ public class GraphicsStore : IDisposable
 #endif
     }
 
+    public Texture Create(VecI size)
+    {
+        textures.Add(new Texture(new NativeTexture(size)));
+        return textures[^1];
+    }
+
     public Texture CreateNativeRenderSurface(VecI size, ITexture nativeTexture, SurfaceOrigin origin)
     {
         if (!GraphicsContext.OwnsTexture(nativeTexture))

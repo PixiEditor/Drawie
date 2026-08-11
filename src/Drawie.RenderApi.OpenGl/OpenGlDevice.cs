@@ -14,12 +14,14 @@ namespace Drawie.RenderApi.OpenGL;
 
 public class OpenGlDevice : IGraphicsDevice
 {
+    public static GL DEBUG_API;
     private int handleCounter = 0;
     public GL Api { get; }
 
     public OpenGlDevice(GL api)
     {
         Api = api;
+        DEBUG_API = api;
     }
 
     public Dictionary<int, INativeObject> ManagedObjects { get; } = new Dictionary<int, INativeObject>();
@@ -31,7 +33,7 @@ public class OpenGlDevice : IGraphicsDevice
 
     public ITexture CreateTexture(TextureDesc desc)
     {
-        throw new NotImplementedException();
+        return new OpenGlTexture(Api, desc.Width, desc.Height);
     }
 
     public IPipeline CreatePipeline(PipelineDesc desc)
@@ -42,6 +44,11 @@ public class OpenGlDevice : IGraphicsDevice
     public ICommandList CreateCommandList()
     {
         return new OpenGlCommandList(Api);
+    }
+
+    public ISampler CreateSampler(SamplerDesc desc)
+    {
+        return new OpenGlSampler(Api);
     }
 
     public void Submit(RecordedRenderPass recordedRenderPass)
@@ -86,7 +93,7 @@ public class OpenGlDevice : IGraphicsDevice
         }
 
         Api.LinkProgram(program);
-
+        
         Api.GetProgram(program, GLEnum.LinkStatus, out var status);
 
         if (status == 0)

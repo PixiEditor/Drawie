@@ -2,6 +2,7 @@ using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Vertie.Core;
 using Drawie.Backend.Vertie.Rendering;
 using Drawie.Numerics;
+using Drawie.RenderApi;
 using Drawie.RenderApi.Abstraction;
 using Drawie.RenderApi.Abstraction.Buffers;
 using Drawie.RenderApi.Abstraction.CommandRecording;
@@ -16,6 +17,7 @@ namespace Drawie.Backend.Vertie.Helpers;
 public static class TextureFramebufferExtensions
 {
     private static Dictionary<Mesh, (IBuffer, IBuffer)> cachedMeshBuffers = new Dictionary<Mesh, (IBuffer, IBuffer)>();
+    private static Dictionary<ITexture, ISampler> cachedSamplers = new Dictionary<ITexture, ISampler>();
 
     private static Dictionary<Material, IShaderProgram> cachedShaderPrograms =
         new Dictionary<Material, IShaderProgram>();
@@ -65,12 +67,18 @@ public static class TextureFramebufferExtensions
         material.PrepareForObject(mesh.Transform);
         
         shader.UpdateUniforms(material.Properties.Values.ToList());
-        
-        foreach (var texture in material.Textures)
-        {
-            cmdList.BindTexture(texture.Name, texture.Texture);
-        }
 
+        foreach (var materialTexture in material.Textures)
+        {
+            var sampler = cachedSamplers.GetValueOrDefault(materialTexture);
+            if (sampler == null)
+            {
+                sampler = device.CreateSampler(new SamplerDesc());
+                cachedSamplers[materialTexture] = sampler;
+            }
+            cmdList.BindTexture(materialTexture, sampler);
+        }
+        
         cmdList.DrawIndexed(mesh.IndexCount);
         var recordedRenderPass = cmdList.EndRenderPass(fb);
 

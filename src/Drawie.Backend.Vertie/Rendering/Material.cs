@@ -10,7 +10,7 @@ public class Material
     public string Name { get; set; }
     public CompiledShader[] Shaders { get; set; }
     public Dictionary<string, UniformBlock> Properties { get; set; } = new();
-    public TextureMaterial[] Textures { get; set; } = Array.Empty<TextureMaterial>();
+    public List<ITexture> Textures { get; set; } = new();
 
     private int _textureCount;
 
@@ -24,12 +24,18 @@ public class Material
                 .AddProperty(new ShaderProperty<Matrix4x4>("uModel", Matrix4x4.Identity))
                 .AddProperty(new ShaderProperty<Matrix4x4>("uView", Matrix4x4.Identity))
                 .AddProperty(new ShaderProperty<Matrix4x4>("uProjection", Matrix4x4.Identity)));
+        
         /*
         if (shader.HasUniform("viewPos"))
         {
             AddProperty<Vector3>("Camera", "viewPos");
         }
     */
+    }
+    
+    public void AddTexture(ITexture texture)
+    {
+        Textures.Add(texture);
     }
 
     public void Use(Camera camera)
@@ -69,10 +75,4 @@ public class Material
             }
         }
     }
-}
-
-public struct TextureMaterial
-{
-    public string Name { get; set; }
-    public ITexture Texture { get; set; }
 }

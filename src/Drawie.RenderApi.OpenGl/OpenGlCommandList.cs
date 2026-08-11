@@ -2,6 +2,7 @@ using Drawie.RenderApi.Abstraction.Buffers;
 using Drawie.RenderApi.Abstraction.CommandRecording;
 using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Abstraction.RenderTargets;
+using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.OpenGL.Extensions;
 using Silk.NET.OpenGL;
 
@@ -49,9 +50,13 @@ public class OpenGlCommandList(GL api) : ICommandList
         Api.BindBuffer(indexBuffer.Usage.ToOpenGlTargetARB(), indexBuffer.NativeHandle);
     }
 
-    public void BindTexture(string textureName, ITexture texture)
+    public void BindTexture(ITexture texture, ISampler sampler)
     {
-        throw new NotImplementedException();
+        if (texture is not IOpenGlTexture openGlTexture) throw new ArgumentException("Cannot bind non opengl textures");
+        if (sampler is not OpenGlSampler openGlSampler) throw new ArgumentException("Cannot bind non opengl samplers");
+        Api.ActiveTexture(TextureUnit.Texture0);
+        Api.BindTexture(TextureTarget.Texture2D, openGlTexture.TextureId);
+        //Api.BindSampler(0, openGlSampler.SamplerId);
     }
 
     public void DrawIndexed(int indexCount)
@@ -104,14 +109,16 @@ public class OpenGlCommandList(GL api) : ICommandList
         Api.BindBuffer(indexBuffer.Usage.ToOpenGlTargetARB(),
             indexBuffer?.NativeHandle ?? 0);
 
-        Api.EnableVertexAttribArray(0);
-
-        Api.VertexAttribPointer(
-            0,
-            3,
-            VertexAttribPointerType.Float,
-            false,
-            3 * sizeof(float),
-            null);
+        VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 8, 0);
+        VertexAttributePointer(1, 3, VertexAttribPointerType.Float, 8, 3);
+        VertexAttributePointer(2, 2, VertexAttribPointerType.Float, 8, 6);
+    }
+    
+    private unsafe void VertexAttributePointer(uint index, int count, VertexAttribPointerType type, uint vertexSize,
+        int offset)
+    {
+        int vTypeSize = sizeof(float);
+        Api.VertexAttribPointer(index, count, type, false, vertexSize * (uint) vTypeSize, (void*) (offset * vTypeSize));
+        Api.EnableVertexAttribArray(index);
     }
 }

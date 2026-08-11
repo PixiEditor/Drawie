@@ -1,12 +1,16 @@
 struct VertexInput
 {
-    float3 vPos : POSITION;
+    float3 vPos       : POSITION;
+    float3 vNormal    : NORMAL;
+    float2 vTexCoords : TEXCOORD0;
 };
 
 struct VertexOutput
 {
-    float4 position : SV_Position;
-    float3 fPos : TEXCOORD0;
+    float4 position   : SV_Position;
+    float3 fNormal    : TEXCOORD0;
+    float3 fPos       : TEXCOORD1;
+    float2 fTexCoords : TEXCOORD2;
 };
 
 [[vk::binding(0, 0)]]
@@ -22,11 +26,27 @@ VertexOutput VSMain(VertexInput input)
 {
     VertexOutput output;
 
-    output.position = mul(mul(mul(uProjection, uView), uModel), float4(input.vPos, 1.0));
+    output.position = mul(
+        mul(
+            mul(uProjection, uView),
+            uModel
+        ),
+        float4(input.vPos, 1.0)
+    );
 
-    // We want to know the fragment's position in World space, so we multiply ONLY by uModel and not uView or uProjection
-    output.fPos = mul(uModel, float4(input.vPos, 1.0)).xyz;
+    output.fPos = mul(
+        uModel,
+        float4(input.vPos, 1.0)
+    ).xyz;
+
+    float3x3 model3x3 = float3x3(uModel);
+
+   output.fNormal = mul(
+       float3x3(uModel),
+       input.vNormal
+   );
+
+    output.fTexCoords = input.vTexCoords;
 
     return output;
 }
-

@@ -18,10 +18,12 @@ public sealed class ShaderDefinition
         var bytes = SlangCompiler.CompileWithReflection(SourceCode,
         [
             "-profile", "glsl_450",
-            "-matrix-layout-row-major",
+            "-matrix-layout-column-major",
             "-fvk-use-entrypoint-name",
             "-target", "spirv"
         ], out var reflection);
+        
+        File.WriteAllBytes("shader.spv", bytes);
 
         return new CompiledShader(bytes, reflection);
     }

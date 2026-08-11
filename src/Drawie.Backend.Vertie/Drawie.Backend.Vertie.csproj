@@ -21,9 +21,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Include="Shaders\*.slang">
+      <Content Include="Shaders\*.slang">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+      </Content>
     </ItemGroup>
 
 </Project>

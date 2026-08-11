@@ -13,5 +13,20 @@
         <ProjectReference Include="..\Drawie.Layer.UI.ImGui\Drawie.Layer.UI.ImGui.csproj" />
         <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="Images\dancing-dog.gif">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Update="Images\silkBoxed.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Update="Images\silkSpecular.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Update="Images\texture.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
     
 </Project>

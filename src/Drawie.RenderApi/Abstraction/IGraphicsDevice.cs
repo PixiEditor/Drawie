@@ -15,9 +15,9 @@ public interface IGraphicsDevice
     ICommandList CreateCommandList();
 
     Dictionary<int, INativeObject> ManagedObjects { get; }
-    
-    /*
     ISampler CreateSampler(SamplerDesc desc);
+
+    /*
     IShader CreateShader(ShaderDesc desc);
     */
     void Submit(RecordedRenderPass cmdList);

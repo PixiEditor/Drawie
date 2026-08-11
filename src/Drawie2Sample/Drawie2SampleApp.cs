@@ -1,5 +1,7 @@
 ﻿using System.Numerics;
 using System.Text;
+using Drawie.Backend.Core;
+using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
@@ -8,6 +10,8 @@ using Drawie.Backend.Vertie.Core;
 using Drawie.Backend.Vertie.Helpers;
 using Drawie.Backend.Vertie.Rendering;
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction.Textures;
+using Drawie.RenderApi.OpenGL;
 using Drawie.Rendering;
 using Drawie.Windowing.Input;
 using DrawiEngine;
@@ -39,6 +43,17 @@ public class Drawie2SampleApp : DrawieApp
     protected override void OnInitialize()
     {
         Material mat = new Material("Basic", [BuiltInShaders.BasicVertexShader, BuiltInShaders.UnlitFragmentShader]);
+        var tex = DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice.CreateTexture(new TextureDesc(){
+            Width = 512,
+            Height = 512,
+            Format = TextureFormat.RGBA8_Unorm,
+            Depth = DepthFormat.NoDepth,
+        });
+
+        var surf = DrawingBackendApi.Current.CreateRenderSurface(new VecI(512, 512), tex, SurfaceOrigin.BottomLeft);
+        surf.Canvas.DrawCircle(256, 256, 128, new Paint(){Color = Colors.Red});
+        
+        mat.AddTexture(new OpenGlTexture(OpenGlDevice.DEBUG_API, 359, 359, "Images/silkBoxed.png"));
         camera = new Camera(Vector3.Zero, Vector3.UnitZ, Vector3.UnitY, (float)window.Size.X / window.Size.Y);
         Cube cube = new Cube();
         cube.Transform.Position = new Vector3(0, 0, 0);

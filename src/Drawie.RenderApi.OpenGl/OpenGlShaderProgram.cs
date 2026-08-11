@@ -1,9 +1,5 @@
-using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Text;
-using Drawie.Numerics;
 using Drawie.RenderApi.Abstraction.Shaders;
-using Silk.NET.Core.Native;
 using Silk.NET.OpenGL;
 
 namespace Drawie.RenderApi.OpenGL;
@@ -83,29 +79,11 @@ public class OpenGlShaderProgram : IShaderProgram
         }
     }
 
-    private int GetUniformBlockSize(uint blockIndex)
-    {
-        int[] size = new int[1];
-
-        Api.GetActiveUniformBlock(
-            ProgramHandle,
-            blockIndex,
-            UniformBlockPName.DataSize,
-            size);
-
-        return size[0];
-    }
-
     private unsafe void UploadProperty(
         object value,
         UniformPropertyLayout layout)
     {
         int size = layout.Size;
-
-        if (value is Matrix4x4 matrix4X4)
-        {
-            value = Matrix4x4.Transpose(matrix4X4);
-        }
 
         GCHandle handle = GCHandle.Alloc(
             value,
