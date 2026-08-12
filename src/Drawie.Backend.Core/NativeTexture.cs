@@ -5,10 +5,11 @@ using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Backend.Core;
 
-public class NativeTexture : IDisposable, ICloneable, IPixelsMap, IFramebufferInfo
+public class NativeTexture : IDisposable, ICloneable, IPixelsMap, IFramebufferInfo, ITexture
 {
     public VecI Size { get; }
     public DrawingSurface DrawingSurface { get; private set; }
@@ -21,6 +22,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, IFramebufferIn
     public ColorSpace ColorSpace { get; }
 
     public ImageInfo ImageInfo { get; }
+    public ulong TextureId => FramebufferId;
 
     private DrawingSurface? cpuSurface;
     private Pixmap? cpuPixmap;
@@ -413,4 +415,5 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, IFramebufferIn
     public uint FramebufferId =>
         DrawingBackendApi.Current.SurfaceImplementation.GetFramebufferInfo(DrawingSurface.ObjectPointer)
             ?.FramebufferId ?? throw new Exception("Framebuffer info not available.");
+
 }

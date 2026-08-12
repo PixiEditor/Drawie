@@ -119,7 +119,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         }
 
         store = new GraphicsStore(RenderApi.GraphicsContext);
-        
+        GraphicsStore.Global = store;
         
         foreach (var layer in layers)
         {

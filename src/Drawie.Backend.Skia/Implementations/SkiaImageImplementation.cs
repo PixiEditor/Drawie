@@ -1,9 +1,13 @@
-﻿using Drawie.Backend.Core.Bridge.Operations;
+﻿using Drawie.Backend.Core;
+using Drawie.Backend.Core.Bridge;
+using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Numerics;
+using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.Skia.Encoders;
 using Drawie.Skia.Extensions;
 using SkiaSharp;
@@ -14,8 +18,9 @@ namespace Drawie.Skia.Implementations
     {
         private readonly SkObjectImplementation<SKData> _imgImplementation;
         private readonly SkiaPixmapImplementation _pixmapImplementation;
-        private SkObjectImplementation<SKSurface>? _surfaceImplementation;
+        private SkiaSurfaceImplementation _surfaceImplementation;
         private SkiaShaderImplementation shaderImpl;
+        private Dictionary<IntPtr, ITexture> textureInfos = new Dictionary<IntPtr, ITexture>();
 
         private Dictionary<EncodedImageFormat, IImageEncoder> nonSkiaEncoders = new Dictionary<EncodedImageFormat, IImageEncoder>()
         {
@@ -30,7 +35,7 @@ namespace Drawie.Skia.Implementations
             shaderImpl = shaderImplementation;
         }
 
-        public void SetSurfaceImplementation(SkObjectImplementation<SKSurface> surfaceImplementation)
+        public void SetSurfaceImplementation(SkiaSurfaceImplementation surfaceImplementation)
         {
             _surfaceImplementation = surfaceImplementation;
         }
@@ -53,6 +58,114 @@ namespace Drawie.Skia.Implementations
             return new Image(snapshot.Handle);
         }
 
+        public Image? TextureSnapshot(DrawingSurface drawingSurface)
+        {
+            var surface = _surfaceImplementation![drawingSurface.ObjectPointer];
+
+            VecI size = new VecI(surface.Canvas.DeviceClipBounds.Width, surface.Canvas.DeviceClipBounds.Height);
+            
+            /*
+            var fbInfo = DrawingBackendApi.Current.SurfaceImplementation.GetFramebufferInfo(drawingSurface.ObjectPointer);
+
+            if (fbInfo is not SkiaFramebufferInfo skiaFramebufferInfo)
+            {
+                return null;
+            }
+            
+            SKImage? snapshot = CreateFromFramebuffer(skiaFramebufferInfo, size, SurfaceOrigin.BottomLeft, out var textureInfo);
+            if (snapshot == null) return null;*/
+
+            var nativeTexture =_surfaceImplementation.GraphicsDevice.CreateTexture(new TextureDesc()
+            {
+                Width = size.X,
+                Height = size.Y,
+                Format = TextureFormat.RGBA8_Unorm
+            });
+
+            SKImage snapshot = SnapshotToOwnedTexture(surface, (uint)nativeTexture.TextureId, size.X, size.Y,
+                SurfaceOrigin.BottomLeft, out var textureInfo);
+
+            AddManagedInstance(snapshot);
+            textureInfos[snapshot.Handle] = textureInfo;
+            return new Image(snapshot.Handle);
+        }
+        
+        internal SKImage? SnapshotToOwnedTexture(
+            SKSurface source,
+            uint textureId,
+            int width,
+            int height,
+            SurfaceOrigin origin, out SkiaTextureInfo info)
+        {
+            const uint GL_TEXTURE_2D = 3553;
+            const uint GL_RGBA8 = 0x8058;
+
+            var textureInfo = new GRGlTextureInfo(
+                GL_TEXTURE_2D,
+                textureId,
+                GL_RGBA8);
+
+            var backendTexture = new GRBackendTexture(
+                width,
+                height,
+                false,
+                textureInfo);
+
+            var targetSurface = SKSurface.Create(
+                _surfaceImplementation.GrContext,
+                backendTexture,
+                (GRSurfaceOrigin)origin,
+                SKColorType.Rgba8888);
+
+            info = new SkiaTextureInfo(backendTexture);
+            
+            if (targetSurface == null)
+                return null;
+
+            using var snapshot = source.Snapshot();
+
+            targetSurface.Canvas.DrawImage(snapshot, 0, 0, SKSamplingOptions.Default);
+            
+            return SKImage.FromTexture(
+                _surfaceImplementation.GrContext,
+                backendTexture,
+                (GRSurfaceOrigin)origin,
+                SKColorType.Rgba8888,
+                SKAlphaType.Premul);
+        }
+        
+        internal SKImage? CreateFromFramebuffer(SkiaFramebufferInfo skiaFramebufferInfo, VecI size, SurfaceOrigin surfaceOrigin, out ITexture fbInfo)
+        {
+            if (skiaFramebufferInfo.VkImageInfo != null)
+            {
+                var imageInfo = skiaFramebufferInfo.VkImageInfo.Value;
+                var backendRenderTarget = new GRBackendTexture(size.X, size.Y, imageInfo);
+                var surface = SKImage.FromTexture(_surfaceImplementation.GrContext, backendRenderTarget,
+                    (GRSurfaceOrigin)surfaceOrigin, SKColorType.Rgba8888, SKAlphaType.Premul);
+
+                fbInfo = new SkiaTextureInfo(backendRenderTarget);
+                return surface;
+            }
+
+            if (skiaFramebufferInfo.GlFramebufferInfo != null)
+            {
+                uint textureId = skiaFramebufferInfo.GlFramebufferInfo.Value.FramebufferObjectId;
+
+                const uint OpenGlTexture2D = 3553;
+                const uint RGBA8 = 0x8058;
+                GRBackendTexture backendRenderTarget =
+                    new GRBackendTexture(size.X, size.Y, false, new GRGlTextureInfo(OpenGlTexture2D, textureId, RGBA8));
+                
+                var surface = SKImage.FromTexture(_surfaceImplementation.GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
+                    SKColorType.Rgba8888, SKAlphaType.Premul);
+
+                fbInfo = new SkiaTextureInfo(backendRenderTarget);
+                return surface;
+            }
+
+            throw new ArgumentException("Unsupported texture type.");
+        }
+
         public Image? FromEncodedData(byte[] dataBytes)
         {
             SKImage img = SKImage.FromEncodedData(dataBytes);
@@ -66,6 +179,7 @@ namespace Drawie.Skia.Implementations
         public void DisposeImage(Image image)
         {
             UnmanageAndDispose(image.ObjectPointer);
+            textureInfos.Remove(image.ObjectPointer);
         }
 
         public Image? FromEncodedData(string path)
@@ -206,6 +320,16 @@ namespace Drawie.Skia.Implementations
         public uint GetUniqueId(IntPtr objectPointer)
         {
             return this[objectPointer].UniqueId;
+        }
+
+        public ulong? GetTextureId(IntPtr objectPointer)
+        {
+            if (textureInfos.TryGetValue(objectPointer, out var info))
+            {
+                return info.TextureId;
+            }
+            
+            return null;
         }
 
         public object GetNativeImage(IntPtr objectPointer)

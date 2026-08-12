@@ -12,6 +12,7 @@ namespace Drawie.Rendering;
 /// </summary>
 public class GraphicsStore : IDisposable
 {
+    public static GraphicsStore Global { get; set; }
 #if DEBUG
     public static List<GraphicsStore> AllStores = new List<GraphicsStore>();
 #endif

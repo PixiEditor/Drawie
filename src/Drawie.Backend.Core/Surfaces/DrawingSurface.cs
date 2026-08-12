@@ -2,8 +2,6 @@
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
-using Drawie.RenderApi;
-using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Backend.Core.Surfaces
 {
@@ -46,6 +44,11 @@ namespace Drawie.Backend.Core.Surfaces
         public Image Snapshot()
         {
             return DrawingBackendApi.Current.ImageImplementation.Snapshot(this);
+        }
+        
+        public Image? TextureSnapshot()
+        {
+            return DrawingBackendApi.Current.ImageImplementation.TextureSnapshot(this);
         }
 
         public Image Snapshot(RectI bounds)

@@ -9,7 +9,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Drawie.Backend.Vertie\Drawie.Backend.Vertie.csproj" />
-        <ProjectReference Include="..\Drawie.Layer.3D.Test\Drawie.Layer.3D.Test.csproj" />
         <ProjectReference Include="..\Drawie.Layer.UI.ImGui\Drawie.Layer.UI.ImGui.csproj" />
         <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
     </ItemGroup>

@@ -4,69 +4,102 @@ using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
+using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Text;
 using Drawie.Backend.Vertie.Core;
 using Drawie.Backend.Vertie.Helpers;
 using Drawie.Backend.Vertie.Rendering;
+using Drawie.Layer.UI.ImGui;
 using Drawie.Numerics;
-using Drawie.RenderApi.Abstraction.Textures;
-using Drawie.RenderApi.OpenGL;
 using Drawie.Rendering;
 using Drawie.Windowing.Input;
 using DrawiEngine;
+using ImGuiNET;
 using Silk.NET.OpenGL;
 using IWindow = Drawie.Windowing.IWindow;
+using Texture = Drawie.Rendering.Texture;
 
 namespace Drawie2Sample;
 
 public class Drawie2SampleApp : DrawieApp
 {
     private IWindow window;
-    private Material material;
 
     private static Camera camera;
     private static VecD lastMousePosition;
-    
+    private int activeRenderMode = 0;
+    private bool handleMovement;
+
+    private string[] renderModes = new[]
+    {
+        "Default",
+        "Wireframe",
+    };
+
+    private RenderOptions renderOptions = new RenderOptions();
+
     public override IWindow CreateMainWindow()
     {
         window = Engine.WindowingPlatform.CreateWindow("Drawie 2 Sample", new VecI(1920, 1080));
-        //window.AddLayer(new ThreeDTest());
-        //window.AddLayer(new ImGuiLayer(RenderImGui));
+        window.AddLayer(new ImGuiLayer(RenderImGui));
         return window;
     }
 
     private void RenderImGui(double dt)
     {
-        ImGuiNET.ImGui.ShowDemoWindow();
+        ImGui.BeginGroup();
+        if (ImGui.Combo("Render Mode", ref activeRenderMode, renderModes, renderModes.Length))
+        {
+            renderOptions.RenderMode = (RenderMode)activeRenderMode;
+        }
+        ImGui.EndGroup();
+        ImGui.ShowMetricsWindow();
     }
 
     protected override void OnInitialize()
     {
         Material mat = new Material("Basic", [BuiltInShaders.BasicVertexShader, BuiltInShaders.UnlitFragmentShader]);
 
-        var surf = new NativeTexture(new VecI(512, 512));
-        surf.DrawingSurface.Canvas.DrawRect(0, 0, 512, 512, new Paint(){Color = Colors.Red});
-        var img = surf.DrawingSurface.Snapshot();
+        var surf = GraphicsStore.Global.Create(new VecI(512, 512));
+        RenderingContext context = new RenderingContext(GraphicsStore.Global.GraphicsContext);
+        var ctx = context.Open();
+        var fb = context.Edit(surf);
+        fb.DrawRectangle(0, 0, 512, 512, new ColorPaintable(Colors.Red));
+        fb.Dispose();
+        ctx.Dispose();
         
-        mat.AddTexture(img);
-        
+        mat.AddTexture(surf);
+        handleMovement = true;
+
+        window.InputController.PrimaryPointer.Cursor.State = CursorState.Disabled;
+        window.InputController.PrimaryKeyboard.KeyPressed += (keyboard, key, code) =>
+        {
+            if (key == Key.Escape)
+            {
+                window.InputController.PrimaryPointer.Cursor.State = CursorState.Normal;
+                handleMovement = false;
+            }
+            else if (key == Key.Enter)
+            {
+                window.InputController.PrimaryPointer.Cursor.State = CursorState.Disabled;
+                handleMovement = true;
+            }
+        };
+
         camera = new Camera(Vector3.Zero, Vector3.UnitZ, Vector3.UnitY, (float)window.Size.X / window.Size.Y);
         Mesh mesh = new Mesh("Assets/teapot.obj");
 
         RegisterMouse(window.InputController);
-        
-        window.Update += d =>
-        {
-            HandleMovement((float)d, camera, window.InputController.PrimaryKeyboard);
-        };
-        
+
+        window.Update += d => { HandleMovement((float)d, camera, window.InputController.PrimaryKeyboard); };
+
         window.Render += (targetTexture, deltaTime) =>
         {
             targetTexture.Clear();
 
-            targetTexture.DrawMesh(mesh, mat, camera);
-            
+            targetTexture.DrawMesh(mesh, mat, camera, renderOptions);
+
             using Font defaultFont = Font.CreateDefault();
             Paintable color = new ColorPaintable(Colors.White);
             StringBuilder sb = new StringBuilder();
@@ -77,15 +110,14 @@ public class Drawie2SampleApp : DrawieApp
             }
 
             RichText rt = new RichText(sb.ToString()) { Fill = true, FillPaintable = color };
-            
+
             using Paint p = new Paint() { Paintable = color };
-            
+
             rt.Paint(targetTexture.Canvas, new VecD(0, 20), defaultFont, p, null);
-            
         };
     }
-    
-    
+
+
     private void RegisterMouse(InputController input)
     {
         for (int i = 0; i < input.Pointers.Count; i++)
@@ -96,13 +128,15 @@ public class Drawie2SampleApp : DrawieApp
         }
     }
 
-    private static void OnScroll(IPointer pointer, VecD scrollDelta)
+    private void OnScroll(IPointer pointer, VecD scrollDelta)
     {
+        if (!handleMovement) return;
         camera.Zoom = (float)scrollDelta.Y;
     }
 
-    private static void OnMouseMove(IPointer pointer, VecD position)
+    private void OnMouseMove(IPointer pointer, VecD position)
     {
+        if (!handleMovement) return;
         float lookSensitivity = 0.1f;
         if (lastMousePosition == default)
         {
@@ -117,9 +151,10 @@ public class Drawie2SampleApp : DrawieApp
             camera.SetDirection((float)offsetX, (float)offsetY);
         }
     }
-    
-    private static void HandleMovement(float deltaTime, Camera camera, IKeyboard primaryKeyboard)
+
+    private void HandleMovement(float deltaTime, Camera camera, IKeyboard primaryKeyboard)
     {
+        if (!handleMovement) return;
         float moveSpeed = 5f * (float)deltaTime;
         if (primaryKeyboard.IsKeyPressed(Key.W))
         {

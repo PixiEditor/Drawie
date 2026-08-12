@@ -171,7 +171,7 @@ namespace Drawie.Skia.Implementations
                 var backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, imageInfo);
                 var surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin, SKColorType.Rgba8888, new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
 
-                fbInfo = new SkiaFramebufferInfo(backendRenderTarget);
+                fbInfo = new SkiaFramebufferInfo(backendRenderTarget, imageInfo);
                 return surface;
             }
 
@@ -184,13 +184,14 @@ namespace Drawie.Skia.Implementations
                     _ => throw new ArgumentException("Unsupported texture type.")
                 };
 
+                GRGlFramebufferInfo grGlFramebufferInfo = new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat());
                 GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
-                    new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
+                    grGlFramebufferInfo);
                 
                 var surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
                     SKColorType.Rgba8888);
 
-                fbInfo = new SkiaFramebufferInfo(backendRenderTarget);
+                fbInfo = new SkiaFramebufferInfo(backendRenderTarget, grGlFramebufferInfo);
                 return surface;
             }
 

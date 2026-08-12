@@ -8,6 +8,7 @@ public struct PipelineDesc
     public IShaderProgram? ShaderProgram { get; set; }
     public DepthDesc Depth { get; set; }
     public BlendDesc  Blend { get; set; }
+    public RasterizerDesc Rasterizer { get; set; }
     public RectI Viewport { get; set; }
 }
 

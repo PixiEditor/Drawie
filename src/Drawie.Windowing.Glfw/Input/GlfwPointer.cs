@@ -2,6 +2,7 @@ using System.Numerics;
 using Drawie.Numerics;
 using Drawie.Windowing.Input;
 using Silk.NET.Input;
+using ICursor = Drawie.Windowing.Input.ICursor;
 
 namespace Drawie.Silk.Input;
 
@@ -15,6 +16,7 @@ public class GlfwPointer : Drawie.Windowing.Input.IPointer
     public event PointerDoubleClick? PointerDoubleClicked;
     public event PointerScroll? PointerScrolled;
     public VecD Position => new VecD(SilkMouse.Position.X, SilkMouse.Position.Y);
+    public ICursor Cursor { get;  }
 
     public GlfwPointer(IMouse silkMouse)
     {
@@ -25,6 +27,7 @@ public class GlfwPointer : Drawie.Windowing.Input.IPointer
         silkMouse.Click += OnMouseClick;
         silkMouse.DoubleClick += OnMouseDoubleClick;
         silkMouse.Scroll += OnMouseScroll;
+        Cursor = new GlfwCursor(silkMouse.Cursor);
     }
 
     private void OnMouseDown(IMouse mouse, MouseButton button)

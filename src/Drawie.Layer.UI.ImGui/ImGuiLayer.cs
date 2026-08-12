@@ -22,7 +22,7 @@ public class ImGuiLayer : ILayer
     {
         Render = render;
     }
-    
+
     public void Initialize(IWindow window)
     {
         if (window == null)
@@ -37,7 +37,7 @@ public class ImGuiLayer : ILayer
 
         renderApi = openGlRenderApi;
         this.window = window;
-        
+
         OnLoaded();
         window.SubscribeToRender("ImGui.Update", "Init", OnEarlyRender);
         window.SubscribeToRender("ImGui.Render", "Render", OnRender);
@@ -56,8 +56,10 @@ public class ImGuiLayer : ILayer
 
     private void OnLoaded()
     {
-        _controller =
-            new ImGuiController(new GL(new LamdaNativeContext(renderApi.GetGlInterface())),
-                window.NativeWindow as IView, window.InputController.NativeInputController as IInputContext);
+        var gl = new GL(new LamdaNativeContext(renderApi.GetGlInterface()));
+        
+        _controller = new ImGuiController(gl,
+            window.NativeWindow as IView,
+            window.InputController.NativeInputController as IInputContext);
     }
 }

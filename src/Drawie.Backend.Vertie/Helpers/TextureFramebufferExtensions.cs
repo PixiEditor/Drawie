@@ -23,15 +23,16 @@ public static class TextureFramebufferExtensions
 
     private static ICommandList? cmdList;
 
-    public static void DrawMesh(this TextureFramebuffer fb, Mesh mesh, Material material, Camera camera)
+    public static void DrawMesh(this TextureFramebuffer fb, Mesh mesh, Material material, Camera camera, RenderOptions options = default)
     {
         IGraphicsDevice device = DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice;
 
         fb.Canvas?.Flush();
-        DrawMesh(fb, mesh, material, camera, device);
+        DrawMesh(fb, mesh, material, camera, device, options);
     }
 
-    public static void DrawMesh(IRenderTarget fb, Mesh mesh, Material material, Camera camera, IGraphicsDevice device)
+    public static void DrawMesh(IRenderTarget fb, Mesh mesh, Material material, Camera camera, IGraphicsDevice device,
+        RenderOptions options)
     {
         var sceneTarget = device.CreateRenderTarget(new TextureDesc()
         {
@@ -49,6 +50,10 @@ public static class TextureFramebufferExtensions
             {
                 Enabled = true,
                 DepthCompare = DepthCompareType.Less,
+            },
+            Rasterizer = new RasterizerDesc()
+            {
+                RenderMode = options.RenderMode
             },
             ShaderProgram = shader,
             Viewport = new RectI(0, 0, fb.Size.X, fb.Size.Y),

@@ -1,4 +1,7 @@
-﻿namespace Drawie.RenderApi.OpenGL;
+﻿using Silk.NET.Core.Contexts;
+using Silk.NET.OpenGL;
+
+namespace Drawie.RenderApi.OpenGL;
 
 public class OpenGlContext : IOpenGlContext
 {

@@ -1,4 +1,5 @@
 using System.Drawing;
+using Drawie.Backend.Vertie.Core;
 using Drawie.RenderApi.Abstraction.Pipeline;
 using Silk.NET.OpenGL;
 
@@ -45,7 +46,7 @@ public class OpenGlPipeline : IPipeline
         Api.Disable(EnableCap.CullFace);
         Api.ClearColor(0, 0, 0, 1);
         Api.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-        //Api.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
+        Api.PolygonMode(TriangleFace.FrontAndBack, Description.Rasterizer.RenderMode == RenderMode.Wireframe ? PolygonMode.Line : PolygonMode.Fill);
 
         Description.ShaderProgram?.Use();
     }

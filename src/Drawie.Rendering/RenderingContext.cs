@@ -1,3 +1,4 @@
+using Drawie.Backend.Core.Bridge;
 using Drawie.RenderApi;
 
 namespace Drawie.Rendering;
@@ -39,7 +40,7 @@ public class RenderingContext : IDisposable
         {
             if (textureFramebuffer.IsOpen) throw new InvalidOperationException("Framebuffer is in use");
         }
-        
+
         IsOpen = false;
         ownedFramebuffers.Clear();
     }

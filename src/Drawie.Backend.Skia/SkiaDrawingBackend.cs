@@ -234,6 +234,7 @@ namespace Drawie.Skia
         public void Flush()
         {
             SkiaGraphicsContext?.Flush();
+            SkiaGraphicsContext?.Submit();
         }
 
         public void ResetContext()

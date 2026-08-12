@@ -15,19 +15,19 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
     ///     <para />
     ///     <para>An image always has a non-zero dimensions. If there is a request to create a new image, either directly or via a surface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
     /// </remarks>
-    public class Image : NativeObject, ICloneable, IPixelsMap, ITexture
+    public class Image : NativeObject, ICloneable, IPixelsMap
     {
         public override object Native => DrawingBackendApi.Current.ImageImplementation.GetNativeImage(ObjectPointer);
 
         public int Width => DrawingBackendApi.Current.ImageImplementation.GetWidth(ObjectPointer);
 
         public int Height => DrawingBackendApi.Current.ImageImplementation.GetHeight(ObjectPointer);
-        public ulong TextureId => DrawingBackendApi.Current.ImageImplementation.GetUniqueId(ObjectPointer);
 
         public ImageInfo Info => DrawingBackendApi.Current.ImageImplementation.GetImageInfo(ObjectPointer);
 
         public VecI Size => new VecI(Width, Height);
         public bool IsDisposed => isDisposed;
+        public ulong TextureId => DrawingBackendApi.Current.ImageImplementation.GetTextureId(ObjectPointer).Value;
 
         private bool isDisposed;
 

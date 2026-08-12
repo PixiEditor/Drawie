@@ -1,3 +1,5 @@
+using Drawie.Backend.Core;
+using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Surfaces;
@@ -62,7 +64,11 @@ public class TextureFramebuffer : IDisposable, IRenderTarget
         
         IsOpen = false;
         UnderlyingTexture.NativeTexture.DrawingSurface.Flush();
+        // TODO: Find a way to synchronize things better
+        syncSurf.DrawingSurface.Canvas.DrawSurface(UnderlyingTexture.NativeTexture.DrawingSurface, 0, 0);
     }
 
     uint IRenderTarget.FramebufferId => UnderlyingTexture.NativeTexture.FramebufferId;
+
+    private static NativeTexture syncSurf = new NativeTexture(new VecI(1, 1));
 }

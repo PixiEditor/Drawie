@@ -18,8 +18,22 @@ public interface IPointer
     public event PointerDoubleClick PointerDoubleClicked;
     public event PointerScroll PointerScrolled;
     public VecD Position { get; }
+    ICursor Cursor { get; }
 
     public bool IsButtonPressed(PointerButton button);
+}
+
+public interface ICursor
+{
+    public CursorState State { get; set; }
+}
+
+public enum CursorState
+{
+    Normal,
+    Hidden,
+    Disabled,
+    Raw
 }
 
 public enum PointerButton
