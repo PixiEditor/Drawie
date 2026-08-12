@@ -2,6 +2,7 @@
 using Drawie.Backend.Vertie.Core;
 using Drawie.RenderApi;
 using Drawie.RenderApi.Abstraction.Shaders;
+using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Backend.Vertie.Rendering;
 

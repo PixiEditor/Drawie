@@ -20,14 +20,14 @@ namespace Drawie.Skia.Implementations
         private Dictionary<IntPtr, IFramebufferInfo> framebufferInfos = new Dictionary<IntPtr, IFramebufferInfo>();
 
         internal GRContext? GrContext { get; set; }
-        private readonly IGraphicsDevice _graphicsDevice;
+        internal IGraphicsDevice GraphicsDevice { get; set; }
+
         private readonly SurfaceOrigin defaultSurfaceOrigin;
 
-        public SkiaSurfaceImplementation(GRContext context, IGraphicsDevice graphicsDevice, SurfaceOrigin surfaceOrigin,
+        public SkiaSurfaceImplementation(GRContext context, SurfaceOrigin surfaceOrigin,
             SkiaPixmapImplementation pixmapImplementation,
             SkiaCanvasImplementation canvasImplementation, SkiaPaintImplementation paintImplementation)
         {
-            _graphicsDevice = graphicsDevice;
             _pixmapImplementation = pixmapImplementation;
             _canvasImplementation = canvasImplementation;
             _paintImplementation = paintImplementation;
@@ -138,7 +138,7 @@ namespace Drawie.Skia.Implementations
                 return SKSurface.Create(info);
             }
 
-            var texture = _graphicsDevice.CreateTexture(new TextureDesc()
+            var texture = GraphicsDevice.CreateTexture(new TextureDesc()
             {
                 Format = TextureFormat.RGBA8_Unorm, Width = info.Width, Height = info.Height
             });
@@ -180,7 +180,7 @@ namespace Drawie.Skia.Implementations
                 uint textureId = renderTexture switch
                 {
                     IWebGlTexture wgl => wgl.TextureId,
-                    IOpenGlTexture ogl => ogl.TextureId,
+                    IOpenGlTexture ogl => (uint)ogl.TextureId,
                     _ => throw new ArgumentException("Unsupported texture type.")
                 };
 

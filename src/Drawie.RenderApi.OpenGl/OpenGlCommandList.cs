@@ -15,14 +15,14 @@ public class OpenGlCommandList(GL api) : ICommandList
     private List<Action> instructions = new List<Action>();
     private IRenderTarget source;
 
-    private IBuffer? vertexBuffer;
-    private IBuffer? indexBuffer;
-    private uint vao;
     private uint originalFb;
+
+    private int lastBoundTextureSlot = 0;
 
     public void BeginRenderPass(IRenderTarget fb)
     {
         source = fb;
+        lastBoundTextureSlot = 0;
         instructions?.Clear();
         RecordInstruction(() =>
         {
@@ -33,35 +33,29 @@ public class OpenGlCommandList(GL api) : ICommandList
 
     public void SetPipeline(IPipeline pipeline)
     {
-        RecordInstruction(() => pipeline.Apply());
+        RecordInstruction(pipeline.Apply);
     }
 
-    public void SetVertexBuffer(IBuffer vertexBuffer)
+    public void SetBuffers(IBufferGroup bufferGroup)
     {
-        this.vertexBuffer = vertexBuffer;
-        Api.BindBuffer(vertexBuffer.Usage.ToOpenGlTargetARB(), vertexBuffer.NativeHandle);
-        HandleVao();
-        RecordInstruction(() => Api.BindVertexArray(vao));
-    }
-
-    public void SetIndexBuffer(IBuffer indexBuffer)
-    {
-        this.indexBuffer = indexBuffer;
-        Api.BindBuffer(indexBuffer.Usage.ToOpenGlTargetARB(), indexBuffer.NativeHandle);
+        RecordInstruction(() => { Api.BindVertexArray(bufferGroup.Handle); });
     }
 
     public void BindTexture(ITexture texture, ISampler sampler)
     {
-        if (texture is not IOpenGlTexture openGlTexture) throw new ArgumentException("Cannot bind non opengl textures");
         if (sampler is not OpenGlSampler openGlSampler) throw new ArgumentException("Cannot bind non opengl samplers");
-        Api.ActiveTexture(TextureUnit.Texture0);
-        Api.BindTexture(TextureTarget.Texture2D, openGlTexture.TextureId);
-        //Api.BindSampler(0, openGlSampler.SamplerId);
+        Api.ActiveTexture(TextureUnit.Texture0 + lastBoundTextureSlot);
+        Api.BindTexture(TextureTarget.Texture2D, (uint)texture.TextureId);
+        Api.BindSampler((uint)lastBoundTextureSlot, openGlSampler.SamplerId);
+        lastBoundTextureSlot++;
     }
 
-    public void DrawIndexed(int indexCount)
+    public unsafe void DrawIndexed(int indexCount)
     {
-        RecordInstruction(() => Api.DrawArrays(PrimitiveType.Triangles, 0, 36));
+        RecordInstruction(() =>
+        {
+            Api.DrawElements(PrimitiveType.Triangles, (uint)indexCount, DrawElementsType.UnsignedInt, (void*)0);
+        });
     }
 
     public RecordedRenderPass EndRenderPass(IRenderTarget blitTo)
@@ -89,36 +83,5 @@ public class OpenGlCommandList(GL api) : ICommandList
     private void RecordInstruction(Action instruction)
     {
         instructions.Add(instruction);
-    }
-
-    private unsafe void HandleVao()
-    {
-        if (vertexBuffer == null || indexBuffer == null)
-            return;
-
-        if (vao == 0)
-        {
-            vao = Api.GenVertexArray();
-        }
-
-        Api.BindVertexArray(vao);
-        Api.BindBuffer(
-            vertexBuffer.Usage.ToOpenGlTargetARB(),
-            vertexBuffer.NativeHandle);
-
-        Api.BindBuffer(indexBuffer.Usage.ToOpenGlTargetARB(),
-            indexBuffer?.NativeHandle ?? 0);
-
-        VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 8, 0);
-        VertexAttributePointer(1, 3, VertexAttribPointerType.Float, 8, 3);
-        VertexAttributePointer(2, 2, VertexAttribPointerType.Float, 8, 6);
-    }
-    
-    private unsafe void VertexAttributePointer(uint index, int count, VertexAttribPointerType type, uint vertexSize,
-        int offset)
-    {
-        int vTypeSize = sizeof(float);
-        Api.VertexAttribPointer(index, count, type, false, vertexSize * (uint) vTypeSize, (void*) (offset * vTypeSize));
-        Api.EnableVertexAttribArray(index);
     }
 }

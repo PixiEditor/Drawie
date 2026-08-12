@@ -3,6 +3,7 @@ using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Numerics;
 using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Rendering;
 

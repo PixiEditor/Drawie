@@ -9,7 +9,7 @@ namespace Drawie.RenderApi.Abstraction;
 
 public interface IGraphicsDevice
 {
-    IBuffer CreateBuffer<TData>(BufferUsage usage, TData[]? data) where TData : unmanaged;
+    IBuffer<TData> CreateBuffer<TData>(BufferUsage usage, TData[]? data) where TData : unmanaged;
     ITexture CreateTexture(TextureDesc desc);
     IPipeline CreatePipeline(PipelineDesc desc);
     ICommandList CreateCommandList();
@@ -17,10 +17,8 @@ public interface IGraphicsDevice
     Dictionary<int, INativeObject> ManagedObjects { get; }
     ISampler CreateSampler(SamplerDesc desc);
 
-    /*
-    IShader CreateShader(ShaderDesc desc);
-    */
     void Submit(RecordedRenderPass cmdList);
     IShaderProgram CreateShaderProgram(ShaderProgramDesc shaderProgramDesc);
     IRenderTarget CreateRenderTarget(TextureDesc textureDesc);
+    IBufferGroup CreateBufferGroup();
 }

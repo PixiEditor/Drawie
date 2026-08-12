@@ -1,5 +1,6 @@
 ﻿using Drawie.JSInterop;
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.Web.Common;
 using Drawie.RenderApi.WebGl.Enums;
 using Drawie.RenderApi.WebGl.Exceptions;

@@ -45,6 +45,7 @@ public class OpenGlPipeline : IPipeline
         Api.Disable(EnableCap.CullFace);
         Api.ClearColor(0, 0, 0, 1);
         Api.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+        //Api.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
 
         Description.ShaderProgram?.Use();
     }

@@ -5,5 +5,5 @@ public enum BufferUsage
     Vertex,
     Index,
     Uniform,
-    Storage
+    Storage,
 }

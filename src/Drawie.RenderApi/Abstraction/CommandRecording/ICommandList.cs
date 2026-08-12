@@ -9,8 +9,7 @@ public interface ICommandList
 {
     void BeginRenderPass(IRenderTarget fb);
     void SetPipeline(IPipeline pipeline);
-    void SetVertexBuffer(IBuffer vertexBuffer);
-    void SetIndexBuffer(IBuffer indexBuffer);
+    void SetBuffers(IBufferGroup bufferGroup);
     void BindTexture(ITexture texture, ISampler sampler);
     void DrawIndexed(int indexCount);
     RecordedRenderPass EndRenderPass(IRenderTarget blitTo);

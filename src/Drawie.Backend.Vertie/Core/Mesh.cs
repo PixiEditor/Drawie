@@ -1,3 +1,6 @@
+using System.Numerics;
+using Assimp;
+using Assimp.Configs;
 using Drawie.RenderApi.Abstraction;
 using Drawie.RenderApi.Abstraction.Buffers;
 
@@ -6,14 +9,69 @@ namespace Drawie.Backend.Vertie.Core;
 public class Mesh
 {
     public Transform Transform { get; } = new Transform();
-    public float[] Vertices { get; set; }
-    public uint[] Indicies { get; set; }
-    public int IndexCount { get; set; }
-    
-    public Mesh(float[] vertices, uint[] indicies, int indexCount)
+    public IReadOnlyList<Vector3> Vertices => vertices;
+    public IReadOnlyList<Vector3> Normals => normals;
+    public IReadOnlyList<Vector2> TexCoords => texCoords;
+    public IReadOnlyList<uint> Indicies => indicies;
+    public int IndexCount => Indicies.Count;
+
+    internal bool BuffersInitialized { get; private set; } = false;
+    public IBufferGroup Buffers { get; private set; }
+
+    private Vector3[] vertices;
+    private Vector3[] normals;
+    private Vector2[] texCoords;
+    private uint[] indicies;
+
+    public Mesh(Vector3[] vertices, uint[] indicies, Vector3[] normals, Vector2[] texCoords)
     {
-        Vertices = vertices;
-        Indicies = indicies;
-        IndexCount = indexCount;
+        this.vertices = vertices;
+        this.indicies = indicies;
+        this.normals = normals;
+        this.texCoords = texCoords;
+    }
+
+    public Mesh(string path)
+    {
+        AssimpContext ctx = new AssimpContext();
+        var scene = ctx.ImportFile(path, PostProcessPreset.TargetRealTimeMaximumQuality);
+        if (!scene.HasMeshes) return;
+        var mesh = scene.Meshes.FirstOrDefault();
+        this.vertices = mesh!.Vertices.Select(x => new Vector3(x.X, x.Y, x.Z)).ToArray();
+        this.indicies = mesh.GetUnsignedIndices().ToArray();
+        this.normals = mesh.Normals.Select(x => new Vector3(x.X, x.Y, x.Z)).ToArray();
+        this.texCoords = mesh.TextureCoordinateChannels[0].Select(x => new Vector2(x.X, x.Y)).ToArray();
+    }
+
+    internal void GenerateBuffers(IGraphicsDevice device)
+    {
+        Buffers = device.CreateBufferGroup();
+        // TODO: Fragile api, CreateBuffer is assumed to be created in buffer Open func (vao is bound there)
+        Buffers.Open(list =>
+            {
+                list.Buffers.AddRange(
+                    device.CreateBuffer(BufferUsage.Vertex, CreateVertexData()),
+                    device.CreateBuffer(BufferUsage.Index, indicies));
+            }
+        );
+
+        BuffersInitialized = true;
+    }
+
+    private float[] CreateVertexData()
+    {
+        float[] vertData = new float[vertices.Length * 8];
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            vertData[i * 8 + 0] = vertices[i].X;
+            vertData[i * 8 + 1] = vertices[i].Y;
+            vertData[i * 8 + 2] = vertices[i].Z;
+            vertData[i * 8 + 3] = normals.ElementAtOrDefault(i).X;
+            vertData[i * 8 + 4] = normals.ElementAtOrDefault(i).Y;
+            vertData[i * 8 + 5] = normals.ElementAtOrDefault(i).Z;
+            vertData[i * 8 + 6] = texCoords.ElementAtOrDefault(i).X;
+            vertData[i * 8 + 7] = texCoords.ElementAtOrDefault(i).Y;
+        }
+        return vertData;
     }
 }

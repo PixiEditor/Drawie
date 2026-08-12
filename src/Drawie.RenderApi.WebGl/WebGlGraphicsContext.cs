@@ -1,4 +1,5 @@
 using Drawie.JSInterop;
+using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.WebGl.Enums;
 
 namespace Drawie.RenderApi.WebGl;

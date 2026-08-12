@@ -1,4 +1,5 @@
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.RenderApi;
 

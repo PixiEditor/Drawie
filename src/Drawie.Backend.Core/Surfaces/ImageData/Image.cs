@@ -2,6 +2,8 @@
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Numerics;
+using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Backend.Core.Surfaces.ImageData
 {
@@ -13,13 +15,14 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
     ///     <para />
     ///     <para>An image always has a non-zero dimensions. If there is a request to create a new image, either directly or via a surface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
     /// </remarks>
-    public class Image : NativeObject, ICloneable, IPixelsMap
+    public class Image : NativeObject, ICloneable, IPixelsMap, ITexture
     {
         public override object Native => DrawingBackendApi.Current.ImageImplementation.GetNativeImage(ObjectPointer);
 
         public int Width => DrawingBackendApi.Current.ImageImplementation.GetWidth(ObjectPointer);
 
         public int Height => DrawingBackendApi.Current.ImageImplementation.GetHeight(ObjectPointer);
+        public ulong TextureId => DrawingBackendApi.Current.ImageImplementation.GetUniqueId(ObjectPointer);
 
         public ImageInfo Info => DrawingBackendApi.Current.ImageImplementation.GetImageInfo(ObjectPointer);
 
@@ -100,5 +103,6 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
         {
             return DrawingBackendApi.Current.ImageImplementation.ToShader(ObjectPointer, clamp, tileMode, fillMatrixValue);
         }
+
     }
 }

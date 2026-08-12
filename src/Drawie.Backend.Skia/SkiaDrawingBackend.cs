@@ -7,6 +7,7 @@ using Drawie.Backend.Core.Surfaces;
 using Drawie.Numerics;
 using Drawie.RenderApi;
 using Drawie.RenderApi.Abstraction;
+using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.Skia.Exceptions;
 using Drawie.Skia.Implementations;
 using SkiaSharp;
@@ -32,7 +33,7 @@ namespace Drawie.Skia
             }
         }
         
-        public IGraphicsDevice GraphicsDevice { get; }
+        public IGraphicsDevice GraphicsDevice { get; private set; }
 
         public IPathEffectImplementation PathEffectImplementation { get; set; }
         public bool IsHardwareAccelerated => SkiaGraphicsContext != null;
@@ -62,12 +63,10 @@ namespace Drawie.Skia
 
         private GRContext _grContext;
 
-        public SkiaDrawingBackend(IGraphicsDevice renderApiGraphicsDevice)
+        public SkiaDrawingBackend()
         {
             SKColorSpace.CreateSrgb();
             SKColorSpace.CreateSrgbLinear();
-
-            GraphicsDevice = renderApiGraphicsDevice;
 
             ColorImplementation = new SkiaColorImplementation();
 
@@ -126,7 +125,7 @@ namespace Drawie.Skia
             SkiaCanvasImplementation canvasImpl =
                 new SkiaCanvasImplementation(paintImpl, imgImpl, bitmapImpl, pathImpl, fontImpl, meshImplementation);
 
-            SurfaceImplementation = new SkiaSurfaceImplementation(SkiaGraphicsContext, GraphicsDevice, SurfaceOrigin.BottomLeft, pixmapImpl, canvasImpl, paintImpl);
+            SurfaceImplementation = new SkiaSurfaceImplementation(SkiaGraphicsContext, SurfaceOrigin.BottomLeft, pixmapImpl, canvasImpl, paintImpl);
 
             canvasImpl.SetSurfaceImplementation(SurfaceImplementation);
             imgImpl.SetSurfaceImplementation(SurfaceImplementation);
@@ -144,6 +143,9 @@ namespace Drawie.Skia
         public void Setup(IRenderApi renderApi)
         {
             ActiveRenderApi = renderApi;
+            GraphicsDevice = renderApi.GraphicsDevice;
+            SurfaceImplementation.GraphicsDevice = renderApi.GraphicsDevice;
+            
             if (renderApi is IVulkanRenderApi vulkanRenderApi)
             {
                 SetupVulkan(vulkanRenderApi.VulkanContext);

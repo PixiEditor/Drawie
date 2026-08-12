@@ -4,6 +4,7 @@ using Avalonia.Rendering.Composition;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Interop.Avalonia.Core;
 using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.OpenGL;
 using Silk.NET.OpenGL;
 

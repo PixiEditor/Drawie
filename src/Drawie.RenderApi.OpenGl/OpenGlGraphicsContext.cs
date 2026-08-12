@@ -1,3 +1,4 @@
+using Drawie.RenderApi.Abstraction.Textures;
 using Silk.NET.Core.Contexts;
 using Silk.NET.OpenGL;
 
@@ -7,7 +8,7 @@ public class OpenGlGraphicsContext(GL api, IGLContext glContext) : IGraphicsCont
 {
     public readonly IGLContext GlContext = glContext;
     public readonly GL Api = api;
-    private HashSet<uint> ownedTextures = new HashSet<uint>();
+    private HashSet<ulong> ownedTextures = new HashSet<ulong>();
 
     public bool OwnsTexture(ITexture nativeTexture)
     {

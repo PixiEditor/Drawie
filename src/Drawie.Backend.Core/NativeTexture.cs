@@ -120,11 +120,12 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, IFramebufferIn
                         throw new Exception("Could not create DrawingSurface for Texture.");
                     }
                 }
+                
+                DrawingSurface.Changed += DrawingSurfaceOnChanged;
             }
         );
 
         ImageInfo = imageImageInfo;
-        DrawingSurface.Changed += DrawingSurfaceOnChanged;
         Changed += OnChanged;
     }
 

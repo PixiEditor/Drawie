@@ -4,7 +4,7 @@ namespace Drawie.RenderApi.OpenGL;
 
 public class OpenGlTexture : IOpenGlTexture, IDisposable
 {
-    public uint TextureId { get; }
+    public ulong TextureId { get; }
 
     public int Width { get; }
     public int Height { get; }
@@ -97,7 +97,7 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
     {
         Api.BindTexture(
             TextureTarget.Texture2D,
-            TextureId);
+            (uint)TextureId);
     }
 
     public void Activate(int textureUnit)
@@ -108,6 +108,6 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
 
     public void Dispose()
     {
-        Api.DeleteTexture(TextureId);
+        Api.DeleteTexture((uint)TextureId);
     }
 }

@@ -14,19 +14,17 @@ namespace Drawie.RenderApi.OpenGL;
 
 public class OpenGlDevice : IGraphicsDevice
 {
-    public static GL DEBUG_API;
     private int handleCounter = 0;
     public GL Api { get; }
 
     public OpenGlDevice(GL api)
     {
         Api = api;
-        DEBUG_API = api;
     }
 
     public Dictionary<int, INativeObject> ManagedObjects { get; } = new Dictionary<int, INativeObject>();
 
-    public IBuffer CreateBuffer<TData>(BufferUsage usage, TData[]? data) where TData : unmanaged
+    public IBuffer<TData> CreateBuffer<TData>(BufferUsage usage, TData[]? data) where TData : unmanaged
     {
         return new OpenGlBuffer<TData>(Api, GetNextHandle(), usage, data);
     }
@@ -117,6 +115,11 @@ public class OpenGlDevice : IGraphicsDevice
     public IRenderTarget CreateRenderTarget(TextureDesc textureDesc)
     {
         return new OpenGlRenderTarget(Api, textureDesc.Width, textureDesc.Height, textureDesc.Depth);
+    }
+
+    public IBufferGroup CreateBufferGroup()
+    {
+        return new OpenGlVertexArrayObject(Api);
     }
 
 

@@ -2,6 +2,7 @@ using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Numerics;
 using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.Rendering;
 using Drawie.Silk.Extensions;
 using Drawie.Silk.Input;
@@ -94,11 +95,10 @@ public class GlfwWindow : Drawie.Windowing.IWindow
     public void Initialize()
     {
         if (initialized) return;
-
+        
         window.Initialize();
-
         InitInput();
-
+        
         if (RenderApi is IVulkanWindowRenderApi)
         {
             if (window.VkSurface == null)
@@ -119,6 +119,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
         }
 
         store = new GraphicsStore(RenderApi.GraphicsContext);
+        
         
         foreach (var layer in layers)
         {
@@ -159,7 +160,7 @@ public class GlfwWindow : Drawie.Windowing.IWindow
             {
                 Initialize();
             }
-
+            
             window.FramebufferResize += WindowOnFramebufferResize;
             RenderApi.FramebufferResized += RenderApiOnFramebufferResized;
 

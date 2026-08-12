@@ -47,7 +47,7 @@ public sealed unsafe class OpenGlRenderTarget : IDisposable, IRenderTarget
             FramebufferTarget.Framebuffer,
             FramebufferAttachment.ColorAttachment0,
             TextureTarget.Texture2D,
-            Color.TextureId,
+            (uint)Color.TextureId,
             0);
 
         if (Depth != null)

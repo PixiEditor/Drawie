@@ -16,7 +16,6 @@ namespace Drawie.Backend.Vertie.Helpers;
 
 public static class TextureFramebufferExtensions
 {
-    private static Dictionary<Mesh, (IBuffer, IBuffer)> cachedMeshBuffers = new Dictionary<Mesh, (IBuffer, IBuffer)>();
     private static Dictionary<ITexture, ISampler> cachedSamplers = new Dictionary<ITexture, ISampler>();
 
     private static Dictionary<Material, IShaderProgram> cachedShaderPrograms =
@@ -59,23 +58,28 @@ public static class TextureFramebufferExtensions
         cmdList.BeginRenderPass(sceneTarget);
         cmdList.SetPipeline(pipeline);
 
-        (IBuffer vertex, IBuffer index) buffers = InitializeBuffers(mesh, device);
-        cmdList.SetIndexBuffer(buffers.index);
-        cmdList.SetVertexBuffer(buffers.vertex);
+        if (!mesh.BuffersInitialized)
+        {
+            mesh.GenerateBuffers(device);
+        }
+        
+        cmdList.SetBuffers(mesh.Buffers);
         
         material.Use(camera);
         material.PrepareForObject(mesh.Transform);
         
         shader.UpdateUniforms(material.Properties.Values.ToList());
 
-        foreach (var materialTexture in material.Textures)
+        for (var i = 0; i < material.Textures.Count; i++)
         {
+            var materialTexture = material.Textures[i];
             var sampler = cachedSamplers.GetValueOrDefault(materialTexture);
             if (sampler == null)
             {
                 sampler = device.CreateSampler(new SamplerDesc());
                 cachedSamplers[materialTexture] = sampler;
             }
+
             cmdList.BindTexture(materialTexture, sampler);
         }
         
@@ -103,20 +107,5 @@ public static class TextureFramebufferExtensions
         cachedShaderPrograms.Add(material, program);
 
         return program;
-    }
-
-    private static (IBuffer vertex, IBuffer index) InitializeBuffers(Mesh mesh, IGraphicsDevice device)
-    {
-        if (cachedMeshBuffers.TryGetValue(mesh, out var buffers))
-        {
-            return buffers;
-        }
-
-        var vertex = device.CreateBuffer(BufferUsage.Vertex, mesh.Vertices);
-        var index = device.CreateBuffer(BufferUsage.Index, mesh.Indicies);
-
-        cachedMeshBuffers[mesh] = (vertex, index);
-
-        return (vertex, index);
     }
 }

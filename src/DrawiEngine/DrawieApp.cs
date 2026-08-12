@@ -21,7 +21,7 @@ public abstract class DrawieApp
 
     public void Run()
     {
-        if (DrawingBackendApi.HasBackend)
+        if (DrawingBackendApi.Initialized)
         {
             OnInitialize();
         }

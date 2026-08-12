@@ -13,6 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="AssimpNetter" Version="6.0.5" />
       <PackageReference Include="Slangc.NET" Version="2026.14.1" />
     </ItemGroup>
 

@@ -28,6 +28,7 @@ public class VulkanTexture : IDisposable, IVkTexture
     public uint TargetSharingMode { get; } = (uint)SharingMode.Exclusive;
     public static uint ColorAttachmentOptimal => (uint)ImageLayout.ColorAttachmentOptimal;
     public static uint ShaderReadOnlyOptimal => (uint)ImageLayout.ShaderReadOnlyOptimal;
+    public ulong TextureId => ImageHandle;
 
     private Image textureImage;
     private DeviceMemory textureImageMemory;
@@ -267,4 +268,5 @@ public class VulkanTexture : IDisposable, IVkTexture
     {
         TransitionImageLayout(textureImage, from, to, buffer);
     }
+
 }

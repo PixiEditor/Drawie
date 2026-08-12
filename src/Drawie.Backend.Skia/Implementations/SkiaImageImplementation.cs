@@ -203,6 +203,11 @@ namespace Drawie.Skia.Implementations
             return new Shader(shader.Handle);
         }
 
+        public uint GetUniqueId(IntPtr objectPointer)
+        {
+            return this[objectPointer].UniqueId;
+        }
+
         public object GetNativeImage(IntPtr objectPointer)
         {
             return this[objectPointer];

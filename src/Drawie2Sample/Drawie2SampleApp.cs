@@ -44,21 +44,15 @@ public class Drawie2SampleApp : DrawieApp
     protected override void OnInitialize()
     {
         Material mat = new Material("Basic", [BuiltInShaders.BasicVertexShader, BuiltInShaders.UnlitFragmentShader]);
-        var tex = DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice.CreateTexture(new TextureDesc(){
-            Width = 512,
-            Height = 512,
-            Format = TextureFormat.RGBA8_Unorm,
-            Depth = DepthFormat.NoDepth,
-        });
 
-        var surf = DrawingBackendApi.Current.CreateRenderSurface(new VecI(512, 512), tex, SurfaceOrigin.BottomLeft);
-        surf.Canvas.DrawCircle(256, 256, 128, new Paint(){Color = Colors.Red});
+        var surf = new NativeTexture(new VecI(512, 512));
+        surf.DrawingSurface.Canvas.DrawRect(0, 0, 512, 512, new Paint(){Color = Colors.Red});
+        var img = surf.DrawingSurface.Snapshot();
         
-        var pixelSpan = Surface.Load("Images/silkBoxed.png").DrawingSurface.PeekPixels().GetPixelSpan<byte>();
-        mat.AddTexture(new OpenGlTexture(OpenGlDevice.DEBUG_API, 359, 359, pixelSpan, PixelFormat.Bgra));
+        mat.AddTexture(img);
+        
         camera = new Camera(Vector3.Zero, Vector3.UnitZ, Vector3.UnitY, (float)window.Size.X / window.Size.Y);
-        Cube cube = new Cube();
-        cube.Transform.Position = new Vector3(0, 0, 0);
+        Mesh mesh = new Mesh("Assets/teapot.obj");
 
         RegisterMouse(window.InputController);
         
@@ -71,7 +65,7 @@ public class Drawie2SampleApp : DrawieApp
         {
             targetTexture.Clear();
 
-            targetTexture.DrawMesh(cube , mat, camera);
+            targetTexture.DrawMesh(mesh, mat, camera);
             
             using Font defaultFont = Font.CreateDefault();
             Paintable color = new ColorPaintable(Colors.White);
