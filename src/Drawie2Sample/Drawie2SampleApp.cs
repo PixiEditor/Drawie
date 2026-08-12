@@ -15,6 +15,7 @@ using Drawie.RenderApi.OpenGL;
 using Drawie.Rendering;
 using Drawie.Windowing.Input;
 using DrawiEngine;
+using Silk.NET.OpenGL;
 using IWindow = Drawie.Windowing.IWindow;
 
 namespace Drawie2Sample;
@@ -53,7 +54,8 @@ public class Drawie2SampleApp : DrawieApp
         var surf = DrawingBackendApi.Current.CreateRenderSurface(new VecI(512, 512), tex, SurfaceOrigin.BottomLeft);
         surf.Canvas.DrawCircle(256, 256, 128, new Paint(){Color = Colors.Red});
         
-        mat.AddTexture(new OpenGlTexture(OpenGlDevice.DEBUG_API, 359, 359, "Images/silkBoxed.png"));
+        var pixelSpan = Surface.Load("Images/silkBoxed.png").DrawingSurface.PeekPixels().GetPixelSpan<byte>();
+        mat.AddTexture(new OpenGlTexture(OpenGlDevice.DEBUG_API, 359, 359, pixelSpan, PixelFormat.Bgra));
         camera = new Camera(Vector3.Zero, Vector3.UnitZ, Vector3.UnitY, (float)window.Size.X / window.Size.Y);
         Cube cube = new Cube();
         cube.Transform.Position = new Vector3(0, 0, 0);

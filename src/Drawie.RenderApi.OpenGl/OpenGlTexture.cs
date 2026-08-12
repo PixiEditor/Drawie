@@ -1,6 +1,4 @@
 ﻿using Silk.NET.OpenGL;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace Drawie.RenderApi.OpenGL;
 
@@ -44,28 +42,10 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
             PixelType.UnsignedByte,
             null);
 
-        Api.TexParameterI(
-            TextureTarget.Texture2D,
-            TextureParameterName.TextureWrapS,
-            (int)GLEnum.ClampToEdge);
-
-        Api.TexParameterI(
-            TextureTarget.Texture2D,
-            TextureParameterName.TextureWrapT,
-            (int)GLEnum.ClampToEdge);
-
-        Api.TexParameterI(
-            TextureTarget.Texture2D,
-            TextureParameterName.TextureMinFilter,
-            (int)GLEnum.Nearest);
-
-        Api.TexParameterI(
-            TextureTarget.Texture2D,
-            TextureParameterName.TextureMagFilter,
-            (int)GLEnum.Nearest);
+        ApplyParameters();
     }
     
-    public unsafe OpenGlTexture(GL api, int width, int height, string path)
+    public unsafe OpenGlTexture(GL api, int width, int height, Span<byte> data, PixelFormat format = PixelFormat.Rgba)
     {
         Api = api;
 
@@ -77,8 +57,13 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
         Activate(0);
         Bind();
        
-        LoadTextureFromPath(path);
+        LoadTextureFromBytes(data, format);
 
+        ApplyParameters();
+    }
+
+    private void ApplyParameters()
+    {
         Api.TexParameterI(
             TextureTarget.Texture2D,
             TextureParameterName.TextureWrapS,
@@ -99,24 +84,13 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
             TextureParameterName.TextureMagFilter,
             (int)GLEnum.Nearest);
     }
-    
-    private unsafe void LoadTextureFromPath(string path)
+
+    private unsafe void LoadTextureFromBytes(Span<byte> data, PixelFormat format)
     {
-        using var img = Image.Load<Rgba32>(path);
-        // Reserve memory in GPU for whole image 
-        Api.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, (uint)img.Width, (uint)img.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, null);
-        
-        img.ProcessPixelRows(accessor =>
+        fixed (void* d = &data[0])
         {
-            for (int y = 0; y < accessor.Height; y++)
-            {
-                fixed (void* data = accessor.GetRowSpan(y))
-                {
-                    // Load the actual image
-                    Api.TexSubImage2D(TextureTarget.Texture2D, 0, 0, y, (uint)accessor.Width, 1, PixelFormat.Rgba, PixelType.UnsignedByte, data);
-                }
-            }
-        });
+            Api.TexImage2D(TextureTarget.Texture2D, 0, (int)InternalFormat.Rgba, (uint)Width, (uint)Height, 0, format, PixelType.UnsignedByte, d);
+        }
     }
 
     public void Bind()
