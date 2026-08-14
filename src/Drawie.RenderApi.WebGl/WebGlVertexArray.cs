@@ -20,7 +20,7 @@ public class WebGlVertexArray : IBufferGroup
     {
         JSRuntime.BindVertexArray(Gl, (int)Handle);
         list(bufferList);
-        JSRuntime.BindVertexArray(Gl, 0);
+        //JSRuntime.BindVertexArray(Gl, 0);
     }
 }
 

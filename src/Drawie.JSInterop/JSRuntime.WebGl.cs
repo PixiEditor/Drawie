@@ -172,4 +172,7 @@ public partial class JSRuntime
     
     [JSImport("webgl.framebufferRenderbuffer", "drawie.js")]
     public static partial void FramebufferRenderbuffer(int gl, int target, int attachment, int renderbufferTarget, int renderbuffer);
+
+    [JSImport("webgl.getContext", "drawie.js")]
+    public static partial int GetContext(string canvasId, string ctx);
 }

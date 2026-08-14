@@ -9,5 +9,6 @@ public enum WebGlCap
     SampleAlphaToCoverage = 0x809E,
     SampleCoverage = 0x80A0,
     ScissorTest = 0x0C11, 
-    StencilTest = 0x0B90
+    StencilTest = 0x0B90,
+    CullFace = 0x0B44,
 }

@@ -1,5 +1,6 @@
 ﻿export class Drawie {
     canvasContextHandles = {};
+    canvasContextIds = 0;
 
     shaderHandleIds = 0;
     shaderHandles = {};
@@ -75,6 +76,10 @@
                 },
                 bindFramebuffer: (handleId, target, framebuffer) => {
                     const gl = this.canvasContextHandles[handleId];
+                    if(framebuffer === 0) {
+                        gl.bindFramebuffer(target, null);
+                        return;
+                    }
                     const fb = this.framebufferHandles[framebuffer];
                     gl.bindFramebuffer(target, fb);
                 },
@@ -262,6 +267,17 @@
                     const gl = this.canvasContextHandles[glHandle];
                     const rb = this.renderbufferHandles[renderbuffer];
                     gl.framebufferRenderbuffer(target, attachment, renderbufferTarget, rb);
+                },
+                getContext: (canvasId, contextType) => {
+                    const canvas = document.getElementById(canvasId);
+                    if (!canvas) {
+                        return null;
+                    }
+                    
+                    const handle = canvas.getContext(contextType);
+                    this.canvasContextIds++;
+                    this.canvasContextHandles[this.canvasContextIds] = handle;
+                    return this.canvasContextIds;
                 },
                 openSkiaContext: (canvasId) => {
                     const contextAttributes = {

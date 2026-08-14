@@ -16,6 +16,13 @@ public class WebGlRenderTarget : IRenderTarget, IWebGlTexture, IDisposable
     private WebGlTexture texture;
     private WebGlDepthBuffer depthBuffer;
 
+    public WebGlRenderTarget(int gl, int id, VecI framebufferSize)
+    {
+        Gl = gl;
+        FramebufferId = (uint)id;
+        Size = framebufferSize;
+    }
+
     public WebGlRenderTarget(int gl, int width, int height, DepthFormat depth)
     {
         Gl = gl;
@@ -59,6 +66,7 @@ public class WebGlRenderTarget : IRenderTarget, IWebGlTexture, IDisposable
     public void Dispose()
     {
         texture.Dispose();
+        depthBuffer.Dispose();
         JSRuntime.DeleteFramebuffer(Gl, (int)FramebufferId);
     }
 
