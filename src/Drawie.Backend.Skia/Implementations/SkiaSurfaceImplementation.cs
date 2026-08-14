@@ -137,6 +137,11 @@ namespace Drawie.Skia.Implementations
             {
                 return SKSurface.Create(info);
             }
+            
+            if(GraphicsDevice == null)
+            {
+                throw new InvalidOperationException("GraphicsDevice is not initialized.");
+            }
 
             var texture = GraphicsDevice.CreateTexture(new TextureDesc()
             {

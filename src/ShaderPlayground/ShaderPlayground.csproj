@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Drawie.Backend.Vertie\Drawie.Backend.Vertie.csproj" />
+      <ProjectReference Include="..\Drawie.ShaderCompiler\Drawie.ShaderCompiler.csproj" />
     </ItemGroup>
 
 </Project>

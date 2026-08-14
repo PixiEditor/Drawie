@@ -61,6 +61,8 @@ public class OpenGlPipeline : IPipeline
             DepthCompareType.Greater => DepthFunction.Greater,
             DepthCompareType.GreaterEqual => DepthFunction.Gequal,
             DepthCompareType.Always => DepthFunction.Always,
+            DepthCompareType.Never => DepthFunction.Never,
+            DepthCompareType.NotEqual => DepthFunction.Notequal,    
             _ => throw new ArgumentOutOfRangeException(nameof(depthDepthCompare), depthDepthCompare, null)
         };
     }

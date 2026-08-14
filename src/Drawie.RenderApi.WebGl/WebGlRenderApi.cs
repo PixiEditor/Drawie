@@ -1,25 +1,39 @@
-﻿namespace Drawie.RenderApi.WebGl;
+﻿using Drawie.RenderApi.Abstraction;
+
+namespace Drawie.RenderApi.WebGl;
 
 public class WebGlRenderApi : IWebGlRenderApi
 {
     public IWebGlContext WebGlContext { get; private set; }
-    public WebGlWindowRenderApi WindowRenderApi { get; private set; }
+    public WebGlHostViewRenderApi HostViewRenderApi { get; private set; }
     
-    IReadOnlyCollection<IWindowRenderApi> IRenderApi.WindowRenderApis => new List<IWindowRenderApi> { WindowRenderApi };
-    
+    IReadOnlyCollection<IHostViewRenderApi> IRenderApi.WindowRenderApis => new List<IHostViewRenderApi> { HostViewRenderApi };
+    public IGraphicsDevice GraphicsDevice { get; private set; }
+
     public WebGlRenderApi()
     {
     }
 
-    public IWindowRenderApi CreateWindowRenderApi()
+    public IHostViewRenderApi CreateWindowRenderApi()
     {
-        if (WindowRenderApi != null)
+        if (HostViewRenderApi != null)
         {
             throw new InvalidOperationException("Window render API was already created.");
-        }
+        } 
 
-        WindowRenderApi = new WebGlWindowRenderApi();
-        WebGlContext = new WebGlContext(WindowRenderApi);
-        return WindowRenderApi;
+        HostViewRenderApi = new WebGlHostViewRenderApi();
+        
+        if (GraphicsDevice == null)
+        {
+            HostViewRenderApi.InstanceCreated += () => CreateGraphicsDevice(HostViewRenderApi.gl);
+        }
+        
+        WebGlContext = new WebGlContext(HostViewRenderApi);
+        return HostViewRenderApi;
+    }
+    
+    private void CreateGraphicsDevice(int context)
+    {
+        GraphicsDevice = new WebGlGraphicsDevice(context);
     }
 }

@@ -13,8 +13,20 @@
     textureHandleIds = 0;
     textureHandles = {};
 
+    samplerIds = 0;
+    samplerHandles = {}
+
+    framebufferIds = 0;
+    framebufferHandles = {}
+
     uniformLocationHandleIds = 0;
     uniformLocationHandles = {};
+
+    vertexArrayIds = 0;
+    vertexArrayHandles = {}
+    
+    renderbufferIds = 0;
+    renderbufferHandles = {}
 
     exports = {};
 
@@ -49,6 +61,40 @@
                     }
 
                     return null;
+                },
+                viewport: (handleId, x, y, width, height) => {
+                    const gl = this.canvasContextHandles[handleId];
+                    gl.viewport(x, y, width, height);
+                },
+                createFramebuffer: (glHandle) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const webGlFramebuffer = gl.createFramebuffer();
+                    this.framebufferIds++;
+                    this.framebufferHandles[this.framebufferIds] = webGlFramebuffer;
+                    return this.framebufferIds;
+                },
+                bindFramebuffer: (handleId, target, framebuffer) => {
+                    const gl = this.canvasContextHandles[handleId];
+                    const fb = this.framebufferHandles[framebuffer];
+                    gl.bindFramebuffer(target, fb);
+                },
+                framebufferTexture2D: (glHandle, target, attachment, textarget, texture, level) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const targetTexture = this.textureHandles[texture]
+                    gl.framebufferTexture2D(target, attachment, textarget, targetTexture, level);
+                },
+                checkFramebufferStatus: (glHandle, target) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    return gl.checkFramebufferStatus(target);
+                },
+                getError: (glHandle) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    return gl.getError();
+                },
+                deleteFramebuffer: (glHandle, framebuffer) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    gl.deleteFramebuffer(this.framebufferHandles[framebuffer]);
+                    delete this.framebufferHandles[framebuffer];
                 },
                 createProgram: (glHandle) => {
                     const gl = this.canvasContextHandles[glHandle];
@@ -92,9 +138,33 @@
                     const buffer = this.bufferHandles[bufferId];
                     gl.bindBuffer(target, buffer);
                 },
-                bufferData: (glHandle, target, data, usage) => {
+                bufferData: (glHandle, target, dataOrSize, usage) => {
                     const gl = this.canvasContextHandles[glHandle];
-                    gl.bufferData(target, new Float32Array(data), usage);
+                    if (typeof dataOrSize === 'number') {
+                        gl.bufferData(target, dataOrSize, usage);
+                        return;
+                    }
+
+                    const array = target === 0x8893 ? new Uint16Array(dataOrSize) : new Float32Array(dataOrSize);
+                    gl.bufferData(target, array, usage);
+                },
+                bindBufferBase: (glHandle, target, index, buffer) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const bufferObj = this.bufferHandles[buffer];
+                    gl.bindBufferBase(target, index, bufferObj);
+                },
+                bufferSubData: (glHandle, target, dstByteOffset, srcData) => {
+                    const gl = this.canvasContextHandles[glHandle];
+
+                    const data = srcData instanceof Uint8Array
+                        ? srcData
+                        : new Uint8Array(srcData);
+
+                    gl.bufferSubData(
+                        target,
+                        dstByteOffset,
+                        data
+                    );
                 },
                 clearColor: (glHandle, r, g, b, a) => {
                     const gl = this.canvasContextHandles[glHandle];
@@ -114,7 +184,7 @@
                 },
                 useProgram: (glHandle, programId) => {
                     const gl = this.canvasContextHandles[glHandle];
-                    const program = programHandles[programId];
+                    const program = this.programHandles[programId];
                     gl.useProgram(program);
                 },
                 drawArrays: (glHandle, mode, first, count) => {
@@ -125,6 +195,73 @@
                     const gl = this.canvasContextHandles[glHandle];
                     const program = this.programHandles[programId];
                     return gl.getAttribLocation(program, name);
+                },
+                enable: (glHandle, cap) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    gl.enable(cap);
+                },
+                disable: (glHandle, cap) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    gl.disable(cap)
+                },
+                depthFunc: (glHandle, func) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    gl.depthFunc(func);
+                },
+                clearDepth: (glHandle, depth) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    gl.clearDepth(depth);
+                },
+                depthMask: (glHandle, value) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    gl.depthMask(value);
+                },
+                getParameter: (glHandle, param) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const foundParam = gl.getParameter(param);
+                    return foundParam.name;
+                },
+                bindVertexArray: (glHandle, vertexArray) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const vao = this.vertexArrayHandles[vertexArray];
+                    gl.bindVertexArray(vao);
+                },
+                bindSampler: (glHandle, slot, sampler) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const wglSampler = this.samplerHandles[sampler];
+                    gl.bindSampler(slot, wglSampler);
+                },
+                uniformBlockBinding: (glHandle, program, blockIndex, bindingPoint) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const wglProgram = this.programHandles[program];
+                    gl.uniformBlockBinding(wglProgram, blockIndex, bindingPoint);
+                },
+                createRenderbuffer: (glHandle) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const rb = gl.createRenderbuffer()
+                    this.renderbufferIds++;
+                    this.renderbufferHandles[this.renderbufferIds] = rb;
+                    return this.renderbufferIds;
+                },
+                bindRenderbuffer: (glHandle, target, renderbufferId) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const rb = this.renderbufferHandles[renderbufferId];
+                    gl.bindRenderbuffer(target, rb);
+                },
+                renderbufferStorage: (glHandle, target, internalFormat, width, height) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    gl.renderbufferStorage(target, internalFormat, width, height);
+                },
+                deleteRenderbuffer: (glHandle, renderbufferId) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const rb = this.renderbufferHandles[renderbufferId];
+                    gl.deleteRenderbuffer(rb);
+                    delete this.renderbufferHandles[renderbufferId];
+                },
+                framebufferRenderbuffer: (glHandle, target, attachment, renderbufferTarget, renderbuffer) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const rb = this.renderbufferHandles[renderbuffer];
+                    gl.framebufferRenderbuffer(target, attachment, renderbufferTarget, rb);
                 },
                 openSkiaContext: (canvasId) => {
                     const contextAttributes = {
@@ -173,7 +310,7 @@
                 },
                 activeTexture: (glHandle, textureUnit) => {
                     const gl = this.canvasContextHandles[glHandle];
-                    gl.activeTexture(gl.TEXTURE0 + textureUnit);
+                    gl.activeTexture(textureUnit);
                 },
                 uniform1i: (glHandle, location, value) => {
                     const gl = this.canvasContextHandles[glHandle];
@@ -197,6 +334,28 @@
 
                     delete this.textureHandles[textureId];
                 },
+                drawElements: (glHandle, mode, count, type, offset) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    gl.drawElements(mode, count, type, offset);
+                },
+                blitFramebuffer: (glHandle, srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    gl.blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+                },
+                createSampler: (glHandle) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const sampler = gl.createSampler();
+                    this.samplerIds++;
+                    this.samplerHandles[this.samplerIds] = sampler;
+                    return this.samplerIds;
+                },
+                createVertexArray: (glHandle) => {
+                    const gl = this.canvasContextHandles[glHandle];
+                    const vao = gl.createVertexArray();
+                    this.vertexArrayIds++;
+                    this.vertexArrayHandles[this.vertexArrayIds] = vao;
+                    return this.vertexArrayIds;
+                }
             },
             window: {
                 innerWidth: () => window.innerWidth,

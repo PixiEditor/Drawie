@@ -1,3 +1,5 @@
+using Drawie.Backend.Shaders.Common;
+
 namespace Drawie.RenderApi.Abstraction.Shaders;
 
 public struct ShaderProgramDesc

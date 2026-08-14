@@ -61,8 +61,8 @@ public static class TextureFramebufferExtensions
 
         cmdList ??= device.CreateCommandList();
         cmdList.BeginRenderPass(sceneTarget);
+        
         cmdList.SetPipeline(pipeline);
-
         if (!mesh.BuffersInitialized)
         {
             mesh.GenerateBuffers(device);

@@ -8,7 +8,7 @@ using Drawie.RenderApi.Abstraction.RenderTargets;
 using Drawie.RenderApi.Abstraction.Shaders;
 using Drawie.RenderApi.Abstraction.Textures;
 using Silk.NET.OpenGL;
-using ShaderType = Drawie.RenderApi.Abstraction.Shaders.ShaderType;
+using ShaderType = Drawie.Backend.Shaders.Common.ShaderType;
 
 namespace Drawie.RenderApi.OpenGL;
 
@@ -22,11 +22,10 @@ public class OpenGlDevice : IGraphicsDevice
         Api = api;
     }
 
-    public Dictionary<int, INativeObject> ManagedObjects { get; } = new Dictionary<int, INativeObject>();
 
     public IBuffer<TData> CreateBuffer<TData>(BufferUsage usage, TData[]? data) where TData : unmanaged
     {
-        return new OpenGlBuffer<TData>(Api, GetNextHandle(), usage, data);
+        return new OpenGlBuffer<TData>(Api, usage, data);
     }
 
     public ITexture CreateTexture(TextureDesc desc)
@@ -134,11 +133,5 @@ public class OpenGlDevice : IGraphicsDevice
             default:
                 throw new ArgumentOutOfRangeException(nameof(shaderType), shaderType, null);
         }
-    }
-
-    private int GetNextHandle()
-    {
-        handleCounter++;
-        return handleCounter;
     }
 }

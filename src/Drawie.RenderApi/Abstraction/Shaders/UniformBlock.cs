@@ -1,4 +1,5 @@
 using System.Numerics;
+using Drawie.Backend.Shaders.Common;
 
 namespace Drawie.RenderApi.Abstraction.Shaders;
 
@@ -30,12 +31,5 @@ public struct UniformBlockLayout
 {
     public int Index { get; set; }
     public int Size { get; set; }
-    public List<UniformPropertyLayout> UniformProperties { get; set; }
-}
-
-public struct UniformPropertyLayout
-{
-    public string UniformName { get; set; }
-    public int Offset { get; set; }
-    public int Size { get; set; }
+    public List<PropertyLayout> UniformProperties { get; set; }
 }

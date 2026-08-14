@@ -9,13 +9,13 @@ namespace Drawie.Backend.Vertie.Rendering;
 public class Material
 {
     public string Name { get; set; }
-    public CompiledShader[] Shaders { get; set; }
+    public Shader[] Shaders { get; set; }
     public Dictionary<string, UniformBlock> Properties { get; set; } = new();
     public List<ITexture> Textures { get; set; } = new();
 
     private int _textureCount;
 
-    public Material(string name, CompiledShader[] shaders)
+    public Material(string name, Shader[] shaders)
     {
         Name = name;
         Shaders = shaders;

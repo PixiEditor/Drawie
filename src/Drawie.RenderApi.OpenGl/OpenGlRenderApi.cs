@@ -6,9 +6,9 @@ namespace Drawie.RenderApi.OpenGL;
 
 public class OpenGlRenderApi : IOpenGlRenderApi
 {
-    private List<OpenGlWindowRenderApi> windowRenderApis = new List<OpenGlWindowRenderApi>();
+    private List<OpenGlHostViewRenderApi> windowRenderApis = new List<OpenGlHostViewRenderApi>();
 
-    public IReadOnlyCollection<IWindowRenderApi> WindowRenderApis => windowRenderApis;
+    public IReadOnlyCollection<IHostViewRenderApi> WindowRenderApis => windowRenderApis;
     public IGraphicsDevice GraphicsDevice { get; private set; }
 
     public IOpenGlContext OpenGlContext
@@ -38,9 +38,9 @@ public class OpenGlRenderApi : IOpenGlRenderApi
         CreateGraphicsDevice(context);
     }
 
-    public IWindowRenderApi CreateWindowRenderApi()
+    public IHostViewRenderApi CreateWindowRenderApi()
     {
-        OpenGlWindowRenderApi renderApi = new OpenGlWindowRenderApi();
+        OpenGlHostViewRenderApi renderApi = new OpenGlHostViewRenderApi();
         windowRenderApis.Add(renderApi);
 
         if (GraphicsDevice == null)

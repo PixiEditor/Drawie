@@ -5,13 +5,13 @@ namespace Drawie.RenderApi.Vulkan;
 
 public class VulkanRenderApi : IVulkanRenderApi
 {
-    private List<IWindowRenderApi> windowRenderApis = new List<IWindowRenderApi>();
-    public IReadOnlyCollection<IWindowRenderApi> WindowRenderApis => windowRenderApis;
+    private List<IHostViewRenderApi> windowRenderApis = new List<IHostViewRenderApi>();
+    public IReadOnlyCollection<IHostViewRenderApi> WindowRenderApis => windowRenderApis;
     public IGraphicsDevice GraphicsDevice { get; private set; }
     public IVulkanContext VulkanContext { get; private set; }
 
-    IReadOnlyCollection<IVulkanWindowRenderApi> IVulkanRenderApi.WindowRenderApis =>
-        windowRenderApis.Cast<IVulkanWindowRenderApi>().ToList();
+    IReadOnlyCollection<IVulkanHostViewRenderApi> IVulkanRenderApi.WindowRenderApis =>
+        windowRenderApis.Cast<IVulkanHostViewRenderApi>().ToList();
 
     public VulkanRenderApi()
     {
@@ -22,25 +22,25 @@ public class VulkanRenderApi : IVulkanRenderApi
         VulkanContext = vulkanContext;
     }
 
-    public IWindowRenderApi CreateWindowRenderApi()
+    public IHostViewRenderApi CreateWindowRenderApi()
     {
-        VulkanWindowRenderApi windowRenderApi;
+        VulkanHostViewRenderApi hostViewRenderApi;
         if (windowRenderApis.Count == 0)
         {
             var context = new VulkanWindowContext();
             VulkanContext = context;
 
-            windowRenderApi = new VulkanWindowRenderApi(context);
-            windowRenderApis.Add(windowRenderApi);
-            return windowRenderApi;
+            hostViewRenderApi = new VulkanHostViewRenderApi(context);
+            windowRenderApis.Add(hostViewRenderApi);
+            return hostViewRenderApi;
         }
 
-        var existingWindowRenderApi = windowRenderApis.First() as VulkanWindowRenderApi;
+        var existingWindowRenderApi = windowRenderApis.First() as VulkanHostViewRenderApi;
 
-        windowRenderApi = new VulkanWindowRenderApi(existingWindowRenderApi.Context);
+        hostViewRenderApi = new VulkanHostViewRenderApi(existingWindowRenderApi.Context);
 
-        windowRenderApis.Add(windowRenderApi);
-        return windowRenderApi;
+        windowRenderApis.Add(hostViewRenderApi);
+        return hostViewRenderApi;
     }
     
     private void CreateGraphicsDevice(IVulkanContext context)

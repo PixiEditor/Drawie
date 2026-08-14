@@ -11,5 +11,6 @@ Sampler2D<float4> uTexture;
 [shader("fragment")]
 float4 PSMain(FragmentInput input) : SV_Target
 {
-    return uTexture.Sample(input.fTexCoords);
+    return float4(1, 0, 0, 1);
+    //return uTexture.Sample(input.fTexCoords);
 }

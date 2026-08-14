@@ -9,7 +9,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Drawie.Backend.Skia\Drawie.Backend.Skia.csproj" />
       <ProjectReference Include="..\Drawie.RenderApi.WebGl\Drawie.RenderApi.WebGl.csproj" />
-      <ProjectReference Include="..\Drawie.Windowing.Browser\Drawie.Windowing.Browser.csproj" />
+      <ProjectReference Include="..\Drawie.Host.Browser\Drawie.Host.Browser.csproj" />
       <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
     </ItemGroup>
 

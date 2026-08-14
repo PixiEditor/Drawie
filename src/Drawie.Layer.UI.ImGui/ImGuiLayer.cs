@@ -1,20 +1,19 @@
 ﻿using Drawie.RenderApi;
 using Drawie.Rendering;
-using Drawie.Windowing;
+using Drawie.Host;
 using Silk.NET.Core.Contexts;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
-using IWindow = Drawie.Windowing.IWindow;
 
 namespace Drawie.Layer.UI.ImGui;
 
 public class ImGuiLayer : ILayer
 {
     public Action<double> Render { get; set; }
-    private IWindow window;
-    private IOpenGlWindowRenderApi renderApi;
+    private IHost _host;
+    private IOpenGlHostViewRenderApi renderApi;
 
     private ImGuiController _controller;
 
@@ -23,24 +22,24 @@ public class ImGuiLayer : ILayer
         Render = render;
     }
 
-    public void Initialize(IWindow window)
+    public void Initialize(IHost host)
     {
-        if (window == null)
+        if (host == null)
         {
-            throw new ArgumentNullException(nameof(window));
+            throw new ArgumentNullException(nameof(host));
         }
 
-        if (window.RenderApi is not IOpenGlWindowRenderApi openGlRenderApi)
+        if (host.RenderApi is not IOpenGlHostViewRenderApi openGlRenderApi)
         {
             throw new InvalidOperationException("ImGui only supports OpenGL render APIs.");
         }
 
         renderApi = openGlRenderApi;
-        this.window = window;
+        this._host = host;
 
         OnLoaded();
-        window.SubscribeToRender("ImGui.Update", "Init", OnEarlyRender);
-        window.SubscribeToRender("ImGui.Render", "Render", OnRender);
+        host.SubscribeToRender("ImGui.Update", "Init", OnEarlyRender);
+        host.SubscribeToRender("ImGui.Render", "Render", OnRender);
     }
 
     private void OnRender(double dt)
@@ -59,7 +58,7 @@ public class ImGuiLayer : ILayer
         var gl = new GL(new LamdaNativeContext(renderApi.GetGlInterface()));
         
         _controller = new ImGuiController(gl,
-            window.NativeWindow as IView,
-            window.InputController.NativeInputController as IInputContext);
+            _host.Native as IView,
+            _host.InputController.NativeInputController as IInputContext);
     }
 }

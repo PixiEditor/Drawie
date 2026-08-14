@@ -20,11 +20,13 @@ public struct DepthDesc
 
 public enum DepthCompareType
 {
+    Never,
     Less,
     LessEqual,
     Equal,
     Greater,
     GreaterEqual,
+    NotEqual,
     Always
 }
 

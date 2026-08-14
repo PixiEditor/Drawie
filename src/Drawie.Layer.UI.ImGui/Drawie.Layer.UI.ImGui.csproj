@@ -11,7 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Drawie.Windowing\Drawie.Windowing.csproj" />
+      <ProjectReference Include="..\Drawie.Host\Drawie.Host.csproj" />
     </ItemGroup>
 
 </Project>

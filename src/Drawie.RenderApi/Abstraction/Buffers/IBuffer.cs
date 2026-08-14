@@ -1,6 +1,6 @@
 namespace Drawie.RenderApi.Abstraction.Buffers;
 
-public interface IBuffer : INativeObject
+public interface IBuffer
 {
     public BufferUsage Usage { get; }
 }

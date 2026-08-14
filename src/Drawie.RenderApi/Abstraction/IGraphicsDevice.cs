@@ -14,7 +14,6 @@ public interface IGraphicsDevice
     IPipeline CreatePipeline(PipelineDesc desc);
     ICommandList CreateCommandList();
 
-    Dictionary<int, INativeObject> ManagedObjects { get; }
     ISampler CreateSampler(SamplerDesc desc);
 
     void Submit(RecordedRenderPass cmdList);

@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Drawie.Backend.Shaders.Common;
 using Drawie.RenderApi.Abstraction.Shaders;
 using Silk.NET.OpenGL;
 
@@ -81,7 +82,7 @@ public class OpenGlShaderProgram : IShaderProgram
 
     private unsafe void UploadProperty(
         object value,
-        UniformPropertyLayout layout)
+        PropertyLayout layout)
     {
         int size = layout.Size;
 

@@ -7,7 +7,6 @@ namespace Drawie.RenderApi.OpenGL;
 
 public class OpenGlBuffer<TData> : IBuffer<TData> where TData : unmanaged
 {
-    public int Handle { get; }
     public uint NativeHandle => openglHandle;
     public BufferUsage Usage { get; }
     public uint Size { get; }
@@ -16,9 +15,8 @@ public class OpenGlBuffer<TData> : IBuffer<TData> where TData : unmanaged
     private GL api;
 
 
-    public OpenGlBuffer(GL api, int handle, BufferUsage usage, TData[]? data = null)
+    public OpenGlBuffer(GL api, BufferUsage usage, TData[]? data = null)
     {
-        Handle = handle;
         Usage = usage;
         this.api = api;
         

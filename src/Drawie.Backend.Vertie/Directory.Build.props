@@ -1,0 +1,11 @@
+<Project>
+    <PropertyGroup>
+        <ShaderRoot>$(ProjectDir)Shaders</ShaderRoot>
+        <IsBrowserBuild>true</IsBrowserBuild>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ShaderFiles Include="$(ShaderRoot)\**\*.slang" />
+    </ItemGroup>
+
+</Project>

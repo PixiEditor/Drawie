@@ -8,22 +8,21 @@ using Silk.NET.OpenGL;
 
 namespace Drawie.RenderApi.OpenGL;
 
-public class OpenGlCommandList(GL api) : ICommandList
+public class OpenGlCommandList(GL api) : CommandList
 {
     public GL Api { get; } = api;
 
-    private List<Action> instructions = new List<Action>();
     private IRenderTarget source;
 
     private uint originalFb;
 
     private int lastBoundTextureSlot = 0;
 
-    public void BeginRenderPass(IRenderTarget fb)
+    public override void BeginRenderPass(IRenderTarget fb)
     {
         source = fb;
         lastBoundTextureSlot = 0;
-        instructions?.Clear();
+        ClearInstructions();
         RecordInstruction(() =>
         {
             originalFb = (uint)Api.GetInteger(GLEnum.FramebufferBinding);
@@ -31,26 +30,26 @@ public class OpenGlCommandList(GL api) : ICommandList
         });
     }
 
-    public void SetPipeline(IPipeline pipeline)
+    public override void SetPipeline(IPipeline pipeline)
     {
         RecordInstruction(pipeline.Apply);
     }
 
-    public void SetBuffers(IBufferGroup bufferGroup)
+    public override void SetBuffers(IBufferGroup bufferGroup)
     {
         RecordInstruction(() => { Api.BindVertexArray(bufferGroup.Handle); });
     }
 
-    public void BindTexture(ITexture texture, ISampler sampler)
+    public override void BindTexture(ITexture texture, ISampler sampler)
     {
         if (sampler is not OpenGlSampler openGlSampler) throw new ArgumentException("Cannot bind non opengl samplers");
         Api.ActiveTexture(TextureUnit.Texture0 + lastBoundTextureSlot);
         Api.BindTexture(TextureTarget.Texture2D, (uint)texture.TextureId);
-        Api.BindSampler((uint)lastBoundTextureSlot, openGlSampler.SamplerId);
+        Api.BindSampler((uint)lastBoundTextureSlot, openGlSampler.Handle);
         lastBoundTextureSlot++;
     }
 
-    public unsafe void DrawIndexed(int indexCount)
+    public override unsafe void DrawIndexed(int indexCount)
     {
         RecordInstruction(() =>
         {
@@ -58,7 +57,7 @@ public class OpenGlCommandList(GL api) : ICommandList
         });
     }
 
-    public RecordedRenderPass EndRenderPass(IRenderTarget blitTo)
+    public override RecordedRenderPass EndRenderPass(IRenderTarget blitTo)
     {
         RecordInstruction(() =>
         {
@@ -71,17 +70,12 @@ public class OpenGlCommandList(GL api) : ICommandList
                 BlitFramebufferFilter.Nearest);
             Api.BindFramebuffer(FramebufferTarget.Framebuffer, originalFb);
         });
-        return new RecordedRenderPass(instructions.ToArray());
+        return ToRenderPass();
     }
 
-    public RecordedRenderPass EndRenderPass()
+    public override RecordedRenderPass EndRenderPass()
     {
         RecordInstruction(() => Api.BindFramebuffer(FramebufferTarget.Framebuffer, originalFb));
-        return new RecordedRenderPass(instructions.ToArray());
-    }
-
-    private void RecordInstruction(Action instruction)
-    {
-        instructions.Add(instruction);
+        return ToRenderPass();
     }
 }

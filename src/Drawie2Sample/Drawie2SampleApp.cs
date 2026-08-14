@@ -1,30 +1,24 @@
 ﻿using System.Numerics;
 using System.Text;
-using Drawie.Backend.Core;
-using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
-using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Text;
 using Drawie.Backend.Vertie.Core;
 using Drawie.Backend.Vertie.Helpers;
 using Drawie.Backend.Vertie.Rendering;
-using Drawie.Layer.UI.ImGui;
+using Drawie.Host;
+using Drawie.Host.Input;
 using Drawie.Numerics;
 using Drawie.Rendering;
-using Drawie.Windowing.Input;
 using DrawiEngine;
 using ImGuiNET;
-using Silk.NET.OpenGL;
-using IWindow = Drawie.Windowing.IWindow;
-using Texture = Drawie.Rendering.Texture;
 
 namespace Drawie2Sample;
 
 public class Drawie2SampleApp : DrawieApp
 {
-    private IWindow window;
+    private IHost window;
 
     private static Camera camera;
     private static VecD lastMousePosition;
@@ -39,10 +33,10 @@ public class Drawie2SampleApp : DrawieApp
 
     private RenderOptions renderOptions = new RenderOptions();
 
-    public override IWindow CreateMainWindow()
+    public override IHost CreateMainWindow()
     {
         window = Engine.WindowingPlatform.CreateWindow("Drawie 2 Sample", new VecI(1920, 1080));
-        window.AddLayer(new ImGuiLayer(RenderImGui));
+        //window.AddLayer(new ImGuiLayer(RenderImGui));
         return window;
     }
 
@@ -54,7 +48,6 @@ public class Drawie2SampleApp : DrawieApp
             renderOptions.RenderMode = (RenderMode)activeRenderMode;
         }
         ImGui.EndGroup();
-        ImGui.ShowMetricsWindow();
     }
 
     protected override void OnInitialize()
@@ -71,24 +64,19 @@ public class Drawie2SampleApp : DrawieApp
         
         mat.AddTexture(surf);
         handleMovement = true;
-
+        
         window.InputController.PrimaryPointer.Cursor.State = CursorState.Disabled;
         window.InputController.PrimaryKeyboard.KeyPressed += (keyboard, key, code) =>
         {
             if (key == Key.Escape)
             {
-                window.InputController.PrimaryPointer.Cursor.State = CursorState.Normal;
-                handleMovement = false;
-            }
-            else if (key == Key.Enter)
-            {
-                window.InputController.PrimaryPointer.Cursor.State = CursorState.Disabled;
-                handleMovement = true;
+                window.InputController.PrimaryPointer.Cursor.State = window.InputController.PrimaryPointer.Cursor.State == CursorState.Disabled ? CursorState.Normal : CursorState.Disabled;
+                handleMovement = !handleMovement;
             }
         };
-
+        
         camera = new Camera(Vector3.Zero, Vector3.UnitZ, Vector3.UnitY, (float)window.Size.X / window.Size.Y);
-        Mesh mesh = new Mesh("Assets/teapot.obj");
+        Mesh mesh = new Cub(); //new Mesh("Assets/teapot.obj");
 
         RegisterMouse(window.InputController);
 
@@ -96,7 +84,7 @@ public class Drawie2SampleApp : DrawieApp
 
         window.Render += (targetTexture, deltaTime) =>
         {
-            targetTexture.Clear();
+            targetTexture.Clear(Colors.Black);
 
             targetTexture.DrawMesh(mesh, mat, camera, renderOptions);
 

@@ -5,7 +5,7 @@ using Silk.NET.OpenGL;
 
 namespace Drawie.RenderApi.OpenGL;
 
-public sealed unsafe class OpenGlRenderTarget : IDisposable, IRenderTarget
+public sealed class OpenGlRenderTarget : IDisposable, IRenderTarget
 {
     public OpenGlTexture Color { get; }
     public OpenGlDepthBuffer? Depth { get; }

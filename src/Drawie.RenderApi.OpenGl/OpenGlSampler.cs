@@ -5,28 +5,28 @@ namespace Drawie.RenderApi.OpenGL;
 
 public class OpenGlSampler : ISampler
 {
-    public uint SamplerId { get; }
+    public uint Handle { get; }
 
     public OpenGlSampler(GL api)
     {
-        SamplerId = api.CreateSampler();
+        Handle = api.CreateSampler();
         api.SamplerParameter(
-            SamplerId,
+            Handle,
             SamplerParameterI.MinFilter,
             (int)TextureMinFilter.Linear);
 
         api.SamplerParameter(
-            SamplerId,
+            Handle,
             SamplerParameterI.MagFilter,
             (int)TextureMagFilter.Linear);
 
         api.SamplerParameter(
-            SamplerId,
+            Handle,
             SamplerParameterI.WrapS,
             (int)TextureWrapMode.Repeat);
 
         api.SamplerParameter(
-            SamplerId,
+            Handle,
             SamplerParameterI.WrapT,
             (int)TextureWrapMode.Repeat);
     }
