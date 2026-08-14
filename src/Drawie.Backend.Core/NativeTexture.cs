@@ -1,6 +1,5 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
-using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
@@ -412,8 +411,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, IFramebufferIn
     }
 #endif
 
-    public uint FramebufferId =>
+    public ulong FramebufferId =>
         DrawingBackendApi.Current.SurfaceImplementation.GetFramebufferInfo(DrawingSurface.ObjectPointer)
             ?.FramebufferId ?? throw new Exception("Framebuffer info not available.");
-
 }

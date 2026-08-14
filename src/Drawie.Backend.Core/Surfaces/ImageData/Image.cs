@@ -27,7 +27,9 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
 
         public VecI Size => new VecI(Width, Height);
         public bool IsDisposed => isDisposed;
+        /*
         public ulong TextureId => DrawingBackendApi.Current.ImageImplementation.GetTextureId(ObjectPointer).Value;
+        */
 
         private bool isDisposed;
 

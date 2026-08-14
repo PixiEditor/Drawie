@@ -50,10 +50,7 @@ public class OpenGlDevice : IGraphicsDevice
 
     public void Submit(RecordedRenderPass recordedRenderPass)
     {
-        foreach (var instruction in recordedRenderPass.Instructions)
-        {
-            instruction.Invoke();
-        }
+        recordedRenderPass.Execute();
     }
 
     public unsafe IShaderProgram CreateShaderProgram(ShaderProgramDesc desc)

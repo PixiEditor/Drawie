@@ -1,3 +1,5 @@
+using Drawie.RenderApi.Abstraction;
+
 namespace Drawie.RenderApi;
 
 public interface IVulkanRenderApi : IRenderApi

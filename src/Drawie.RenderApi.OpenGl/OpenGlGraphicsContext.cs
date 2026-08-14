@@ -8,11 +8,11 @@ public class OpenGlGraphicsContext(GL api, IGLContext glContext) : IGraphicsCont
 {
     public readonly IGLContext GlContext = glContext;
     public readonly GL Api = api;
-    private HashSet<ulong> ownedTextures = new HashSet<ulong>();
+    private Dictionary<ulong, IOpenGlTexture> ownedTextures = new Dictionary<ulong, IOpenGlTexture>();
 
     public bool OwnsTexture(ITexture nativeTexture)
     {
-        return nativeTexture is OpenGlTexture glTexture && ownedTextures.Contains(glTexture.TextureId);
+        return nativeTexture is OpenGlTexture glTexture && ownedTextures.ContainsKey(glTexture.TextureId);
     }
 
     public void MakeCurrent()
@@ -22,7 +22,8 @@ public class OpenGlGraphicsContext(GL api, IGLContext glContext) : IGraphicsCont
 
     public OpenGlTexture CreateTexture(uint id, int width, int height)
     {
-        ownedTextures.Add(id);
-        return new OpenGlTexture(id, Api, width, height);
+        var tex = new OpenGlTexture(id, Api, width, height);
+        ownedTextures.Add(id, tex);
+        return tex;
     }
 }

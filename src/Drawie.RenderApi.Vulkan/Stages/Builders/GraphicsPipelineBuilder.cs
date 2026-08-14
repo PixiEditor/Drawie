@@ -11,6 +11,8 @@ public class GraphicsPipelineBuilder
     public List<GraphicsPipelineStageBuilder> Stages { get; } = new();
     public RenderPassBuilder RenderPassBuilder { get; set; }
 
+    public bool HasDepthStencil { get; set; }
+
     public GraphicsPipelineBuilder(Vk vk, Device logicalDevice)
     {
         Vk = vk;
@@ -26,11 +28,17 @@ public class GraphicsPipelineBuilder
         Stages.Add(stage);
         return this;
     }
-    
+
     public GraphicsPipelineBuilder WithRenderPass(Action<RenderPassBuilder> renderPassBuilder)
     {
         RenderPassBuilder = new(Vk, LogicalDevice);
         renderPassBuilder(RenderPassBuilder);
+        return this;
+    }
+
+    public GraphicsPipelineBuilder WithDepth()
+    {
+        HasDepthStencil = true;
         return this;
     }
 
@@ -39,20 +47,20 @@ public class GraphicsPipelineBuilder
         ref DescriptorSetLayout descriptorSetLayout)
     {
         if (Stages.Count == 0) throw new GraphicsPipelineBuilderException("No stages were added to the pipeline.");
-        if (RenderPassBuilder == null) throw new GraphicsPipelineBuilderException("No render pass was added to the pipeline.");
+        if (RenderPassBuilder == null)
+            throw new GraphicsPipelineBuilderException("No render pass was added to the pipeline.");
 
         RenderPass renderPass = RenderPassBuilder.Create(swapChainImageFormat, finalLayout);
 
         var stages = stackalloc PipelineShaderStageCreateInfo[Stages.Count];
         for (var i = 0; i < Stages.Count; i++) stages[i] = Stages[i].Build();
-        
+
         var bindingDescription = Vertex.GetBindingDescription();
         var attributeDescriptions = Vertex.GetAttributeDescriptions();
 
         fixed (VertexInputAttributeDescription* attributeDescriptionsPtr = attributeDescriptions)
         fixed (DescriptorSetLayout* descriptorPtr = &descriptorSetLayout)
         {
-
             PipelineVertexInputStateCreateInfo vertexInputInfo = new()
             {
                 SType = StructureType.PipelineVertexInputStateCreateInfo,
@@ -107,6 +115,18 @@ public class GraphicsPipelineBuilder
                 DepthBiasEnable = false
             };
 
+            PipelineDepthStencilStateCreateInfo depthStencil = new()
+            {
+                SType = StructureType.PipelineDepthStencilStateCreateInfo,
+
+                DepthTestEnable = HasDepthStencil,
+                DepthWriteEnable = HasDepthStencil,
+                DepthCompareOp = CompareOp.Less,
+
+                DepthBoundsTestEnable = false,
+                StencilTestEnable = false
+            };
+
             PipelineMultisampleStateCreateInfo multisampling = new()
             {
                 SType = StructureType.PipelineMultisampleStateCreateInfo,
@@ -158,6 +178,7 @@ public class GraphicsPipelineBuilder
                 PRasterizationState = &rasterizer,
                 PMultisampleState = &multisampling,
                 PColorBlendState = &colorBlending,
+                PDepthStencilState = &depthStencil,
                 Layout = pipelineLayout,
                 RenderPass = renderPass,
                 Subpass = 0,

@@ -2,10 +2,15 @@ namespace Drawie.RenderApi.Abstraction.CommandRecording;
 
 public class RecordedRenderPass
 {
-    public Action[] Instructions { get; }
+    public Action Execute { get; init; }
 
-    public RecordedRenderPass(Action[] instructions)
+    public RecordedRenderPass()
     {
-        Instructions = instructions;
+        
+    }
+
+    public RecordedRenderPass(Action execute)
+    {
+        Execute = execute;
     }
 }

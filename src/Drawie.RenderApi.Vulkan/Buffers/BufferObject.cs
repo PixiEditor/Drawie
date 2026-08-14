@@ -1,15 +1,17 @@
-﻿using Drawie.RenderApi.Vulkan.Exceptions;
+﻿using Drawie.RenderApi.Abstraction.Buffers;
+using Drawie.RenderApi.Vulkan.Exceptions;
 using Silk.NET.Vulkan;
 using Buffer = Silk.NET.Vulkan.Buffer;
 
 namespace Drawie.RenderApi.Vulkan.Buffers;
 
-public class BufferObject : IDisposable
+public class BufferObject : IDisposable, IBuffer
 {
     public ulong Size { get; set; }
     
     public Buffer VkBuffer => vkBuffer;
     public DeviceMemory VkBufferMemory => vkBufferMemory;
+    public BufferUsage Usage { get; }
 
     private Silk.NET.Vulkan.Buffer vkBuffer = default;
     private DeviceMemory vkBufferMemory = default;
@@ -20,12 +22,13 @@ public class BufferObject : IDisposable
 
     protected unsafe BufferObject(Vk vk, Device device, PhysicalDevice physicalDevice, ulong size,
         BufferUsageFlags usage,
-        MemoryPropertyFlags properties)
+        MemoryPropertyFlags properties, BufferUsage purpose)
     {
         Size = size;
         this.vk = vk;
         this.device = device;
         this.physicalDevice = physicalDevice;
+        Usage = purpose;
 
         BufferCreateInfo bufferInfo = new()
         {
@@ -87,4 +90,5 @@ public class BufferObject : IDisposable
         vk!.DestroyBuffer(device, vkBuffer, null);
         vk!.FreeMemory(device, vkBufferMemory, null);
     }
+
 }

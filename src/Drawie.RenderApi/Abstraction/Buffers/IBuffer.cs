@@ -7,5 +7,5 @@ public interface IBuffer
 
 public interface IBuffer<T> : IBuffer where T : unmanaged
 {
-    public uint Size { get; }
+    public ulong Size { get; }
 }

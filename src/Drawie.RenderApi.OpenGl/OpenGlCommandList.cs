@@ -26,7 +26,7 @@ public class OpenGlCommandList(GL api) : CommandList
         RecordInstruction(() =>
         {
             originalFb = (uint)Api.GetInteger(GLEnum.FramebufferBinding);
-            Api.BindFramebuffer(FramebufferTarget.Framebuffer, fb.FramebufferId);
+            Api.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)fb.FramebufferId);
         });
     }
 
@@ -61,8 +61,8 @@ public class OpenGlCommandList(GL api) : CommandList
     {
         RecordInstruction(() =>
         {
-            Api.BindFramebuffer(FramebufferTarget.ReadFramebuffer, source.FramebufferId);
-            Api.BindFramebuffer(FramebufferTarget.DrawFramebuffer, blitTo.FramebufferId);
+            Api.BindFramebuffer(FramebufferTarget.ReadFramebuffer, (uint)source.FramebufferId);
+            Api.BindFramebuffer(FramebufferTarget.DrawFramebuffer, (uint)blitTo.FramebufferId);
             Api.BlitFramebuffer(
                 0, 0, source.Size.X, source.Size.Y,
                 0, 0, blitTo.Size.X, blitTo.Size.Y,

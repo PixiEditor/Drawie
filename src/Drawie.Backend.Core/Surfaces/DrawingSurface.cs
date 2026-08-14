@@ -46,11 +46,6 @@ namespace Drawie.Backend.Core.Surfaces
             return DrawingBackendApi.Current.ImageImplementation.Snapshot(this);
         }
         
-        public Image? TextureSnapshot()
-        {
-            return DrawingBackendApi.Current.ImageImplementation.TextureSnapshot(this);
-        }
-
         public Image Snapshot(RectI bounds)
         {
             return DrawingBackendApi.Current.ImageImplementation.Snapshot(this, bounds);

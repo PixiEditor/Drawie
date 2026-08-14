@@ -184,7 +184,7 @@ public class GlfwHost : Drawie.Host.IHost
 
     private void CreateRenderTarget(VecI size, ITexture nativeRenderTexture)
     {
-        renderTexture = store.CreateNativeRenderSurface(size, nativeRenderTexture, SurfaceOrigin.BottomLeft);
+        renderTexture = store.CreateNativeRenderSurface(size, nativeRenderTexture, RenderApi is IVulkanHostViewRenderApi ? SurfaceOrigin.TopLeft : SurfaceOrigin.BottomLeft);
     }
 
     private void WindowOnFramebufferResize(Vector2D<int> newSize)

@@ -68,7 +68,7 @@ public class TextureFramebuffer : IDisposable, IRenderTarget
         syncSurf.DrawingSurface.Canvas.DrawSurface(UnderlyingTexture.NativeTexture.DrawingSurface, 0, 0);
     }
 
-    uint IRenderTarget.FramebufferId => UnderlyingTexture.NativeTexture.FramebufferId;
+    ulong IRenderTarget.FramebufferId => UnderlyingTexture.NativeTexture.FramebufferId;
 
     private static NativeTexture syncSurf = new NativeTexture(new VecI(1, 1));
 }

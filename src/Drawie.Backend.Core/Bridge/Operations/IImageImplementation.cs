@@ -10,7 +10,6 @@ namespace Drawie.Backend.Core.Bridge.Operations
     {
         public Image Snapshot(DrawingSurface drawingSurface);
         public Image Snapshot(DrawingSurface drawingSurface, RectI bounds);
-        public Image? TextureSnapshot(DrawingSurface drawingSurface);
         public void DisposeImage(Image image);
         public Image? FromEncodedData(string path);
         public Image? FromEncodedData(byte[] dataBytes);
@@ -31,6 +30,8 @@ namespace Drawie.Backend.Core.Bridge.Operations
         public Shader ToRawShader(IntPtr objectPointer);
         public Shader? ToShader(IntPtr objectPointer, TileMode clamp, TileMode tileMode, Matrix3X3 fillMatrixValue);
         public uint GetUniqueId(IntPtr objectPointer);
+        /*
         public ulong? GetTextureId(IntPtr objectPointer);
+    */
     }
 }

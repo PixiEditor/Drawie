@@ -51,7 +51,7 @@ public class Mesh
             {
                 list.Buffers.AddRange(
                     device.CreateBuffer(BufferUsage.Vertex, CreateVertexData()),
-                    device.CreateBuffer(BufferUsage.Index, indicies));
+                device.CreateBuffer(BufferUsage.Index, indicies));
             }
         );
 

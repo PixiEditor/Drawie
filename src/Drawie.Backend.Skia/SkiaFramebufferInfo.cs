@@ -21,5 +21,5 @@ public class SkiaFramebufferInfo : IFramebufferInfo
         GlFramebufferInfo = grGlFramebufferInfo;
     }
 
-    public uint FramebufferId => target.GetGlFramebufferInfo().FramebufferObjectId;
+    public ulong FramebufferId => VkImageInfo?.Image ?? target.GetGlFramebufferInfo().FramebufferObjectId;
 }

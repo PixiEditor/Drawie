@@ -15,38 +15,13 @@ public class Texture : ITexture
     public int Width { get; }
     public int Height { get; }
     public VecI Size => new VecI(Width, Height);
-    public ulong TextureId
-    {
-        get
-        {
-            if(lastSnapshot == null) Snapshot(true);
-            
-            return lastSnapshot.TextureId;
-        }
-    }
+    public ulong TextureId  => NativeTexture.TextureId;
 
-    public Image Image
-    {
-        get
-        {
-            if(lastSnapshot == null) Snapshot(true);
-
-            return lastSnapshot;
-        }
-    }
-
-    private Image? lastSnapshot;
 
     internal Texture(NativeTexture native)
     {
         NativeTexture = native;
         Width = native.Size.X;
         Height = native.Size.Y;
-    }
-
-    public void Snapshot(bool force = false)
-    {
-        if(lastSnapshot != null || force)
-            lastSnapshot = NativeTexture.DrawingSurface.TextureSnapshot();
     }
 }

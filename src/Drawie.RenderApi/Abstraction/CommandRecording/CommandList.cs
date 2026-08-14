@@ -16,7 +16,14 @@ public abstract class CommandList : ICommandList
 
     protected RecordedRenderPass ToRenderPass()
     {
-        return new RecordedRenderPass(instructions.ToArray());
+        var execute = () =>
+        {
+            foreach (var instruction in instructions)
+            {
+                instruction.Invoke();
+            }
+        };
+        return new RecordedRenderPass(execute);
     }
 
     protected void ClearInstructions()

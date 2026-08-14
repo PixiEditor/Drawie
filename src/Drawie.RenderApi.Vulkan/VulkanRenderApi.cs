@@ -20,6 +20,7 @@ public class VulkanRenderApi : IVulkanRenderApi
     public VulkanRenderApi(IVulkanContext vulkanContext)
     {
         VulkanContext = vulkanContext;
+        GraphicsDevice = CreateGraphicsDevice(vulkanContext);
     }
 
     public IHostViewRenderApi CreateWindowRenderApi()
@@ -29,8 +30,10 @@ public class VulkanRenderApi : IVulkanRenderApi
         {
             var context = new VulkanWindowContext();
             VulkanContext = context;
-
+            
             hostViewRenderApi = new VulkanHostViewRenderApi(context);
+
+            hostViewRenderApi.Initialized += () => { GraphicsDevice = CreateGraphicsDevice(context); };
             windowRenderApis.Add(hostViewRenderApi);
             return hostViewRenderApi;
         }
@@ -43,8 +46,10 @@ public class VulkanRenderApi : IVulkanRenderApi
         return hostViewRenderApi;
     }
     
-    private void CreateGraphicsDevice(IVulkanContext context)
+    private static IGraphicsDevice CreateGraphicsDevice(IVulkanContext context)
     {
-        throw new NotImplementedException();
-    }
-}
+        if (context is not VulkanContext vulkanContext || vulkanContext.Api is null)
+            throw new InvalidOperationException("Vulkan graphics device is available only after the Vulkan context is initialized.");
+
+        return new VulkanGraphicsDevice(vulkanContext);
+    }}

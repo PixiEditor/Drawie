@@ -9,7 +9,7 @@ public class OpenGlBuffer<TData> : IBuffer<TData> where TData : unmanaged
 {
     public uint NativeHandle => openglHandle;
     public BufferUsage Usage { get; }
-    public uint Size { get; }
+    public ulong Size { get; }
 
     private uint openglHandle;
     private GL api;

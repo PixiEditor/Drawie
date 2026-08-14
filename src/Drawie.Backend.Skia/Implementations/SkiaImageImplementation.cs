@@ -20,7 +20,9 @@ namespace Drawie.Skia.Implementations
         private readonly SkiaPixmapImplementation _pixmapImplementation;
         private SkiaSurfaceImplementation _surfaceImplementation;
         private SkiaShaderImplementation shaderImpl;
+        /*
         private Dictionary<IntPtr, ITexture> textureInfos = new Dictionary<IntPtr, ITexture>();
+        */
 
         private Dictionary<EncodedImageFormat, IImageEncoder> nonSkiaEncoders = new Dictionary<EncodedImageFormat, IImageEncoder>()
         {
@@ -58,7 +60,7 @@ namespace Drawie.Skia.Implementations
             return new Image(snapshot.Handle);
         }
 
-        public Image? TextureSnapshot(DrawingSurface drawingSurface)
+        /*public Image? TextureSnapshot(DrawingSurface drawingSurface)
         {
             var surface = _surfaceImplementation![drawingSurface.ObjectPointer];
 
@@ -73,7 +75,7 @@ namespace Drawie.Skia.Implementations
             }
             
             SKImage? snapshot = CreateFromFramebuffer(skiaFramebufferInfo, size, SurfaceOrigin.BottomLeft, out var textureInfo);
-            if (snapshot == null) return null;*/
+            if (snapshot == null) return null;#1#
 
             var nativeTexture =_surfaceImplementation.GraphicsDevice.CreateTexture(new TextureDesc()
             {
@@ -132,7 +134,7 @@ namespace Drawie.Skia.Implementations
                 (GRSurfaceOrigin)origin,
                 SKColorType.Rgba8888,
                 SKAlphaType.Premul);
-        }
+        }*/
         
         internal SKImage? CreateFromFramebuffer(SkiaFramebufferInfo skiaFramebufferInfo, VecI size, SurfaceOrigin surfaceOrigin, out ITexture fbInfo)
         {
@@ -179,7 +181,9 @@ namespace Drawie.Skia.Implementations
         public void DisposeImage(Image image)
         {
             UnmanageAndDispose(image.ObjectPointer);
+            /*
             textureInfos.Remove(image.ObjectPointer);
+        */
         }
 
         public Image? FromEncodedData(string path)
@@ -322,6 +326,7 @@ namespace Drawie.Skia.Implementations
             return this[objectPointer].UniqueId;
         }
 
+        /*
         public ulong? GetTextureId(IntPtr objectPointer)
         {
             if (textureInfos.TryGetValue(objectPointer, out var info))
@@ -331,6 +336,7 @@ namespace Drawie.Skia.Implementations
             
             return null;
         }
+        */
 
         public object GetNativeImage(IntPtr objectPointer)
         {

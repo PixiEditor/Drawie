@@ -37,11 +37,6 @@ public class GraphicsStore : IDisposable
 
     public Texture CreateNativeRenderSurface(VecI size, ITexture nativeTexture, SurfaceOrigin origin)
     {
-        if (!GraphicsContext.OwnsTexture(nativeTexture))
-        {
-            throw new ArgumentException("The given native texture is not owned by this graphics store.");
-        }
-
         textures.Add(new Texture(
             NativeTexture.FromExisting(DrawingBackendApi.Current.CreateRenderSurface(size, nativeTexture, origin))));
         return textures[^1];

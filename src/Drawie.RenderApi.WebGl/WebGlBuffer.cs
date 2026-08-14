@@ -11,7 +11,7 @@ public class WebGlBuffer<TData> : IBuffer<TData> where TData : unmanaged
     public int Id { get; }
     public int Gl { get; }
     public BufferUsage Usage { get; }
-    public uint Size { get; }
+    public ulong Size { get; }
 
     public WebGlBuffer(int gl, BufferUsage usage, TData[]? data = null)
     {

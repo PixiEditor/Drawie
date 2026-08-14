@@ -6,4 +6,6 @@ public enum BufferUsage
     Index,
     Uniform,
     Storage,
+    Transfer,
+    Other,
 }

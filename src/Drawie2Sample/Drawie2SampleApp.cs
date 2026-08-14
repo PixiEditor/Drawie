@@ -9,6 +9,7 @@ using Drawie.Backend.Vertie.Helpers;
 using Drawie.Backend.Vertie.Rendering;
 using Drawie.Host;
 using Drawie.Host.Input;
+using Drawie.Layer.UI.ImGui;
 using Drawie.Numerics;
 using Drawie.Rendering;
 using DrawiEngine;
@@ -76,7 +77,7 @@ public class Drawie2SampleApp : DrawieApp
         };
         
         camera = new Camera(Vector3.Zero, Vector3.UnitZ, Vector3.UnitY, (float)window.Size.X / window.Size.Y);
-        Mesh mesh = new Cub(); //new Mesh("Assets/teapot.obj");
+        Mesh mesh = new Mesh("Assets/teapot.obj");
 
         RegisterMouse(window.InputController);
 

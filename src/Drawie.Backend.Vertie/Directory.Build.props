@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
         <ShaderRoot>$(ProjectDir)Shaders</ShaderRoot>
-        <IsBrowserBuild>true</IsBrowserBuild>
+        <IsBrowserBuild>false</IsBrowserBuild>
     </PropertyGroup>
 
     <ItemGroup>

@@ -2,7 +2,7 @@
 using DrawiEngine;
 using DrawiEngine.Desktop;
 
-DrawingEngine engine = DesktopDrawingEngine.CreateDefaultDesktop(false);
+DrawingEngine engine = DesktopDrawingEngine.CreateDefaultDesktop();
 
 Drawie2SampleApp app = new Drawie2SampleApp();
 

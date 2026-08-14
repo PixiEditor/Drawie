@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction;
 using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.RenderApi.Vulkan.Exceptions;
@@ -8,7 +9,6 @@ using Drawie.RenderApi.Vulkan.Helpers;
 using Drawie.RenderApi.Vulkan.Stages;
 using Drawie.RenderApi.Vulkan.Stages.Builders;
 using Drawie.RenderApi.Vulkan.Structs;
-using Silk.NET.Maths;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 using Buffer = Silk.NET.Vulkan.Buffer;
@@ -57,7 +57,9 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
     public event Action? FramebufferResized;
     ITexture IHostViewRenderApi.RenderTexture => texture;
 
-    public VulkanWindowContext Context => context; 
+    public VulkanWindowContext Context => context;
+
+    public event Action Initialized;
     
     IVulkanContext IVulkanHostViewRenderApi.Context => context;
 
@@ -73,10 +75,10 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
 
     public void PrepareTextureToWrite()
     {
-        texture.TransitionLayoutTo(VulkanTexture.ShaderReadOnlyOptimal, VulkanTexture.ColorAttachmentOptimal);
+        texture.MakeWriteable();
     }
 
-    public IGraphicsContext GraphicsContext { get; }
+    public IGraphicsContext GraphicsContext { get; private set; }
 
     public void CreateInstance(object contextObject, VecI framebufferSize)
     {
@@ -108,6 +110,9 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
         CreateSyncObjects();
 
         lastFramebufferSize = framebufferSize;
+
+        GraphicsContext = context;
+        Initialized?.Invoke();
     }
 
     public unsafe void DestroyInstance()
@@ -195,8 +200,8 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
 
     public void CreateTextureImage()
     {
-        texture = new VulkanTexture(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, commandPool,
-            context.GraphicsQueue, context.GraphicsQueueFamilyIndex, framebufferSize);
+        texture = new VulkanTexture(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, commandPool, context.GraphicsQueue, context.GraphicsQueueFamilyIndex, framebufferSize);
+        context.AddManagedTexture(texture, texture.ImageHandle);
         texture.MakeReadOnly();
     }
 
@@ -252,7 +257,7 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
             DescriptorImageInfo imageInfo = new()
             {
                 Sampler = texture.Sampler,
-                ImageView = texture.ImageView,
+                ImageView = texture.ColorAttachment.View,
                 ImageLayout = ImageLayout.ShaderReadOnlyOptimal
             };
 
@@ -423,7 +428,7 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
 
     private void UpdateTextureLayout()
     {
-        texture.TransitionLayoutTo(VulkanTexture.ColorAttachmentOptimal, VulkanTexture.ShaderReadOnlyOptimal);
+        texture.MakeReadOnly();
     }
 
     private unsafe void CreateCommandPool()

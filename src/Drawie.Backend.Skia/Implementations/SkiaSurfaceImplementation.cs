@@ -32,6 +32,7 @@ namespace Drawie.Skia.Implementations
             _canvasImplementation = canvasImplementation;
             _paintImplementation = paintImplementation;
             GrContext = context;
+            defaultSurfaceOrigin = surfaceOrigin;
         }
 
         public Pixmap PeekPixels(DrawingSurface drawingSurface)

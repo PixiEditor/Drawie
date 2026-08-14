@@ -30,8 +30,7 @@ public class VulkanContent : IDisposable
         var commandBuffer = context.Pool.CreateCommandBuffer();
         commandBuffer.BeginRecording();
 
-        texture.TransitionLayoutTo(commandBuffer.InternalHandle, ImageLayout.ColorAttachmentOptimal,
-            ImageLayout.TransferSrcOptimal);
+        texture.ColorAttachment.TransitionLayout(ImageLayout.TransferSrcOptimal, commandBuffer.InternalHandle);
 
         image.TransitionLayout(commandBuffer.InternalHandle, ImageLayout.TransferDstOptimal,
             AccessFlags.TransferWriteBit);
@@ -65,8 +64,7 @@ public class VulkanContent : IDisposable
 
         commandBuffer.Submit();
 
-        texture.TransitionLayoutTo((uint)ImageLayout.TransferSrcOptimal,
-            (uint)ImageLayout.ColorAttachmentOptimal);
+        texture.ColorAttachment.TransitionLayout(ImageLayout.ColorAttachmentOptimal, commandBuffer.InternalHandle);
     }
 
     public void CreateTextureImage(VecI size)
