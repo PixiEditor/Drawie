@@ -1,20 +1,52 @@
+struct VertexInput
+{
+    float3 vPos       : POSITION;
+    float3 vNormal    : NORMAL;
+    float2 vTexCoords : TEXCOORD0;
+};
+
 struct VertexOutput
 {
-    float4 position : SV_Position;
+    float4 position   : SV_Position;
+    float3 fNormal    : TEXCOORD0;
+    float3 fPos       : TEXCOORD1;
+    float2 fTexCoords : TEXCOORD2;
+};
+
+[[vk::binding(0, 0)]]
+cbuffer Transform
+{
+    float4x4 uModel;
+    float4x4 uView;
+    float4x4 uProjection;
 };
 
 [shader("vertex")]
-VertexOutput VSMain(uint vertexId : SV_VertexID)
+VertexOutput VSMain(VertexInput input)
 {
-    float2 positions[3] =
-    {
-        float2(-0.5, -0.5),
-        float2( 0.5, -0.5),
-        float2( 0.0,  0.5)
-    };
-
     VertexOutput output;
-    output.position = float4(positions[vertexId], 0.0, 1.0);
+
+    output.position = mul(
+        mul(
+            mul(uProjection, uView),
+            uModel
+        ),
+        float4(input.vPos, 1.0)
+    );
+
+    output.fPos = mul(
+        uModel,
+        float4(input.vPos, 1.0)
+    ).xyz;
+
+    float3x3 model3x3 = float3x3(uModel);
+
+   output.fNormal = mul(
+       float3x3(uModel),
+       input.vNormal
+   );
+
+    output.fTexCoords = input.vTexCoords;
 
     return output;
 }

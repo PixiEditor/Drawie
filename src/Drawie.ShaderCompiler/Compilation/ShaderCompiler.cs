@@ -24,8 +24,7 @@ public class ShaderCompiler
             [
                 "-matrix-layout-column-major",
                 "-fvk-use-entrypoint-name",
-                "-emit-spirv-via-glsl",
-                "-profile", "glsl_330",
+                "-target", "spirv",
             ],
             out var reflection);
         

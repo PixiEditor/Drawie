@@ -70,12 +70,12 @@ public static class TextureFramebufferExtensions
         
         cmdList.SetBuffers(mesh.Buffers);
         
-        //material.Use(camera);
-        //material.PrepareForObject(mesh.Transform);
+        material.Use(camera);
+        material.PrepareForObject(mesh.Transform);
         
-        //shader.UpdateUniforms(material.Properties.Values.ToList());
+        shader.UpdateUniforms(material.Properties.Values.ToList());
 
-        /*for (var i = 0; i < material.Textures.Count; i++)
+        for (var i = 0; i < material.Textures.Count; i++)
         {
             var materialTexture = material.Textures[i];
             var sampler = cachedSamplers.GetValueOrDefault(materialTexture);
@@ -86,7 +86,7 @@ public static class TextureFramebufferExtensions
             }
 
             cmdList.BindTexture(materialTexture, sampler);
-        }*/
+        }
         
         cmdList.DrawIndexed(mesh.IndexCount);
         var recordedRenderPass = cmdList.EndRenderPass(fb);
