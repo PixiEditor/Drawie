@@ -18,6 +18,7 @@ using Drawie.Numerics;
 using Drawie.Rendering;
 using DrawiEngine;
 using ImGuiNET;
+using Label = Drawie.Layer.UI.MiniUi.Controls.Label;
 
 namespace Drawie2Sample;
 
@@ -48,10 +49,24 @@ public class Drawie2SampleApp : DrawieApp
 
     private void RenderMiniUi(double dt)
     {
-        string text = renderOptions.RenderMode == RenderMode.Default ? "Enable wireframe" : "Enable solid fill";
-        if (Button.Show(text))
+        if (CollapsableGroup.Begin("debug", "Debug"))
         {
-            renderOptions.RenderMode = renderOptions.RenderMode == RenderMode.Default ?  RenderMode.Wireframe : RenderMode.Default;
+            Panel.BeginColumn();
+
+            Panel.BeginRow();
+                Label.Show($"FPS: {1f / dt:F1}");
+            Panel.EndRow();
+
+            string text = renderOptions.RenderMode == RenderMode.Default ? "Enable wireframe" : "Enable solid fill";
+            if (Button.Show(text))
+            {
+                renderOptions.RenderMode = renderOptions.RenderMode == RenderMode.Default
+                    ? RenderMode.Wireframe
+                    : RenderMode.Default;
+            }
+
+            Panel.EndColumn();
+            CollapsableGroup.End();
         }
     }
 
@@ -62,25 +77,29 @@ public class Drawie2SampleApp : DrawieApp
         {
             renderOptions.RenderMode = (RenderMode)activeRenderMode;
         }
+
         ImGui.EndGroup();
     }
 
     protected override void OnInitialize()
     {
         handleMovement = true;
-        
+
         window.InputController.PrimaryPointer.Cursor.State = CursorState.Disabled;
         window.InputController.PrimaryKeyboard.KeyPressed += (keyboard, key, code) =>
         {
             if (key == Key.Escape)
             {
-                window.InputController.PrimaryPointer.Cursor.State = window.InputController.PrimaryPointer.Cursor.State == CursorState.Disabled ? CursorState.Normal : CursorState.Disabled;
+                window.InputController.PrimaryPointer.Cursor.State =
+                    window.InputController.PrimaryPointer.Cursor.State == CursorState.Disabled
+                        ? CursorState.Normal
+                        : CursorState.Disabled;
                 handleMovement = !handleMovement;
             }
         };
-        
+
         camera = new Camera(new Vector3(0, 0, 5), Vector3.UnitZ, Vector3.UnitY, (float)window.Size.X / window.Size.Y);
-        
+
         //"Shiba" (https://skfb.ly/6WxVW) by zixisun02 is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
         Scene scene = new Scene("Assets/shiba.fbx", Path.Combine("Assets", "textures"));
 

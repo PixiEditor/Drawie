@@ -16,27 +16,37 @@ public static class Button
 
         RichText rt = new RichText(label);
         rt.Fill = true;
-        using Font font = Font.FromFontFamily(MiniUiStyle.Active.FontFamily);
+        Font font = MiniUiStyle.Active.Font;
         
         VecF bounds = CalculateBounds(rt, font);
         
         using Paint btnPaint = new Paint();
 
         RectD btnBounds = new RectD(ctx.CurrentPosition.X, ctx.CurrentPosition.Y, bounds.X, bounds.Y);
-        btnBounds.Size += new VecD(MiniUiStyle.Active.HorizontalPadding * 2, MiniUiStyle.Active.VerticalPadding * 2);
+        btnBounds.Size += new VecD(MiniUiStyle.Active.Padding * 2, MiniUiStyle.Active.Padding * 2);
 
         bool hitTest = btnBounds.ContainsInclusive(MiniUiContext.Active.PointerPosition);
-        btnPaint.Paintable = hitTest ? MiniUiStyle.Active.BackgroundLow : MiniUiStyle.Active.BackgroundMid;
+        btnPaint.Paintable = hitTest ? MiniUiStyle.Active.BackgroundHigh : MiniUiStyle.Active.BackgroundMid;
         
-        ctx.Framebuffer.Canvas!.DrawRect(btnBounds, btnPaint);
+        OutlinedRectangle.Draw(btnBounds, btnPaint.Paintable, hitTest ? MiniUiStyle.Active.BorderHigh : MiniUiStyle.Active.BorderMid);
         
         btnPaint.Paintable = MiniUiStyle.Active.Foreground;
         rt.FillPaintable = MiniUiStyle.Active.Foreground;
 
         bool justPressed = !ctx.LastState.PressedPointerButtons[PointerButton.Left] &&
                            ctx.InputController.PrimaryPointer.IsButtonPressed(PointerButton.Left);
-        
-        rt.Paint(ctx.Framebuffer.Canvas, new VecD(ctx.CurrentPosition.X + MiniUiStyle.Active.HorizontalPadding, ctx.CurrentPosition.Y + bounds.Y + MiniUiStyle.Active.VerticalPadding / 2f), font, btnPaint,null);
+
+        RectD drawBounds =
+            new RectD(
+                new VecD(ctx.CurrentPosition.X + MiniUiStyle.Active.Padding,
+                    ctx.CurrentPosition.Y + bounds.Y + MiniUiStyle.Active.Padding / 2f), btnBounds.Size);
+
+        if (ctx.Framebuffer != null)
+        {
+            rt.Paint(ctx.Framebuffer?.Canvas, drawBounds.Pos, font, btnPaint, null);
+        }
+
+        Panel.Advance(btnBounds);
         return hitTest && justPressed;
     }
 

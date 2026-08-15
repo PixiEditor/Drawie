@@ -8,8 +8,8 @@ public class MiniUiContext : IDisposable
 {
     public static MiniUiContext? Active { get; private set; }
 
-    public TextureFramebuffer? Framebuffer { get; private set; }
-    public VecF CurrentPosition { get; private set; }
+    public TextureFramebuffer? Framebuffer { get; set; }
+    public VecF CurrentPosition { get; set; }
     
     public VecD PointerPosition {get; private set;}
     public InputController InputController { get; private set; }
