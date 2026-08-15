@@ -53,6 +53,6 @@ public class OpenGlRenderApi : IOpenGlRenderApi
 
     private void CreateGraphicsDevice(IOpenGlContext context)
     {
-        GraphicsDevice = new OpenGlDevice(new GL(new LamdaNativeContext(context.GetGlInterface)));
+        GraphicsDevice = new OpenGlDevice(context);
     }
 }

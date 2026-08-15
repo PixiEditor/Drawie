@@ -136,11 +136,11 @@ namespace Drawie.Skia.Implementations
                 SKAlphaType.Premul);
         }*/
         
-        internal SKImage? CreateFromFramebuffer(SkiaFramebufferInfo skiaFramebufferInfo, VecI size, SurfaceOrigin surfaceOrigin, out ITexture fbInfo)
+        internal SKImage? CreateFromFramebuffer(SkiaNativeSurfaceInfo skiaNativeSurfaceInfo, VecI size, SurfaceOrigin surfaceOrigin, out ITexture fbInfo)
         {
-            if (skiaFramebufferInfo.VkImageInfo != null)
+            if (skiaNativeSurfaceInfo.VkImageInfo != null)
             {
-                var imageInfo = skiaFramebufferInfo.VkImageInfo.Value;
+                var imageInfo = skiaNativeSurfaceInfo.VkImageInfo.Value;
                 var backendRenderTarget = new GRBackendTexture(size.X, size.Y, imageInfo);
                 var surface = SKImage.FromTexture(_surfaceImplementation.GrContext, backendRenderTarget,
                     (GRSurfaceOrigin)surfaceOrigin, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -149,9 +149,9 @@ namespace Drawie.Skia.Implementations
                 return surface;
             }
 
-            if (skiaFramebufferInfo.GlFramebufferInfo != null)
+            if (skiaNativeSurfaceInfo.GlFramebufferInfo != null)
             {
-                uint textureId = skiaFramebufferInfo.GlFramebufferInfo.Value.FramebufferObjectId;
+                uint textureId = skiaNativeSurfaceInfo.GlFramebufferInfo.Value.FramebufferObjectId;
 
                 const uint OpenGlTexture2D = 3553;
                 const uint RGBA8 = 0x8058;

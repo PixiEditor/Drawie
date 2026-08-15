@@ -17,7 +17,7 @@ namespace Drawie.Skia.Implementations
         private readonly SkiaPixmapImplementation _pixmapImplementation;
         private readonly SkiaCanvasImplementation _canvasImplementation;
         private readonly SkiaPaintImplementation _paintImplementation;
-        private Dictionary<IntPtr, IFramebufferInfo> framebufferInfos = new Dictionary<IntPtr, IFramebufferInfo>();
+        private Dictionary<IntPtr, IFramebufferInfo> nativeSurfaceInfos = new Dictionary<IntPtr, IFramebufferInfo>();
 
         internal GRContext? GrContext { get; set; }
         internal IGraphicsDevice GraphicsDevice { get; set; }
@@ -138,8 +138,8 @@ namespace Drawie.Skia.Implementations
             {
                 return SKSurface.Create(info);
             }
-            
-            if(GraphicsDevice == null)
+
+            if (GraphicsDevice == null)
             {
                 throw new InvalidOperationException("GraphicsDevice is not initialized.");
             }
@@ -149,14 +149,18 @@ namespace Drawie.Skia.Implementations
                 Format = TextureFormat.RGBA8_Unorm, Width = info.Width, Height = info.Height
             });
 
-            var surface = CreateFromNativeTexture(texture, new VecI(info.Width, info.Height), defaultSurfaceOrigin, out var framebufferInfo);
+            var surface = CreateFromNativeTexture(texture, new VecI(info.Width, info.Height), defaultSurfaceOrigin,
+                false,
+                out var framebufferInfo);
             if (surface == null) return null;
-            
-            framebufferInfos[surface.Handle] = framebufferInfo;
+
+            nativeSurfaceInfos[surface.Handle] = framebufferInfo;
             return surface;
         }
 
-        internal SKSurface? CreateFromNativeTexture(ITexture renderTexture, VecI size, SurfaceOrigin surfaceOrigin, out IFramebufferInfo fbInfo)
+        internal SKSurface? CreateFromNativeTexture(ITexture renderTexture, VecI size, SurfaceOrigin surfaceOrigin,
+            bool asRenderTarget,
+            out IFramebufferInfo fbInfo)
         {
             if (renderTexture is IVkTexture texture)
             {
@@ -175,9 +179,10 @@ namespace Drawie.Skia.Implementations
                 };
 
                 var backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, imageInfo);
-                var surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin, SKColorType.Rgba8888, new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
+                var surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
+                    SKColorType.Rgba8888, new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
 
-                fbInfo = new SkiaFramebufferInfo(backendRenderTarget, imageInfo);
+                fbInfo = new SkiaNativeSurfaceInfo(backendRenderTarget, imageInfo);
                 return surface;
             }
 
@@ -190,14 +195,31 @@ namespace Drawie.Skia.Implementations
                     _ => throw new ArgumentException("Unsupported texture type.")
                 };
 
-                GRGlFramebufferInfo grGlFramebufferInfo = new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat());
-                GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
-                    grGlFramebufferInfo);
-                
-                var surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
-                    SKColorType.Rgba8888);
+                SKSurface? surface;
+                if (!asRenderTarget)
+                {
+                    const uint OpenGlTexture2D = 3553;
+                    const uint RGBA8 = 0x8058;
+                    var info = new GRGlTextureInfo(OpenGlTexture2D, textureId, RGBA8);
+                    var backendRenderTarget = new GRBackendTexture(size.X, size.Y, false, info);
 
-                fbInfo = new SkiaFramebufferInfo(backendRenderTarget, grGlFramebufferInfo);
+                    surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
+                        SKColorType.Rgba8888);
+                    fbInfo = new SkiaNativeSurfaceInfo(backendRenderTarget, info);
+                }
+                else
+                {
+                    GRGlFramebufferInfo grGlFramebufferInfo =
+                        new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat());
+                    GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
+                        grGlFramebufferInfo);
+                    
+                    surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
+                        SKColorType.Rgba8888);
+                    
+                    fbInfo = new SkiaNativeSurfaceInfo(backendRenderTarget, grGlFramebufferInfo);
+                }
+
                 return surface;
             }
 
@@ -207,7 +229,7 @@ namespace Drawie.Skia.Implementations
         public void Dispose(DrawingSurface drawingSurface)
         {
             UnmanageAndDispose(drawingSurface.ObjectPointer);
-            framebufferInfos.Remove(drawingSurface.ObjectPointer, out var framebufferInfo);
+            nativeSurfaceInfos.Remove(drawingSurface.ObjectPointer, out var framebufferInfo);
         }
 
         public object GetNativeSurface(IntPtr objectPointer)
@@ -267,14 +289,14 @@ namespace Drawie.Skia.Implementations
             return new RectD(skRect.Left, skRect.Top, skRect.Width, skRect.Height);
         }
 
-        public IFramebufferInfo? GetFramebufferInfo(IntPtr objectPointer)
+        public IFramebufferInfo? GetNativeSurfaceInfo(IntPtr objectPointer)
         {
-            return framebufferInfos.GetValueOrDefault(objectPointer);
+            return nativeSurfaceInfos.GetValueOrDefault(objectPointer);
         }
 
         public void AddManagedFramebuffer(IntPtr nativeHandle, IFramebufferInfo fbInfo)
         {
-            framebufferInfos.Add(nativeHandle, fbInfo);
+            nativeSurfaceInfos.Add(nativeHandle, fbInfo);
         }
     }
 }

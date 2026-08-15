@@ -10,7 +10,7 @@ public sealed class OpenGlRenderTarget : IDisposable, IRenderTarget
     public OpenGlTexture Color { get; }
     public OpenGlDepthBuffer? Depth { get; }
 
-    public ulong FramebufferId { get; }
+    public ulong SurfaceId { get; }
     public VecI Size => new VecI(Width, Height);
 
     public int Width => Color.Width;
@@ -37,11 +37,11 @@ public sealed class OpenGlRenderTarget : IDisposable, IRenderTarget
                 width,
                 height, depth);
 
-        FramebufferId = Api.GenFramebuffer();
+        SurfaceId = Api.GenFramebuffer();
 
         Api.BindFramebuffer(
             FramebufferTarget.Framebuffer,
-            (uint)FramebufferId);
+            (uint)SurfaceId);
 
         Api.FramebufferTexture2D(
             FramebufferTarget.Framebuffer,
@@ -77,12 +77,12 @@ public sealed class OpenGlRenderTarget : IDisposable, IRenderTarget
     {
         Api.BindFramebuffer(
             FramebufferTarget.Framebuffer,
-            (uint)FramebufferId);
+            (uint)SurfaceId);
     }
 
     public void Dispose()
     {
-        Api.DeleteFramebuffer((uint)FramebufferId);
+        Api.DeleteFramebuffer((uint)SurfaceId);
 
         Depth?.Dispose();
         Color.Dispose();

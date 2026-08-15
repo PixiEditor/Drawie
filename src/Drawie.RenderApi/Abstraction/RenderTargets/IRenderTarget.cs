@@ -4,6 +4,6 @@ namespace Drawie.RenderApi.Abstraction.RenderTargets;
 
 public interface IRenderTarget
 {
-    ulong FramebufferId { get; }
+    ulong SurfaceId { get; }
     VecI Size { get; }
 }

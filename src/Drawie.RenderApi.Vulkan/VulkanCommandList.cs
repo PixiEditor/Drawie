@@ -129,7 +129,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
     {
         EnsureRecording();
 
-        var vkTex = context.ManagedTextures[blitTo.FramebufferId];
+        var vkTex = context.ManagedTextures[blitTo.SurfaceId];
 
         if (vkTex is not VulkanTexture destination)
             throw new ArgumentException(

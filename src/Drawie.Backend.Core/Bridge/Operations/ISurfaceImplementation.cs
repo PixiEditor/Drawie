@@ -21,6 +21,6 @@ public interface ISurfaceImplementation
     public RectI GetDeviceClipBounds(IntPtr drawingSurface);
     public void Unmanage(DrawingSurface surface);
     public RectD GetLocalClipBounds(IntPtr objectPointer);
-    IFramebufferInfo? GetFramebufferInfo(IntPtr objectPointer);
+    IFramebufferInfo? GetNativeSurfaceInfo(IntPtr objectPointer);
 }
 

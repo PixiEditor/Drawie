@@ -1,6 +1,4 @@
 using Drawie.Backend.Core;
-using Drawie.Backend.Core.Bridge;
-using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Numerics;
 using Drawie.RenderApi.Abstraction.Textures;
 

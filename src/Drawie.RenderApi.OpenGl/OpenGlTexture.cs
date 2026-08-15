@@ -34,7 +34,7 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
         Api.TexImage2D(
             TextureTarget.Texture2D,
             0,
-            InternalFormat.Rgba8,
+            InternalFormat.Rgba,
             (uint)width,
             (uint)height,
             0,

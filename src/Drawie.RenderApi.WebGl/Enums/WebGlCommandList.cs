@@ -29,7 +29,7 @@ public class WebGlCommandList : CommandList
         RecordInstruction(() =>
         {
             originalFb = JSRuntime.GetParameter(Gl, (int)WebGlBindings.FramebufferBinding);
-            JSRuntime.BindFramebuffer(Gl, (int)WebGlFramebufferTarget.Framebuffer, (int)fb.FramebufferId);
+            JSRuntime.BindFramebuffer(Gl, (int)WebGlFramebufferTarget.Framebuffer, (int)fb.SurfaceId);
         });
     }
 
@@ -67,8 +67,8 @@ public class WebGlCommandList : CommandList
     {
         RecordInstruction(() =>
         {
-            JSRuntime.BindFramebuffer(Gl, (int)WebGlFramebufferTarget.ReadFramebuffer, (int)source.FramebufferId);
-            JSRuntime.BindFramebuffer(Gl, (int)WebGlFramebufferTarget.DrawFramebuffer, (int)blitTo.FramebufferId);
+            JSRuntime.BindFramebuffer(Gl, (int)WebGlFramebufferTarget.ReadFramebuffer, (int)source.SurfaceId);
+            JSRuntime.BindFramebuffer(Gl, (int)WebGlFramebufferTarget.DrawFramebuffer, (int)blitTo.SurfaceId);
             JSRuntime.BlitFramebuffer(Gl,
                 0, 0, source.Size.X, source.Size.Y,
                 0, 0, blitTo.Size.X, blitTo.Size.Y,

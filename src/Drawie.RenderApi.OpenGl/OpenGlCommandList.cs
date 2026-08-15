@@ -26,7 +26,7 @@ public class OpenGlCommandList(GL api) : CommandList
         RecordInstruction(() =>
         {
             originalFb = (uint)Api.GetInteger(GLEnum.FramebufferBinding);
-            Api.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)fb.FramebufferId);
+            Api.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)fb.SurfaceId);
         });
     }
 
@@ -43,10 +43,17 @@ public class OpenGlCommandList(GL api) : CommandList
     public override void BindTexture(ITexture texture, ISampler sampler)
     {
         if (sampler is not OpenGlSampler openGlSampler) throw new ArgumentException("Cannot bind non opengl samplers");
-        Api.ActiveTexture(TextureUnit.Texture0 + lastBoundTextureSlot);
-        Api.BindTexture(TextureTarget.Texture2D, (uint)texture.TextureId);
-        Api.BindSampler((uint)lastBoundTextureSlot, openGlSampler.Handle);
-        lastBoundTextureSlot++;
+        // if vk:binding has binding set to 1, we need to update it at Texture1, generally, for binding transformation matrices we want to use 
+        // binding 0, so binding 1 is a good assumption. Ideally shader reflection can resolve that but I guess it's fine for now
+
+        RecordInstruction(() =>
+        {
+            int textureUnit = lastBoundTextureSlot + 1;
+            Api.ActiveTexture(TextureUnit.Texture0 + textureUnit);
+            Api.BindTexture(TextureTarget.Texture2D, (uint)texture.TextureId);
+            Api.BindSampler((uint)textureUnit, openGlSampler.Handle);
+            lastBoundTextureSlot++;
+        });
     }
 
     public override unsafe void DrawIndexed(int indexCount)
@@ -61,8 +68,8 @@ public class OpenGlCommandList(GL api) : CommandList
     {
         RecordInstruction(() =>
         {
-            Api.BindFramebuffer(FramebufferTarget.ReadFramebuffer, (uint)source.FramebufferId);
-            Api.BindFramebuffer(FramebufferTarget.DrawFramebuffer, (uint)blitTo.FramebufferId);
+            Api.BindFramebuffer(FramebufferTarget.ReadFramebuffer, (uint)source.SurfaceId);
+            Api.BindFramebuffer(FramebufferTarget.DrawFramebuffer, (uint)blitTo.SurfaceId);
             Api.BlitFramebuffer(
                 0, 0, source.Size.X, source.Size.Y,
                 0, 0, blitTo.Size.X, blitTo.Size.Y,

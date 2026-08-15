@@ -7,6 +7,7 @@ using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Abstraction.RenderTargets;
 using Drawie.RenderApi.Abstraction.Shaders;
 using Drawie.RenderApi.Abstraction.Textures;
+using Silk.NET.Core.Contexts;
 using Silk.NET.OpenGL;
 using ShaderType = Drawie.Backend.Shaders.Common.ShaderType;
 
@@ -14,14 +15,15 @@ namespace Drawie.RenderApi.OpenGL;
 
 public class OpenGlDevice : IGraphicsDevice
 {
+    private readonly IOpenGlContext context;
     private int handleCounter = 0;
     public GL Api { get; }
 
-    public OpenGlDevice(GL api)
+    public OpenGlDevice(IOpenGlContext graphicsContext)
     {
-        Api = api;
+        Api = new GL(new LamdaNativeContext(graphicsContext.GetGlInterface));
+        context = graphicsContext;
     }
-
 
     public IBuffer<TData> CreateBuffer<TData>(BufferUsage usage, TData[]? data) where TData : unmanaged
     {
@@ -30,7 +32,9 @@ public class OpenGlDevice : IGraphicsDevice
 
     public ITexture CreateTexture(TextureDesc desc)
     {
-        return new OpenGlTexture(Api, desc.Width, desc.Height);
+        var texture =  new OpenGlTexture(Api, desc.Width, desc.Height);
+        context.AddManagedTexture(texture);
+        return texture;
     }
 
     public IPipeline CreatePipeline(PipelineDesc desc)

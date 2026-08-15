@@ -63,12 +63,8 @@ public class TextureFramebuffer : IDisposable, IRenderTarget
         if (!IsOpen) return;
         
         IsOpen = false;
-        UnderlyingTexture.NativeTexture.DrawingSurface.Flush();
-        // TODO: Find a way to synchronize things better
-        syncSurf.DrawingSurface.Canvas.DrawSurface(UnderlyingTexture.NativeTexture.DrawingSurface, 0, 0);
+        DrawingBackendApi.Current.Flush();
     }
 
-    ulong IRenderTarget.FramebufferId => UnderlyingTexture.NativeTexture.FramebufferId;
-
-    private static NativeTexture syncSurf = new NativeTexture(new VecI(1, 1));
+    ulong IRenderTarget.SurfaceId => UnderlyingTexture.NativeTexture.SurfaceId;
 }

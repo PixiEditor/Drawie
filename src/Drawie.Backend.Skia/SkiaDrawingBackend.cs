@@ -205,7 +205,7 @@ namespace Drawie.Skia
 
         public DrawingSurface? CreateRenderSurface(VecI size, ITexture renderTexture, SurfaceOrigin surfaceOrigin)
         {
-            var native = SurfaceImplementation.CreateFromNativeTexture(renderTexture, size, surfaceOrigin, out var fbInfo);
+            var native = SurfaceImplementation.CreateFromNativeTexture(renderTexture, size, surfaceOrigin, true, out var fbInfo);
             if (native == null)
             {
                 return null;

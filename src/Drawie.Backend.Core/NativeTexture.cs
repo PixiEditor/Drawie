@@ -21,7 +21,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, IFramebufferIn
     public ColorSpace ColorSpace { get; }
 
     public ImageInfo ImageInfo { get; }
-    public ulong TextureId => FramebufferId;
+    public ulong TextureId => SurfaceId;
 
     private DrawingSurface? cpuSurface;
     private Pixmap? cpuPixmap;
@@ -411,7 +411,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, IFramebufferIn
     }
 #endif
 
-    public ulong FramebufferId =>
-        DrawingBackendApi.Current.SurfaceImplementation.GetFramebufferInfo(DrawingSurface.ObjectPointer)
-            ?.FramebufferId ?? throw new Exception("Framebuffer info not available.");
+    public ulong SurfaceId =>
+        DrawingBackendApi.Current.SurfaceImplementation.GetNativeSurfaceInfo(DrawingSurface.ObjectPointer)
+            ?.SurfaceId ?? throw new Exception("Framebuffer info not available.");
 }
