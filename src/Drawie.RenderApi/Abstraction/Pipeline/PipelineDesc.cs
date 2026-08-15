@@ -1,5 +1,6 @@
 using Drawie.Numerics;
 using Drawie.RenderApi.Abstraction.Shaders;
+using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.RenderApi.Abstraction.Pipeline;
 
@@ -31,6 +32,7 @@ public record struct DepthDesc
 {
     public bool Enabled { get; set; }
     public DepthCompareType DepthCompare  { get; set; }
+    public DepthFormat Format { get; set; }
 }
 
 public enum DepthCompareType

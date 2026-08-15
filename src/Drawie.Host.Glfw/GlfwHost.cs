@@ -20,7 +20,6 @@ namespace Drawie.Silk;
 
 public class GlfwHost : Drawie.Host.IHost
 {
-    private GraphicsStore store;
     private IWindow? window;
     private bool isRunning;
 
@@ -90,8 +89,8 @@ public class GlfwHost : Drawie.Host.IHost
         renderStack.Add(new RenderOrder("Init", _ => { }));
         renderStack.Add(new RenderOrder("Render", RenderContent));
         renderStack.Add(new RenderOrder("RenderApi", RenderApi.Render));
-        
-        renderContentStack.Add(new RenderContentOrder("Init", (_, _) => {}));
+
+        renderContentStack.Add(new RenderContentOrder("Init", (_, _) => { }));
         renderContentStack.Add(new RenderContentOrder("RenderContent", DefaultRenderContent));
     }
 
@@ -126,9 +125,6 @@ public class GlfwHost : Drawie.Host.IHost
         {
             RenderApi.CreateInstance(window.Native, window.Size.ToVecI());
         }
-
-        store = new GraphicsStore(RenderApi.GraphicsContext);
-        GraphicsStore.Global = store;
 
         for (int i = 0; i < layers.Count; i++)
         {
@@ -195,7 +191,7 @@ public class GlfwHost : Drawie.Host.IHost
 
     private void RenderApiOnFramebufferResized()
     {
-        store.DisposeTexture(renderTexture);
+        renderTexture.Dispose();
         surface = null!;
 
         CreateRenderTarget(window!.FramebufferSize.ToVecI(), RenderApi.RenderTexture);
@@ -203,8 +199,9 @@ public class GlfwHost : Drawie.Host.IHost
 
     private void CreateRenderTarget(VecI size, ITexture nativeRenderTexture)
     {
-        renderTexture = store.CreateNativeRenderSurface(size, nativeRenderTexture,
-            RenderApi is IVulkanHostViewRenderApi ? SurfaceOrigin.TopLeft : SurfaceOrigin.BottomLeft);
+        renderTexture = new Texture(NativeTexture.FromExisting(DrawingBackendApi.Current.CreateRenderSurface(size,
+            nativeRenderTexture,
+            RenderApi is IVulkanHostViewRenderApi ? SurfaceOrigin.TopLeft : SurfaceOrigin.BottomLeft)));
     }
 
     private void WindowOnFramebufferResize(Vector2D<int> newSize)
@@ -243,7 +240,6 @@ public class GlfwHost : Drawie.Host.IHost
     {
         window.Update -= OnUpdate;
         window.Render -= OnRender;
-        store.Dispose();
         RenderApi.DestroyInstance();
 
         window?.Close();
@@ -267,7 +263,7 @@ public class GlfwHost : Drawie.Host.IHost
             renderStack.Add(new RenderOrder(name, render));
         }
     }
-    
+
     public void SubscribeToRenderContent(string name, string renderAfter, Action<TextureFramebuffer, double> render)
     {
         var foundRenderAfter = renderContentStack.FindIndex(r => r.Name == renderAfter);

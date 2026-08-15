@@ -1,6 +1,8 @@
 using Drawie.Backend.Vertie.Core;
 using Drawie.RenderApi.Abstraction.CommandRecording;
 using Drawie.RenderApi.Abstraction.Pipeline;
+using Drawie.RenderApi.Abstraction.Textures;
+using Drawie.RenderApi.Vulkan.Helpers;
 using Drawie.RenderApi.Vulkan.Stages;
 using Drawie.RenderApi.Vulkan.Stages.Builders;
 using Silk.NET.Vulkan;
@@ -40,27 +42,32 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
 
     public unsafe void Apply(ICommandList cmdList)
     {
-        if(cmdList is not VulkanCommandList commandList) throw new ArgumentNullException("Only vulkan command list is supported");
-        
+        if (cmdList is not VulkanCommandList commandList)
+            throw new ArgumentNullException("Only vulkan command list is supported");
+
         context.Api!.CmdBindPipeline(
             commandList.CommandBuffer,
             PipelineBindPoint.Graphics,
             Pipeline);
-        
+
         var descriptorSet = program.DescriptorSet;
-        context.Api.CmdBindDescriptorSets(commandList.CommandBuffer, PipelineBindPoint.Graphics, GraphicsPipeline.VkPipelineLayout, 0, 1, &descriptorSet, 0, null);
+        context.Api.CmdBindDescriptorSets(commandList.CommandBuffer, PipelineBindPoint.Graphics,
+            GraphicsPipeline.VkPipelineLayout, 0, 1, &descriptorSet, 0, null);
     }
 
     private GraphicsPipeline CreatePipeline()
     {
         Builder.WithVertexLayout(layout => layout.WithVec3().WithVec3().WithVec2());
         Builder.WithPolygonMode(Description.Rasterizer.RenderMode == RenderMode.Default
-            ? PolygonMode.Fill
-            : PolygonMode.Line);
+                ? PolygonMode.Fill
+                : PolygonMode.Line)
+            .WithCullMode(CullModeFlags.BackBit)
+            .WithFrontFace(FrontFace.Clockwise);
+
         Builder.Stages.Add(program.VertexStageBuilder);
         Builder.Stages.Add(program.FragmentStageBuilder);
         Builder.DoNotDisposeStages = true;
-        Builder.WithRenderPass(builder => {});
+        Builder.WithRenderPass(builder => { builder.WithDepth(Description.Depth.Format.ToVkFormat()); });
         Builder.WithDepth();
         var descriptorSetLayout = program.DescriptorSetLayout;
         var pipeline = Builder.Create(new Extent2D((uint)Description.Viewport.Width, (uint)Description.Viewport.Height),

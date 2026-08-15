@@ -12,6 +12,8 @@ public class GraphicsPipelineBuilder
     public RenderPassBuilder RenderPassBuilder { get; set; }
     public GraphicsPipelineVertexLayoutBuilder  VertexLayoutBuilder { get; set; }
 
+    public CullModeFlags CullMode { get; set; } = CullModeFlags.None;
+    public FrontFace FrontFace { get; set; } = FrontFace.Clockwise;
     public bool HasDepthStencil { get; set; }
     public PolygonMode PolygonMode { get; set; } = PolygonMode.Fill;
     public bool DoNotDisposeStages { get; set; }
@@ -25,6 +27,18 @@ public class GraphicsPipelineBuilder
     public GraphicsPipelineBuilder WithPolygonMode(PolygonMode polygonMode)
     {
         PolygonMode = polygonMode;
+        return this;
+    }
+
+    public GraphicsPipelineBuilder WithCullMode(CullModeFlags cullMode)
+    {
+        CullMode = cullMode;
+        return this;
+    }
+
+    public GraphicsPipelineBuilder WithFrontFace(FrontFace frontFace)
+    {
+        FrontFace = frontFace;
         return this;
     }
 
@@ -128,9 +142,8 @@ public class GraphicsPipelineBuilder
                 RasterizerDiscardEnable = false,
                 PolygonMode = PolygonMode,
                 LineWidth = 1.0f,
-                CullMode = CullModeFlags.None,
-                /*CullMode = CullModeFlags.BackBit,
-                FrontFace = FrontFace.Clockwise,*/
+                CullMode = CullMode,
+                FrontFace = FrontFace,
                 DepthBiasEnable = false
             };
 

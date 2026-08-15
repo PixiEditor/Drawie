@@ -7,19 +7,27 @@ namespace Drawie.Rendering;
 /// <summary>
 ///     Readonly texture, can be modified with a Rendering Context
 /// </summary>
-public class Texture : ITexture
+public class Texture : ITexture, IDisposable
 {
-    public NativeTexture NativeTexture { get; }
+    internal NativeTexture NativeTexture { get; }
     public int Width { get; }
     public int Height { get; }
     public VecI Size => new VecI(Width, Height);
     public ulong TextureId  => NativeTexture.TextureId;
 
+    public Texture(VecI size) : this(new NativeTexture(size))
+    {
+    }
 
-    internal Texture(NativeTexture native)
+    public Texture(NativeTexture native)
     {
         NativeTexture = native;
         Width = native.Size.X;
         Height = native.Size.Y;
+    }
+
+    public void Dispose()
+    {
+        NativeTexture.Dispose();
     }
 }

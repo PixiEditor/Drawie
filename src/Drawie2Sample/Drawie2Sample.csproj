@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="Assets\**">
+      <EmbeddedResource Include="Assets\**\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </EmbeddedResource>
     </ItemGroup>

@@ -80,7 +80,7 @@ public class VulkanTexture : IDisposable, IVkTexture
 
         if (desc.Depth != DepthFormat.NoDepth)
         {
-            var depthFormat = ToVkDepthFormat(desc.Depth);
+            var depthFormat = desc.Depth.ToVkFormat();
 
             depthAttachment = new VulkanImageAttachment(
                 Vk,
@@ -98,19 +98,6 @@ public class VulkanTexture : IDisposable, IVkTexture
         }
         
         CreateSampler();
-    }
-
-    private Format ToVkDepthFormat(DepthFormat descDepth)
-    {
-        switch (descDepth)
-        {
-            case DepthFormat.NoDepth:   
-                throw new ArgumentException("No depth is not supported depth format.");
-            case DepthFormat.Depth24Stencil8:
-                return Format.D24UnormS8Uint;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(descDepth), descDepth, null);
-        }
     }
 
     private Format ToVkFormat(TextureFormat descFormat)

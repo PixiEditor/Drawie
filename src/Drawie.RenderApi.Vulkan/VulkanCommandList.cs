@@ -214,7 +214,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             ClearValue = new ClearValue
             {
                 Color = new ClearColorValue(0f, 0f, 0f, 1f)
-            }
+            },
         };
 
         RenderingAttachmentInfo depthAttachment = default;
@@ -225,7 +225,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             {
                 SType = StructureType.RenderingAttachmentInfo,
                 ImageView = target.Texture.DepthAttachment.View,
-                ImageLayout = ImageLayout.DepthAttachmentOptimal,
+                ImageLayout = ImageLayout.DepthStencilAttachmentOptimal,
                 LoadOp = AttachmentLoadOp.Clear,
                 StoreOp = AttachmentStoreOp.Store,
                 ClearValue = new ClearValue

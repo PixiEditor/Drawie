@@ -1,6 +1,5 @@
 using System.Numerics;
-using Assimp;
-using Assimp.Configs;
+using Drawie.Backend.Vertie.Rendering;
 using Drawie.RenderApi.Abstraction;
 using Drawie.RenderApi.Abstraction.Buffers;
 
@@ -14,6 +13,7 @@ public class Mesh
     public IReadOnlyList<Vector2> TexCoords => texCoords;
     public IReadOnlyList<uint> Indicies => indicies;
     public int IndexCount => Indicies.Count;
+    public Material Material { get; }
 
     internal bool BuffersInitialized { get; private set; } = false;
     public IBufferGroup Buffers { get; private set; }
@@ -23,24 +23,13 @@ public class Mesh
     private Vector2[] texCoords;
     private uint[] indicies;
 
-    public Mesh(Vector3[] vertices, uint[] indicies, Vector3[] normals, Vector2[] texCoords)
+    public Mesh(Vector3[] vertices, uint[] indicies, Vector3[] normals, Vector2[] texCoords, Material material)
     {
         this.vertices = vertices;
         this.indicies = indicies;
         this.normals = normals;
         this.texCoords = texCoords;
-    }
-
-    public Mesh(string path)
-    {
-        AssimpContext ctx = new AssimpContext();
-        var scene = ctx.ImportFile(path, PostProcessPreset.TargetRealTimeMaximumQuality);
-        if (!scene.HasMeshes) return;
-        var mesh = scene.Meshes.FirstOrDefault();
-        this.vertices = mesh!.Vertices.Select(x => new Vector3(x.X, x.Y, x.Z)).ToArray();
-        this.indicies = mesh.GetUnsignedIndices().ToArray();
-        this.normals = mesh.Normals.Select(x => new Vector3(x.X, x.Y, x.Z)).ToArray();
-        this.texCoords = mesh.TextureCoordinateChannels[0].Select(x => new Vector2(x.X, x.Y)).ToArray();
+        Material = material;
     }
 
     internal void GenerateBuffers(IGraphicsDevice device)

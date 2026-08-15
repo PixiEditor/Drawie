@@ -54,11 +54,11 @@ public class BrowserWindow(IHostViewRenderApi hostViewRenderApi) : IHost
 
     private Texture renderTexture;
     private VecI? pendingResize = null;
-    private GraphicsStore store;
     private HtmlCanvas canvas;
 
     private List<ILayer> layers = new List<ILayer>();
     private List<RenderOrder> renderStack = new List<RenderOrder>();
+    private List<RenderContentOrder> renderContentOrder = new List<RenderContentOrder>();
 
     public void Initialize()
     {
@@ -69,14 +69,16 @@ public class BrowserWindow(IHostViewRenderApi hostViewRenderApi) : IHost
         RenderApi.FramebufferResized += FramebufferResized;
 
         InputController = new InputController(new [] { new BrowserKeyboard() }, [new BrowserPointer()], null);
-        store = new GraphicsStore(RenderApi.GraphicsContext);
-        GraphicsStore.Global = store;
         
         renderStack.Add(new RenderOrder("Init", _ => { }));
-        renderStack.Add(new RenderOrder("Render", RenderContent));
+        renderStack.Add(new RenderOrder("RenderContent", RenderContent));
         renderStack.Add(new RenderOrder("RenderApi", RenderApi.Render));
+        
+        renderContentOrder.Add(new RenderContentOrder("Init", (_, _) => {}));
+        renderContentOrder.Add(new RenderContentOrder("RenderContent", OnRenderContentDefault));
     }
-    
+
+
     public void AddLayer(ILayer layer)
     {
         layers.Add(layer);
@@ -88,6 +90,15 @@ public class BrowserWindow(IHostViewRenderApi hostViewRenderApi) : IHost
         if (foundRenderAfter != -1)
         {
             renderStack.Insert(foundRenderAfter + 1, new RenderOrder(name, render));
+        }
+    }
+
+    public void SubscribeToRenderContent(string name, string renderAfter, Action<TextureFramebuffer, double> render)
+    {
+        var foundRenderAfter = renderContentOrder.FindIndex(r => r.Name == renderAfter);
+        if (foundRenderAfter != -1)
+        {
+            renderContentOrder.Insert(foundRenderAfter + 1, new RenderContentOrder(name, render));
         }
     }
 
@@ -122,7 +133,7 @@ public class BrowserWindow(IHostViewRenderApi hostViewRenderApi) : IHost
                 var oldTexture = renderTexture;
                 renderTexture = newRenderTexture;
                 
-                store.DisposeTexture(oldTexture);
+                oldTexture.Dispose();
             }
 
             pendingResize = null;
@@ -143,10 +154,21 @@ public class BrowserWindow(IHostViewRenderApi hostViewRenderApi) : IHost
         var renderingScope = ctx.Open();
         var fbo = ctx.Edit(renderTexture);
         fbo.Clear();
-        Render?.Invoke(fbo, dt);
+
+        foreach (var layer in renderContentOrder)
+        {
+            layer.Render(fbo, dt);
+        }
+        
         fbo.Dispose();
         renderingScope.Dispose();
         ctx.Dispose();
+    }
+    
+    
+    private void OnRenderContentDefault(TextureFramebuffer fbo, double dt)
+    {
+        Render?.Invoke(fbo, dt);
     }
 
     public void Close()
@@ -161,6 +183,6 @@ public class BrowserWindow(IHostViewRenderApi hostViewRenderApi) : IHost
 
     private Texture CreateRenderTexture()
     {
-        return store.CreateNativeRenderSurface(UsableWindowSize, RenderApi.RenderTexture, SurfaceOrigin.BottomLeft);
+        return new Texture(NativeTexture.FromExisting(DrawingBackendApi.Current.CreateRenderSurface(UsableWindowSize, RenderApi.RenderTexture, SurfaceOrigin.BottomLeft)));
     }
 }

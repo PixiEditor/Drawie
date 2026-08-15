@@ -25,13 +25,6 @@ public class Material
                 .AddProperty(new ShaderProperty<Matrix4x4>("uModel", Matrix4x4.Identity))
                 .AddProperty(new ShaderProperty<Matrix4x4>("uView", Matrix4x4.Identity))
                 .AddProperty(new ShaderProperty<Matrix4x4>("uProjection", Matrix4x4.Identity)));
-        
-        /*
-        if (shader.HasUniform("viewPos"))
-        {
-            AddProperty<Vector3>("Camera", "viewPos");
-        }
-    */
     }
     
     public void AddTexture(ITexture texture)
@@ -43,12 +36,6 @@ public class Material
     {
         Properties["Transform"].SetProperty("uView", camera.ViewMatrix);
         Properties["Transform"].SetProperty("uProjection", camera.ProjectionMatrix);
-        /*
-        if (Shader.HasUniform("viewPos"))
-        {
-            SetProperty("Camera", "viewPos", camera.Position);
-        }
-    */
     }
 
     public void PrepareForObject(Transform transform)

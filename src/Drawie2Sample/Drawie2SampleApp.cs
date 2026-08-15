@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Reflection.Emit;
 using System.Text;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
@@ -66,17 +67,6 @@ public class Drawie2SampleApp : DrawieApp
 
     protected override void OnInitialize()
     {
-        Material mat = new Material("Basic", [BuiltInShaders.BasicVertexShader, BuiltInShaders.UnlitFragmentShader]);
-
-        var surf = GraphicsStore.Global.Create(new VecI(512, 512));
-        RenderingContext context = new RenderingContext(GraphicsStore.Global.GraphicsContext);
-        var ctx = context.Open();
-        var fb = context.Edit(surf);
-        fb.DrawRectangle(0, 0, 512, 512, new ColorPaintable(Colors.Blue));
-        fb.Dispose();
-        ctx.Dispose();
-        
-        mat.AddTexture(surf);
         handleMovement = true;
         
         window.InputController.PrimaryPointer.Cursor.State = CursorState.Disabled;
@@ -89,8 +79,15 @@ public class Drawie2SampleApp : DrawieApp
             }
         };
         
-        camera = new Camera(Vector3.Zero, Vector3.UnitZ, Vector3.UnitY, (float)window.Size.X / window.Size.Y);
-        Mesh mesh = new Mesh("Assets/teapot.obj");
+        camera = new Camera(new Vector3(0, 0, 5), Vector3.UnitZ, Vector3.UnitY, (float)window.Size.X / window.Size.Y);
+        
+        //"Shiba" (https://skfb.ly/6WxVW) by zixisun02 is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+        Scene scene = new Scene("Assets/shiba.fbx", Path.Combine("Assets", "textures"));
+
+        foreach (var sceneMesh in scene.Meshes)
+        {
+            sceneMesh.Transform.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, float.DegreesToRadians(-90));
+        }
 
         RegisterMouse(window.InputController);
 
@@ -103,27 +100,9 @@ public class Drawie2SampleApp : DrawieApp
         window.Render += (targetTexture, deltaTime) =>
         {
             targetTexture.Clear();
-
-            targetTexture.DrawMesh(mesh, mat, camera, renderOptions);
-
-            /*
-            using Font defaultFont = Font.CreateDefault();
-            Paintable color = new ColorPaintable(Colors.White);
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Stores: " + GraphicsStore.AllStores.Count);
-            foreach (var store in GraphicsStore.AllStores)
-            {
-                sb.AppendLine("Store:  " + store.GetDebugText());
-            }
-
-            RichText rt = new RichText(sb.ToString()) { Fill = true, FillPaintable = color };
-
-            using Paint p = new Paint() { Paintable = color };
-
-            rt.Paint(targetTexture.Canvas, new VecD(0, 20), defaultFont, p, null);*/
+            targetTexture.DrawScene(scene, camera, renderOptions);
         };
     }
-
 
     private void RegisterMouse(InputController input)
     {
