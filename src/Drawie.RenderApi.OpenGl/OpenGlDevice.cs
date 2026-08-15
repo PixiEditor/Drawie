@@ -135,4 +135,9 @@ public class OpenGlDevice : IGraphicsDevice
                 throw new ArgumentOutOfRangeException(nameof(shaderType), shaderType, null);
         }
     }
+
+    public void Dispose()
+    {
+        
+    }
 }

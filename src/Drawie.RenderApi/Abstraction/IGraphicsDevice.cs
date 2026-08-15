@@ -7,7 +7,7 @@ using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.RenderApi.Abstraction;
 
-public interface IGraphicsDevice
+public interface IGraphicsDevice : IDisposable
 {
     IBuffer<TData> CreateBuffer<TData>(BufferUsage usage, TData[]? data) where TData : unmanaged;
     ITexture CreateTexture(TextureDesc desc);

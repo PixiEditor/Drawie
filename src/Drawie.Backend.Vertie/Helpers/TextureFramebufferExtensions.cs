@@ -2,9 +2,7 @@ using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Vertie.Core;
 using Drawie.Backend.Vertie.Rendering;
 using Drawie.Numerics;
-using Drawie.RenderApi;
 using Drawie.RenderApi.Abstraction;
-using Drawie.RenderApi.Abstraction.Buffers;
 using Drawie.RenderApi.Abstraction.CommandRecording;
 using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Abstraction.RenderTargets;
@@ -20,10 +18,13 @@ public static class TextureFramebufferExtensions
 
     private static Dictionary<Material, IShaderProgram> cachedShaderPrograms =
         new Dictionary<Material, IShaderProgram>();
+    
+    private static IRenderTarget? cachedRenderTarget;
 
     private static ICommandList? cmdList;
 
-    public static void DrawMesh(this TextureFramebuffer fb, Mesh mesh, Material material, Camera camera, RenderOptions options = default)
+    public static void DrawMesh(this TextureFramebuffer fb, Mesh mesh, Material material, Camera camera,
+        RenderOptions options = default)
     {
         IGraphicsDevice device = DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice;
 
@@ -34,16 +35,21 @@ public static class TextureFramebufferExtensions
     public static void DrawMesh(IRenderTarget fb, Mesh mesh, Material material, Camera camera, IGraphicsDevice device,
         RenderOptions options)
     {
-        var sceneTarget = device.CreateRenderTarget(new TextureDesc()
+        if (cachedRenderTarget == null || cachedRenderTarget.Size != fb.Size)
         {
-            Width = fb.Size.X,
-            Height = fb.Size.Y,
-            Format = TextureFormat.RGBA8_Unorm,
-            Depth = DepthFormat.Depth24Stencil8
-        });
+            (cachedRenderTarget as IDisposable)?.Dispose();
+            
+            cachedRenderTarget = device.CreateRenderTarget(new TextureDesc()
+            {
+                Width = fb.Size.X,
+                Height = fb.Size.Y,
+                Format = TextureFormat.RGBA8_Unorm,
+                Depth = DepthFormat.Depth24Stencil8
+            });
+        }
 
         var shader = GetOrCreateShaderProgram(device, material);
-        
+
         var pipeline = device.CreatePipeline(new PipelineDesc()
         {
             Depth = new DepthDesc()
@@ -60,19 +66,19 @@ public static class TextureFramebufferExtensions
         });
 
         cmdList ??= device.CreateCommandList();
-        cmdList.BeginRenderPass(sceneTarget);
-        
+        cmdList.BeginRenderPass(cachedRenderTarget);
+
         cmdList.SetPipeline(pipeline);
         if (!mesh.BuffersInitialized)
         {
             mesh.GenerateBuffers(device);
         }
-        
+
         cmdList.SetBuffers(mesh.Buffers);
-        
+
         material.Use(camera);
         material.PrepareForObject(mesh.Transform);
-        
+
         shader.UpdateUniforms(material.Properties.Values.ToList());
 
         for (var i = 0; i < material.Textures.Count; i++)
@@ -87,17 +93,12 @@ public static class TextureFramebufferExtensions
 
             cmdList.BindTexture(materialTexture, sampler);
         }
-        
+
         cmdList.DrawIndexed(mesh.IndexCount);
         var recordedRenderPass = cmdList.EndRenderPass(fb);
 
         device.Submit(recordedRenderPass);
         DrawingBackendApi.Current.ResetContext();
-
-        if (sceneTarget is IDisposable disposable)
-        {
-            disposable.Dispose();
-        }
     }
 
     private static IShaderProgram GetOrCreateShaderProgram(IGraphicsDevice graphicsDevice, Material material)
@@ -108,7 +109,8 @@ public static class TextureFramebufferExtensions
         }
 
         var program =
-            graphicsDevice.CreateShaderProgram(new ShaderProgramDesc(material.Shaders.Select(x => new ShaderDesc(x.EntryName, x.ShaderBytes, x.ShaderType))));
+            graphicsDevice.CreateShaderProgram(new ShaderProgramDesc(
+                material.Shaders.Select(x => new ShaderDesc(x.EntryName, x.ShaderBytes, x.ShaderType))));
         cachedShaderPrograms.Add(material, program);
 
         return program;

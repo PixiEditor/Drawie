@@ -7,3 +7,5 @@ DrawingEngine engine = DesktopDrawingEngine.CreateDefaultDesktop();
 Drawie2SampleApp app = new Drawie2SampleApp();
 
 engine.RunWithApp(app);
+
+await engine.Dispose();

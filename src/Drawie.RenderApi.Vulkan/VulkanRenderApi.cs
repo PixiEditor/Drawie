@@ -52,4 +52,14 @@ public class VulkanRenderApi : IVulkanRenderApi
             throw new InvalidOperationException("Vulkan graphics device is available only after the Vulkan context is initialized.");
 
         return new VulkanGraphicsDevice(vulkanContext);
-    }}
+    }
+
+    public void Dispose()
+    {
+        GraphicsDevice?.Dispose();
+        GraphicsDevice = null;
+        
+        if(VulkanContext is IDisposable disposable)
+            disposable.Dispose();
+    }
+}

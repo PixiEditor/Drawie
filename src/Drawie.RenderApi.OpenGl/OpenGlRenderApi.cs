@@ -55,4 +55,9 @@ public class OpenGlRenderApi : IOpenGlRenderApi
     {
         GraphicsDevice = new OpenGlDevice(context);
     }
+
+    public void Dispose()
+    {
+        GraphicsDevice.Dispose();
+    }
 }

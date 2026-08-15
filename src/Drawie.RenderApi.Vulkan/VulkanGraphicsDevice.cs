@@ -11,17 +11,18 @@ using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Helpers;
 using Silk.NET.Vulkan;
-using Buffer = Silk.NET.Vulkan.Buffer;
 using IAbstractionTexture = Drawie.RenderApi.Abstraction.Textures.ITexture;
 
 namespace Drawie.RenderApi.Vulkan;
 
-public sealed class VulkanGraphicsDevice : IGraphicsDevice, IDisposable
+public sealed class VulkanGraphicsDevice : IGraphicsDevice 
 {
     private readonly VulkanContext context;
     private readonly CommandPool commandPool;
     private VulkanPipeline? pipeline;
-    
+
+    private List<IDisposable> disposables = new List<IDisposable>();
+
     public VulkanGraphicsDevice(VulkanContext context)
     {
         if (context.Api is null)
@@ -54,11 +55,14 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice, IDisposable
         TData[]? data)
         where TData : unmanaged
     {
-        return new VulkanBuffer<TData>(
+        var buffer = new VulkanBuffer<TData>(
             context,
             commandPool,
             usage,
             data);
+        disposables.Add(buffer);
+
+        return buffer;
     }
 
     public IAbstractionTexture CreateTexture(TextureDesc desc)
@@ -73,6 +77,7 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice, IDisposable
             desc);
 
         context.AddManagedTexture(vkTex, vkTex.ImageHandle);
+        disposables.Add(vkTex);
         return vkTex;
     }
 
@@ -82,8 +87,14 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice, IDisposable
 
         if (pipeline == null || !pipeline.Description.Equals(desc))
         {
+            if (pipeline != null)
+            {
+                disposables.Remove(pipeline);
+            }
+
             pipeline?.Dispose();
             pipeline = new VulkanPipeline(context, desc);
+            disposables.Add(pipeline);
         }
 
         return pipeline;
@@ -91,12 +102,16 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice, IDisposable
 
     public ICommandList CreateCommandList()
     {
-        return new VulkanCommandList(context, commandPool);
+        var cmdList = new VulkanCommandList(context, commandPool);
+        disposables.Add(cmdList);
+        return cmdList;
     }
 
     public ISampler CreateSampler(SamplerDesc desc)
     {
-        return new VulkanSampler(context, desc);
+        var sampler = new VulkanSampler(context, desc);
+        disposables.Add(sampler);
+        return sampler;
     }
 
     public void Submit(RecordedRenderPass cmdList)
@@ -106,7 +121,9 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice, IDisposable
 
     public IShaderProgram CreateShaderProgram(ShaderProgramDesc desc)
     {
-        return new VulkanShaderProgram(context, desc);
+        var program = new VulkanShaderProgram(context, desc);
+        disposables.Add(program);
+        return program;
     }
 
     public IRenderTarget CreateRenderTarget(TextureDesc textureDesc)
@@ -127,6 +144,11 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice, IDisposable
             context.LogicalDevice.Device,
             commandPool,
             null);
+
+        foreach (var disposable in disposables)
+        {
+            disposable.Dispose();
+        }
     }
 }
 
@@ -167,7 +189,8 @@ internal sealed class VulkanBuffer<T> : IVkBuffer, IBuffer<T>, IDisposable where
         {
             BufferUsage.Vertex => new VertexBuffer(context, size),
             BufferUsage.Index => new IndexBuffer(context, size),
-            BufferUsage.Uniform => new UniformBuffer(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, size),
+            BufferUsage.Uniform => new UniformBuffer(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice,
+                size),
             BufferUsage.Storage => new VulkanStorageBuffer(context, size),
             _ => throw new ArgumentOutOfRangeException(nameof(usage), usage, null)
         };

@@ -55,5 +55,6 @@ public class DrawingEngine
     public async ValueTask Dispose()
     {
         await DrawingBackend.DisposeAsync();
+        RenderApi.Dispose();
     }
 }
