@@ -5,7 +5,7 @@ struct FragmentInput
     float2 fTexCoords : TEXCOORD2;
 };
 
-[[vk::binding(0, 0)]]
+[[vk::binding(1, 0)]]
 Sampler2D<float4> uTexture;
 
 [shader("fragment")]

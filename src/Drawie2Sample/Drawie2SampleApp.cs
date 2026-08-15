@@ -59,7 +59,7 @@ public class Drawie2SampleApp : DrawieApp
         RenderingContext context = new RenderingContext(GraphicsStore.Global.GraphicsContext);
         var ctx = context.Open();
         var fb = context.Edit(surf);
-        fb.DrawRectangle(0, 0, 512, 512, new ColorPaintable(Colors.Red));
+        fb.DrawRectangle(0, 0, 512, 512, new ColorPaintable(Colors.Blue));
         fb.Dispose();
         ctx.Dispose();
         
