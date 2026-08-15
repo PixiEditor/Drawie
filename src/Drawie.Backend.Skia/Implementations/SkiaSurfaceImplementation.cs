@@ -17,7 +17,7 @@ namespace Drawie.Skia.Implementations
         private readonly SkiaPixmapImplementation _pixmapImplementation;
         private readonly SkiaCanvasImplementation _canvasImplementation;
         private readonly SkiaPaintImplementation _paintImplementation;
-        private Dictionary<IntPtr, IFramebufferInfo> nativeSurfaceInfos = new Dictionary<IntPtr, IFramebufferInfo>();
+        private Dictionary<IntPtr, INativeSurfaceInfo> nativeSurfaceInfos = new Dictionary<IntPtr, INativeSurfaceInfo>();
 
         internal GRContext? GrContext { get; set; }
         internal IGraphicsDevice GraphicsDevice { get; set; }
@@ -160,7 +160,7 @@ namespace Drawie.Skia.Implementations
 
         internal SKSurface? CreateFromNativeTexture(ITexture renderTexture, VecI size, SurfaceOrigin surfaceOrigin,
             bool asRenderTarget,
-            out IFramebufferInfo fbInfo)
+            out INativeSurfaceInfo fbInfo)
         {
             if (renderTexture is IVkTexture texture)
             {
@@ -289,12 +289,12 @@ namespace Drawie.Skia.Implementations
             return new RectD(skRect.Left, skRect.Top, skRect.Width, skRect.Height);
         }
 
-        public IFramebufferInfo? GetNativeSurfaceInfo(IntPtr objectPointer)
+        public INativeSurfaceInfo? GetNativeSurfaceInfo(IntPtr objectPointer)
         {
             return nativeSurfaceInfos.GetValueOrDefault(objectPointer);
         }
 
-        public void AddManagedFramebuffer(IntPtr nativeHandle, IFramebufferInfo fbInfo)
+        public void AddManagedFramebuffer(IntPtr nativeHandle, INativeSurfaceInfo fbInfo)
         {
             nativeSurfaceInfos.Add(nativeHandle, fbInfo);
         }

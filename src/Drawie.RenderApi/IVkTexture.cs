@@ -13,4 +13,5 @@ public interface IVkTexture : ITexture
    public uint Tiling { get; }
    public void MakeReadOnly();
    public void MakeWriteable();
+   event Action Disposing;
 }

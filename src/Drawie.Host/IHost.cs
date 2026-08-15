@@ -29,4 +29,5 @@ public interface IHost
     public object Native { get; }
     public event Action Loaded;
     public void SubscribeToRender(string name, string renderAfter, Action<double> render);
+    public void SubscribeToRenderContent(string name, string renderAfter, Action<TextureFramebuffer, double> render);
 }

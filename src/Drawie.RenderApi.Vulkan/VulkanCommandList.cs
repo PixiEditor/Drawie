@@ -94,7 +94,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         var vkTex = context.ManagedTextures[texture.TextureId];
 
         if (vkTex is not VulkanTexture vkTexture) throw new ArgumentException("Only IVkTexture's are valid");
-
+        
         vkTexture.MakeReadOnly(commandBuffer);
 
         BindTextureDescriptor(

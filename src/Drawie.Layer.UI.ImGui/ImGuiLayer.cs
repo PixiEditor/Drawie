@@ -22,6 +22,11 @@ public class ImGuiLayer : ILayer
         Render = render;
     }
 
+    public bool IsRenderApiSupported(IHostViewRenderApi api)
+    {
+        return api is IOpenGlHostViewRenderApi;
+    }
+
     public void Initialize(IHost host)
     {
         if (host == null)
@@ -39,7 +44,7 @@ public class ImGuiLayer : ILayer
 
         OnLoaded();
         host.SubscribeToRender("ImGui.Update", "Init", OnEarlyRender);
-        host.SubscribeToRender("ImGui.Render", "Render", OnRender);
+        host.SubscribeToRender("ImGui.Render", "RenderContent", OnRender);
     }
 
     private void OnRender(double dt)

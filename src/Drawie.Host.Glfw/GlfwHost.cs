@@ -60,7 +60,7 @@ public class GlfwHost : Drawie.Host.IHost
         get => window?.TopMost ?? false;
         set => window?.TopMost = value;
     }
-    
+
     public object Native => window;
     public event Action? Loaded;
 
@@ -71,9 +71,10 @@ public class GlfwHost : Drawie.Host.IHost
     private SKSurface? surface;
     private Texture renderTexture;
     private bool initialized;
-    
+
     private List<ILayer> layers = new List<ILayer>();
     private List<RenderOrder> renderStack = new List<RenderOrder>();
+    private List<RenderContentOrder> renderContentStack = new List<RenderContentOrder>();
 
     public GlfwHost(string name, VecI size, IHostViewRenderApi renderApi)
     {
@@ -89,16 +90,24 @@ public class GlfwHost : Drawie.Host.IHost
         renderStack.Add(new RenderOrder("Init", _ => { }));
         renderStack.Add(new RenderOrder("Render", RenderContent));
         renderStack.Add(new RenderOrder("RenderApi", RenderApi.Render));
+        
+        renderContentStack.Add(new RenderContentOrder("Init", (_, _) => {}));
+        renderContentStack.Add(new RenderContentOrder("RenderContent", DefaultRenderContent));
+    }
+
+    private void DefaultRenderContent(TextureFramebuffer fbo, double dt)
+    {
+        Render?.Invoke(fbo, dt);
     }
 
 
     public void Initialize()
     {
         if (initialized) return;
-        
+
         window.Initialize();
         InitInput();
-        
+
         if (RenderApi is IVulkanHostViewRenderApi)
         {
             if (window.VkSurface == null)
@@ -120,19 +129,29 @@ public class GlfwHost : Drawie.Host.IHost
 
         store = new GraphicsStore(RenderApi.GraphicsContext);
         GraphicsStore.Global = store;
-        
+
+        for (int i = 0; i < layers.Count; i++)
+        {
+            if (!layers[i].IsRenderApiSupported(RenderApi))
+            {
+                Console.WriteLine($"Layer {layers[i]} is not supported on this render api. Skipping...");
+                layers.RemoveAt(i);
+                i--;
+            }
+        }
+
         foreach (var layer in layers)
         {
             layer.Initialize(this);
         }
-        
+
         initialized = true;
     }
 
     private void InitInput()
     {
         var input = window.CreateInput();
-        
+
         GlfwKeyboard[] keyboards = new GlfwKeyboard[input.Keyboards.Count];
         for (var i = 0; i < input.Keyboards.Count; i++)
         {
@@ -160,7 +179,7 @@ public class GlfwHost : Drawie.Host.IHost
             {
                 Initialize();
             }
-            
+
             window.FramebufferResize += WindowOnFramebufferResize;
             RenderApi.FramebufferResized += RenderApiOnFramebufferResized;
 
@@ -176,7 +195,7 @@ public class GlfwHost : Drawie.Host.IHost
 
     private void RenderApiOnFramebufferResized()
     {
-        store.Dispose();
+        store.DisposeTexture(renderTexture);
         surface = null!;
 
         CreateRenderTarget(window!.FramebufferSize.ToVecI(), RenderApi.RenderTexture);
@@ -184,7 +203,8 @@ public class GlfwHost : Drawie.Host.IHost
 
     private void CreateRenderTarget(VecI size, ITexture nativeRenderTexture)
     {
-        renderTexture = store.CreateNativeRenderSurface(size, nativeRenderTexture, RenderApi is IVulkanHostViewRenderApi ? SurfaceOrigin.TopLeft : SurfaceOrigin.BottomLeft);
+        renderTexture = store.CreateNativeRenderSurface(size, nativeRenderTexture,
+            RenderApi is IVulkanHostViewRenderApi ? SurfaceOrigin.TopLeft : SurfaceOrigin.BottomLeft);
     }
 
     private void WindowOnFramebufferResize(Vector2D<int> newSize)
@@ -200,13 +220,12 @@ public class GlfwHost : Drawie.Host.IHost
 
     private void OnRender(double dt)
     {
-        // TODO: Composite framebuffers for each layer
         foreach (var layer in renderStack)
         {
             layer.Render(dt);
         }
     }
-    
+
     private void RenderContent(double dt)
     {
         RenderApi.PrepareTextureToWrite();
@@ -214,7 +233,10 @@ public class GlfwHost : Drawie.Host.IHost
         using var renderingScope = ctx.Open();
         using var fbo = ctx.Edit(renderTexture);
         fbo.Clear();
-        Render?.Invoke(fbo, dt);
+        foreach (var layer in renderContentStack)
+        {
+            layer.Render(fbo, dt);
+        }
     }
 
     public void Close()
@@ -243,6 +265,19 @@ public class GlfwHost : Drawie.Host.IHost
         else
         {
             renderStack.Add(new RenderOrder(name, render));
+        }
+    }
+    
+    public void SubscribeToRenderContent(string name, string renderAfter, Action<TextureFramebuffer, double> render)
+    {
+        var foundRenderAfter = renderContentStack.FindIndex(r => r.Name == renderAfter);
+        if (foundRenderAfter != -1)
+        {
+            renderContentStack.Insert(foundRenderAfter + 1, new RenderContentOrder(name, render));
+        }
+        else
+        {
+            renderContentStack.Add(new RenderContentOrder(name, render));
         }
     }
 }

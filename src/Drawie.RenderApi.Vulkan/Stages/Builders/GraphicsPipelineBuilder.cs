@@ -13,11 +13,19 @@ public class GraphicsPipelineBuilder
     public GraphicsPipelineVertexLayoutBuilder  VertexLayoutBuilder { get; set; }
 
     public bool HasDepthStencil { get; set; }
+    public PolygonMode PolygonMode { get; set; } = PolygonMode.Fill;
+    public bool DoNotDisposeStages { get; set; }
 
     public GraphicsPipelineBuilder(Vk vk, Device logicalDevice)
     {
         Vk = vk;
         LogicalDevice = logicalDevice;
+    }
+
+    public GraphicsPipelineBuilder WithPolygonMode(PolygonMode polygonMode)
+    {
+        PolygonMode = polygonMode;
+        return this;
     }
 
     public GraphicsPipelineBuilder AddStage(Action<GraphicsPipelineStageBuilder> stageBuilder)
@@ -118,7 +126,7 @@ public class GraphicsPipelineBuilder
                 SType = StructureType.PipelineRasterizationStateCreateInfo,
                 DepthClampEnable = false,
                 RasterizerDiscardEnable = false,
-                PolygonMode = PolygonMode.Fill,
+                PolygonMode = PolygonMode,
                 LineWidth = 1.0f,
                 CullMode = CullModeFlags.None,
                 /*CullMode = CullModeFlags.BackBit,
@@ -200,7 +208,8 @@ public class GraphicsPipelineBuilder
                     out var graphicsPipeline) !=
                 Result.Success) throw new VulkanException("Failed to create graphics pipeline.");
 
-            foreach (var stage in Stages) stage.Dispose();
+            if(!DoNotDisposeStages)
+                foreach (var stage in Stages) stage.Dispose();
 
             return new GraphicsPipeline(Vk, LogicalDevice, pipelineLayout, graphicsPipeline, renderPass);
         }

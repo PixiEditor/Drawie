@@ -137,7 +137,9 @@ public class VulkanTexture : IDisposable, IVkTexture
     {
         colorAttachment.TransitionLayout(ImageLayout.ColorAttachmentOptimal);
     }
-    
+
+    public event Action? Disposing;
+
     public void MakeWriteable(CommandBuffer cmdBuffer)
     {
         colorAttachment.TransitionLayout(ImageLayout.ColorAttachmentOptimal, cmdBuffer);
@@ -197,6 +199,7 @@ public class VulkanTexture : IDisposable, IVkTexture
 
     public unsafe void Dispose()
     {
+        Disposing?.Invoke();
         Vk.DestroySampler(LogicalDevice, sampler, null);
         ColorAttachment.Dispose();
         DepthAttachment?.Dispose();

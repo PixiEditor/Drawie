@@ -75,6 +75,16 @@ public abstract class VulkanContext : IDisposable, IVulkanContext, IGraphicsCont
     {
         if (texture is not IVkTexture vkTexture) throw new ArgumentException("Can't manage non IVkTexture");
         managedTextures[handle] = vkTexture;
+        
+        vkTexture.Disposing += () =>
+        {
+            RemoveManagedTexture(texture.TextureId);
+        };
+    }
+
+    public void RemoveManagedTexture(ulong handle)
+    {
+        managedTextures.Remove(handle);
     }
 
     protected unsafe void SetupInstance(IVulkanContextInfo contextInfo)

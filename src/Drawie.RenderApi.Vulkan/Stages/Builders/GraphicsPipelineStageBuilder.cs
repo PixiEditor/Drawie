@@ -35,7 +35,7 @@ public class GraphicsPipelineStageBuilder : IDisposable
     {
         if (created)
         {
-            throw new GraphicsPipelineBuilderException("Stage was already created");
+            return createdStage;
         }
 
         byte[] code = ShaderBytes ?? Array.Empty<byte>();

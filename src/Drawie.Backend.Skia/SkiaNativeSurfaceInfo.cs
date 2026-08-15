@@ -3,7 +3,7 @@ using SkiaSharp;
 
 namespace Drawie.Skia;
 
-public class SkiaNativeSurfaceInfo : IFramebufferInfo
+public class SkiaNativeSurfaceInfo : INativeSurfaceInfo
 {
     public GRVkImageInfo? VkImageInfo { get; }
     public GRGlFramebufferInfo? GlFramebufferInfo { get; }

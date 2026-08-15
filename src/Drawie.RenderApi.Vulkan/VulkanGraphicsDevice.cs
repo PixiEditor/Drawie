@@ -20,6 +20,7 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice, IDisposable
 {
     private readonly VulkanContext context;
     private readonly CommandPool commandPool;
+    private VulkanPipeline? pipeline;
     
     public VulkanGraphicsDevice(VulkanContext context)
     {
@@ -75,12 +76,17 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice, IDisposable
         return vkTex;
     }
 
-    private VulkanPipeline? pipeline;
     public IPipeline CreatePipeline(PipelineDesc desc)
     {
         context.Api!.DeviceWaitIdle(context.LogicalDevice.Device);
-        
-        return pipeline ??= new VulkanPipeline(context, desc);
+
+        if (pipeline == null || !pipeline.Description.Equals(desc))
+        {
+            pipeline?.Dispose();
+            pipeline = new VulkanPipeline(context, desc);
+        }
+
+        return pipeline;
     }
 
     public ICommandList CreateCommandList()

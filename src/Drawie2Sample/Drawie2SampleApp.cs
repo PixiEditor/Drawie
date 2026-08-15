@@ -2,6 +2,7 @@
 using System.Text;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
+using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Text;
 using Drawie.Backend.Vertie.Core;
@@ -10,6 +11,8 @@ using Drawie.Backend.Vertie.Rendering;
 using Drawie.Host;
 using Drawie.Host.Input;
 using Drawie.Layer.UI.ImGui;
+using Drawie.Layer.UI.MiniUi;
+using Drawie.Layer.UI.MiniUi.Controls;
 using Drawie.Numerics;
 using Drawie.Rendering;
 using DrawiEngine;
@@ -38,7 +41,17 @@ public class Drawie2SampleApp : DrawieApp
     {
         window = Engine.WindowingPlatform.CreateWindow("Drawie 2 Sample", new VecI(1920, 1080));
         //window.AddLayer(new ImGuiLayer(RenderImGui));
+        window.AddLayer(new MiniUILayer(RenderMiniUi));
         return window;
+    }
+
+    private void RenderMiniUi(double dt)
+    {
+        string text = renderOptions.RenderMode == RenderMode.Default ? "Enable wireframe" : "Enable solid fill";
+        if (Button.Show(text))
+        {
+            renderOptions.RenderMode = renderOptions.RenderMode == RenderMode.Default ?  RenderMode.Wireframe : RenderMode.Default;
+        }
     }
 
     private void RenderImGui(double dt)
@@ -81,14 +94,19 @@ public class Drawie2SampleApp : DrawieApp
 
         RegisterMouse(window.InputController);
 
-        window.Update += d => { HandleMovement((float)d, camera, window.InputController.PrimaryKeyboard); };
+        window.Update += d =>
+        {
+            camera.AspectRatio = (float)window.Size.X / window.Size.Y;
+            HandleMovement((float)d, camera, window.InputController.PrimaryKeyboard);
+        };
 
         window.Render += (targetTexture, deltaTime) =>
         {
-            targetTexture.Clear(Colors.Black);
+            targetTexture.Clear();
 
             targetTexture.DrawMesh(mesh, mat, camera, renderOptions);
 
+            /*
             using Font defaultFont = Font.CreateDefault();
             Paintable color = new ColorPaintable(Colors.White);
             StringBuilder sb = new StringBuilder();
@@ -102,7 +120,7 @@ public class Drawie2SampleApp : DrawieApp
 
             using Paint p = new Paint() { Paintable = color };
 
-            rt.Paint(targetTexture.Canvas, new VecD(0, 20), defaultFont, p, null);
+            rt.Paint(targetTexture.Canvas, new VecD(0, 20), defaultFont, p, null);*/
         };
     }
 

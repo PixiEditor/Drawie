@@ -8,7 +8,7 @@ using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Backend.Core;
 
-public class NativeTexture : IDisposable, ICloneable, IPixelsMap, IFramebufferInfo, ITexture
+public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurfaceInfo, ITexture
 {
     public VecI Size { get; }
     public DrawingSurface DrawingSurface { get; private set; }

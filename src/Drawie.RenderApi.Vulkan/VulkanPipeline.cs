@@ -1,10 +1,8 @@
+using Drawie.Backend.Vertie.Core;
 using Drawie.RenderApi.Abstraction.CommandRecording;
 using Drawie.RenderApi.Abstraction.Pipeline;
-using Drawie.RenderApi.Vulkan.Exceptions;
-using Drawie.RenderApi.Vulkan.Extensions;
 using Drawie.RenderApi.Vulkan.Stages;
 using Drawie.RenderApi.Vulkan.Stages.Builders;
-using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 
 namespace Drawie.RenderApi.Vulkan;
@@ -56,8 +54,12 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
     private GraphicsPipeline CreatePipeline()
     {
         Builder.WithVertexLayout(layout => layout.WithVec3().WithVec3().WithVec2());
+        Builder.WithPolygonMode(Description.Rasterizer.RenderMode == RenderMode.Default
+            ? PolygonMode.Fill
+            : PolygonMode.Line);
         Builder.Stages.Add(program.VertexStageBuilder);
         Builder.Stages.Add(program.FragmentStageBuilder);
+        Builder.DoNotDisposeStages = true;
         Builder.WithRenderPass(builder => {});
         Builder.WithDepth();
         var descriptorSetLayout = program.DescriptorSetLayout;
