@@ -553,6 +553,7 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
         builder
             .AddStage(stage => stage.OfType(GraphicsPipelineStageType.Vertex).WithShader("Drawie.RenderApi.Vulkan.Shaders.vert.spv"))
             .AddStage(stage => stage.OfType(GraphicsPipelineStageType.Fragment).WithShader("Drawie.RenderApi.Vulkan.Shaders.frag.spv"))
+            .WithVertexLayout(layout => layout.WithVec2().WithVec3().WithVec2())
             .WithRenderPass(renderPass =>
             {
                 /*TODO: Add some meaningful stuff*/
@@ -689,7 +690,7 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
 
     private void CreateVertexBuffer()
     {
-        var bufferSize = (ulong)Marshal.SizeOf<Vertex>() * (ulong)Primitives.Vertices.Length;
+        var bufferSize = (ulong)Marshal.SizeOf<Vertex2D>() * (ulong)Primitives.Vertices.Length;
 
         using StagingBuffer stagingBuffer = new(context, bufferSize);
 

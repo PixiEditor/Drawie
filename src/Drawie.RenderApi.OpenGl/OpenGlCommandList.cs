@@ -32,7 +32,7 @@ public class OpenGlCommandList(GL api) : CommandList
 
     public override void SetPipeline(IPipeline pipeline)
     {
-        RecordInstruction(pipeline.Apply);
+        RecordInstruction(() => pipeline.Apply(this));
     }
 
     public override void SetBuffers(IBufferGroup bufferGroup)

@@ -10,6 +10,7 @@ public class GraphicsPipelineBuilder
     public Device LogicalDevice { get; set; }
     public List<GraphicsPipelineStageBuilder> Stages { get; } = new();
     public RenderPassBuilder RenderPassBuilder { get; set; }
+    public GraphicsPipelineVertexLayoutBuilder  VertexLayoutBuilder { get; set; }
 
     public bool HasDepthStencil { get; set; }
 
@@ -26,6 +27,16 @@ public class GraphicsPipelineBuilder
         stageBuilder(stage);
 
         Stages.Add(stage);
+        return this;
+    }
+
+    public GraphicsPipelineBuilder WithVertexLayout(Action<GraphicsPipelineVertexLayoutBuilder> vertexLayoutBuilder)
+    {
+        GraphicsPipelineVertexLayoutBuilder builder = new GraphicsPipelineVertexLayoutBuilder();
+
+        vertexLayoutBuilder(builder);
+
+        VertexLayoutBuilder = builder;
         return this;
     }
 
@@ -49,14 +60,14 @@ public class GraphicsPipelineBuilder
         if (Stages.Count == 0) throw new GraphicsPipelineBuilderException("No stages were added to the pipeline.");
         if (RenderPassBuilder == null)
             throw new GraphicsPipelineBuilderException("No render pass was added to the pipeline.");
+        if(VertexLayoutBuilder == null) throw new GraphicsPipelineBuilderException("No vertex layout was added to the pipeline.");
 
         RenderPass renderPass = RenderPassBuilder.Create(swapChainImageFormat, finalLayout);
 
         var stages = stackalloc PipelineShaderStageCreateInfo[Stages.Count];
         for (var i = 0; i < Stages.Count; i++) stages[i] = Stages[i].Build();
 
-        var bindingDescription = Vertex.GetBindingDescription();
-        var attributeDescriptions = Vertex.GetAttributeDescriptions();
+        var (bindingDescription, attributeDescriptions) = VertexLayoutBuilder.Build();
 
         fixed (VertexInputAttributeDescription* attributeDescriptionsPtr = attributeDescriptions)
         fixed (DescriptorSetLayout* descriptorPtr = &descriptorSetLayout)
@@ -81,8 +92,8 @@ public class GraphicsPipelineBuilder
             {
                 X = 0.0f,
                 Y = 0.0f,
-                Width = (float)swapChainExtent.Width,
-                Height = (float)swapChainExtent.Height,
+                Width = swapChainExtent.Width,
+                Height = swapChainExtent.Height,
                 MinDepth = 0.0f,
                 MaxDepth = 1.0f
             };

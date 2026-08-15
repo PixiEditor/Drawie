@@ -35,7 +35,7 @@ public class WebGlCommandList : CommandList
 
     public override void SetPipeline(IPipeline pipeline)
     {
-        RecordInstruction(pipeline.Apply);
+        RecordInstruction(() => pipeline.Apply());
     }
 
     public override void SetBuffers(IBufferGroup bufferGroup)

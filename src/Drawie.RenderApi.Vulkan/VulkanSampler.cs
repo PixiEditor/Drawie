@@ -7,21 +7,22 @@ namespace Drawie.RenderApi.Vulkan;
 internal sealed class VulkanSampler : ISampler, IDisposable
 {
     private readonly VulkanContext context;
-    private readonly Sampler sampler;
+    private readonly Sampler _vkSampler;
 
-    public uint Handle => unchecked((uint)sampler.Handle);
+    public uint Handle => unchecked((uint)_vkSampler.Handle);
+    public Sampler VkSampler => _vkSampler;
 
     public VulkanSampler(VulkanContext context, SamplerDesc desc)
     {
         this.context = context;
-        sampler = CreateSampler(desc);
+        _vkSampler = CreateSampler(desc);
     }
 
     public unsafe void Dispose()
     {
         context.Api!.DestroySampler(
             context.LogicalDevice.Device,
-            sampler,
+            _vkSampler,
             null);
     }
 

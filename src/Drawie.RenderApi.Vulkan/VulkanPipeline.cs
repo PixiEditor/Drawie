@@ -1,3 +1,4 @@
+using Drawie.RenderApi.Abstraction.CommandRecording;
 using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Extensions;
@@ -16,6 +17,7 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
 
     public Pipeline Pipeline { get; }
     public GraphicsPipeline GraphicsPipeline => graphicsPipeline;
+    public DescriptorSet DescriptorSet => program.DescriptorSet;
 
     public GraphicsPipelineBuilder Builder { get; }
 
@@ -38,16 +40,26 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
         Pipeline = graphicsPipeline.VkPipeline;
     }
 
-    public void Apply()
+    public unsafe void Apply(ICommandList cmdList)
     {
-        // Vulkan pipelines are explicitly bound by VulkanCommandList.
+        if(cmdList is not VulkanCommandList commandList) throw new ArgumentNullException("Only vulkan command list is supported");
+        
+        context.Api!.CmdBindPipeline(
+            commandList.CommandBuffer,
+            PipelineBindPoint.Graphics,
+            Pipeline);
+        
+        var descriptorSet = program.DescriptorSet;
+        context.Api.CmdBindDescriptorSets(commandList.CommandBuffer, PipelineBindPoint.Graphics, GraphicsPipeline.VkPipelineLayout, 0, 1, &descriptorSet, 0, null);
     }
 
     private GraphicsPipeline CreatePipeline()
     {
+        Builder.WithVertexLayout(layout => layout.WithVec3().WithVec3().WithVec2());
         Builder.Stages.Add(program.VertexStageBuilder);
         Builder.Stages.Add(program.FragmentStageBuilder);
         Builder.WithRenderPass(builder => {});
+        Builder.WithDepth();
         var descriptorSetLayout = program.DescriptorSetLayout;
         var pipeline = Builder.Create(new Extent2D((uint)Description.Viewport.Width, (uint)Description.Viewport.Height),
             Format.R8G8B8A8Unorm, ImageLayout.PresentSrcKhr, ref descriptorSetLayout);

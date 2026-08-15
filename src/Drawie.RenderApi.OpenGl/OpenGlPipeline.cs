@@ -1,5 +1,7 @@
 using System.Drawing;
+using System.Windows.Input;
 using Drawie.Backend.Vertie.Core;
+using Drawie.RenderApi.Abstraction.CommandRecording;
 using Drawie.RenderApi.Abstraction.Pipeline;
 using Silk.NET.OpenGL;
 
@@ -16,7 +18,7 @@ public class OpenGlPipeline : IPipeline
         Api = api;
     }
 
-    public void Apply()
+    public void Apply(ICommandList list)
     {
         Api.Viewport(new Rectangle(Description.Viewport.X, Description.Viewport.Y, Description.Viewport.Width,
             Description.Viewport.Height));

@@ -16,7 +16,7 @@ public class WebGlPipeline : IPipeline
         Gl = gl;
     }
 
-    public void Apply()
+    public void Apply(VulkanCommandList vulkanCommandList)
     {
         JSRuntime.Viewport(Gl, Description.Viewport.X, Description.Viewport.Y, Description.Viewport.Width, Description.Viewport.Height);
         

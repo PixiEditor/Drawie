@@ -11,6 +11,7 @@ namespace Drawie.RenderApi.Vulkan;
 
 internal sealed class VulkanCommandList : CommandList, IDisposable
 {
+    public CommandBuffer CommandBuffer => commandBuffer;
     private readonly VulkanContext context;
     private readonly CommandPool commandPool;
 
@@ -19,7 +20,6 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
     private VulkanRenderTarget? renderTarget;
     private VulkanPipeline? pipeline;
-    private VulkanBufferGroup? buffers;
 
     public VulkanCommandList(
         VulkanContext context,
@@ -40,6 +40,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
                 "Render target must be a Vulkan render target.",
                 nameof(fb));
 
+        pipeline = null;
         renderTarget = target;
 
         commandBuffer = AllocateCommandBuffer();
@@ -57,17 +58,10 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             throw new InvalidOperationException(
                 "BeginRenderPass must be called first.");
 
-        if (pipeline is not VulkanPipeline vkPipeline)
-            throw new ArgumentException(
-                "Pipeline must be a Vulkan pipeline.",
-                nameof(pipeline));
-
+        if (pipeline is not VulkanPipeline vkPipeline) throw new ArgumentException("Only VulkanPipeline is supported");
+        
+        pipeline.Apply(this);
         this.pipeline = vkPipeline;
-
-        context.Api!.CmdBindPipeline(
-            commandBuffer,
-            PipelineBindPoint.Graphics,
-            vkPipeline.Pipeline);
     }
 
     public override void SetBuffers(IBufferGroup bufferGroup)
@@ -80,8 +74,6 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             throw new ArgumentException(
                 "Buffer group must be a Vulkan buffer group.",
                 nameof(bufferGroup));
-
-        buffers = vkBuffers;
 
         BindBuffers(vkBuffers);
     }
@@ -229,8 +221,6 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
         if (target.Texture.DepthAttachment is not null)
         {
-            //target.Texture.DepthAttachment.MakeDepthAttachment(commandBuffer);
-
             depthAttachment = new RenderingAttachmentInfo
             {
                 SType = StructureType.RenderingAttachmentInfo,
@@ -299,20 +289,45 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         });
     }
 
-    private void BindTextureDescriptor(
+    private unsafe void BindTextureDescriptor(
         VulkanTexture texture,
         VulkanSampler sampler)
     {
-        // TODO: Implement
-        /*context.Api!.CmdBindDescriptorSets(
+        var imageInfo = new DescriptorImageInfo
+        {
+            Sampler = sampler.VkSampler,
+            ImageView = texture.ColorAttachment.View,
+            ImageLayout = ImageLayout.ShaderReadOnlyOptimal
+        };
+
+        var write = new WriteDescriptorSet
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = pipeline.DescriptorSet,
+            DstBinding = 1,
+            DstArrayElement = 0,
+            DescriptorCount = 1,
+            DescriptorType = DescriptorType.CombinedImageSampler,
+            PImageInfo = &imageInfo
+        };
+
+        context.Api!.UpdateDescriptorSets(
+            context.LogicalDevice.Device,
+            1,
+            &write,
+            0,
+            null);
+
+        var set = pipeline.DescriptorSet;
+        context.Api!.CmdBindDescriptorSets(
             commandBuffer,
             PipelineBindPoint.Graphics,
             pipeline.GraphicsPipeline.VkPipelineLayout,
             0,
             1,
-            in descriptorSet,
+            in set,
             0,
-            null);*/
+            null);
         
     }
 
@@ -320,11 +335,6 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         VulkanTexture source,
         VulkanTexture destination)
     {
-        /*
-        TransitionForBlitSource(source);
-        TransitionForBlitDestination(destination, ImageLayout.TransferDstOptimal);
-        */
-        
         source.ColorAttachment.TransitionLayout(ImageLayout.TransferSrcOptimal, commandBuffer);
         destination.ColorAttachment.TransitionLayout(ImageLayout.TransferDstOptimal, commandBuffer);
 
@@ -353,10 +363,11 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             (int)source.Height,
             1);
 
-        region.DstOffsets[0] = new Offset3D(0, 0, 0);
+        // Y is flipped at blit level
+        region.DstOffsets[0] = new Offset3D(0, (int)destination.Height, 0);
         region.DstOffsets[1] = new Offset3D(
             (int)destination.Width,
-            (int)destination.Height,
+            0,
             1);
 
         context.Api!.CmdBlitImage(
@@ -372,82 +383,6 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         destination.ColorAttachment.TransitionLayout(ImageLayout.ColorAttachmentOptimal, commandBuffer);
     }
     
-    /*private unsafe void TransitionForBlitSource(VulkanTexture texture)
-    {
-        ImageMemoryBarrier barrier = new()
-        {
-            SType = StructureType.ImageMemoryBarrier,
-
-            OldLayout = ImageLayout.ColorAttachmentOptimal,
-            NewLayout = ImageLayout.TransferSrcOptimal,
-
-            SrcAccessMask = AccessFlags.ColorAttachmentWriteBit,
-            DstAccessMask = AccessFlags.TransferReadBit,
-
-            SrcQueueFamilyIndex = Vk.QueueFamilyIgnored,
-            DstQueueFamilyIndex = Vk.QueueFamilyIgnored,
-
-            Image = texture.VkImage,
-
-            SubresourceRange = new ImageSubresourceRange
-            {
-                AspectMask = ImageAspectFlags.ColorBit,
-                BaseMipLevel = 0,
-                LevelCount = 1,
-                BaseArrayLayer = 0,
-                LayerCount = 1
-            }
-        };
-
-        context.Api!.CmdPipelineBarrier(
-            commandBuffer,
-            PipelineStageFlags.ColorAttachmentOutputBit,
-            PipelineStageFlags.TransferBit,
-            DependencyFlags.None,
-            0, null,
-            0, null,
-            1, &barrier);
-    }
-    
-    private unsafe void TransitionForBlitDestination(
-        VulkanTexture texture,
-        ImageLayout oldLayout)
-    {
-        ImageMemoryBarrier barrier = new()
-        {
-            SType = StructureType.ImageMemoryBarrier,
-
-            OldLayout = oldLayout,
-            NewLayout = ImageLayout.TransferDstOptimal,
-
-            SrcAccessMask = AccessFlags.MemoryReadBit,
-            DstAccessMask = AccessFlags.TransferWriteBit,
-
-            SrcQueueFamilyIndex = Vk.QueueFamilyIgnored,
-            DstQueueFamilyIndex = Vk.QueueFamilyIgnored,
-
-            Image = texture.VkImage,
-
-            SubresourceRange = new ImageSubresourceRange
-            {
-                AspectMask = ImageAspectFlags.ColorBit,
-                BaseMipLevel = 0,
-                LevelCount = 1,
-                BaseArrayLayer = 0,
-                LayerCount = 1
-            }
-        };
-
-        context.Api!.CmdPipelineBarrier(
-            commandBuffer,
-            PipelineStageFlags.AllCommandsBit,
-            PipelineStageFlags.TransferBit,
-            DependencyFlags.None,
-            0, null,
-            0, null,
-            1, &barrier);
-    }*/
-
     public void Dispose()
     {
         

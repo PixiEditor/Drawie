@@ -5,7 +5,7 @@ using Silk.NET.Vulkan;
 
 namespace Drawie.RenderApi.Vulkan.Structs;
 
-public struct Vertex
+public struct Vertex2D
 {
     public Vector2D<float> Position;
     public Vector3D<float> Color;
@@ -16,7 +16,7 @@ public struct Vertex
         return new VertexInputBindingDescription
         {
             Binding = 0,
-            Stride = (uint)Unsafe.SizeOf<Vertex>(),
+            Stride = (uint)Unsafe.SizeOf<Vertex2D>(),
             InputRate = VertexInputRate.Vertex
         };
     }
@@ -30,21 +30,21 @@ public struct Vertex
                 Binding = 0,
                 Location = 0,
                 Format = Format.R32G32Sfloat,
-                Offset = (uint)Marshal.OffsetOf<Vertex>(nameof(Position))
+                Offset = (uint)Marshal.OffsetOf<Vertex2D>(nameof(Position))
             },
             new VertexInputAttributeDescription
             {
                 Binding = 0,
                 Location = 1,
                 Format = Format.R32G32B32Sfloat,
-                Offset = (uint)Marshal.OffsetOf<Vertex>(nameof(Color))
+                Offset = (uint)Marshal.OffsetOf<Vertex2D>(nameof(Color))
             },
             new VertexInputAttributeDescription()
             {
                 Binding = 0,
                 Location = 2,
                 Format = Format.R32G32Sfloat,
-                Offset = (uint)Marshal.OffsetOf<Vertex>(nameof(TexCoord))
+                Offset = (uint)Marshal.OffsetOf<Vertex2D>(nameof(TexCoord))
             }
         };
     }
