@@ -10,7 +10,7 @@ public class Material
 {
     public string Name { get; set; }
     public Shader[] Shaders { get; set; }
-    public Dictionary<string, UniformBlock> Properties { get; set; } = new();
+    public Dictionary<string, PropertyGroupDefinition> Properties { get; set; } = new();
     public List<ITexture> Textures { get; set; } = new();
 
     private int _textureCount;
@@ -21,29 +21,29 @@ public class Material
         Shaders = shaders;
 
         Properties.Add("Transform",
-            new UniformBlock("Transform")
-                .AddProperty(new ShaderProperty<Matrix4x4>("uModel", Matrix4x4.Identity))
-                .AddProperty(new ShaderProperty<Matrix4x4>("uView", Matrix4x4.Identity))
-                .AddProperty(new ShaderProperty<Matrix4x4>("uProjection", Matrix4x4.Identity)));
+            new PropertyGroupDefinition("Transform")
+                .AddProperty<Matrix4x4>("uModel", Matrix4x4.Identity)
+                .AddProperty<Matrix4x4>("uView", Matrix4x4.Identity)
+                .AddProperty<Matrix4x4>("uProjection", Matrix4x4.Identity));
+
+        foreach (var propertyGroup in Properties)
+        {
+            foreach (var shader in shaders)
+            {
+                if (shader.HasUniformBlock(propertyGroup.Key))
+                {
+                    propertyGroup.Value.ShaderLayout = shader.GetLayoutFor(propertyGroup.Key);
+                }
+            }
+        }
     }
-    
+
     public void AddTexture(ITexture texture)
     {
         Textures.Add(texture);
     }
 
-    public void Use(Camera camera)
-    {
-        Properties["Transform"].SetProperty("uView", camera.ViewMatrix);
-        Properties["Transform"].SetProperty("uProjection", camera.ProjectionMatrix);
-    }
-
-    public void PrepareForObject(Transform transform)
-    {
-        Properties["Transform"].SetProperty("uModel", transform.ViewMatrix);
-        UpdateShader();
-    }
-
+    /*
     public void UpdateShader()
     {
         foreach (var property in Properties)
@@ -62,5 +62,5 @@ public class Material
                 shader.SetUniformBlock(prop);
             }
         }
-    }
+    }*/
 }

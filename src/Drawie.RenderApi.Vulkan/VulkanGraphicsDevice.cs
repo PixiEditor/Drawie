@@ -15,11 +15,13 @@ using IAbstractionTexture = Drawie.RenderApi.Abstraction.Textures.ITexture;
 
 namespace Drawie.RenderApi.Vulkan;
 
-public sealed class VulkanGraphicsDevice : IGraphicsDevice 
+public sealed class VulkanGraphicsDevice : IGraphicsDevice
 {
     private readonly VulkanContext context;
     private readonly CommandPool commandPool;
     private VulkanPipeline? pipeline;
+
+    private Dictionary<Guid, UniformBuffer> bufferCache = new Dictionary<Guid, UniformBuffer>();
 
     private List<IDisposable> disposables = new List<IDisposable>();
 
@@ -102,7 +104,7 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
 
     public ICommandList CreateCommandList()
     {
-        var cmdList = new VulkanCommandList(context, commandPool);
+        var cmdList = new VulkanCommandList(context, commandPool) { BufferCache = bufferCache };
         disposables.Add(cmdList);
         return cmdList;
     }
@@ -139,6 +141,11 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
 
     public unsafe void Dispose()
     {
+        foreach (var uniformBuffer in bufferCache)
+        {
+            uniformBuffer.Value.Dispose();
+        }
+
         context.Api!.DestroyCommandPool(
             context.LogicalDevice.Device,
             commandPool,

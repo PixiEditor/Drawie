@@ -71,7 +71,7 @@ public static class TextureFramebufferExtensions
             Viewport = new RectI(0, 0, fb.Size.X, fb.Size.Y),
         });
 
-        cmdList ??= device.CreateCommandList();
+        cmdList = device.CreateCommandList();
 
         foreach (var mesh in scene.Meshes)
         {
@@ -151,7 +151,7 @@ public static class TextureFramebufferExtensions
 
         var program =
             graphicsDevice.CreateShaderProgram(new ShaderProgramDesc(
-                scene.Meshes.SelectMany(x => x.Material.Shaders)
+                scene.Meshes.SelectMany(x => x.Material.Original.Shaders)
                     .Select(x => new ShaderDesc(x.EntryName, x.ShaderBytes, x.ShaderType))));
         cachedShaderPrograms.Add(scene, program);
 

@@ -13,7 +13,7 @@ public class Mesh
     public IReadOnlyList<Vector2> TexCoords => texCoords;
     public IReadOnlyList<uint> Indicies => indicies;
     public int IndexCount => Indicies.Count;
-    public Material Material { get; }
+    public MaterialInstance Material { get; }
 
     internal bool BuffersInitialized { get; private set; } = false;
     public IBufferGroup Buffers { get; private set; }
@@ -29,7 +29,7 @@ public class Mesh
         this.indicies = indicies;
         this.normals = normals;
         this.texCoords = texCoords;
-        Material = material;
+        Material = new MaterialInstance(material);
     }
 
     internal void GenerateBuffers(IGraphicsDevice device)

@@ -27,6 +27,9 @@ public class VulkanWindowContext : VulkanContext
         surface = new VkNonDispatchableHandle(vkContext.GetSurfaceHandle(Instance.Handle)).ToSurface();
     }
 
+    public override KhrDynamicRendering? DynamicRendering => khrDynamicRendering;
+    private KhrDynamicRendering khrDynamicRendering;
+
     public override void Initialize(IVulkanContextInfo contextInfo)
     {
         Api = Vk.GetApi();
@@ -36,6 +39,7 @@ public class VulkanWindowContext : VulkanContext
         deviceExtensions.Add(KhrDynamicRendering.ExtensionName);
         
         SetupInstance(contextInfo);
+        
         SetupDebugMessenger();
 
         if (contextInfo.HasSurface)
@@ -46,6 +50,11 @@ public class VulkanWindowContext : VulkanContext
         GpuInfo = PickPhysicalDevice();
 
         CreateLogicalDevice();
+        
+        if (Api.TryGetDeviceExtension(Instance, LogicalDevice.Device, out KhrDynamicRendering dynamicRendering))
+        {
+            khrDynamicRendering = dynamicRendering;
+        }
     }
 
     protected override unsafe void CreateLogicalDevice()

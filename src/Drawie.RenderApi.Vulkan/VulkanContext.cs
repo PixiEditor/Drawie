@@ -56,6 +56,7 @@ public abstract class VulkanContext : IDisposable, IVulkanContext, IGraphicsCont
     IntPtr IVulkanContext.PhysicalDeviceHandle => PhysicalDevice.Handle;
     IntPtr IVulkanContext.InstanceHandle => Instance.Handle;
     IntPtr IVulkanContext.GraphicsQueueHandle => GraphicsQueue.Handle;
+    public abstract KhrDynamicRendering? DynamicRendering { get; }
 
     public IntPtr GetProcedureAddress(string name, IntPtr instance, IntPtr device)
     {

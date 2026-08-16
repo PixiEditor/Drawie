@@ -14,13 +14,14 @@ namespace Drawie.RenderApi.Vulkan;
 internal sealed class VulkanCommandList : CommandList, IDisposable
 {
     public CommandBuffer CommandBuffer => commandBuffer;
+    public Dictionary<Guid, UniformBuffer> BufferCache { get; set; }
+
     private readonly VulkanContext context;
     private readonly CommandPool commandPool;
 
     private CommandBuffer commandBuffer;
     private bool recording;
 
-    private Dictionary<string, UniformBuffer> uniformBuffers = new Dictionary<string, UniformBuffer>();
     private VulkanRenderTarget? renderTarget;
     private VulkanPipeline? pipeline;
 
@@ -102,7 +103,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         foreach (var block in blocks)
         {
             UniformBuffer? buffer = null;
-            if (uniformBuffers.TryGetValue(block.Name, out var uniformBuffer))
+            if (BufferCache.TryGetValue(block.UniformBlockId, out var uniformBuffer))
             {
                 buffer = uniformBuffer;
             }
@@ -110,6 +111,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             {
                 buffer = new UniformBuffer(context.Api, context.LogicalDevice.Device, context.PhysicalDevice,
                     (ulong)block.ShaderLayout.Size);
+                BufferCache[block.UniformBlockId] = buffer;
             }
 
             UniformUtility.SerializeToBuffer(block, buffer);
@@ -217,7 +219,8 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
     {
         EnsureRecording();
 
-        context.Api!.CmdEndRenderPass(commandBuffer);
+        context.DynamicRendering.CmdEndRendering(commandBuffer);
+        //context.Api!.CmdEndRenderPass(commandBuffer);
 
         EndCommandBuffer(commandBuffer);
 
@@ -344,10 +347,63 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
                 "Failed to end Vulkan command buffer.");
     }
 
-    private unsafe void BeginRendering(VulkanRenderTarget target)
+    private void BeginRendering(VulkanRenderTarget target)
+    {
+        BeginDynamicRendering(target);
+        //BeginRenderPass(target);
+    }
+
+    private unsafe void BeginRenderPass(VulkanRenderTarget target)
     {
         target.Texture.ColorAttachment.TransitionLayout(ImageLayout.PresentSrcKhr, commandBuffer);
-        /*
+        RenderPassBeginInfo renderPassInfo = new()
+        {
+            SType = StructureType.RenderPassBeginInfo,
+            RenderPass = pipeline.GraphicsPipeline.VkRenderPass,
+            Framebuffer = renderTarget.Framebuffer.Value,
+            RenderArea = new Rect2D
+            {
+                Offset = new Offset2D(0, 0),
+                Extent = new Extent2D((uint)renderTarget.Size.X, (uint)renderTarget.Size.Y)
+            }
+        };
+        ClearValue clearColor = new()
+        {
+            Color = new ClearColorValue() { Float32_0 = 0, Float32_1 = 0, Float32_2 = 0, Float32_3 = 1 }
+        };
+
+        ClearValue clearDepth = new()
+        {
+            DepthStencil = new ClearDepthStencilValue(0, 0)
+        };
+
+        ClearValue clearMsaaResolved = new()
+        {
+            Color = new ClearColorValue() { Float32_0 = 0, Float32_1 = 0, Float32_2 = 0, Float32_3 = 1 }
+        };
+
+        ClearValue* clearValues = stackalloc ClearValue[(int)target.Texture.Attachments];
+        clearValues[0] = clearColor;
+        int i = 0;
+        if (target.Texture.DepthAttachment != null)
+        {
+            clearValues[1] = clearDepth;
+            i++;
+        }
+
+        if (target.Texture.MsaaResolvedColorAttachment != null)
+        {
+            clearValues[i] = clearMsaaResolved;
+        }
+
+        renderPassInfo.ClearValueCount = target.Texture.Attachments;
+        renderPassInfo.PClearValues = clearValues;
+
+        context.Api!.CmdBeginRenderPass(commandBuffer, &renderPassInfo, SubpassContents.Inline);
+    }
+
+    private unsafe void BeginDynamicRendering(VulkanRenderTarget target)
+    {
         target.Texture.MakeWriteable(commandBuffer);
         
         RenderingAttachmentInfo colorAttachment = new()
@@ -407,54 +463,8 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
         if (target.Texture.DepthAttachment is not null)
             renderingInfo.PDepthAttachment = &depthAttachment;
-            */
-
-
-        RenderPassBeginInfo renderPassInfo = new()
-        {
-            SType = StructureType.RenderPassBeginInfo,
-            RenderPass = pipeline.GraphicsPipeline.VkRenderPass,
-            Framebuffer = renderTarget.Framebuffer.Value,
-            RenderArea = new Rect2D
-            {
-                Offset = new Offset2D(0, 0),
-                Extent = new Extent2D((uint)renderTarget.Size.X, (uint)renderTarget.Size.Y)
-            }
-        };
-
-        ClearValue clearColor = new()
-        {
-            Color = new ClearColorValue() { Float32_0 = 0, Float32_1 = 0, Float32_2 = 0, Float32_3 = 1 }
-        };
-
-        ClearValue clearDepth = new()
-        {
-            DepthStencil = new ClearDepthStencilValue(0, 0)
-        };
-
-        ClearValue clearMsaaResolved = new()
-        {
-            Color = new ClearColorValue() { Float32_0 = 0, Float32_1 = 0, Float32_2 = 0, Float32_3 = 1 }
-        };
-
-        ClearValue* clearValues = stackalloc ClearValue[(int)target.Texture.Attachments];
-        clearValues[0] = clearColor;
-        int i = 0;
-        if (target.Texture.DepthAttachment != null)
-        {
-            clearValues[1] = clearDepth;
-            i++;
-        }
-
-        if (target.Texture.MsaaResolvedColorAttachment != null)
-        {
-            clearValues[i] = clearMsaaResolved;
-        }
-
-        renderPassInfo.ClearValueCount = target.Texture.Attachments;
-        renderPassInfo.PClearValues = clearValues;
-
-        context.Api!.CmdBeginRenderPass(commandBuffer, &renderPassInfo, SubpassContents.Inline);
+        
+        context.DynamicRendering?.CmdBeginRendering(commandBuffer, &renderingInfo);
     }
 
     private unsafe void BindBuffers(VulkanBufferGroup group)
@@ -540,10 +550,6 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
     public unsafe void Dispose()
     {
-        foreach (var uniformBuffer in uniformBuffers)
-        {
-            uniformBuffer.Value.Dispose();
-        }
         context.Api.DestroyCommandPool(context.LogicalDevice.Device, commandPool, null);
     }
 }

@@ -9,6 +9,8 @@ public class UniformBlock
     public List<ShaderProperty> Properties { get; set; } = new List<ShaderProperty>();
     public UniformBlockLayout ShaderLayout { get; set; }
 
+    public Guid UniformBlockId { get; } = Guid.NewGuid();
+
     public UniformBlock AddProperty(ShaderProperty property)
     {
         Properties.Add(property);
