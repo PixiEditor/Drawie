@@ -102,14 +102,14 @@ public class RenderPassBuilder : IDisposable
         }
 
         SubpassDependency dependency = default;
-        if (Samples == 1)
+        if (!WithDepthStencil)
         {
             dependency = new()
             {
                 SrcSubpass = Vk.SubpassExternal,
                 DstSubpass = 0,
                 SrcStageMask = PipelineStageFlags.ColorAttachmentOutputBit,
-                SrcAccessMask = AccessFlags.ColorAttachmentWriteBit,
+                SrcAccessMask = AccessFlags.None,
                 DstStageMask = PipelineStageFlags.ColorAttachmentOutputBit,
                 DstAccessMask = AccessFlags.ColorAttachmentWriteBit
             };
@@ -121,13 +121,9 @@ public class RenderPassBuilder : IDisposable
                 SrcSubpass = Vk.SubpassExternal,
                 DstSubpass = 0,
                 SrcStageMask = PipelineStageFlags.ColorAttachmentOutputBit | PipelineStageFlags.EarlyFragmentTestsBit | PipelineStageFlags.LateFragmentTestsBit,
-
-                SrcAccessMask =
-                    Samples > 1 ? AccessFlags.ColorAttachmentWriteBit | AccessFlags.DepthStencilAttachmentWriteBit
-                                : AccessFlags.ColorAttachmentWriteBit,
+                SrcAccessMask = AccessFlags.ColorAttachmentWriteBit | AccessFlags.DepthStencilAttachmentWriteBit,
 
                 DstStageMask = PipelineStageFlags.ColorAttachmentOutputBit | PipelineStageFlags.EarlyFragmentTestsBit,
-
                 DstAccessMask = AccessFlags.ColorAttachmentWriteBit | AccessFlags.DepthStencilAttachmentWriteBit
             };
         }

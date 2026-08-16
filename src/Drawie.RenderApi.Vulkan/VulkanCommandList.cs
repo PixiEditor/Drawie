@@ -181,7 +181,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         CommandBufferBeginInfo info = new()
         {
             SType = StructureType.CommandBufferBeginInfo,
-            Flags = CommandBufferUsageFlags.OneTimeSubmitBit
+            Flags = CommandBufferUsageFlags.OneTimeSubmitBit,
         };
 
         if (context.Api!.BeginCommandBuffer(
@@ -256,7 +256,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             RenderArea = renderArea,
             LayerCount = 1,
             ColorAttachmentCount = 1,
-            PColorAttachments = &colorAttachment
+            PColorAttachments = &colorAttachment,
         };
 
         if (target.Texture.DepthAttachment is not null)
@@ -389,7 +389,8 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         destination.ColorAttachment.TransitionLayout(ImageLayout.ColorAttachmentOptimal, commandBuffer);
     }
 
-    public void Dispose()
+    public unsafe void Dispose()
     {
+        context.Api.DestroyCommandPool(context.LogicalDevice.Device, commandPool, null);
     }
 }

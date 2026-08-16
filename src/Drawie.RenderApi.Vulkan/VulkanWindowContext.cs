@@ -30,10 +30,10 @@ public class VulkanWindowContext : VulkanContext
     public override void Initialize(IVulkanContextInfo contextInfo)
     {
         Api = Vk.GetApi();
-        
         TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
         
         deviceExtensions.Add(KhrSwapchain.ExtensionName);
+        deviceExtensions.Add(KhrDynamicRendering.ExtensionName);
         
         SetupInstance(contextInfo);
         SetupDebugMessenger();

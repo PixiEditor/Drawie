@@ -42,6 +42,7 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
         deviceExtensions.Add("VK_KHR_get_physical_device_properties2");
         deviceExtensions.Add("VK_KHR_external_memory_capabilities");
         deviceExtensions.Add("VK_KHR_external_semaphore_capabilities");
+        //TODO if it crashes with vertie, try adding VK_KHR_dynamic_rendering
         
         if(EnableValidationLayers)
             deviceExtensions.Add("VK_EXT_debug_utils");
