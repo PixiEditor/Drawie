@@ -17,4 +17,19 @@ public static class FormatExtensions
                 throw new ArgumentOutOfRangeException(nameof(descDepth), descDepth, null);
         }
     }
+    
+    public static SampleCountFlags ToSampleFlags(int samples)
+    {
+        return samples switch
+        {
+            1 => SampleCountFlags.Count1Bit,
+            2 => SampleCountFlags.Count2Bit,
+            4 => SampleCountFlags.Count4Bit,
+            8 => SampleCountFlags.Count8Bit,
+            16 => SampleCountFlags.Count16Bit,
+            32 => SampleCountFlags.Count32Bit,
+            64 => SampleCountFlags.Count64Bit,
+            _ => throw new ArgumentOutOfRangeException(nameof(samples), samples, null)
+        };
+    }
 }

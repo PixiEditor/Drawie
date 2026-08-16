@@ -59,7 +59,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
                 "BeginRenderPass must be called first.");
 
         if (pipeline is not VulkanPipeline vkPipeline) throw new ArgumentException("Only VulkanPipeline is supported");
-        
+
         pipeline.Apply(this);
         this.pipeline = vkPipeline;
     }
@@ -94,7 +94,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         var vkTex = context.ManagedTextures[texture.TextureId];
 
         if (vkTex is not VulkanTexture vkTexture) throw new ArgumentException("Only IVkTexture's are valid");
-        
+
         vkTexture.MakeReadOnly(commandBuffer);
 
         BindTextureDescriptor(
@@ -235,6 +235,13 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             };
         }
 
+        if (target.Texture.MsaaResolveColorAttachment != null)
+        {
+            colorAttachment.ResolveMode = ResolveModeFlags.AverageBit;
+            colorAttachment.ResolveImageView = target.Texture.MsaaResolveColorAttachment.View;
+            colorAttachment.ResolveImageLayout = ImageLayout.ColorAttachmentOptimal;
+        }
+
         Rect2D renderArea = new()
         {
             Offset = new Offset2D(0, 0),
@@ -258,7 +265,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         context.Api!.CmdBeginRendering(
             commandBuffer,
             in renderingInfo);
-    }    
+    }
 
     private unsafe void BindBuffers(VulkanBufferGroup group)
     {
@@ -328,7 +335,6 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             in set,
             0,
             null);
-        
     }
 
     private void Blit(
@@ -382,9 +388,8 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
         destination.ColorAttachment.TransitionLayout(ImageLayout.ColorAttachmentOptimal, commandBuffer);
     }
-    
+
     public void Dispose()
     {
-        
     }
 }

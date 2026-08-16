@@ -67,7 +67,11 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
         Builder.Stages.Add(program.VertexStageBuilder);
         Builder.Stages.Add(program.FragmentStageBuilder);
         Builder.DoNotDisposeStages = true;
-        Builder.WithRenderPass(builder => { builder.WithDepth(Description.Depth.Format.ToVkFormat()); });
+        Builder.WithRenderPass(builder =>
+        {
+            builder.WithDepth(Description.Depth.Format.ToVkFormat())
+                .WithSamples(Description.Rasterizer.Samples);
+        });
         Builder.WithDepth();
         var descriptorSetLayout = program.DescriptorSetLayout;
         var pipeline = Builder.Create(new Extent2D((uint)Description.Viewport.Width, (uint)Description.Viewport.Height),

@@ -22,8 +22,9 @@ public sealed unsafe class VulkanImageAttachment : IDisposable
     public uint Height { get; }
     public ImageAspectFlags AspectMask { get; }
     public ImageUsageFlags Usage { get; }
-
     public ImageLayout Layout { get; private set; } = ImageLayout.Undefined;
+    public SampleCountFlags Samples { get; private set; }
+    
 
     public VulkanImageAttachment(
         Vk vk,
@@ -35,7 +36,7 @@ public sealed unsafe class VulkanImageAttachment : IDisposable
         uint height,
         Format format,
         ImageUsageFlags usage,
-        ImageAspectFlags aspectMask)
+        ImageAspectFlags aspectMask, SampleCountFlags samples)
     {
         this.vk = vk;
         this.device = device;
@@ -48,6 +49,7 @@ public sealed unsafe class VulkanImageAttachment : IDisposable
         Format = format;
         Usage = usage;
         AspectMask = aspectMask;
+        Samples = samples;
 
         CreateImage();
         AllocateMemory();
@@ -67,7 +69,7 @@ public sealed unsafe class VulkanImageAttachment : IDisposable
             Tiling = ImageTiling.Optimal,
             InitialLayout = ImageLayout.Undefined,
             Usage = Usage,
-            Samples = SampleCountFlags.Count1Bit,
+            Samples = Samples,
             SharingMode = SharingMode.Exclusive
         };
 

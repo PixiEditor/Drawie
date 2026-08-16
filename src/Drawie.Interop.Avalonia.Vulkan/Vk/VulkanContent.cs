@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.Vulkan.Buffers;
 using Silk.NET.Vulkan;
 
@@ -71,7 +72,7 @@ public class VulkanContent : IDisposable
     {
         texture = new VulkanTexture(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice,
             context.Pool.CommandPool,
-            context.GraphicsQueue, context.GraphicsQueueFamilyIndex, size);
+            context.GraphicsQueue, context.GraphicsQueueFamilyIndex, new TextureDesc { Width = size.X, Height = size.Y, Depth = DepthFormat.NoDepth, Samples = 1, Format = TextureFormat.RGBA8_Unorm});
     }
 
     public void Dispose()

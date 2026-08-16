@@ -32,19 +32,14 @@ public class VulkanTexture : IDisposable, IVkTexture
 
     public VulkanImageAttachment ColorAttachment => colorAttachment;
     public VulkanImageAttachment? DepthAttachment => depthAttachment;
+    public VulkanImageAttachment? MsaaResolveColorAttachment => msaaResolveAttachment;
 
     private VulkanImageAttachment colorAttachment;
     private VulkanImageAttachment? depthAttachment;
+    private VulkanImageAttachment? msaaResolveAttachment;
     private Sampler sampler;
-    
-    public VulkanTexture(Vk vk, Device logicalDevice, PhysicalDevice physicalDevice, CommandPool commandPool,
-        Queue graphicsQueue, uint queueFamily, VecI size) : this(vk, logicalDevice, physicalDevice, commandPool, graphicsQueue, queueFamily, new TextureDesc()
-    {
-        Format = TextureFormat.RGBA8_Unorm, Depth = DepthFormat.NoDepth, Width = size.X, Height = size.Y,
-    })
-    {
-    }
 
+   
     public VulkanTexture(Vk vk, Device logicalDevice, PhysicalDevice physicalDevice, CommandPool commandPool,
         Queue graphicsQueue, uint queueFamily, TextureDesc desc)
     {
@@ -56,7 +51,8 @@ public class VulkanTexture : IDisposable, IVkTexture
         QueueFamily = queueFamily;
         ImageFormat = (uint)ToVkFormat(desc.Format);
         Tiling = (uint)ImageTiling.Optimal;
-        UsageFlags = (uint)(ImageUsageFlags.SampledBit | ImageUsageFlags.TransferSrcBit | ImageUsageFlags.TransferDstBit | ImageUsageFlags.ColorAttachmentBit);
+        UsageFlags = (uint)(ImageUsageFlags.SampledBit | ImageUsageFlags.TransferSrcBit |
+                            ImageUsageFlags.TransferDstBit | ImageUsageFlags.ColorAttachmentBit);
         Width = (uint)desc.Width;
         Height = (uint)desc.Height;
 
@@ -73,7 +69,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             ImageUsageFlags.TransferSrcBit |
             ImageUsageFlags.TransferDstBit |
             ImageUsageFlags.ColorAttachmentBit,
-            ImageAspectFlags.ColorBit);
+            ImageAspectFlags.ColorBit, FormatExtensions.ToSampleFlags(desc.Samples));
 
         colorAttachment.TransitionLayout(
             ImageLayout.ColorAttachmentOptimal);
@@ -92,13 +88,34 @@ public class VulkanTexture : IDisposable, IVkTexture
                 (uint)desc.Height,
                 depthFormat,
                 ImageUsageFlags.DepthStencilAttachmentBit,
-                ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit);
+                ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit, FormatExtensions.ToSampleFlags(desc.Samples));
 
             depthAttachment.TransitionLayout(ImageLayout.DepthStencilAttachmentOptimal);
         }
-        
+
+        if (desc.Samples > 1)
+        {
+            msaaResolveAttachment = new VulkanImageAttachment(
+                Vk,
+                LogicalDevice,
+                PhysicalDevice,
+                CommandPool,
+                GraphicsQueue,
+                (uint)desc.Width,
+                (uint)desc.Height,
+                ToVkFormat(desc.Format),
+                ImageUsageFlags.SampledBit |
+                ImageUsageFlags.TransferSrcBit |
+                ImageUsageFlags.TransferDstBit |
+                ImageUsageFlags.ColorAttachmentBit,
+                ImageAspectFlags.ColorBit, SampleCountFlags.Count1Bit);
+
+            msaaResolveAttachment.TransitionLayout(ImageLayout.ColorAttachmentOptimal);
+        }
+
         CreateSampler();
     }
+    
 
     private Format ToVkFormat(TextureFormat descFormat)
     {
@@ -114,9 +131,9 @@ public class VulkanTexture : IDisposable, IVkTexture
     {
         colorAttachment.TransitionLayout(ImageLayout.ShaderReadOnlyOptimal);
     }
-    
+
     public void MakeReadOnly(CommandBuffer cmdBuffer)
-    {    
+    {
         colorAttachment.TransitionLayout(ImageLayout.ShaderReadOnlyOptimal, cmdBuffer);
     }
 
@@ -143,7 +160,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             AddressModeV = SamplerAddressMode.Repeat,
             AddressModeW = SamplerAddressMode.Repeat,
             AnisotropyEnable = false,
-            MaxAnisotropy = 1, 
+            MaxAnisotropy = 1,
             BorderColor = BorderColor.IntOpaqueBlack,
             UnnormalizedCoordinates = false,
             CompareEnable = false,
@@ -153,7 +170,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             MinLod = 0,
             MaxLod = 0
         };
-        
+
         fixed (Sampler* samplerPtr = &sampler)
         {
             if (Vk.CreateSampler(LogicalDevice, &samplerCreateInfo, null, samplerPtr) != Result.Success)

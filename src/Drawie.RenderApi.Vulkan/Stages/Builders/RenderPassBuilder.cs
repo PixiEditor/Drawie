@@ -1,4 +1,5 @@
 using Drawie.RenderApi.Vulkan.Exceptions;
+using Drawie.RenderApi.Vulkan.Helpers;
 using Silk.NET.Vulkan;
 
 namespace Drawie.RenderApi.Vulkan.Stages.Builders;
@@ -7,9 +8,10 @@ public class RenderPassBuilder : IDisposable
 {
     public Vk Vk { get; set; }
     public Device LogicalDevice { get; set; }
-    
+
     public bool WithDepthStencil { get; set; }
     public Format DepthStencilFormat { get; set; }
+    public int Samples { get; set; } = 1;
 
     public RenderPassBuilder(Vk vk, Device logicalDevice)
     {
@@ -23,26 +25,31 @@ public class RenderPassBuilder : IDisposable
         DepthStencilFormat = depthStencilFormat;
         return this;
     }
-    
+
+    public RenderPassBuilder WithSamples(int samples)
+    {
+        Samples = samples;
+        return this;
+    }
 
     public unsafe RenderPass Create(Format format, ImageLayout imageLayout)
     {
         AttachmentDescription colorAttachment = new()
         {
             Format = format,
-            Samples = SampleCountFlags.Count1Bit,
+            Samples = FormatExtensions.ToSampleFlags(Samples),
             LoadOp = AttachmentLoadOp.Clear,
             StoreOp = AttachmentStoreOp.Store,
             StencilLoadOp = AttachmentLoadOp.DontCare,
             StencilStoreOp = AttachmentStoreOp.DontCare,
             InitialLayout = ImageLayout.Undefined,
-            FinalLayout = imageLayout
+            FinalLayout = Samples == 1 ? imageLayout : ImageLayout.ColorAttachmentOptimal
         };
 
         AttachmentDescription depthAttachment = new()
         {
             Format = DepthStencilFormat,
-            Samples = SampleCountFlags.Count1Bit,
+            Samples = FormatExtensions.ToSampleFlags(Samples),
             InitialLayout = ImageLayout.Undefined,
             FinalLayout = ImageLayout.DepthStencilAttachmentOptimal,
             LoadOp = AttachmentLoadOp.Clear,
@@ -71,30 +78,70 @@ public class RenderPassBuilder : IDisposable
             PDepthStencilAttachment = WithDepthStencil ? &depthAttachmentRef : null,
         };
 
+        AttachmentDescription colorResolveAttachment = new()
+        {
+            Format = format,
+            Samples = SampleCountFlags.Count1Bit,
+            LoadOp = AttachmentLoadOp.DontCare,
+            StoreOp = AttachmentStoreOp.Store,
+            StencilLoadOp = AttachmentLoadOp.DontCare,
+            StencilStoreOp = AttachmentStoreOp.DontCare,
+            InitialLayout = ImageLayout.Undefined,
+            FinalLayout = ImageLayout.PresentSrcKhr
+        };
+        
+        if (Samples > 1)
+        {
+            AttachmentReference colorResolveAttachmentRef = new()
+            {
+                Attachment = (uint)(WithDepthStencil ? 2 : 1),
+                Layout = ImageLayout.ColorAttachmentOptimal,
+            };
+
+            subpass.PResolveAttachments = &colorResolveAttachmentRef;
+        }
+
         SubpassDependency dependency = new()
         {
             SrcSubpass = Vk.SubpassExternal,
             DstSubpass = 0,
             SrcStageMask = PipelineStageFlags.ColorAttachmentOutputBit,
-            SrcAccessMask = 0,
+            SrcAccessMask = Samples > 1
+                ? AccessFlags.ColorAttachmentWriteBit | AccessFlags.DepthStencilAttachmentWriteBit
+                : AccessFlags.None,
             DstStageMask = PipelineStageFlags.ColorAttachmentOutputBit,
             DstAccessMask = AccessFlags.ColorAttachmentWriteBit
         };
 
+        uint attachmentCount = 1;
+        if (WithDepthStencil) attachmentCount++;
+        if (Samples > 1) attachmentCount++;
+
         AttachmentDescription* attachments = &colorAttachment;
-        if (WithDepthStencil)
+        if (attachmentCount > 1)
         {
-            var attachmentDescriptions = stackalloc AttachmentDescription[2];
+            var attachmentDescriptions = stackalloc AttachmentDescription[(int)attachmentCount];
             attachmentDescriptions[0] = colorAttachment;
-            attachmentDescriptions[1] = depthAttachment;
-            
+            int i = 1;
+            if (WithDepthStencil)
+            {
+                attachmentDescriptions[1] = depthAttachment;
+                i++;
+            }
+
+            if (Samples > 1)
+            {
+                attachmentDescriptions[i] = colorResolveAttachment;
+            }
+
             attachments = attachmentDescriptions;
         }
+
 
         RenderPassCreateInfo renderPassInfo = new()
         {
             SType = StructureType.RenderPassCreateInfo,
-            AttachmentCount = (uint)(WithDepthStencil ? 2 : 1),
+            AttachmentCount = attachmentCount,
             PAttachments = attachments,
             SubpassCount = 1,
             PSubpasses = &subpass,
@@ -107,7 +154,6 @@ public class RenderPassBuilder : IDisposable
 
         return renderPass;
     }
-
 
     public void Dispose()
     {

@@ -1,4 +1,5 @@
 using Drawie.RenderApi.Vulkan.Exceptions;
+using Drawie.RenderApi.Vulkan.Helpers;
 using Drawie.RenderApi.Vulkan.Structs;
 using Silk.NET.Vulkan;
 
@@ -75,7 +76,7 @@ public class GraphicsPipelineBuilder
         return this;
     }
 
-    public unsafe GraphicsPipeline Create(Extent2D swapChainExtent, Format swapChainImageFormat,
+    public unsafe GraphicsPipeline Create(Extent2D extent, Format imageFormat,
         ImageLayout finalLayout,
         ref DescriptorSetLayout descriptorSetLayout)
     {
@@ -84,7 +85,7 @@ public class GraphicsPipelineBuilder
             throw new GraphicsPipelineBuilderException("No render pass was added to the pipeline.");
         if(VertexLayoutBuilder == null) throw new GraphicsPipelineBuilderException("No vertex layout was added to the pipeline.");
 
-        RenderPass renderPass = RenderPassBuilder.Create(swapChainImageFormat, finalLayout);
+        RenderPass renderPass = RenderPassBuilder.Create(imageFormat, finalLayout);
 
         var stages = stackalloc PipelineShaderStageCreateInfo[Stages.Count];
         for (var i = 0; i < Stages.Count; i++) stages[i] = Stages[i].Build();
@@ -114,8 +115,8 @@ public class GraphicsPipelineBuilder
             {
                 X = 0.0f,
                 Y = 0.0f,
-                Width = swapChainExtent.Width,
-                Height = swapChainExtent.Height,
+                Width = extent.Width,
+                Height = extent.Height,
                 MinDepth = 0.0f,
                 MaxDepth = 1.0f
             };
@@ -123,7 +124,7 @@ public class GraphicsPipelineBuilder
             Rect2D scissor = new()
             {
                 Offset = new Offset2D(0, 0),
-                Extent = swapChainExtent
+                Extent = extent
             };
 
             PipelineViewportStateCreateInfo viewportState = new()
@@ -163,7 +164,7 @@ public class GraphicsPipelineBuilder
             {
                 SType = StructureType.PipelineMultisampleStateCreateInfo,
                 SampleShadingEnable = false,
-                RasterizationSamples = SampleCountFlags.Count1Bit
+                RasterizationSamples = FormatExtensions.ToSampleFlags(RenderPassBuilder.Samples)
             };
 
             PipelineColorBlendAttachmentState colorBlendAttachment = new()

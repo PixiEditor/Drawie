@@ -200,7 +200,8 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
 
     public void CreateTextureImage()
     {
-        texture = new VulkanTexture(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, commandPool, context.GraphicsQueue, context.GraphicsQueueFamilyIndex, framebufferSize);
+        texture = new VulkanTexture(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, commandPool, context.GraphicsQueue, context.GraphicsQueueFamilyIndex, 
+            new TextureDesc { Width = framebufferSize.X, Height = framebufferSize.Y, Samples = 1, Depth = DepthFormat.NoDepth, Format = TextureFormat.RGBA8_Unorm });
         context.AddManagedTexture(texture, texture.ImageHandle);
         texture.MakeReadOnly();
     }
@@ -556,7 +557,7 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
             .WithVertexLayout(layout => layout.WithVec2().WithVec3().WithVec2())
             .WithRenderPass(renderPass =>
             {
-                /*TODO: Add some meaningful stuff*/
+                //renderPass.WithSamples(4);
             });
 
         graphicsPipeline = builder.Create(swapChainExtent, swapChainImageFormat, ImageLayout.PresentSrcKhr, ref descriptorSetLayout);
