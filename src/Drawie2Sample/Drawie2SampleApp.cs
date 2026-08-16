@@ -1,4 +1,6 @@
 ﻿using System.Numerics;
+using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Vertie.Core;
 using Drawie.Backend.Vertie.Helpers;
 using Drawie.Host;

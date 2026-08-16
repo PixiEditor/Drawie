@@ -212,13 +212,23 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
             Type = DescriptorType.UniformBuffer,
             DescriptorCount = 1,
         };
+        
+        DescriptorPoolSize poolFragSize = new DescriptorPoolSize()
+        {
+            Type = DescriptorType.CombinedImageSampler,
+            DescriptorCount = 1,
+        };
+
+        DescriptorPoolSize* poolSizes = stackalloc DescriptorPoolSize[2];
+        poolSizes[0] = poolSize;
+        poolSizes[1] = poolFragSize;
 
         DescriptorPoolCreateInfo poolInfo = new()
         {
             SType = StructureType.DescriptorPoolCreateInfo,
-            PoolSizeCount = 1,
+            PoolSizeCount = 2,
+            PPoolSizes = poolSizes,
             MaxSets = 2,// TODO: Check this
-            PPoolSizes = &poolSize
         };
         
         Context.Api.CreateDescriptorPool(Context.LogicalDevice.Device, &poolInfo, null, out var descriptorPool).ThrowOnError("Failed to create descriptor pool.");
