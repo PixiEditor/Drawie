@@ -119,20 +119,6 @@ public static class TextureFramebufferExtensions
             }
 
             cmdList.UpdateUniforms(material.Properties.Values.ToList(), texturesForMaterial, samplers);
-
-            /*for (var i = 0; i < material.Textures.Count; i++)
-            {
-                var materialTexture = material.Textures[i];
-                var sampler = cachedSamplers.GetValueOrDefault(materialTexture);
-                if (sampler == null)
-                {
-                    sampler = device.CreateSampler(new SamplerDesc());
-                    cachedSamplers[materialTexture] = sampler;
-                }
-
-                cmdList.BindTexture(preparedTextures[materialTexture.TextureId], sampler);
-            }*/
-
             cmdList.DrawIndexed(mesh.IndexCount);
         }
 

@@ -155,6 +155,37 @@ public sealed unsafe class VulkanImageAttachment : IDisposable
 
         Layout = newLayout;
     }
+    
+    public void TransitionLayout(
+        ImageLayout oldLayout,
+        ImageLayout newLayout,
+        CommandBuffer? commandBuffer = null)
+    {
+        if (commandBuffer.HasValue)
+        {
+            TransitionLayout(
+                commandBuffer.Value,
+                oldLayout,
+                newLayout);
+
+            Layout = newLayout;
+            return;
+        }
+
+        using var session = new SingleTimeCommandBufferSession(
+            vk,
+            commandPool,
+            device,
+            graphicsQueue);
+
+        TransitionLayout(
+            session.CommandBuffer,
+            oldLayout,
+            newLayout);
+
+        Layout = newLayout;
+    }
+
 
     private void TransitionLayout(
         CommandBuffer commandBuffer,

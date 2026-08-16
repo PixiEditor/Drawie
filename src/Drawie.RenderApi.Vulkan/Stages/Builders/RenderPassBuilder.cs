@@ -87,7 +87,7 @@ public class RenderPassBuilder : IDisposable
             StencilLoadOp = AttachmentLoadOp.DontCare,
             StencilStoreOp = AttachmentStoreOp.DontCare,
             InitialLayout = ImageLayout.Undefined,
-            FinalLayout = ImageLayout.PresentSrcKhr
+            FinalLayout = imageLayout
         };
         
         if (Samples > 1)
@@ -151,7 +151,6 @@ public class RenderPassBuilder : IDisposable
 
             attachments = attachmentDescriptions;
         }
-
 
         RenderPassCreateInfo renderPassInfo = new()
         {

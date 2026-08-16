@@ -219,8 +219,8 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
     {
         EnsureRecording();
 
-        context.DynamicRendering.CmdEndRendering(commandBuffer);
-        //context.Api!.CmdEndRenderPass(commandBuffer);
+        //context.DynamicRendering.CmdEndRendering(commandBuffer);
+        context.Api!.CmdEndRenderPass(commandBuffer);
 
         EndCommandBuffer(commandBuffer);
 
@@ -349,13 +349,13 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
     private void BeginRendering(VulkanRenderTarget target)
     {
-        BeginDynamicRendering(target);
-        //BeginRenderPass(target);
+        //BeginDynamicRendering(target);
+        BeginRenderPass(target);
     }
 
     private unsafe void BeginRenderPass(VulkanRenderTarget target)
     {
-        target.Texture.ColorAttachment.TransitionLayout(ImageLayout.PresentSrcKhr, commandBuffer);
+        target.Texture.MakeWriteable(commandBuffer);
         RenderPassBeginInfo renderPassInfo = new()
         {
             SType = StructureType.RenderPassBeginInfo,
@@ -374,7 +374,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
         ClearValue clearDepth = new()
         {
-            DepthStencil = new ClearDepthStencilValue(0, 0)
+            DepthStencil = new ClearDepthStencilValue(1, 0)
         };
 
         ClearValue clearMsaaResolved = new()
@@ -402,7 +402,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         context.Api!.CmdBeginRenderPass(commandBuffer, &renderPassInfo, SubpassContents.Inline);
     }
 
-    private unsafe void BeginDynamicRendering(VulkanRenderTarget target)
+    /*private unsafe void BeginDynamicRendering(VulkanRenderTarget target)
     {
         target.Texture.MakeWriteable(commandBuffer);
         
@@ -465,7 +465,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             renderingInfo.PDepthAttachment = &depthAttachment;
         
         context.DynamicRendering?.CmdBeginRendering(commandBuffer, &renderingInfo);
-    }
+    }*/
 
     private unsafe void BindBuffers(VulkanBufferGroup group)
     {

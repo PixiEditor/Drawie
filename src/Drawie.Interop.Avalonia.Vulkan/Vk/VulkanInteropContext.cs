@@ -28,8 +28,6 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
         this.gpuInterop = gpuInterop;
     }
 
-    public override KhrDynamicRendering? DynamicRendering { get; } = null; // TODO:
-
     public override void Initialize(IVulkanContextInfo contextInfo)
     {
         if (gpuInterop is null)

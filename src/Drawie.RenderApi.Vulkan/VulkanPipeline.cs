@@ -76,7 +76,7 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
         Builder.WithDepth();
         
         var pipeline = Builder.Create(new Extent2D((uint)Description.Viewport.Width, (uint)Description.Viewport.Height),
-            Format.R8G8B8A8Unorm, ImageLayout.PresentSrcKhr, [program.DescriptorSetLayout]);
+            Format.R8G8B8A8Unorm, ImageLayout.ColorAttachmentOptimal, [program.DescriptorSetLayout]);
 
         return pipeline;
     }
