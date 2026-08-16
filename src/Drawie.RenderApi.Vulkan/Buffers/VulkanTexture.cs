@@ -34,12 +34,23 @@ public class VulkanTexture : IDisposable, IVkTexture
     public VulkanImageAttachment? DepthAttachment => depthAttachment;
     public VulkanImageAttachment? MsaaResolvedColorAttachment => msaaResolvedColorAttachment;
 
+    public uint Attachments
+    {
+        get
+        {
+            uint count = 1;
+            if (DepthAttachment != null) count++;
+            if (MsaaResolvedColorAttachment != null) count++;
+            return count;
+        }
+    }
+
     private VulkanImageAttachment colorAttachment;
     private VulkanImageAttachment? depthAttachment;
     private VulkanImageAttachment? msaaResolvedColorAttachment;
     private Sampler sampler;
 
-   
+
     public VulkanTexture(Vk vk, Device logicalDevice, PhysicalDevice physicalDevice, CommandPool commandPool,
         Queue graphicsQueue, uint queueFamily, TextureDesc desc)
     {
@@ -115,7 +126,7 @@ public class VulkanTexture : IDisposable, IVkTexture
 
         CreateSampler();
     }
-    
+
 
     private Format ToVkFormat(TextureFormat descFormat)
     {

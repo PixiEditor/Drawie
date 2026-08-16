@@ -78,7 +78,7 @@ public class GraphicsPipelineBuilder
 
     public unsafe GraphicsPipeline Create(Extent2D extent, Format imageFormat,
         ImageLayout finalLayout,
-        ref DescriptorSetLayout descriptorSetLayout)
+        DescriptorSetLayout[] descriptorSetLayouts)
     {
         if (Stages.Count == 0) throw new GraphicsPipelineBuilderException("No stages were added to the pipeline.");
         if (RenderPassBuilder == null)
@@ -91,9 +91,15 @@ public class GraphicsPipelineBuilder
         for (var i = 0; i < Stages.Count; i++) stages[i] = Stages[i].Build();
 
         var (bindingDescription, attributeDescriptions) = VertexLayoutBuilder.Build();
+        
+        DescriptorSetLayout* layouts = stackalloc DescriptorSetLayout[descriptorSetLayouts.Length];
+        for (var i = 0; i < descriptorSetLayouts.Length; i++)
+        {
+            var descriptorSetLayout = descriptorSetLayouts[i];
+            layouts[i] = descriptorSetLayout;
+        }
 
         fixed (VertexInputAttributeDescription* attributeDescriptionsPtr = attributeDescriptions)
-        fixed (DescriptorSetLayout* descriptorPtr = &descriptorSetLayout)
         {
             PipelineVertexInputStateCreateInfo vertexInputInfo = new()
             {
@@ -192,8 +198,8 @@ public class GraphicsPipelineBuilder
             {
                 SType = StructureType.PipelineLayoutCreateInfo,
                 PushConstantRangeCount = 0,
-                SetLayoutCount = 1,
-                PSetLayouts = descriptorPtr
+                SetLayoutCount = (uint)descriptorSetLayouts.Length,
+                PSetLayouts = layouts
             };
 
             if (Vk!.CreatePipelineLayout(LogicalDevice, in pipelineLayoutInfo, null, out var pipelineLayout) !=

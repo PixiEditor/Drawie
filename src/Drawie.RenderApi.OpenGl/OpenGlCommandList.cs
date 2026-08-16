@@ -2,6 +2,7 @@ using Drawie.RenderApi.Abstraction.Buffers;
 using Drawie.RenderApi.Abstraction.CommandRecording;
 using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Abstraction.RenderTargets;
+using Drawie.RenderApi.Abstraction.Shaders;
 using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.OpenGL.Extensions;
 using Silk.NET.OpenGL;
@@ -17,6 +18,7 @@ public class OpenGlCommandList(GL api) : CommandList
     private uint originalFb;
 
     private int lastBoundTextureSlot = 0;
+    private IPipeline boundPipeline;
 
     public override void BeginRenderPass(IRenderTarget fb)
     {
@@ -32,7 +34,22 @@ public class OpenGlCommandList(GL api) : CommandList
 
     public override void SetPipeline(IPipeline pipeline)
     {
-        RecordInstruction(() => pipeline.Apply(this));
+        boundPipeline = pipeline;
+    }
+    
+    public override void BindPipeline()
+    {
+        RecordInstruction(() => boundPipeline.Apply(this));
+    }
+
+    public override PreparedTexture PrepareTexture(ITexture texture)
+    {
+        return new PreparedTexture(texture.TextureId);
+    }
+
+    public override void UpdateUniforms(List<UniformBlock> blocks, List<PreparedTexture> textures, List<ISampler> samplers)
+    {
+        
     }
 
     public override void SetBuffers(IBufferGroup bufferGroup)
@@ -40,7 +57,7 @@ public class OpenGlCommandList(GL api) : CommandList
         RecordInstruction(() => { Api.BindVertexArray(bufferGroup.Handle); });
     }
 
-    public override void BindTexture(ITexture texture, ISampler sampler)
+    public override void BindTexture(PreparedTexture texture, ISampler sampler)
     {
         if (sampler is not OpenGlSampler openGlSampler) throw new ArgumentException("Cannot bind non opengl samplers");
         // if vk:binding has binding set to 1, we need to update it at Texture1, generally, for binding transformation matrices we want to use 
@@ -50,7 +67,7 @@ public class OpenGlCommandList(GL api) : CommandList
         {
             int textureUnit = lastBoundTextureSlot + 1;
             Api.ActiveTexture(TextureUnit.Texture0 + textureUnit);
-            Api.BindTexture(TextureTarget.Texture2D, (uint)texture.TextureId);
+            Api.BindTexture(TextureTarget.Texture2D, (uint)texture.Handle);
             Api.BindSampler((uint)textureUnit, openGlSampler.Handle);
             lastBoundTextureSlot++;
         });

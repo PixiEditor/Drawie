@@ -22,6 +22,7 @@ public static class TextureFramebufferExtensions
     private static IRenderTarget? cachedRenderTarget;
 
     private static ICommandList? cmdList;
+    private static Dictionary<ulong, PreparedTexture> preparedTextures = new Dictionary<ulong, PreparedTexture>();
 
     public static void DrawScene(this TextureFramebuffer fb, Scene scene, Camera camera,
         RenderOptions options = default)
@@ -50,7 +51,8 @@ public static class TextureFramebufferExtensions
             });
         }
 
-        var shader = GetOrCreateShaderProgram(device, scene);
+        preparedTextures.Clear();
+        var program = GetOrCreateShaderProgram(device, scene);
 
         var pipeline = device.CreatePipeline(new PipelineDesc()
         {
@@ -65,14 +67,26 @@ public static class TextureFramebufferExtensions
                 RenderMode = options.RenderMode,
                 Samples = 1
             },
-            ShaderProgram = shader,
+            ShaderProgram = program,
             Viewport = new RectI(0, 0, fb.Size.X, fb.Size.Y),
         });
 
         cmdList ??= device.CreateCommandList();
-        cmdList.BeginRenderPass(cachedRenderTarget);
+
+        foreach (var mesh in scene.Meshes)
+        {
+            foreach (var texture in mesh.Material.Textures)
+            {
+                if (preparedTextures.ContainsKey(texture.TextureId)) continue;
+                preparedTextures.Add(texture.TextureId, cmdList.PrepareTexture(texture));
+            }
+        }
 
         cmdList.SetPipeline(pipeline);
+
+        cmdList.BeginRenderPass(cachedRenderTarget);
+        cmdList.BindPipeline();
+
         foreach (var mesh in scene.Meshes)
         {
             if (!mesh.BuffersInitialized)
@@ -86,9 +100,27 @@ public static class TextureFramebufferExtensions
             material.Use(camera);
             material.PrepareForObject(mesh.Transform);
 
-            shader.UpdateUniforms(material.Properties.Values.ToList());
+            List<PreparedTexture> texturesForMaterial = new List<PreparedTexture>();
+            List<ISampler> samplers = new List<ISampler>();
+            foreach (var materialTexture in material.Textures)
+            {
+                if (preparedTextures.TryGetValue(materialTexture.TextureId, out var texture))
+                {
+                    texturesForMaterial.Add(texture);
+                    var sampler = cachedSamplers.GetValueOrDefault(materialTexture);
+                    if (sampler == null)
+                    {
+                        sampler = device.CreateSampler(new SamplerDesc());
+                        cachedSamplers[materialTexture] = sampler;
+                    }
 
-            for (var i = 0; i < material.Textures.Count; i++)
+                    samplers.Add(sampler);
+                }
+            }
+
+            cmdList.UpdateUniforms(material.Properties.Values.ToList(), texturesForMaterial, samplers);
+
+            /*for (var i = 0; i < material.Textures.Count; i++)
             {
                 var materialTexture = material.Textures[i];
                 var sampler = cachedSamplers.GetValueOrDefault(materialTexture);
@@ -98,8 +130,8 @@ public static class TextureFramebufferExtensions
                     cachedSamplers[materialTexture] = sampler;
                 }
 
-                cmdList.BindTexture(materialTexture, sampler);
-            }
+                cmdList.BindTexture(preparedTextures[materialTexture.TextureId], sampler);
+            }*/
 
             cmdList.DrawIndexed(mesh.IndexCount);
         }
@@ -119,7 +151,8 @@ public static class TextureFramebufferExtensions
 
         var program =
             graphicsDevice.CreateShaderProgram(new ShaderProgramDesc(
-                scene.Meshes.SelectMany(x => x.Material.Shaders).Select(x => new ShaderDesc(x.EntryName, x.ShaderBytes, x.ShaderType))));
+                scene.Meshes.SelectMany(x => x.Material.Shaders)
+                    .Select(x => new ShaderDesc(x.EntryName, x.ShaderBytes, x.ShaderType))));
         cachedShaderPrograms.Add(scene, program);
 
         return program;

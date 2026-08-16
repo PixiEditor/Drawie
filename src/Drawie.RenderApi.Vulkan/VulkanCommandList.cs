@@ -2,9 +2,11 @@ using Drawie.RenderApi.Abstraction.Buffers;
 using Drawie.RenderApi.Abstraction.CommandRecording;
 using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Abstraction.RenderTargets;
+using Drawie.RenderApi.Abstraction.Shaders;
 using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.RenderApi.Vulkan.Exceptions;
+using Drawie.RenderApi.Vulkan.Helpers;
 using Silk.NET.Vulkan;
 
 namespace Drawie.RenderApi.Vulkan;
@@ -18,6 +20,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
     private CommandBuffer commandBuffer;
     private bool recording;
 
+    private Dictionary<string, UniformBuffer> uniformBuffers = new Dictionary<string, UniformBuffer>();
     private VulkanRenderTarget? renderTarget;
     private VulkanPipeline? pipeline;
 
@@ -27,6 +30,8 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
     {
         this.context = context;
         this.commandPool = commandPool;
+        commandBuffer = AllocateCommandBuffer();
+        BeginCommandBuffer(commandBuffer);
     }
 
     public override void BeginRenderPass(IRenderTarget fb)
@@ -40,12 +45,9 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
                 "Render target must be a Vulkan render target.",
                 nameof(fb));
 
-        pipeline = null;
         renderTarget = target;
 
-        commandBuffer = AllocateCommandBuffer();
-
-        BeginCommandBuffer(commandBuffer);
+        renderTarget.CreateFramebufferFor(pipeline.GraphicsPipeline.VkRenderPass);
 
         recording = true;
 
@@ -54,14 +56,9 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
     public override void SetPipeline(IPipeline pipeline)
     {
-        if (!recording)
-            throw new InvalidOperationException(
-                "BeginRenderPass must be called first.");
-
         if (pipeline is not VulkanPipeline vkPipeline) throw new ArgumentException("Only VulkanPipeline is supported");
-
-        pipeline.Apply(this);
         this.pipeline = vkPipeline;
+        //vkPipeline.DescriptorPool.Reset();
     }
 
     public override void SetBuffers(IBufferGroup bufferGroup)
@@ -78,8 +75,115 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         BindBuffers(vkBuffers);
     }
 
+    public override void BindPipeline()
+    {
+        if (!recording)
+            throw new InvalidOperationException(
+                "BeginRenderPass must be called first.");
+
+        if (pipeline == null) throw new NullReferenceException("Pipeline is was not set");
+
+        pipeline.Apply(this);
+    }
+
+    public override PreparedTexture PrepareTexture(ITexture texture)
+    {
+        var vkTex = context.ManagedTextures[texture.TextureId];
+
+        if (vkTex is not VulkanTexture vkTexture) throw new ArgumentException("Only IVkTexture's are valid");
+        vkTexture.MakeReadOnly(commandBuffer);
+
+        return new PreparedTexture(texture.TextureId);
+    }
+
+    public override void UpdateUniforms(List<UniformBlock> blocks, List<PreparedTexture> textures,
+        List<ISampler> samplers)
+    {
+        foreach (var block in blocks)
+        {
+            UniformBuffer? buffer = null;
+            if (uniformBuffers.TryGetValue(block.Name, out var uniformBuffer))
+            {
+                buffer = uniformBuffer;
+            }
+            else
+            {
+                buffer = new UniformBuffer(context.Api, context.LogicalDevice.Device, context.PhysicalDevice,
+                    (ulong)block.ShaderLayout.Size);
+            }
+
+            UniformUtility.SerializeToBuffer(block, buffer);
+            // TODO first texture is temporary as shader only supports single texture
+            UpdateUniformDescriptor(buffer, (ulong)block.ShaderLayout.Size, textures.FirstOrDefault(), samplers.FirstOrDefault());
+        }
+    }
+
+    private unsafe void UpdateUniformDescriptor(UniformBuffer buffer, ulong size, PreparedTexture texture, ISampler sampler)
+    {
+        var vkTexture = context.ManagedTextures[texture.Handle] as VulkanTexture;
+        var vkSampler = sampler as VulkanSampler;
+        // TODO: better id
+        var set = pipeline.DescriptorPool.GetOrAllocateDescriptorSet(0, buffer.VkBuffer.Handle);
+        DescriptorBufferInfo bufferInfo = new()
+        {
+            Buffer = buffer.VkBuffer,
+            Offset = 0,
+            Range = size
+        };
+
+        WriteDescriptorSet write = new()
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = set,
+            DstBinding = 0,
+            DstArrayElement = 0,
+            DescriptorCount = 1,
+            DescriptorType = DescriptorType.UniformBuffer,
+            PBufferInfo = &bufferInfo
+        };
+        
+        var imageInfo = new DescriptorImageInfo
+        {
+            Sampler = vkSampler.VkSampler,
+            ImageView = vkTexture.ColorAttachment.View,
+            ImageLayout = ImageLayout.ShaderReadOnlyOptimal
+        };
+
+        var writeImgSampler = new WriteDescriptorSet
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = set,
+            DstBinding = 1,
+            DstArrayElement = 0,
+            DescriptorCount = 1,
+            DescriptorType = DescriptorType.CombinedImageSampler,
+            PImageInfo = &imageInfo
+        };
+
+        WriteDescriptorSet* sets = stackalloc WriteDescriptorSet[2];
+        sets[0] = write;
+        sets[1] = writeImgSampler;
+
+        context.Api.UpdateDescriptorSets(
+            context.LogicalDevice.Device,
+            2,
+            sets,
+            0,
+            null);
+        
+        context.Api!.CmdBindDescriptorSets(
+            commandBuffer,
+            PipelineBindPoint.Graphics,
+            pipeline.GraphicsPipeline.VkPipelineLayout,
+            0,
+            1,
+            in set,
+            0,
+            null);
+    }
+
     public override void BindTexture(
-        ITexture texture,
+        PreparedTexture texture,
         ISampler sampler)
     {
         if (!recording)
@@ -91,11 +195,9 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
                 "Sampler must be a Vulkan sampler.",
                 nameof(sampler));
 
-        var vkTex = context.ManagedTextures[texture.TextureId];
+        var vkTex = context.ManagedTextures[texture.Handle];
 
         if (vkTex is not VulkanTexture vkTexture) throw new ArgumentException("Only IVkTexture's are valid");
-
-        vkTexture.MakeReadOnly(commandBuffer);
 
         BindTextureDescriptor(
             vkTexture,
@@ -115,11 +217,12 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
     {
         EnsureRecording();
 
-        context.Api!.CmdEndRendering(commandBuffer);
+        context.Api!.CmdEndRenderPass(commandBuffer);
 
         EndCommandBuffer(commandBuffer);
 
         recording = false;
+        pipeline = null;
 
         return new VulkanRecordedRenderPass(context, commandBuffer, commandPool);
     }
@@ -136,7 +239,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
                 "Destination must be a Vulkan render target.",
                 nameof(blitTo));
 
-        context.Api!.CmdEndRendering(commandBuffer);
+        context.Api!.CmdEndRenderPass(commandBuffer);
 
         Blit(renderTarget!.Texture, destination);
 
@@ -152,6 +255,47 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         if (!recording)
             throw new InvalidOperationException(
                 "No Vulkan render pass is currently being recorded.");
+    }
+
+    private unsafe void BindTextureDescriptor(
+        VulkanTexture texture,
+        VulkanSampler sampler)
+    {
+        var set = pipeline.DescriptorPool.GetOrAllocateDescriptorSet(1, texture.ImageHandle);
+        var imageInfo = new DescriptorImageInfo
+        {
+            Sampler = sampler.VkSampler,
+            ImageView = texture.ColorAttachment.View,
+            ImageLayout = ImageLayout.ShaderReadOnlyOptimal
+        };
+
+        var write = new WriteDescriptorSet
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = set,
+            DstBinding = 1,
+            DstArrayElement = 0,
+            DescriptorCount = 1,
+            DescriptorType = DescriptorType.CombinedImageSampler,
+            PImageInfo = &imageInfo
+        };
+
+        context.Api!.UpdateDescriptorSets(
+            context.LogicalDevice.Device,
+            1,
+            &write,
+            0,
+            null);
+
+        context.Api!.CmdBindDescriptorSets(
+            commandBuffer,
+            PipelineBindPoint.Graphics,
+            pipeline.GraphicsPipeline.VkPipelineLayout,
+            1,
+            1,
+            in set,
+            0,
+            null);
     }
 
     private unsafe CommandBuffer AllocateCommandBuffer()
@@ -202,8 +346,10 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
     private unsafe void BeginRendering(VulkanRenderTarget target)
     {
+        target.Texture.ColorAttachment.TransitionLayout(ImageLayout.PresentSrcKhr, commandBuffer);
+        /*
         target.Texture.MakeWriteable(commandBuffer);
-
+        
         RenderingAttachmentInfo colorAttachment = new()
         {
             SType = StructureType.RenderingAttachmentInfo,
@@ -261,10 +407,54 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
         if (target.Texture.DepthAttachment is not null)
             renderingInfo.PDepthAttachment = &depthAttachment;
+            */
 
-        context.Api!.CmdBeginRendering(
-            commandBuffer,
-            in renderingInfo);
+
+        RenderPassBeginInfo renderPassInfo = new()
+        {
+            SType = StructureType.RenderPassBeginInfo,
+            RenderPass = pipeline.GraphicsPipeline.VkRenderPass,
+            Framebuffer = renderTarget.Framebuffer.Value,
+            RenderArea = new Rect2D
+            {
+                Offset = new Offset2D(0, 0),
+                Extent = new Extent2D((uint)renderTarget.Size.X, (uint)renderTarget.Size.Y)
+            }
+        };
+
+        ClearValue clearColor = new()
+        {
+            Color = new ClearColorValue() { Float32_0 = 0, Float32_1 = 0, Float32_2 = 0, Float32_3 = 1 }
+        };
+
+        ClearValue clearDepth = new()
+        {
+            DepthStencil = new ClearDepthStencilValue(0, 0)
+        };
+
+        ClearValue clearMsaaResolved = new()
+        {
+            Color = new ClearColorValue() { Float32_0 = 0, Float32_1 = 0, Float32_2 = 0, Float32_3 = 1 }
+        };
+
+        ClearValue* clearValues = stackalloc ClearValue[(int)target.Texture.Attachments];
+        clearValues[0] = clearColor;
+        int i = 0;
+        if (target.Texture.DepthAttachment != null)
+        {
+            clearValues[1] = clearDepth;
+            i++;
+        }
+
+        if (target.Texture.MsaaResolvedColorAttachment != null)
+        {
+            clearValues[i] = clearMsaaResolved;
+        }
+
+        renderPassInfo.ClearValueCount = target.Texture.Attachments;
+        renderPassInfo.PClearValues = clearValues;
+
+        context.Api!.CmdBeginRenderPass(commandBuffer, &renderPassInfo, SubpassContents.Inline);
     }
 
     private unsafe void BindBuffers(VulkanBufferGroup group)
@@ -294,47 +484,6 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
                     IndexType.Uint32);
             }
         });
-    }
-
-    private unsafe void BindTextureDescriptor(
-        VulkanTexture texture,
-        VulkanSampler sampler)
-    {
-        var imageInfo = new DescriptorImageInfo
-        {
-            Sampler = sampler.VkSampler,
-            ImageView = texture.ColorAttachment.View,
-            ImageLayout = ImageLayout.ShaderReadOnlyOptimal
-        };
-
-        var write = new WriteDescriptorSet
-        {
-            SType = StructureType.WriteDescriptorSet,
-            DstSet = pipeline.DescriptorSet,
-            DstBinding = 1,
-            DstArrayElement = 0,
-            DescriptorCount = 1,
-            DescriptorType = DescriptorType.CombinedImageSampler,
-            PImageInfo = &imageInfo
-        };
-
-        context.Api!.UpdateDescriptorSets(
-            context.LogicalDevice.Device,
-            1,
-            &write,
-            0,
-            null);
-
-        var set = pipeline.DescriptorSet;
-        context.Api!.CmdBindDescriptorSets(
-            commandBuffer,
-            PipelineBindPoint.Graphics,
-            pipeline.GraphicsPipeline.VkPipelineLayout,
-            0,
-            1,
-            in set,
-            0,
-            null);
     }
 
     private void Blit(
@@ -391,6 +540,10 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
     public unsafe void Dispose()
     {
+        foreach (var uniformBuffer in uniformBuffers)
+        {
+            uniformBuffer.Value.Dispose();
+        }
         context.Api.DestroyCommandPool(context.LogicalDevice.Device, commandPool, null);
     }
 }

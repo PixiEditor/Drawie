@@ -560,7 +560,7 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
                 renderPass.WithSamples(1);
             });
 
-        graphicsPipeline = builder.Create(swapChainExtent, swapChainImageFormat, ImageLayout.PresentSrcKhr, ref descriptorSetLayout);
+        graphicsPipeline = builder.Create(swapChainExtent, swapChainImageFormat, ImageLayout.PresentSrcKhr, [descriptorSetLayout]);
     }
 
     private unsafe void CreateImageViews()

@@ -210,6 +210,12 @@ public sealed unsafe class VulkanImageAttachment : IDisposable
                 sourceStage =
                     PipelineStageFlags.FragmentShaderBit;
                 break;
+            
+            case ImageLayout.PresentSrcKhr:
+                barrier.SrcAccessMask = 0;
+                sourceStage =
+                    PipelineStageFlags.BottomOfPipeBit;
+                break;
 
             default:
                 barrier.SrcAccessMask = AccessFlags.MemoryReadBit;
@@ -241,6 +247,12 @@ public sealed unsafe class VulkanImageAttachment : IDisposable
                     AccessFlags.ShaderReadBit;
                 destinationStage =
                     PipelineStageFlags.FragmentShaderBit;
+                break;
+            
+            case ImageLayout.PresentSrcKhr:
+                barrier.DstAccessMask = 0;
+                destinationStage =
+                    PipelineStageFlags.BottomOfPipeBit;
                 break;
 
             default:

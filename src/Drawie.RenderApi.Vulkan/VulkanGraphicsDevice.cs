@@ -129,7 +129,7 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
     public IRenderTarget CreateRenderTarget(TextureDesc textureDesc)
     {
         var texture = (VulkanTexture)CreateTexture(textureDesc);
-        return new VulkanRenderTarget(texture, new VecI(textureDesc.Width, textureDesc.Height));
+        return new VulkanRenderTarget(context, texture, new VecI(textureDesc.Width, textureDesc.Height));
     }
 
     public IBufferGroup CreateBufferGroup()

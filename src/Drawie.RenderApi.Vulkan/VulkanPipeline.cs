@@ -17,7 +17,7 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
 
     public Pipeline Pipeline { get; }
     public GraphicsPipeline GraphicsPipeline => graphicsPipeline;
-    public DescriptorSet DescriptorSet => program.DescriptorSet;
+    public VulkanDescriptorPool DescriptorPool => program.DescriptorPool;
 
     public GraphicsPipelineBuilder Builder { get; }
 
@@ -50,9 +50,10 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
             PipelineBindPoint.Graphics,
             Pipeline);
 
-        var descriptorSet = program.DescriptorSet;
+        /*
         context.Api.CmdBindDescriptorSets(commandList.CommandBuffer, PipelineBindPoint.Graphics,
-            GraphicsPipeline.VkPipelineLayout, 0, 1, &descriptorSet, 0, null);
+            GraphicsPipeline.VkPipelineLayout, 0, 1, in descriptorSet, 0, null);
+    */
     }
 
     private GraphicsPipeline CreatePipeline()
@@ -73,9 +74,9 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
                 .WithSamples(Description.Rasterizer.Samples);
         });
         Builder.WithDepth();
-        var descriptorSetLayout = program.DescriptorSetLayout;
+        
         var pipeline = Builder.Create(new Extent2D((uint)Description.Viewport.Width, (uint)Description.Viewport.Height),
-            Format.R8G8B8A8Unorm, ImageLayout.PresentSrcKhr, ref descriptorSetLayout);
+            Format.R8G8B8A8Unorm, ImageLayout.PresentSrcKhr, [program.DescriptorSetLayout]);
 
         return pipeline;
     }

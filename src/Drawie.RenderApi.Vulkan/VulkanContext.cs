@@ -8,6 +8,7 @@ using Silk.NET.Core;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.EXT;
+using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace Drawie.RenderApi.Vulkan;
 
@@ -38,6 +39,7 @@ public abstract class VulkanContext : IDisposable, IVulkanContext, IGraphicsCont
     public GpuInfo GpuInfo { get; set; }
 
     public IReadOnlyDictionary<ulong, IVkTexture> ManagedTextures => managedTextures;
+    
     
     private Dictionary<ulong, IVkTexture> managedTextures = new Dictionary<ulong, IVkTexture>();
     
