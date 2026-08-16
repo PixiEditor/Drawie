@@ -44,7 +44,14 @@ public class OpenGlPipeline : IPipeline
         {
             Api.Disable(EnableCap.DepthTest);
         }
+
+        if (Description.Rasterizer.Samples != 1)
+        {
+            Api.Enable(EnableCap.Multisample);
+        }
         
+        Api.Enable(EnableCap.CullFace);
+        Api.CullFace(TriangleFace.Back);
         Api.ClearColor(0, 0, 0, 1);
         Api.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
         Api.PolygonMode(TriangleFace.FrontAndBack, Description.Rasterizer.RenderMode == RenderMode.Wireframe ? PolygonMode.Line : PolygonMode.Fill);

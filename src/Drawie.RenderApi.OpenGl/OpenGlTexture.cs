@@ -8,6 +8,7 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
 
     public int Width { get; }
     public int Height { get; }
+    public int Samples { get; }
 
     private GL Api { get; }
 
@@ -17,30 +18,44 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
         Api = api;
         Width = width;
         Height = height;
+        Samples = 1;
     }
 
-    public unsafe OpenGlTexture(GL api, int width, int height)
+    public unsafe OpenGlTexture(GL api, int width, int height, int samples)
     {
         Api = api;
 
         Width = width;
         Height = height;
+        Samples = samples;
 
         TextureId = Api.GenTexture();
 
         Activate(0);
         Bind();
 
-        Api.TexImage2D(
-            TextureTarget.Texture2D,
-            0,
-            InternalFormat.Rgba,
-            (uint)width,
-            (uint)height,
-            0,
-            PixelFormat.Rgba,
-            PixelType.UnsignedByte,
-            null);
+        if (samples == 1)
+        {
+            Api.TexImage2D(
+                TextureTarget.Texture2D,
+                0,
+                InternalFormat.Rgba,
+                (uint)width,
+                (uint)height,
+                0,
+                PixelFormat.Rgba,
+                PixelType.UnsignedByte,
+                null);
+        }
+        else
+        {
+            Api.TexImage2DMultisample(
+                TextureTarget.Texture2DMultisample,
+                (uint)samples,
+                InternalFormat.Rgb,
+                (uint)width,
+                (uint)height, true);
+        }
 
         ApplyParameters();
     }
@@ -95,8 +110,9 @@ public class OpenGlTexture : IOpenGlTexture, IDisposable
 
     public void Bind()
     {
+        var target = Samples == 1 ? TextureTarget.Texture2D : TextureTarget.Texture2DMultisample;
         Api.BindTexture(
-            TextureTarget.Texture2D,
+            target,
             (uint)TextureId);
     }
 

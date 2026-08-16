@@ -32,11 +32,11 @@ public class VulkanTexture : IDisposable, IVkTexture
 
     public VulkanImageAttachment ColorAttachment => colorAttachment;
     public VulkanImageAttachment? DepthAttachment => depthAttachment;
-    public VulkanImageAttachment? MsaaResolveColorAttachment => msaaResolveAttachment;
+    public VulkanImageAttachment? MsaaResolvedColorAttachment => msaaResolvedColorAttachment;
 
     private VulkanImageAttachment colorAttachment;
     private VulkanImageAttachment? depthAttachment;
-    private VulkanImageAttachment? msaaResolveAttachment;
+    private VulkanImageAttachment? msaaResolvedColorAttachment;
     private Sampler sampler;
 
    
@@ -95,7 +95,7 @@ public class VulkanTexture : IDisposable, IVkTexture
 
         if (desc.Samples > 1)
         {
-            msaaResolveAttachment = new VulkanImageAttachment(
+            msaaResolvedColorAttachment = new VulkanImageAttachment(
                 Vk,
                 LogicalDevice,
                 PhysicalDevice,
@@ -110,7 +110,7 @@ public class VulkanTexture : IDisposable, IVkTexture
                 ImageUsageFlags.ColorAttachmentBit,
                 ImageAspectFlags.ColorBit, SampleCountFlags.Count1Bit);
 
-            msaaResolveAttachment.TransitionLayout(ImageLayout.ColorAttachmentOptimal);
+            msaaResolvedColorAttachment.TransitionLayout(ImageLayout.ColorAttachmentOptimal);
         }
 
         CreateSampler();

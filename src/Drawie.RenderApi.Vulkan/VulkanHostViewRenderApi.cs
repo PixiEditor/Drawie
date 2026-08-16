@@ -557,7 +557,7 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
             .WithVertexLayout(layout => layout.WithVec2().WithVec3().WithVec2())
             .WithRenderPass(renderPass =>
             {
-                //renderPass.WithSamples(4);
+                renderPass.WithSamples(1);
             });
 
         graphicsPipeline = builder.Create(swapChainExtent, swapChainImageFormat, ImageLayout.PresentSrcKhr, ref descriptorSetLayout);

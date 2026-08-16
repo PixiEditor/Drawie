@@ -32,7 +32,7 @@ public class OpenGlDevice : IGraphicsDevice
 
     public ITexture CreateTexture(TextureDesc desc)
     {
-        var texture =  new OpenGlTexture(Api, desc.Width, desc.Height);
+        var texture = new OpenGlTexture(Api, desc.Width, desc.Height, desc.Samples);
         context.AddManagedTexture(texture);
         return texture;
     }
@@ -114,7 +114,7 @@ public class OpenGlDevice : IGraphicsDevice
 
     public IRenderTarget CreateRenderTarget(TextureDesc textureDesc)
     {
-        return new OpenGlRenderTarget(Api, textureDesc.Width, textureDesc.Height, textureDesc.Depth);
+        return new OpenGlRenderTarget(Api, textureDesc);
     }
 
     public IBufferGroup CreateBufferGroup()

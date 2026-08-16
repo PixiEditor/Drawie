@@ -20,22 +20,20 @@ public sealed class OpenGlRenderTarget : IDisposable, IRenderTarget
 
     public OpenGlRenderTarget(
         GL api,
-        int width,
-        int height,
-        DepthFormat depth)
+        TextureDesc desc)
     {
         Api = api;
 
         Color = new OpenGlTexture(
             api,
-            width,
-            height);
+            desc.Width,
+            desc.Height, desc.Samples);
 
-        if (depth != DepthFormat.NoDepth)
+        if (desc.Depth != DepthFormat.NoDepth)
             Depth = new OpenGlDepthBuffer(
                 api,
-                width,
-                height, depth);
+                desc.Width,
+                desc.Height, desc.Depth, desc.Samples);
 
         SurfaceId = Api.GenFramebuffer();
 
@@ -43,10 +41,11 @@ public sealed class OpenGlRenderTarget : IDisposable, IRenderTarget
             FramebufferTarget.Framebuffer,
             (uint)SurfaceId);
 
+        var target = desc.Samples == 1 ? TextureTarget.Texture2D : TextureTarget.Texture2DMultisample;
         Api.FramebufferTexture2D(
             FramebufferTarget.Framebuffer,
             FramebufferAttachment.ColorAttachment0,
-            TextureTarget.Texture2D,
+            target,
             (uint)Color.TextureId,
             0);
 
@@ -61,7 +60,6 @@ public sealed class OpenGlRenderTarget : IDisposable, IRenderTarget
 
         var status = Api.CheckFramebufferStatus(
             FramebufferTarget.Framebuffer);
-
         if (status != GLEnum.FramebufferComplete)
         {
             throw new InvalidOperationException(
@@ -71,13 +69,6 @@ public sealed class OpenGlRenderTarget : IDisposable, IRenderTarget
         Api.BindFramebuffer(
             FramebufferTarget.Framebuffer,
             0);
-    }
-
-    public void Bind()
-    {
-        Api.BindFramebuffer(
-            FramebufferTarget.Framebuffer,
-            (uint)SurfaceId);
     }
 
     public void Dispose()

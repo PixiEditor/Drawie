@@ -235,10 +235,10 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             };
         }
 
-        if (target.Texture.MsaaResolveColorAttachment != null)
+        if (target.Texture.MsaaResolvedColorAttachment != null)
         {
             colorAttachment.ResolveMode = ResolveModeFlags.AverageBit;
-            colorAttachment.ResolveImageView = target.Texture.MsaaResolveColorAttachment.View;
+            colorAttachment.ResolveImageView = target.Texture.MsaaResolvedColorAttachment.View;
             colorAttachment.ResolveImageLayout = ImageLayout.ColorAttachmentOptimal;
         }
 
