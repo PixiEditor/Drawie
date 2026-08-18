@@ -553,6 +553,14 @@ namespace Drawie.Skia.Implementations
             return null;
         }
 
+        private static string RemoveLastOccurance(string text, string toRemove)
+        {
+            int index = text.LastIndexOf(toRemove, StringComparison.Ordinal);
+            return index < 0 ? 
+                text : 
+                text.Substring(0, index) + text.Substring(index + toRemove.Length);
+        }
+        
         private static bool TryDetectType(string lastString, string name, out UniformValueType? detectedType)
         {
             if (!lastString.Contains("uniform ", StringComparison.InvariantCultureIgnoreCase))
@@ -561,7 +569,7 @@ namespace Drawie.Skia.Implementations
                 return false;
             }
 
-            string nameLessBlock = lastString.Replace(name, string.Empty);
+            string nameLessBlock = RemoveLastOccurance(lastString, name);
 
             if (nameLessBlock.Contains("color", StringComparison.InvariantCultureIgnoreCase))
             {

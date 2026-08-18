@@ -9,6 +9,8 @@ public partial class BuiltInFunctions
 
     private const string Epsilon = "1e-10";
 
+    public Expression GetUnpremultiply(Expression rgbaHalf4) => Call(Unpremultiply, rgbaHalf4);
+    
     public Expression GetRgbToHsv(Expression rgba) => Call(RgbToHsv, rgba);
 
     public Expression GetRgbToHsl(Expression rgba) => Call(RgbToHsl, rgba);
@@ -64,6 +66,17 @@ public partial class BuiltInFunctions
 
         usedFunctions.Add(function);
     }
+
+    private static readonly BuiltInFunction<Half4> Unpremultiply = new(
+        "half4 color",
+        nameof(Unpremultiply),
+        """
+        if (color.a <= 0.0) {
+            return half4(0, 0, 0, 0);
+        }
+        return half4(color.rgb / color.a, color.a);
+        """
+    );
 
     // Taken from here https://www.shadertoy.com/view/4dKcWK
     private static readonly BuiltInFunction<Half3> HueToRgb = new(
