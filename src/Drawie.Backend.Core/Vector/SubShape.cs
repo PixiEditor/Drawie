@@ -260,6 +260,11 @@ public class SubShape
         return newPath;
     }
 
+    public VectorPathData ToPathData(VectorPath? appendTo = null)
+    {
+        return new VectorPathData(ToPath(appendTo));
+    }
+
     private void AddVerbToPath(Verb verb, VectorPath newPath)
     {
         if (verb.IsEmptyVerb())

@@ -362,14 +362,16 @@ namespace Drawie.Skia.Implementations
                 if (skSurface != null)
                 {
                     var surfaceImpl = _surfaceImpl;
-                    if (!surfaceImpl.TryGetInstance(skSurface.Handle, out var surface))
+                    IntPtr? foundHandle = _surfaceImpl.FindManagedInstanceHandle(skSurface);
+                    if (foundHandle == null)
                     {
-                        surfaceImpl.AddManagedInstance(skSurface.Handle, skSurface);
-                        surface = skSurface;
+                        foundHandle = surfaceImpl.AddManagedInstance(skSurface);
                     }
 
-                    return surface != null ? new DrawingSurface(surface.Handle, canvas) : null;
+                    return new DrawingSurface(foundHandle.Value, canvas);
                 }
+
+                return null;
             }
 
             throw new ObjectDisposedException(nameof(canvas));

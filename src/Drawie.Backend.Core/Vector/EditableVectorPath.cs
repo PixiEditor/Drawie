@@ -52,6 +52,12 @@ public class EditableVectorPath
         }
     }
 
+    public EditableVectorPath(VectorPathData dataPath)
+    {
+        Path = dataPath.ToPath();
+        UpdatePathFrom(Path);
+    }
+
     public int IndexOf(SubShape subShape)
     {
         return subShapes.IndexOf(subShape);
@@ -108,7 +114,7 @@ public class EditableVectorPath
             {
                 isSubShapeClosed = true;
                 VecF[] verbData = data.points.ToArray();
-                if(verbData.Length < 2)
+                if (verbData.Length < 2)
                 {
                     var newData = new VecF[2];
                     if (verbData.Length == 1)
@@ -119,6 +125,7 @@ public class EditableVectorPath
 
                     verbData = newData;
                 }
+
                 if (currentSubShapePoints[^1].Verb.IsEmptyVerb())
                 {
                     int lastIndex = currentSubShapePoints.Count - 2;

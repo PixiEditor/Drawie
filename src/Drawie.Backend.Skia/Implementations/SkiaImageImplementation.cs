@@ -40,8 +40,7 @@ namespace Drawie.Skia.Implementations
             var surface = _surfaceImplementation![drawingSurface.ObjectPointer];
             SKImage snapshot = surface.Snapshot();
 
-            AddManagedInstance(snapshot);
-            return new Image(snapshot.Handle);
+            return new Image(AddManagedInstance(snapshot));
         }
 
         public Image Snapshot(DrawingSurface drawingSurface, RectI bounds)
@@ -49,8 +48,7 @@ namespace Drawie.Skia.Implementations
             var surface = _surfaceImplementation![drawingSurface.ObjectPointer];
             SKImage snapshot = surface.Snapshot(bounds.ToSkRectI());
 
-            AddManagedInstance(snapshot);
-            return new Image(snapshot.Handle);
+            return new Image(AddManagedInstance(snapshot));
         }
 
         public Image? FromEncodedData(byte[] dataBytes)
@@ -58,9 +56,8 @@ namespace Drawie.Skia.Implementations
             SKImage img = SKImage.FromEncodedData(dataBytes);
             if (img is null)
                 return null;
-            AddManagedInstance(img);
 
-            return new Image(img.Handle);
+            return new Image(AddManagedInstance(img));
         }
 
         public void DisposeImage(Image image)
@@ -73,8 +70,7 @@ namespace Drawie.Skia.Implementations
             var nativeImg = SKImage.FromEncodedData(path);
             if (nativeImg is null)
                 return null;
-            AddManagedInstance(nativeImg);
-            return new Image(nativeImg.Handle);
+            return new Image(AddManagedInstance(nativeImg));
         }
 
         public Image? FromPixelCopy(ImageInfo info, byte[] pixels)
@@ -82,8 +78,7 @@ namespace Drawie.Skia.Implementations
             var nativeImg = SKImage.FromPixelCopy(info.ToSkImageInfo(), pixels);
             if (nativeImg is null)
                 return null;
-            AddManagedInstance(nativeImg);
-            return new Image(nativeImg.Handle);
+            return new Image(AddManagedInstance(nativeImg));
         }
 
         public Pixmap PeekPixels(Image image)
@@ -107,8 +102,7 @@ namespace Drawie.Skia.Implementations
         {
             var native = this[image.ObjectPointer];
             var encoded = native.Encode();
-            _imgImplementation.AddManagedInstance(encoded);
-            return new ImgData(encoded.Handle);
+            return new ImgData(_imgImplementation.AddManagedInstance(encoded));
         }
 
         public ImgData Encode(Image image, EncodedImageFormat format, int quality)
@@ -133,8 +127,7 @@ namespace Drawie.Skia.Implementations
                 encoded = native.Encode((SKEncodedImageFormat)format, quality);
             }
 
-            _imgImplementation.AddManagedInstance(encoded);
-            return new ImgData(encoded.Handle);
+            return new ImgData(_imgImplementation.AddManagedInstance(encoded));
         }
 
         public int GetWidth(IntPtr objectPointer)
@@ -152,8 +145,7 @@ namespace Drawie.Skia.Implementations
             var native = this[image.ObjectPointer];
             var encoded = native.Encode();
             var clone = SKImage.FromEncodedData(encoded);
-            AddManagedInstance(clone);
-            return new Image(clone.Handle);
+            return new Image(AddManagedInstance(clone));
         }
 
         public Pixmap PeekPixels(IntPtr objectPointer)
@@ -172,8 +164,7 @@ namespace Drawie.Skia.Implementations
         public Shader ToShader(IntPtr objectPointer)
         {
             var shader = this[objectPointer].ToShader();
-            shaderImpl.AddManagedInstance(shader);
-            return new Shader(shader.Handle);
+            return new Shader(shaderImpl.AddManagedInstance(shader));
         }
 
 
@@ -181,15 +172,14 @@ namespace Drawie.Skia.Implementations
         {
             var shader = this[objectPointer]
                 .ToShader((SKShaderTileMode)tileX, (SKShaderTileMode)tileY, samplingOptions.ToSkSamplingOptions(), localMatrix.ToSkMatrix());
-            shaderImpl.AddManagedInstance(shader);
-            return new Shader(shader.Handle);
+
+            return new Shader(shaderImpl.AddManagedInstance(shader));
         }
 
         public Shader ToRawShader(IntPtr objectPointer)
         {
             var shader = this[objectPointer].ToRawShader();
-            shaderImpl.AddManagedInstance(shader);
-            return new Shader(shader.Handle);
+            return new Shader(shaderImpl.AddManagedInstance(shader));
         }
 
         public Shader? ToShader(IntPtr objectPointer, TileMode clamp, TileMode tileMode, Matrix3X3 fillMatrixValue)
@@ -199,8 +189,7 @@ namespace Drawie.Skia.Implementations
             if (shader is null)
                 return null;
 
-            shaderImpl.AddManagedInstance(shader);
-            return new Shader(shader.Handle);
+            return new Shader(shaderImpl.AddManagedInstance(shader));
         }
 
         public object GetNativeImage(IntPtr objectPointer)

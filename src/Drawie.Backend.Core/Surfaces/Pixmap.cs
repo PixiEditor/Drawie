@@ -9,15 +9,10 @@ public class Pixmap : NativeObject
 {
     public override object Native => DrawingBackendApi.Current.PixmapImplementation.GetNativePixmap(ObjectPointer);
 
-    internal Pixmap(IntPtr objPtr) : base(objPtr)
+    public Pixmap(IntPtr objPtr) : base(objPtr)
     {
     }
 
-    public static Pixmap InternalCreateFromExistingPointer(IntPtr objPointer)
-    {
-        return new Pixmap(objPointer);
-    }
-    
     public Pixmap(ImageInfo imgInfo, IntPtr dataPtr) : base(dataPtr)
     {
         ObjectPointer = DrawingBackendApi.Current.PixmapImplementation.Construct(dataPtr, imgInfo);

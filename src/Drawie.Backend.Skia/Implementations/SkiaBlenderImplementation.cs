@@ -27,9 +27,7 @@ public class SkiaBlenderImplementation : SkObjectImplementation<SKBlender>, IBle
             return IntPtr.Zero;
         }
 
-        AddManagedInstance(blender);
-
-        return blender.Handle;
+        return AddManagedInstance(blender);
     }
 
     public IntPtr CreateFromString(string blenderCode, Uniforms uniforms, out string? errors)
@@ -43,9 +41,7 @@ public class SkiaBlenderImplementation : SkObjectImplementation<SKBlender>, IBle
         SKRuntimeEffectUniforms effectUniforms = SkiaShaderImplementation.UniformsToSkUniforms(uniforms, declaration, effect);
         SKRuntimeEffectChildren effectChildren = SkiaShaderImplementation.UniformsToSkChildren(uniforms, effect, shaderImpl);
         var blender = effect.ToBlender(effectUniforms, effectChildren);
-        AddManagedInstance(blender);
-
-        return blender.Handle;
+        return AddManagedInstance(blender);
     }
 
     public object GetNativeObject(IntPtr objectPointer)
