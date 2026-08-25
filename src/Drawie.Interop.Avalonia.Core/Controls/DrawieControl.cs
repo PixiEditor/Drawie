@@ -12,7 +12,7 @@ public abstract class DrawieControl : InteropControl
 {
     private RenderApiResources resources;
     private DrawingSurface? framebuffer;
-    private NativeTexture intermediateSurface;
+    private Texture intermediateSurface;
 
     private PixelSize lastSize = PixelSize.Empty;
 
@@ -87,7 +87,7 @@ public abstract class DrawieControl : InteropControl
                 if (UseIntermediateSurface)
                 {
                     intermediateSurface?.Dispose();
-                    intermediateSurface = NativeTexture.ForDisplay(sizeVec);
+                    intermediateSurface = Texture.ForDisplay(sizeVec);
                 }
 
                 lastSize = size;

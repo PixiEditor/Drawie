@@ -10,6 +10,7 @@ namespace Drawie.Interop.Avalonia.OpenGl;
 public class OpenGlInteropContext : IOpenGlContext, IDrawieInteropContext
 {
     public bool IsGlViaAngle { get; }
+
     public static OpenGlInteropContext? Current { get; private set; }
 
     public IGlContext Context { get; }
@@ -35,6 +36,11 @@ public class OpenGlInteropContext : IOpenGlContext, IDrawieInteropContext
     public RenderApiResources CreateResources(CompositionDrawingSurface surface, ICompositionGpuInterop interop)
     {
         return new OpenGlRenderApiResources(surface, interop);
+    }
+
+    public void AddManagedTexture(IOpenGlTexture texture)
+    {
+        // TODO
     }
 
     public GpuDiagnostics GetGpuDiagnostics()

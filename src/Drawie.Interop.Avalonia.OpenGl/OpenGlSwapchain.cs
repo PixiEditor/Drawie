@@ -88,7 +88,7 @@ internal class DxgiMutexOpenGlSwapChainImage : IGlSwapchainImage
         _texture.Dispose();
     }
 
-    public uint TextureId => (uint)_texture.TextureId;
+    public ulong TextureId => (ulong)_texture.TextureId;
     public int InternalFormat => _texture.InternalFormat;
     public PixelSize Size => new(_texture.Properties.Width, _texture.Properties.Height);
     public Task? LastPresent => _lastPresent;
@@ -142,7 +142,7 @@ internal class CompositionOpenGlSwapChainImage : IGlSwapchainImage
         _texture.Dispose();
     }
 
-    public uint TextureId => (uint)_texture.TextureId;
+    public ulong TextureId => (ulong)_texture.TextureId;
     public int InternalFormat => _texture.InternalFormat;
     public PixelSize Size => _texture.Size;
     public Task? LastPresent { get; private set; }

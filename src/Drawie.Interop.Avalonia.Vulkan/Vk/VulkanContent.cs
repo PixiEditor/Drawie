@@ -63,9 +63,8 @@ public class VulkanContent : IDisposable
             ImageLayout.TransferSrcOptimal,
             image.InternalHandle, ImageLayout.TransferDstOptimal, 1, srcBlitRegion, Filter.Linear);
 
-        commandBuffer.Submit();
-
         texture.ColorAttachment.TransitionLayout(ImageLayout.ColorAttachmentOptimal, commandBuffer.InternalHandle);
+        commandBuffer.Submit();
     }
 
     public void CreateTextureImage(VecI size)

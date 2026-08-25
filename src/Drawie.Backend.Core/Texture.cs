@@ -8,7 +8,7 @@ using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Backend.Core;
 
-public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurfaceInfo, ITexture
+public class Texture : IDisposable, ICloneable, IPixelsMap, INativeSurfaceInfo, ITexture
 {
     public VecI Size { get; }
     public DrawingSurface DrawingSurface { get; private set; }
@@ -35,7 +35,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
     private Paint nearestNeighborReplacingPaint =
         new() { BlendMode = BlendMode.Src };
 
-    public NativeTexture(VecI size)
+    public Texture(VecI size)
         : this(new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb())
         {
             GpuBacked = true
@@ -48,31 +48,31 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
         cpuSynced = false;
     }
 
-    public static NativeTexture ForDisplay(VecI size)
+    public static Texture ForDisplay(VecI size)
     {
-        return new NativeTexture(
+        return new Texture(
             new ImageInfo(size.X, size.Y, ColorType.Rgba8888, AlphaType.Premul, ColorSpace.CreateSrgb())
             {
                 GpuBacked = true
             });
     }
 
-    public static NativeTexture ForProcessing(VecI size)
+    public static Texture ForProcessing(VecI size)
     {
-        return new NativeTexture(
+        return new Texture(
             new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgbLinear())
             {
                 GpuBacked = true
             });
     }
 
-    public static NativeTexture ForProcessing(VecI size, ColorSpace colorSpace)
+    public static Texture ForProcessing(VecI size, ColorSpace colorSpace)
     {
-        return new NativeTexture(
+        return new Texture(
             new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, colorSpace) { GpuBacked = true });
     }
 
-    public static NativeTexture? ForProcessing(DrawingSurface copySizeAndMatrixFrom, ColorSpace colorSpace)
+    public static Texture? ForProcessing(DrawingSurface copySizeAndMatrixFrom, ColorSpace colorSpace)
     {
         VecI size = new VecI(
             copySizeAndMatrixFrom.DeviceClipBounds.Size.X + copySizeAndMatrixFrom.DeviceClipBounds.Pos.X,
@@ -80,7 +80,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
         if (size.X <= 0 || size.Y <= 0)
             return null;
 
-        NativeTexture tex = new NativeTexture(
+        Texture tex = new Texture(
             new ImageInfo(size.X, size.Y,
                 ColorType.RgbaF16, AlphaType.Premul, colorSpace) { GpuBacked = true });
         tex.DrawingSurface.Canvas.SetMatrix(copySizeAndMatrixFrom.Canvas.TotalMatrix);
@@ -88,9 +88,9 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
         return tex;
     }
 
-    public static NativeTexture ForProcessing(Canvas copySizeAndMatrixFrom, ColorSpace colorSpace)
+    public static Texture ForProcessing(Canvas copySizeAndMatrixFrom, ColorSpace colorSpace)
     {
-        NativeTexture tex = new NativeTexture(
+        Texture tex = new Texture(
             new ImageInfo(
                 copySizeAndMatrixFrom.DeviceClipBounds.Size.X + copySizeAndMatrixFrom.DeviceClipBounds.Pos.X,
                 copySizeAndMatrixFrom.DeviceClipBounds.Size.Y + copySizeAndMatrixFrom.DeviceClipBounds.Pos.Y,
@@ -100,7 +100,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
         return tex;
     }
 
-    public NativeTexture(ImageInfo imageImageInfo)
+    public Texture(ImageInfo imageImageInfo)
     {
         Size = new VecI(imageImageInfo.Width, imageImageInfo.Height);
         if (!imageImageInfo.GpuBacked)
@@ -121,7 +121,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
                         throw new Exception("Could not create DrawingSurface for Texture.");
                     }
                 }
-                
+
                 DrawingSurface.Changed += DrawingSurfaceOnChanged;
             }
         );
@@ -130,13 +130,13 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
         Changed += OnChanged;
     }
 
-    public NativeTexture(NativeTexture other) : this(other.Size)
+    public Texture(Texture other) : this(other.Size)
     {
         using var ctx = EnsureContext();
         DrawingSurface.Canvas.DrawSurface(other.DrawingSurface, 0, 0);
     }
 
-    internal NativeTexture(DrawingSurface drawingSurface)
+    internal Texture(DrawingSurface drawingSurface)
     {
         DrawingSurface = drawingSurface;
         Size = drawingSurface.DeviceClipBounds.Size;
@@ -145,7 +145,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
 
     public object Clone()
     {
-        return new NativeTexture(this);
+        return new Texture(this);
     }
 
     private void DrawingSurfaceOnChanged(RectD? changedRect)
@@ -154,7 +154,7 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
     }
 
 
-    public static NativeTexture Load(string path)
+    public static Texture Load(string path)
     {
         using var ctx = EnsureContext();
         if (!File.Exists(path))
@@ -163,13 +163,13 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
         if (image is null)
             throw new ArgumentException($"The image with path {path} couldn't be loaded");
 
-        NativeTexture nativeTexture = new NativeTexture(image.Size);
-        nativeTexture.DrawingSurface.Canvas.DrawImage(image, 0, 0);
+        Texture texture = new Texture(image.Size);
+        texture.DrawingSurface.Canvas.DrawImage(image, 0, 0);
 
-        return nativeTexture;
+        return texture;
     }
 
-    public static NativeTexture Load(byte[] data)
+    public static Texture Load(byte[] data)
     {
         using var ctx = EnsureContext();
         using Image image = Image.FromEncodedData(data);
@@ -177,30 +177,30 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
         if (image is null || image.Size.ShortestAxis <= 0)
             throw new ArgumentException("The image couldn't be loaded");
 
-        NativeTexture nativeTexture = new NativeTexture(image.Size);
-        nativeTexture.DrawingSurface.Canvas.DrawImage(image, 0, 0);
+        Texture texture = new Texture(image.Size);
+        texture.DrawingSurface.Canvas.DrawImage(image, 0, 0);
 
-        return nativeTexture;
+        return texture;
     }
 
-    public static NativeTexture? Load(byte[] encoded, ColorType colorType, VecI imageSize)
+    public static Texture? Load(byte[] encoded, ColorType colorType, VecI imageSize)
     {
         using var ctx = EnsureContext();
         using var image = Image.FromPixels(new ImageInfo(imageSize.X, imageSize.Y, colorType), encoded);
         if (image is null)
             return null;
 
-        var surface = new NativeTexture(new VecI(image.Width, image.Height));
+        var surface = new Texture(new VecI(image.Width, image.Height));
         surface.DrawingSurface.Canvas.DrawImage(image, 0, 0);
 
         return surface;
     }
 
-    public NativeTexture CreateResized(VecI newSize, ResizeMethod method)
+    public Texture CreateResized(VecI newSize, ResizeMethod method)
     {
         using var ctx = EnsureContext();
         using Image image = DrawingSurface.Snapshot();
-        NativeTexture newNativeTexture = new(newSize);
+        Texture newTexture = new(newSize);
         using Paint paint = new();
 
         FilterQuality filterQuality = method switch
@@ -211,12 +211,12 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
             _ => FilterQuality.None
         };
 
-        newNativeTexture.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y), paint);
+        newTexture.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y), paint);
 
-        return newNativeTexture;
+        return newTexture;
     }
 
-    public void CopyTo(NativeTexture destination)
+    public void CopyTo(Texture destination)
     {
         destination.DrawingSurface.Canvas.DrawSurface(DrawingSurface, 0, 0);
     }
@@ -231,21 +231,21 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
         DrawingSurface.Canvas.DrawImage(image, 0, 0);
     }
 
-    public NativeTexture ResizeNearestNeighbor(VecI newSize)
+    public Texture ResizeNearestNeighbor(VecI newSize)
     {
         using Image image = DrawingSurface.Snapshot();
-        NativeTexture newSurface = new(newSize);
+        Texture newSurface = new(newSize);
         newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y),
             nearestNeighborReplacingPaint);
         return newSurface;
     }
 
-    public NativeTexture Resize(VecI newSize, FilterQuality quality)
+    public Texture Resize(VecI newSize, FilterQuality quality)
     {
         using var ctx = EnsureContext();
         using Image image = DrawingSurface.Snapshot();
         using Paint paint = new();
-        NativeTexture newSurface = new(newSize);
+        Texture newSurface = new(newSize);
         newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y),
             paint);
         return newSurface;
@@ -356,10 +356,10 @@ public class NativeTexture : IDisposable, ICloneable, IPixelsMap, INativeSurface
         nearestNeighborReplacingPaint.Dispose();
     }
 
-    public static NativeTexture FromExisting(DrawingSurface drawingSurface)
+    public static Texture FromExisting(DrawingSurface drawingSurface)
     {
-        NativeTexture nativeTexture = new(drawingSurface);
-        return nativeTexture;
+        Texture texture = new(drawingSurface);
+        return texture;
     }
 
     private static IDisposable EnsureContext()

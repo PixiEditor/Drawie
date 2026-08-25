@@ -1,5 +1,4 @@
 ﻿using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.OpenGL;
 using Avalonia.OpenGL.Egl;
 using Avalonia.Rendering.Composition;
@@ -14,7 +13,7 @@ using Drawie.RenderApi.Vulkan;
 using Drawie.Skia;
 using DrawiEngine;
 
-namespace Drawie.Interop.VulkanAvalonia;
+namespace Drawie.Interop.Avalonia;
 
 public static class AppBuilderExtensions
 {

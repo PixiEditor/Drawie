@@ -15,13 +15,13 @@ public class TextureFramebuffer : IDisposable, IRenderTarget
     internal Texture UnderlyingTexture { get; }
     public bool IsOpen { get; private set; }
     public VecI Size { get; }
-    public Canvas? Canvas => IsOpen ? UnderlyingTexture?.NativeTexture?.DrawingSurface?.Canvas : null;
+    public Canvas? Canvas => IsOpen ? UnderlyingTexture?.DrawingSurface?.Canvas : null;
 
 
     internal TextureFramebuffer(Texture texture)
     {
         UnderlyingTexture = texture;
-        Size = new VecI(texture.Width, texture.Height);
+        Size = texture.Size;
     }
 
     internal IDisposable Open()
@@ -33,13 +33,13 @@ public class TextureFramebuffer : IDisposable, IRenderTarget
     public void Clear()
     {
         ThrowIfNotOpen();
-        UnderlyingTexture.NativeTexture.DrawingSurface.Canvas.Clear();
+        UnderlyingTexture.DrawingSurface.Canvas.Clear();
     }
     
     public void Clear(Color color)
     {
         ThrowIfNotOpen();
-        UnderlyingTexture.NativeTexture.DrawingSurface.Canvas.Clear(color);
+        UnderlyingTexture.DrawingSurface.Canvas.Clear(color);
     }
     
     public void DrawRectangle(float x, float y, float width, float height, Paintable paintable)
@@ -47,7 +47,7 @@ public class TextureFramebuffer : IDisposable, IRenderTarget
         ThrowIfNotOpen();
 
         using var paint = new Paint() { Paintable = paintable };
-        UnderlyingTexture.NativeTexture.DrawingSurface.Canvas.DrawRect(x, y, width, height, paint);
+        UnderlyingTexture.DrawingSurface.Canvas.DrawRect(x, y, width, height, paint);
     }
 
     private void ThrowIfNotOpen()
@@ -66,5 +66,5 @@ public class TextureFramebuffer : IDisposable, IRenderTarget
         DrawingBackendApi.Current.Flush();
     }
 
-    ulong IRenderTarget.SurfaceId => UnderlyingTexture.NativeTexture.SurfaceId;
+    ulong IRenderTarget.SurfaceId => UnderlyingTexture.SurfaceId;
 }

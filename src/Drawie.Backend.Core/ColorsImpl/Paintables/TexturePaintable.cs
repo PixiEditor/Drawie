@@ -9,7 +9,7 @@ namespace Drawie.Backend.Core.ColorsImpl.Paintables;
 
 public class TexturePaintable : Paintable
 {
-    public NativeTexture Image { get; private set; }
+    public Texture Image { get; private set; }
     public override bool AnythingVisible => Image is { Size: {X: > 0, Y: > 0 }};
     public SamplingOptions SamplingOptions { get; set; } = SamplingOptions.Bilinear;
 
@@ -19,13 +19,13 @@ public class TexturePaintable : Paintable
 
     private bool disposeAfterUse;
 
-    public TexturePaintable(NativeTexture image)
+    public TexturePaintable(Texture image)
     {
         Image = image;
         Image.LockDispose(this);
     }
 
-    public TexturePaintable(NativeTexture image, bool disposeAfterUse)
+    public TexturePaintable(Texture image, bool disposeAfterUse)
     {
         Image = image;
         Image.LockDispose(this);
@@ -74,7 +74,7 @@ public class TexturePaintable : Paintable
 
     public override void ApplyOpacity(double opacity)
     {
-        NativeTexture surf = new NativeTexture(Image.Size);
+        Texture surf = new Texture(Image.Size);
         using Paint paint = new Paint
         {
             Color = Colors.White.WithAlpha((byte)(opacity * 255)),
