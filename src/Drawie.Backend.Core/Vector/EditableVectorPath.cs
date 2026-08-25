@@ -52,12 +52,6 @@ public class EditableVectorPath
         }
     }
 
-    public EditableVectorPath(VectorPathData dataPath)
-    {
-        Path = dataPath.ToPath();
-        UpdatePathFrom(Path);
-    }
-
     public int IndexOf(SubShape subShape)
     {
         return subShapes.IndexOf(subShape);
