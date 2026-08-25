@@ -76,18 +76,6 @@ namespace Drawie.Skia.Implementations
             skPaint.BlendMode = (SKBlendMode)value;
         }
 
-        public FilterQuality GetFilterQuality(Paint paint)
-        {
-            SKPaint skPaint = this[paint.ObjectPointer];
-            return (FilterQuality)skPaint.FilterQuality;
-        }
-
-        public void SetFilterQuality(Paint paint, FilterQuality value)
-        {
-            SKPaint skPaint = this[paint.ObjectPointer];
-            skPaint.FilterQuality = (SKFilterQuality)value;
-        }
-
         public bool GetIsAntiAliased(Paint paint)
         {
             SKPaint skPaint = this[paint.ObjectPointer];
