@@ -15,22 +15,20 @@ namespace Drawie.Skia.Implementations
 
         public SkiaColorSpaceImplementation()
         {
-            _srgbPointer = SKColorSpace.CreateSrgb().Handle;
-            _srgbLinearPointer = SKColorSpace.CreateSrgbLinear().Handle;
+            var srgb = SKColorSpace.CreateSrgb();
+            var srgbLinear = SKColorSpace.CreateSrgbLinear();
+            _srgbPointer = AddManagedInstance(srgb);
+            _srgbLinearPointer = AddManagedInstance(srgbLinear);
         }
 
         public ColorSpace CreateSrgb()
         {
-            SKColorSpace skColorSpace = SKColorSpace.CreateSrgb();
-            AddManagedInstance(skColorSpace);
-            return new ColorSpace(skColorSpace.Handle);
+            return new ColorSpace(_srgbPointer);
         }
 
         public ColorSpace CreateSrgbLinear()
         {
-            SKColorSpace skColorSpace = SKColorSpace.CreateSrgbLinear();
-            AddManagedInstance(skColorSpace);
-            return new ColorSpace(skColorSpace.Handle);
+            return new ColorSpace(_srgbLinearPointer);
         }
 
         public void Dispose(IntPtr objectPointer)

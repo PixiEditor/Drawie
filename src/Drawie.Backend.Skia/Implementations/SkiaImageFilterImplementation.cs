@@ -30,8 +30,7 @@ namespace Drawie.Skia.Implementations
             if (skImageFilter == null)
                 return null;
 
-            AddManagedInstance(skImageFilter);
-            return skImageFilter.Handle;
+            return AddManagedInstance(skImageFilter);
         }
 
         public IntPtr? CreateCompose(ImageFilter outer, ImageFilter inner)
@@ -44,9 +43,7 @@ namespace Drawie.Skia.Implementations
             if (compose == null)
                 return null;
 
-            AddManagedInstance(compose);
-
-            return compose.Handle;
+            return AddManagedInstance(compose);
         }
 
         public IntPtr? CreateBlendMode(BlendMode blendMode, ImageFilter? background, ImageFilter? foreground)
@@ -69,8 +66,7 @@ namespace Drawie.Skia.Implementations
             if (skImageFilter == null)
                 return null;
 
-            AddManagedInstance(skImageFilter);
-            return skImageFilter.Handle;
+            return AddManagedInstance(skImageFilter);
         }
 
         public object GetNativeImageFilter(IntPtr objPtr) => this[objPtr];
@@ -83,8 +79,7 @@ namespace Drawie.Skia.Implementations
                 return null;
             }
 
-            AddManagedInstance(skImageFilter);
-            return skImageFilter.Handle;
+            return AddManagedInstance(skImageFilter);
         }
 
         public IntPtr? CreateDropShadow(float dx, float dy, float sigmaX, float sigmaY, Color color,
@@ -101,8 +96,7 @@ namespace Drawie.Skia.Implementations
             if (skImageFilter == null)
                 return null;
 
-            AddManagedInstance(skImageFilter);
-            return skImageFilter.Handle;
+            return AddManagedInstance(skImageFilter);
         }
 
         public IntPtr? CreateShader(Shader shader, bool dither)
@@ -113,8 +107,7 @@ namespace Drawie.Skia.Implementations
             if (skImageFilter == null)
                 return null;
 
-            AddManagedInstance(skImageFilter);
-            return skImageFilter.Handle;
+            return AddManagedInstance(skImageFilter);
         }
 
         public IntPtr? CreateImage(Image image)
@@ -131,8 +124,7 @@ namespace Drawie.Skia.Implementations
             if (skImageFilter == null)
                 return null;
 
-            AddManagedInstance(skImageFilter);
-            return skImageFilter.Handle;
+            return AddManagedInstance(skImageFilter);
         }
 
         public IntPtr? CreateTile(RectD source, RectD dest, ImageFilter input)
@@ -148,8 +140,7 @@ namespace Drawie.Skia.Implementations
             if (skImageFilter == null)
                 return null;
 
-            AddManagedInstance(skImageFilter);
-            return skImageFilter.Handle;
+            return AddManagedInstance(skImageFilter);
         }
 
         public void DisposeObject(IntPtr objectPointer)
@@ -183,8 +174,7 @@ namespace Drawie.Skia.Implementations
             if (skImageFilter == null)
                 return null;
 
-            AddManagedInstance(skImageFilter);
-            return skImageFilter.Handle;
+            return AddManagedInstance(skImageFilter);
         }
 
         public IntPtr? CreateBlur(float sigmaX, float sigmaY, TileMode timeMode)
@@ -196,8 +186,7 @@ namespace Drawie.Skia.Implementations
                 return null;
             }
 
-            AddManagedInstance(skImageFilter);
-            return skImageFilter.Handle;
+            return AddManagedInstance(skImageFilter);
         }
 
         public IntPtr? CreateDilate(float radiusX, float radiusY)
@@ -209,8 +198,7 @@ namespace Drawie.Skia.Implementations
                 return null;
             }
 
-            AddManagedInstance(skImageFilter);
-            return skImageFilter.Handle;
+            return AddManagedInstance(skImageFilter);
         }
 
         public IntPtr? CreateMerge(ImageFilter[] filters)
@@ -226,8 +214,7 @@ namespace Drawie.Skia.Implementations
             if (skImageFilter == null)
                 return null;
 
-            AddManagedInstance(skImageFilter);
-            return skImageFilter.Handle;
+            return AddManagedInstance(skImageFilter);
         }
     }
 }

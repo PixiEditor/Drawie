@@ -248,11 +248,11 @@ namespace Drawie.Skia.Implementations
             Trace(skSurface);
 #endif
 
-            _canvasImplementation.AddManagedInstance(skSurface.Canvas.Handle, skSurface.Canvas);
-            Canvas canvas = new Canvas(skSurface.Canvas.Handle);
+            IntPtr canvasHandle = _canvasImplementation.AddManagedInstance(skSurface.Canvas);
+            Canvas canvas = new Canvas(canvasHandle);
 
-            DrawingSurface surface = new DrawingSurface(skSurface.Handle, canvas);
-            AddManagedInstance(skSurface);
+            IntPtr surfaceHandle = AddManagedInstance(skSurface);
+            DrawingSurface surface = new DrawingSurface(surfaceHandle, canvas);
 
             return surface;
         }

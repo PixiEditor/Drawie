@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations
@@ -7,29 +8,35 @@ namespace Drawie.Skia.Implementations
     {
         public int Count => ManagedInstances.Count;
         private readonly ConcurrentDictionary<IntPtr, T> ManagedInstances = new ConcurrentDictionary<IntPtr, T>();
+        private ulong handleCounter = 1;
 
 #if DRAWIE_TRACE
         protected static Dictionary<T, string> sources = new();
 #endif
 
-        internal void AddManagedInstance(T instance)
+        internal IntPtr AddManagedInstance(T instance)
         {
-            if (ManagedInstances.TryAdd(instance.Handle, instance))
+            IntPtr handle = GetNextHandle();
+            if (ManagedInstances.TryAdd(handle, instance))
             {
 #if DRAWIE_TRACE
                 sources[instance] = Environment.StackTrace;
 #endif
             }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"Native handle {instance.Handle} is already registered. " +
+                    $"Existing: {ManagedInstances[instance.Handle]}, " +
+                    $"New: {instance}");
+            }
+
+            return handle;
         }
 
-        internal void AddManagedInstance(IntPtr handle, T instance)
+        protected IntPtr GetNextHandle()
         {
-            if (ManagedInstances.TryAdd(handle, instance))
-            {
-#if DRAWIE_TRACE
-                        sources[instance] = Environment.StackTrace;
-#endif
-            }
+            return (IntPtr)Interlocked.Increment(ref handleCounter);
         }
 
         public bool TryGetInstance(IntPtr objPtr, out T? instance)
@@ -47,20 +54,6 @@ namespace Drawie.Skia.Implementations
 #endif
                 instance.Dispose();
             }
-        }
-
-        public void UnmanageAndDispose(T instance)
-        {
-            if (ManagedInstances.TryRemove(instance.Handle, out var managedInstance))
-            {
-                if (managedInstance == null) return;
-
-#if DRAWIE_TRACE
-                Untrace(managedInstance);
-#endif
-            }
-
-            instance.Dispose();
         }
 
         public void UpdateManagedInstance(IntPtr objPtr, T instance)
@@ -145,5 +138,16 @@ namespace Drawie.Skia.Implementations
         }
 
 #endif
+        public IntPtr? FindManagedInstanceHandle(T native)
+        {
+            foreach (var kvp in ManagedInstances)
+            {
+                if (EqualityComparer<T>.Default.Equals(kvp.Value, native))
+                {
+                    return kvp.Key;
+                }
+            }
+            return null;
+        }
     }
 }

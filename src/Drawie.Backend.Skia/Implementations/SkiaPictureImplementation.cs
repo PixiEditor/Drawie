@@ -50,9 +50,8 @@ public class SkiaPictureImplementation : SkObjectImplementation<SKPicture>, IPic
 
         var shader = skPicture.ToShader((SKShaderTileMode)tileModeX, (SKShaderTileMode)tileModeY,
             (SKFilterMode)filterMode, localMatrix.ToSkMatrix(), tile.ToSkRect());
-        _shaderImplementation.AddManagedInstance(shader);
 
-        return new Shader(shader.Handle);
+        return new Shader(_shaderImplementation.AddManagedInstance(shader));
     }
 
     public void Serialize(Picture picture, Stream stream)

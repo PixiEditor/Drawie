@@ -31,8 +31,7 @@ namespace Drawie.Skia.Implementations
         public IntPtr CreateShader()
         {
             SKShader skShader = SKShader.CreateEmpty();
-            AddManagedInstance(skShader);
-            return skShader.Handle;
+            return AddManagedInstance(skShader);
         }
 
         public Shader? CreateFromString(string shaderCode, Uniforms uniforms, out string errors)
@@ -44,11 +43,11 @@ namespace Drawie.Skia.Implementations
                 SKRuntimeEffectUniforms effectUniforms = UniformsToSkUniforms(uniforms, declaration, effect);
                 SKRuntimeEffectChildren effectChildren = UniformsToSkChildren(uniforms, effect);
                 SKShader shader = effect.ToShader(effectUniforms, effectChildren);
-                AddManagedInstance(shader);
-                runtimeEffects[shader.Handle] = effect;
-                declarations[shader.Handle] = declaration;
+                IntPtr shaderHandle = AddManagedInstance(shader);
+                runtimeEffects[shaderHandle] = effect;
+                declarations[shaderHandle] = declaration;
 
-                return new Shader(shader.Handle, declaration);
+                return new Shader(shaderHandle, declaration);
             }
 
             return null;
@@ -65,14 +64,14 @@ namespace Drawie.Skia.Implementations
                     return null;
                 }
 
-                AddManagedInstance(shader);
+                IntPtr shaderHandle = AddManagedInstance(shader);
                 var declaration = DeclarationsFromEffect(shaderCode, effect);
-                declarations[shader.Handle] = declaration;
+                declarations[shaderHandle] = declaration;
 
 #if DRAWIE_TRACE
             Trace(shader);
 #endif
-                return new Shader(shader.Handle, declaration);
+                return new Shader(shaderHandle, declaration);
             }
 
             return null;
@@ -89,8 +88,8 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            AddManagedInstance(shader);
-            return new Shader(shader.Handle);
+            IntPtr shaderHandle = AddManagedInstance(shader);
+            return new Shader(shaderHandle);
         }
 
         public Shader? CreateLinearGradient(VecD p1, VecD p2, Color[] colors, float[] offsets)
@@ -104,12 +103,12 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            AddManagedInstance(shader);
+            IntPtr shaderHandle = AddManagedInstance(shader);
 
 #if DRAWIE_TRACE
             Trace(shader);
 #endif
-            return new Shader(shader.Handle);
+            return new Shader(shaderHandle);
         }
 
         public Shader? CreateLinearGradient(VecD p1, VecD p2, Color[] colors, float[] offsets, Matrix3X3 localMatrix)
@@ -124,12 +123,12 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            AddManagedInstance(shader);
+            IntPtr shaderHandle = AddManagedInstance(shader);
 
 #if DRAWIE_TRACE
             Trace(shader);
 #endif
-            return new Shader(shader.Handle);
+            return new Shader(shaderHandle);
         }
 
         public Shader? CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
@@ -143,13 +142,13 @@ namespace Drawie.Skia.Implementations
                 (SKShaderTileMode)tileMode);
             if (shader == null) return null;
 
-            AddManagedInstance(shader);
+            IntPtr shaderHandle = AddManagedInstance(shader);
 
 #if DRAWIE_TRACE
             Trace(shader);
 #endif
 
-            return new Shader(shader.Handle);
+            return new Shader(shaderHandle);
         }
 
         public Shader? CreateRadialGradient(VecD center, float radius, Color[] colors)
@@ -161,13 +160,13 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            AddManagedInstance(shader);
+            IntPtr shaderHandle = AddManagedInstance(shader);
 
 #if DRAWIE_TRACE
             Trace(shader);
 #endif
 
-            return new Shader(shader.Handle);
+            return new Shader(shaderHandle);
         }
 
         public Shader? CreateRadialGradient(VecD center, float radius, Color[] colors, float[] colorPos,
@@ -183,13 +182,13 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            AddManagedInstance(shader);
+            IntPtr shaderHandle = AddManagedInstance(shader);
 
 #if DRAWIE_TRACE
             Trace(shader);
 #endif
 
-            return new Shader(shader.Handle);
+            return new Shader(shaderHandle);
         }
 
         public Shader? CreateSweepGradient(VecD center, Color[] colors, float[] colorPos, Matrix3X3 localMatrix)
@@ -202,13 +201,13 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            AddManagedInstance(shader);
+            IntPtr shaderHandle = AddManagedInstance(shader);
 
 #if DRAWIE_TRACE
             Trace(shader);
 #endif
 
-            return new Shader(shader.Handle);
+            return new Shader(shaderHandle);
         }
 
         public Shader? CreateSweepGradient(VecD center, Color[] colors, float[] colorPos,
@@ -224,13 +223,13 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            AddManagedInstance(shader);
+            IntPtr shaderHandle = AddManagedInstance(shader);
 
 #if DRAWIE_TRACE
             Trace(shader);
 #endif
 
-            return new Shader(shader.Handle);
+            return new Shader(shaderHandle);
         }
 
         public Shader? CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves,
@@ -244,12 +243,12 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            AddManagedInstance(shader);
+            IntPtr shaderHandle = AddManagedInstance(shader);
 
 #if DRAWIE_TRACE
             Trace(shader);
 #endif
-            return new Shader(shader.Handle);
+            return new Shader(shaderHandle);
         }
 
         public Shader? CreatePerlinFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)
@@ -265,12 +264,12 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            AddManagedInstance(shader);
+            IntPtr shaderHandle = AddManagedInstance(shader);
 
 #if DRAWIE_TRACE
             Trace(shader);
 #endif
-            return new Shader(shader.Handle);
+            return new Shader(shaderHandle);
         }
 
         public object GetNativeShader(IntPtr objectPointer)
@@ -295,16 +294,16 @@ namespace Drawie.Skia.Implementations
             runtimeEffects.Remove(objectPointer);
 
             var newShader = effect.ToShader(effectUniforms, effectChildren);
-            AddManagedInstance(newShader);
+            IntPtr shaderHandle = AddManagedInstance(newShader);
 
-            runtimeEffects[newShader.Handle] = effect;
-            declarations[newShader.Handle] = oldDeclarations;
+            runtimeEffects[shaderHandle] = effect;
+            declarations[shaderHandle] = oldDeclarations;
 
 #if DRAWIE_TRACE
             Trace(newShader);
 #endif
 
-            return new Shader(newShader.Handle, oldDeclarations);
+            return new Shader(shaderHandle, oldDeclarations);
         }
 
         public Shader SetLocalMatrix(IntPtr objectPointer, Matrix3X3 matrix)
@@ -314,7 +313,8 @@ namespace Drawie.Skia.Implementations
                 throw new InvalidOperationException("Shader does not exist");
             }
 
-            return new Shader(shader.WithLocalMatrix(matrix.ToSkMatrix()).Handle);
+            IntPtr shaderHandle = AddManagedInstance(shader.WithLocalMatrix(matrix.ToSkMatrix()));
+            return new Shader(shaderHandle);
         }
 
         public Shader? CreateBitmap(Bitmap bitmap, TileMode tileX, TileMode tileY, Matrix3X3 matrix)
@@ -329,12 +329,12 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            AddManagedInstance(shader);
+            IntPtr shaderHandle = AddManagedInstance(shader);
 
 #if DRAWIE_TRACE
             Trace(shader);
 #endif
-            return new Shader(shader.Handle);
+            return new Shader(shaderHandle);
         }
 
         public Shader? CreateCreate(Image image, TileMode tileX, TileMode tileY, Matrix3X3 matrix)
@@ -350,8 +350,8 @@ namespace Drawie.Skia.Implementations
 
             if (shader == null) return null;
 
-            AddManagedInstance(shader);
-            return new Shader(shader.Handle);
+            IntPtr shaderHandle = AddManagedInstance(shader);
+            return new Shader(shaderHandle);
         }
 
         public UniformDeclaration[]? GetUniformDeclarations(string shaderCode)
@@ -553,6 +553,14 @@ namespace Drawie.Skia.Implementations
             return null;
         }
 
+        private static string RemoveLastOccurance(string text, string toRemove)
+        {
+            int index = text.LastIndexOf(toRemove, StringComparison.Ordinal);
+            return index < 0 ? 
+                text : 
+                text.Substring(0, index) + text.Substring(index + toRemove.Length);
+        }
+        
         private static bool TryDetectType(string lastString, string name, out UniformValueType? detectedType)
         {
             if (!lastString.Contains("uniform ", StringComparison.InvariantCultureIgnoreCase))
@@ -561,7 +569,7 @@ namespace Drawie.Skia.Implementations
                 return false;
             }
 
-            string nameLessBlock = lastString.Replace(name, string.Empty);
+            string nameLessBlock = RemoveLastOccurance(lastString, name);
 
             if (nameLessBlock.Contains("color", StringComparison.InvariantCultureIgnoreCase))
             {

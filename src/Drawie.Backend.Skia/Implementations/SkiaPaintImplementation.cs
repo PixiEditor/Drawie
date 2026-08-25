@@ -30,13 +30,14 @@ namespace Drawie.Skia.Implementations
         public IntPtr CreatePaint()
         {
             SKPaint skPaint = new SKPaint();
-            AddManagedInstance(skPaint);
+            IntPtr address = AddManagedInstance(skPaint);
             if (skPaint.ColorFilter != null)
             {
-                colorFilterImplementation.AddManagedInstance(skPaint.ColorFilter.Handle, skPaint.ColorFilter);
+                throw new Exception("Color filter needs managed instance. How did we get here?");
+                //colorFilterImplementation.AddManagedInstance(skPaint.ColorFilter.Handle, skPaint.ColorFilter);
             }
 
-            return skPaint.Handle;
+            return address;
         }
 
         public void Dispose(IntPtr paintObjPointer)
@@ -47,9 +48,8 @@ namespace Drawie.Skia.Implementations
         public Paint Clone(IntPtr paintObjPointer)
         {
             SKPaint clone = this[paintObjPointer].Clone();
-            AddManagedInstance(clone);
 
-            return new Paint(clone.Handle);
+            return new Paint(AddManagedInstance(clone));
         }
 
         public Color GetColor(Paint paint)
@@ -115,9 +115,10 @@ namespace Drawie.Skia.Implementations
                     return null;
                 }
 
-                if(!blenderImplementation.TryGetInstance(skPaint.Blender.Handle, out _))
+                if(!blenderImplementation.TryGetInstance(paint.Blender.ObjectPointer, out _))
                 {
-                    blenderImplementation.AddManagedInstance(skPaint.Blender.Handle, skPaint.Blender);
+                    throw new Exception("Blender needs managed instance. How did we get here?");
+                    //blenderImplementation.AddManagedInstance(skPaint.Blender);
                 }
 
                 return new Blender(skPaint.Blender.Handle);

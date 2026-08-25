@@ -32,8 +32,7 @@ namespace Drawie.Skia.Implementations
         public ImgData Create(ReadOnlySpan<byte> buffer)
         {
             SKData data = SKData.CreateCopy(buffer.ToArray());
-            AddManagedInstance(data);
-            return new ImgData(data.Handle);
+            return new ImgData(AddManagedInstance(data));
         }
 
         public object GetNativeImgData(IntPtr objectPointer)

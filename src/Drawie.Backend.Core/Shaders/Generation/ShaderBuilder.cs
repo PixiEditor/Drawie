@@ -83,20 +83,29 @@ public class ShaderBuilder
 
     public Half4 Sample(SurfaceSampler texName, Expression pos, bool normalizedCoordinates)
     {
-        string resultName = $"color_{GetUniqueNameNumber()}";
-        Half4 result = new Half4(resultName);
-        _variables.Add(result);
+        string rawResultName = $"color_{GetUniqueNameNumber()}";
+        Half4 rawResult = new Half4(rawResultName);
+        _variables.Add(rawResult);
+        
+        string unpremulResultName = $"color_{GetUniqueNameNumber()}";
+        Half4 unpremulResult = new Half4(unpremulResultName);
+        _variables.Add(unpremulResult);
+        
         if (normalizedCoordinates)
         {
             _bodyBuilder.AppendLine(
-                $"half4 {resultName} = {texName.VariableName}.eval({pos.ExpressionValue} * iResolution);");
+                $"half4 {rawResultName} = {texName.VariableName}.eval({pos.ExpressionValue} * iResolution);");
+            _bodyBuilder.AppendLine(
+                $"half4 {unpremulResultName} = {Functions.GetUnpremultiply(rawResult).ExpressionValue};");
         }
         else
         {
-            _bodyBuilder.AppendLine($"half4 {resultName} = {texName.VariableName}.eval({pos.ExpressionValue});");
+            _bodyBuilder.AppendLine($"half4 {rawResultName} = {texName.VariableName}.eval({pos.ExpressionValue});");
+            _bodyBuilder.AppendLine(
+                $"half4 {unpremulResultName} = {Functions.GetUnpremultiply(rawResult).ExpressionValue};");
         }
 
-        return result;
+        return unpremulResult;
     }
 
     public void ReturnVar(Half4 colorValue, bool premultiply)
