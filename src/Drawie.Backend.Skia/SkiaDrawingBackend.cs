@@ -259,7 +259,8 @@ namespace Drawie.Skia
 
         public override string ToString()
         {
-            return "Skia";
+            var version = typeof(SKCanvas).Assembly.GetName().Version;
+            return "Skia " + version;
         }
 
         public async ValueTask DisposeAsync()
