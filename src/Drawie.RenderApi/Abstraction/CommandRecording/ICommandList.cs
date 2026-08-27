@@ -18,4 +18,5 @@ public interface ICommandList
     void BindPipeline();
     PreparedTexture PrepareTexture(ITexture texture);
     void UpdateUniforms(List<UniformBlock> blocks, List<PreparedTexture> textures, List<ISampler> samplers);
+    void RestoreTexture(PreparedTexture preparedTextureValue);
 }

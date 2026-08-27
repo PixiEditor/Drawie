@@ -12,6 +12,17 @@ public class OpenGlContext : IOpenGlContext
         Textures.Add(texture.TextureId, texture);
     }
 
+    public IOpenGlTexture? GetManagedTexture(ulong textureId)
+    {
+        Textures.TryGetValue(textureId, out var texture);
+        return texture;
+    }
+
+    public void RemoveManagedTexture(ulong textureId)
+    {
+        Textures.Remove(textureId);
+    }
+
     public OpenGlContext(Func<string, IntPtr> getGlInterface, bool isGlViaAngle)
     {
         this.getGlInterface = getGlInterface;

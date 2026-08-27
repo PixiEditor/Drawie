@@ -52,6 +52,11 @@ public class OpenGlCommandList(GL api) : CommandList
         
     }
 
+    public override void RestoreTexture(PreparedTexture preparedTextureValue)
+    {
+        // no op
+    }
+
     public override void SetBuffers(IBufferGroup bufferGroup)
     {
         RecordInstruction(() => { Api.BindVertexArray(bufferGroup.Handle); });

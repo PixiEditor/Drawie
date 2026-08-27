@@ -20,4 +20,5 @@ public interface IGraphicsDevice : IDisposable
     IShaderProgram CreateShaderProgram(ShaderProgramDesc shaderProgramDesc);
     IRenderTarget CreateRenderTarget(TextureDesc textureDesc);
     IBufferGroup CreateBufferGroup();
+    void DisposeTexture(ulong textureHandle);
 }

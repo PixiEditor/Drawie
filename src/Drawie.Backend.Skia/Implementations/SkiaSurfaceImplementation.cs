@@ -26,6 +26,8 @@ namespace Drawie.Skia.Implementations
 
         private readonly SurfaceOrigin defaultSurfaceOrigin;
 
+        private HashSet<IntPtr> surfacesInUse = new HashSet<IntPtr>();
+
         public SkiaSurfaceImplementation(GRContext context, SurfaceOrigin surfaceOrigin,
             SkiaPixmapImplementation pixmapImplementation,
             SkiaCanvasImplementation canvasImplementation, SkiaPaintImplementation paintImplementation)
@@ -231,12 +233,19 @@ namespace Drawie.Skia.Implementations
         public void Dispose(DrawingSurface drawingSurface)
         {
             var instance = this.GetInstanceOrDefault(drawingSurface.ObjectPointer);
+            ulong? surfaceId = null;
             if (instance != null)
             {
-                nativeSurfaceInfos.Remove(instance, out var framebufferInfo);
+                nativeSurfaceInfos.Remove(instance, out var surfaceInfo);
+                surfaceId = surfaceInfo?.SurfaceId;
             }
 
             UnmanageAndDispose(drawingSurface.ObjectPointer);
+            if (surfaceId != null)
+            {
+                throw new NotImplementedException("Implement a proper lifetime management for GPU-backed surfaces.");
+                GraphicsDevice.DisposeTexture(surfaceId.Value);
+            }
         }
 
         public object GetNativeSurface(IntPtr objectPointer)

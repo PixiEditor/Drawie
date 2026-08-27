@@ -141,6 +141,11 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
         return new VulkanBufferGroup();
     }
 
+    public void DisposeTexture(ulong textureHandle)
+    {
+        (context.ManagedTextures[textureHandle] as IDisposable)?.Dispose();
+    }
+
     public unsafe void Dispose()
     {
         foreach (var uniformBuffer in bufferCache)

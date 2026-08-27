@@ -1,4 +1,5 @@
 using Drawie.Backend.Core.Bridge;
+using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Vertie.Core;
 using Drawie.Backend.Vertie.Rendering;
 using Drawie.Numerics;
@@ -25,6 +26,15 @@ public static class TextureFramebufferExtensions
     private static Dictionary<ulong, PreparedTexture> preparedTextures = new Dictionary<ulong, PreparedTexture>();
 
     public static void DrawScene(this TextureFramebuffer fb, Scene scene, Camera camera,
+        RenderOptions options = default)
+    {
+        IGraphicsDevice device = DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice;
+
+        fb.Canvas?.Flush();
+        DrawScene(fb, scene, camera, device, options);
+    }
+
+    public static void DrawScene(this DrawingSurface fb, Scene scene, Camera camera,
         RenderOptions options = default)
     {
         IGraphicsDevice device = DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice;
@@ -125,6 +135,7 @@ public static class TextureFramebufferExtensions
         var recordedRenderPass = cmdList.EndRenderPass(fb);
 
         device.Submit(recordedRenderPass);
+
         DrawingBackendApi.Current.ResetContext();
     }
 

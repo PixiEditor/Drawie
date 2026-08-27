@@ -43,4 +43,6 @@ public abstract class CommandList : ICommandList
     public abstract PreparedTexture PrepareTexture(ITexture texture);
     public abstract void UpdateUniforms(List<UniformBlock> blocks, List<PreparedTexture> textures,
         List<ISampler> samplers);
+
+    public abstract void RestoreTexture(PreparedTexture preparedTextureValue);
 }

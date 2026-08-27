@@ -122,6 +122,12 @@ public class OpenGlDevice : IGraphicsDevice
         return new OpenGlVertexArrayObject(Api);
     }
 
+    public void DisposeTexture(ulong textureHandle)
+    {
+        (context.GetManagedTexture(textureHandle) as IDisposable)?.Dispose();
+        context.RemoveManagedTexture(textureHandle);
+    }
+
 
     private Silk.NET.OpenGL.ShaderType ToOpenGlShaderType(ShaderType shaderType)
     {

@@ -5,6 +5,7 @@ using Drawie.Backend.Core.Debug;
 using Drawie.Interop.Avalonia.Core;
 using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan;
+using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.RenderApi.Vulkan.ContextObjects;
 using Drawie.RenderApi.Vulkan.Extensions;
 using DrawiEngine;
@@ -38,15 +39,17 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
 
         Api = Silk.NET.Vulkan.Vk.GetApi();
 
-        TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
 
         deviceExtensions.Add("VK_KHR_get_physical_device_properties2");
         deviceExtensions.Add("VK_KHR_external_memory_capabilities");
         deviceExtensions.Add("VK_KHR_external_semaphore_capabilities");
         //TODO if it crashes with vertie, try adding VK_KHR_dynamic_rendering
-        
-        if(EnableValidationLayers)
+
+        if (EnableValidationLayers)
+        {
+            TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
             deviceExtensions.Add("VK_EXT_debug_utils");
+        }
 
         SetupInstance(contextInfo);
         SetupDebugMessenger();

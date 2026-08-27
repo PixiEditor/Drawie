@@ -120,6 +120,13 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         }
     }
 
+    public override void RestoreTexture(PreparedTexture preparedTextureValue)
+    {
+        var target = context.ManagedTextures[preparedTextureValue.Handle];
+        if(target is not VulkanTexture vkTex) throw new ArgumentException("Only VulkanTexture's are valid");
+        vkTex.MakeReadOnly(commandBuffer);
+    }
+
     private unsafe void UpdateUniformDescriptor(UniformBuffer buffer, ulong size, PreparedTexture texture, ISampler sampler)
     {
         if (texture.Handle == 0 || sampler == default)
