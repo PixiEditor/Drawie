@@ -153,11 +153,7 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
             var selectedGpu =
                 suitableDevices.FirstOrDefault(x => x?.Item1.IsDiscreteGpu is true, null) ?? suitableDevices[0];
             PhysicalDevice = selectedGpu?.Item2 ?? default;
-            GpuInfo = selectedGpu?.Item1 ?? new GpuInfo("Unknown", "Unknown", false);
-        }
-        else
-        {
-            PhysicalDevice = default;
+            return selectedGpu?.Item1 ?? new GpuInfo("Unknown", "Unknown", false);
         }
 
         if (PhysicalDevice.Handle == 0) throw new VulkanException("Failed to find a suitable Vulkan GPU.");
