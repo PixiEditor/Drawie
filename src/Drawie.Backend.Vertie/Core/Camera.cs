@@ -63,4 +63,14 @@ public class Camera
         Right = Vector3.Normalize(Vector3.Cross(Forward, Vector3.UnitY));
         Up = Vector3.Normalize(Vector3.Cross(Right, cameraDirection));
     }
+
+    public void LookAt(Vector3 target)
+    {
+        Forward = Vector3.Normalize(target - Position);
+        Right = Vector3.Normalize(Vector3.Cross(Forward, Vector3.UnitY));
+        Up = Vector3.Normalize(Vector3.Cross(Right, Forward));
+
+        Yaw = MathF.Atan2(Forward.Z, Forward.X) * (180f / MathF.PI);
+        Pitch = MathF.Asin(Forward.Y) * (180f / MathF.PI);
+    }
 }

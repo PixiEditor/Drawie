@@ -25,6 +25,7 @@ public class ShaderCompiler
                 "-matrix-layout-column-major",
                 "-fvk-use-entrypoint-name",
                 "-target", "spirv",
+                "-profile", "spirv_1_3"
             ],
             out var reflection);
         

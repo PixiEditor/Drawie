@@ -122,6 +122,9 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
     private unsafe void UpdateUniformDescriptor(UniformBuffer buffer, ulong size, PreparedTexture texture, ISampler sampler)
     {
+        if (texture.Handle == 0 || sampler == default)
+            return;
+
         var vkTexture = context.ManagedTextures[texture.Handle] as VulkanTexture;
         var vkSampler = sampler as VulkanSampler;
         // TODO: better id

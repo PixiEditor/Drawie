@@ -49,6 +49,7 @@ public class VulkanTexture : IDisposable, IVkTexture
     private VulkanImageAttachment? depthAttachment;
     private VulkanImageAttachment? msaaResolvedColorAttachment;
     private Sampler sampler;
+    private bool isExternalSampler = false;
 
 
     public VulkanTexture(Vk vk, Device logicalDevice, PhysicalDevice physicalDevice, CommandPool commandPool,
@@ -127,6 +128,7 @@ public class VulkanTexture : IDisposable, IVkTexture
         if (sampler != null)
         {
             this.sampler = sampler.Value;
+            isExternalSampler = true;
         }
         else
         {
@@ -219,7 +221,10 @@ public class VulkanTexture : IDisposable, IVkTexture
     public unsafe void Dispose()
     {
         Disposing?.Invoke();
-        Vk.DestroySampler(LogicalDevice, sampler, null);
+        if (!isExternalSampler)
+        {
+            Vk.DestroySampler(LogicalDevice, sampler, null);
+        }
         ColorAttachment.Dispose();
         DepthAttachment?.Dispose();
     }
