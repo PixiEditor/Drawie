@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations
@@ -8,7 +7,7 @@ namespace Drawie.Skia.Implementations
     {
         public int Count => ManagedInstances.Count;
         private readonly ConcurrentDictionary<IntPtr, T> ManagedInstances = new ConcurrentDictionary<IntPtr, T>();
-        private ulong handleCounter = 1;
+        private nuint handleCounter = 1;
 
 #if DRAWIE_TRACE
         protected static Dictionary<T, string> sources = new();
@@ -36,7 +35,8 @@ namespace Drawie.Skia.Implementations
 
         protected IntPtr GetNextHandle()
         {
-            return (IntPtr)Interlocked.Increment(ref handleCounter);
+            handleCounter++;
+            return (IntPtr)handleCounter;
         }
 
         public bool TryGetInstance(IntPtr objPtr, out T? instance)

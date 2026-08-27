@@ -17,7 +17,9 @@ namespace Drawie.Skia.Implementations
         private readonly SkiaPixmapImplementation _pixmapImplementation;
         private readonly SkiaCanvasImplementation _canvasImplementation;
         private readonly SkiaPaintImplementation _paintImplementation;
-        private Dictionary<IntPtr, INativeSurfaceInfo> nativeSurfaceInfos = new Dictionary<IntPtr, INativeSurfaceInfo>();
+
+        private Dictionary<SKSurface, INativeSurfaceInfo> nativeSurfaceInfos =
+            new Dictionary<SKSurface, INativeSurfaceInfo>();
 
         internal GRContext? GrContext { get; set; }
         internal IGraphicsDevice GraphicsDevice { get; set; }
@@ -154,7 +156,7 @@ namespace Drawie.Skia.Implementations
                 out var framebufferInfo);
             if (surface == null) return null;
 
-            nativeSurfaceInfos[surface.Handle] = framebufferInfo;
+            nativeSurfaceInfos[surface] = framebufferInfo;
             return surface;
         }
 
@@ -213,10 +215,10 @@ namespace Drawie.Skia.Implementations
                         new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat());
                     GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
                         grGlFramebufferInfo);
-                    
+
                     surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
                         SKColorType.Rgba8888);
-                    
+
                     fbInfo = new SkiaNativeSurfaceInfo(backendRenderTarget, grGlFramebufferInfo);
                 }
 
@@ -228,8 +230,13 @@ namespace Drawie.Skia.Implementations
 
         public void Dispose(DrawingSurface drawingSurface)
         {
+            var instance = this.GetInstanceOrDefault(drawingSurface.ObjectPointer);
+            if (instance != null)
+            {
+                nativeSurfaceInfos.Remove(instance, out var framebufferInfo);
+            }
+
             UnmanageAndDispose(drawingSurface.ObjectPointer);
-            nativeSurfaceInfos.Remove(drawingSurface.ObjectPointer, out var framebufferInfo);
         }
 
         public object GetNativeSurface(IntPtr objectPointer)
@@ -291,10 +298,10 @@ namespace Drawie.Skia.Implementations
 
         public INativeSurfaceInfo? GetNativeSurfaceInfo(IntPtr objectPointer)
         {
-            return nativeSurfaceInfos.GetValueOrDefault(objectPointer);
+            return nativeSurfaceInfos.GetValueOrDefault(this[objectPointer]);
         }
 
-        public void AddManagedFramebuffer(IntPtr nativeHandle, INativeSurfaceInfo fbInfo)
+        public void AddManagedFramebuffer(SKSurface nativeHandle, INativeSurfaceInfo fbInfo)
         {
             nativeSurfaceInfos.Add(nativeHandle, fbInfo);
         }

@@ -20,6 +20,7 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
     private readonly VulkanContext context;
     private readonly CommandPool commandPool;
     private VulkanPipeline? pipeline;
+    private VulkanSampler globalSampler;
 
     private Dictionary<Guid, UniformBuffer> bufferCache = new Dictionary<Guid, UniformBuffer>();
 
@@ -33,6 +34,7 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
 
         this.context = context;
         commandPool = CreateCommandPool();
+        globalSampler = new VulkanSampler(context, new SamplerDesc());
     }
 
     private unsafe CommandPool CreateCommandPool()
@@ -76,7 +78,7 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
             commandPool,
             context.GraphicsQueue,
             context.GraphicsQueueFamilyIndex,
-            desc);
+            desc, globalSampler.VkSampler);
 
         context.AddManagedTexture(vkTex, vkTex.ImageHandle);
         disposables.Add(vkTex);
@@ -145,6 +147,8 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
         {
             uniformBuffer.Value.Dispose();
         }
+
+        globalSampler?.Dispose();
 
         context.Api!.DestroyCommandPool(
             context.LogicalDevice.Device,

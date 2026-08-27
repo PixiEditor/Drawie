@@ -52,7 +52,7 @@ public class VulkanTexture : IDisposable, IVkTexture
 
 
     public VulkanTexture(Vk vk, Device logicalDevice, PhysicalDevice physicalDevice, CommandPool commandPool,
-        Queue graphicsQueue, uint queueFamily, TextureDesc desc)
+        Queue graphicsQueue, uint queueFamily, TextureDesc desc, Sampler? sampler = null)
     {
         Vk = vk;
         LogicalDevice = logicalDevice;
@@ -124,7 +124,14 @@ public class VulkanTexture : IDisposable, IVkTexture
             msaaResolvedColorAttachment.TransitionLayout(ImageLayout.ColorAttachmentOptimal);
         }
 
-        CreateSampler();
+        if (sampler != null)
+        {
+            this.sampler = sampler.Value;
+        }
+        else
+        {
+            CreateSampler();
+        }
     }
 
 
@@ -200,10 +207,7 @@ public class VulkanTexture : IDisposable, IVkTexture
             BufferImageHeight = 0,
             ImageSubresource = new ImageSubresourceLayers()
             {
-                AspectMask = ImageAspectFlags.ColorBit,
-                MipLevel = 0,
-                BaseArrayLayer = 0,
-                LayerCount = 1
+                AspectMask = ImageAspectFlags.ColorBit, MipLevel = 0, BaseArrayLayer = 0, LayerCount = 1
             },
             ImageOffset = new Offset3D(0, 0, 0),
             ImageExtent = new Extent3D(width, height, 1)
