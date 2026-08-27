@@ -208,7 +208,42 @@ namespace Drawie.Skia
             var native = SurfaceImplementation.CreateFromNativeTexture(renderTexture, size, surfaceOrigin, true, out var fbInfo);
             if (native == null)
             {
-                return null;
+                var imageInfo = new GRVkImageInfo()
+                {
+                    CurrentQueueFamily = texture.QueueFamily,
+                    Format = texture.ImageFormat,
+                    Image = texture.ImageHandle,
+                    ImageLayout = texture.Layout,
+                    ImageTiling = texture.Tiling,
+                    ImageUsageFlags = texture.UsageFlags,
+                    LevelCount = 1,
+                    SampleCount = 1,
+                    Protected = false,
+                    SharingMode = texture.TargetSharingMode,
+                };
+
+                var surface = SKSurface.Create(GraphicsContext, new GRBackendRenderTarget(size.X, size.Y, imageInfo),
+                    (GRSurfaceOrigin)surfaceOrigin, SKColorType.Rgba8888,
+                    new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
+
+                return DrawingSurface.FromNative(surface);
+            }
+            else if (renderTexture is IWebGlTexture or IOpenGlTexture)
+            {
+                uint textureId = renderTexture switch
+                {
+                    IWebGlTexture wgl => wgl.TextureId,
+                    IOpenGlTexture ogl => ogl.TextureId,
+                    _ => throw new ArgumentException("Unsupported texture type.")
+                };
+
+                GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
+                    new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat()));
+
+                var surface = SKSurface.Create(GraphicsContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
+                    SKColorType.Rgba8888);
+
+                return DrawingSurface.FromNative(surface);
             }
 
             SurfaceImplementation.AddManagedFramebuffer(native.Handle, fbInfo);
@@ -244,7 +279,8 @@ namespace Drawie.Skia
 
         public override string ToString()
         {
-            return "Skia";
+            var version = typeof(SKCanvas).Assembly.GetName().Version;
+            return "Skia " + version;
         }
 
         public async ValueTask DisposeAsync()
