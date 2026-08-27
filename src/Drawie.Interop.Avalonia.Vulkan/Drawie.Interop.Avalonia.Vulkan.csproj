@@ -24,5 +24,6 @@
 
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)"/>
+        <PackageReference Include="Silk.NET.Direct3D11" Version="2.23.0" />
     </ItemGroup>
 </Project>
