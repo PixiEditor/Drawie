@@ -203,7 +203,7 @@ public class GlfwHost : Drawie.Host.IHost
     private void CreateRenderTarget(VecI size, ITexture nativeRenderTexture)
     {
         nativeTexture = nativeRenderTexture;
-        renderTexture =Texture.FromExisting(DrawingBackendApi.Current.CreateRenderSurface(size,
+        renderTexture = Texture.FromExisting(DrawingBackendApi.Current.CreateRenderSurface(size,
             nativeRenderTexture,
             RenderApi is IVulkanHostViewRenderApi ? SurfaceOrigin.TopLeft : SurfaceOrigin.BottomLeft));
     }
