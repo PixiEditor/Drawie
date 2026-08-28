@@ -69,6 +69,7 @@ public class GlfwHost : Drawie.Host.IHost
 
     private SKSurface? surface;
     private Texture renderTexture;
+    private ITexture nativeTexture;
     private bool initialized;
 
     private List<ILayer> layers = new List<ILayer>();
@@ -201,7 +202,8 @@ public class GlfwHost : Drawie.Host.IHost
 
     private void CreateRenderTarget(VecI size, ITexture nativeRenderTexture)
     {
-        renderTexture = new Texture(NativeTexture.FromExisting(DrawingBackendApi.Current.CreateRenderSurface(size,
+        nativeTexture = nativeRenderTexture;
+        renderTexture = new Texture(Texture.FromExisting(DrawingBackendApi.Current.CreateRenderSurface(size,
             nativeRenderTexture,
             RenderApi is IVulkanHostViewRenderApi ? SurfaceOrigin.TopLeft : SurfaceOrigin.BottomLeft)));
     }

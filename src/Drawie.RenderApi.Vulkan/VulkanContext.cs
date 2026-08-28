@@ -96,10 +96,10 @@ public abstract class VulkanContext : IDisposable, IVulkanContext, IGraphicsCont
         ApplicationInfo appInfo = new()
         {
             SType = StructureType.ApplicationInfo,
-            PApplicationName = (byte*)Marshal.StringToHGlobalAnsi("Drawie"),
+            PApplicationName = (byte*)Marshal.StringToHGlobalAnsi("Drawie App"),
             ApplicationVersion = new Version32(1, 0, 0),
-            PEngineName = (byte*)Marshal.StringToHGlobalAnsi("Drawie Engine"),
-            EngineVersion = new Version32(1, 0, 0),
+            PEngineName = (byte*)Marshal.StringToHGlobalAnsi("Drawie"),
+            EngineVersion = new Version32(2, 0, 0),
             ApiVersion = Vk.Version11
         };
 
@@ -208,6 +208,11 @@ public abstract class VulkanContext : IDisposable, IVulkanContext, IGraphicsCont
     private unsafe string[] GetExtensions(IVulkanContextInfo contextInfo)
     {
         string[] contextExtensions = contextInfo.GetInstanceExtensions();
+        if (EnableValidationLayers && !contextExtensions.Contains(ExtDebugUtils.ExtensionName))
+        {
+            contextExtensions = [.. contextExtensions, ExtDebugUtils.ExtensionName];
+        }
+        
         return contextExtensions;
     }
 

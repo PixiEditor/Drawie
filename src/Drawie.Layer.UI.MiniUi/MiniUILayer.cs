@@ -1,4 +1,5 @@
-﻿using Drawie.Backend.Core.Bridge;
+﻿using Drawie.Backend.Core;
+using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Host;
 using Drawie.Numerics;
