@@ -143,7 +143,11 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
 
     public void DisposeTexture(ulong textureHandle)
     {
-        (context.ManagedTextures[textureHandle] as IDisposable)?.Dispose();
+        if (context.ManagedTextures.TryGetValue(textureHandle, out var texture))
+        {
+            (texture as IDisposable)?.Dispose();
+            context.RemoveManagedTexture(textureHandle);
+        }
     }
 
     public unsafe void Dispose()

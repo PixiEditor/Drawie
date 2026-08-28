@@ -240,10 +240,12 @@ namespace Drawie.Skia.Implementations
                 surfaceId = surfaceInfo?.SurfaceId;
             }
 
+            // TODO: Maybe queue for disposal after a global flush + add texture type variations, so some are managed by skia and some have native textures
+            instance.Flush(true, true);
+            
             UnmanageAndDispose(drawingSurface.ObjectPointer);
             if (surfaceId != null)
             {
-                throw new NotImplementedException("Implement a proper lifetime management for GPU-backed surfaces.");
                 GraphicsDevice.DisposeTexture(surfaceId.Value);
             }
         }
