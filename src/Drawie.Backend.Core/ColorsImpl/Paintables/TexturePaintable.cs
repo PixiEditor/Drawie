@@ -15,7 +15,7 @@ public class TexturePaintable : Paintable
 
     public override RectD LocalBounds => new RectD(0, 0, Image.Size.X, Image.Size.Y);
 
-    private Image lastSnapshot;
+    private Image? lastSnapshot;
 
     private bool disposeAfterUse;
 

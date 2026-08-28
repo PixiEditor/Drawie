@@ -4,46 +4,126 @@ namespace Drawie.RenderApi.OpenGL;
 
 public class OpenGlTexture : IOpenGlTexture, IDisposable
 {
-    public uint TextureId { get; }
+    public ulong TextureId { get; }
 
-    private GL Api { get; set; }
-    
-    public OpenGlTexture(uint textureId, GL api)
+    public int Width { get; }
+    public int Height { get; }
+    public int Samples { get; }
+
+    private GL Api { get; }
+
+    public OpenGlTexture(uint textureId, GL api, int width, int height)
     {
         TextureId = textureId;
         Api = api;
+        Width = width;
+        Height = height;
+        Samples = 1;
     }
 
-    public unsafe OpenGlTexture(GL api, int width, int height)
+    public unsafe OpenGlTexture(GL api, int width, int height, int samples)
     {
-        TextureId = api.GenTexture();
-
         Api = api;
+
+        Width = width;
+        Height = height;
+        Samples = samples;
+
+        TextureId = Api.GenTexture();
+
         Activate(0);
         Bind();
 
-        Api.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba, (uint)width, (uint)height, 0,
-            PixelFormat.Rgba,
-            PixelType.UnsignedByte, null);
+        if (samples == 1)
+        {
+            Api.TexImage2D(
+                TextureTarget.Texture2D,
+                0,
+                InternalFormat.Rgba,
+                (uint)width,
+                (uint)height,
+                0,
+                PixelFormat.Rgba,
+                PixelType.UnsignedByte,
+                null);
+        }
+        else
+        {
+            Api.TexImage2DMultisample(
+                TextureTarget.Texture2DMultisample,
+                (uint)samples,
+                InternalFormat.Rgb,
+                (uint)width,
+                (uint)height, true);
+        }
 
-        Api.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.Repeat);
-        Api.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.Repeat);
-        Api.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
-        Api.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
+        ApplyParameters();
+    }
+    
+    public unsafe OpenGlTexture(GL api, int width, int height, Span<byte> data, PixelFormat format = PixelFormat.Rgba)
+    {
+        Api = api;
+
+        Width = width;
+        Height = height;
+
+        TextureId = Api.GenTexture();
+        
+        Activate(0);
+        Bind();
+       
+        LoadTextureFromBytes(data, format);
+
+        ApplyParameters();
+    }
+
+    private void ApplyParameters()
+    {
+        Api.TexParameterI(
+            TextureTarget.Texture2D,
+            TextureParameterName.TextureWrapS,
+            (int)GLEnum.ClampToEdge);
+
+        Api.TexParameterI(
+            TextureTarget.Texture2D,
+            TextureParameterName.TextureWrapT,
+            (int)GLEnum.ClampToEdge);
+
+        Api.TexParameterI(
+            TextureTarget.Texture2D,
+            TextureParameterName.TextureMinFilter,
+            (int)GLEnum.Nearest);
+
+        Api.TexParameterI(
+            TextureTarget.Texture2D,
+            TextureParameterName.TextureMagFilter,
+            (int)GLEnum.Nearest);
+    }
+
+    private unsafe void LoadTextureFromBytes(Span<byte> data, PixelFormat format)
+    {
+        fixed (void* d = &data[0])
+        {
+            Api.TexImage2D(TextureTarget.Texture2D, 0, (int)InternalFormat.Rgba, (uint)Width, (uint)Height, 0, format, PixelType.UnsignedByte, d);
+        }
     }
 
     public void Bind()
     {
-        Api.BindTexture(TextureTarget.Texture2D, TextureId);
+        var target = Samples == 1 ? TextureTarget.Texture2D : TextureTarget.Texture2DMultisample;
+        Api.BindTexture(
+            target,
+            (uint)TextureId);
     }
 
     public void Activate(int textureUnit)
     {
-        Api.ActiveTexture(TextureUnit.Texture0 + textureUnit);
+        Api.ActiveTexture(
+            TextureUnit.Texture0 + textureUnit);
     }
 
     public void Dispose()
     {
-        Api.DeleteTexture(TextureId);
+        Api.DeleteTexture((uint)TextureId);
     }
 }

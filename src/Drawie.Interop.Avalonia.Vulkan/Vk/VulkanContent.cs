@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.Vulkan.Buffers;
 using Silk.NET.Vulkan;
 
@@ -30,8 +31,7 @@ public class VulkanContent : IDisposable
         var commandBuffer = context.Pool.CreateCommandBuffer();
         commandBuffer.BeginRecording();
 
-        texture.TransitionLayoutTo(commandBuffer.InternalHandle, ImageLayout.ColorAttachmentOptimal,
-            ImageLayout.TransferSrcOptimal);
+        texture.ColorAttachment.TransitionLayout(ImageLayout.TransferSrcOptimal, commandBuffer.InternalHandle);
 
         image.TransitionLayout(commandBuffer.InternalHandle, ImageLayout.TransferDstOptimal,
             AccessFlags.TransferWriteBit);
@@ -63,17 +63,15 @@ public class VulkanContent : IDisposable
             ImageLayout.TransferSrcOptimal,
             image.InternalHandle, ImageLayout.TransferDstOptimal, 1, srcBlitRegion, Filter.Linear);
 
+        texture.ColorAttachment.TransitionLayout(ImageLayout.ColorAttachmentOptimal, commandBuffer.InternalHandle);
         commandBuffer.Submit();
-
-        texture.TransitionLayoutTo((uint)ImageLayout.TransferSrcOptimal,
-            (uint)ImageLayout.ColorAttachmentOptimal);
     }
 
     public void CreateTextureImage(VecI size)
     {
         texture = new VulkanTexture(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice,
             context.Pool.CommandPool,
-            context.GraphicsQueue, context.GraphicsQueueFamilyIndex, size);
+            context.GraphicsQueue, context.GraphicsQueueFamilyIndex, new TextureDesc { Width = size.X, Height = size.Y, Depth = DepthFormat.NoDepth, Samples = 1, Format = TextureFormat.RGBA8_Unorm});
     }
 
     public void Dispose()

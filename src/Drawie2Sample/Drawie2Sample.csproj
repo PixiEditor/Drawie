@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Drawie2Sample</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Drawie.Backend.Vertie\Drawie.Backend.Vertie.csproj" />
+        <ProjectReference Include="..\Drawie.Layer.UI.ImGui\Drawie.Layer.UI.ImGui.csproj" />
+        <ProjectReference Include="..\Drawie.Layer.UI.MiniUi\Drawie.Layer.UI.MiniUi.csproj" />
+        <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Assets\**\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+    </ItemGroup>
+    
+</Project>

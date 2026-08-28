@@ -87,9 +87,14 @@ namespace Drawie.Skia
             ColorSpace? cs = null;
             if (info.ColorSpace != null)
             {
-                cs = new ColorSpace(info.ColorSpace.Handle);
                 var colorSpaceImpl = DrawingBackendApi.Current.ColorSpaceImplementation as SkiaColorSpaceImplementation;
-                colorSpaceImpl.AddManagedInstance(info.ColorSpace);
+                IntPtr? existing = colorSpaceImpl.FindManagedInstanceHandle(info.ColorSpace);
+                if (existing == null)
+                {
+                    existing = colorSpaceImpl.AddManagedInstance(info.ColorSpace);
+                }
+
+                cs = new ColorSpace(existing.Value);
             }
 
             return new ImageInfo(info.Width, info.Height,

@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Build.Framework" Version="18.9.6"/>
+        <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.9.6"/>
+
+        <PackageReference Include="Silk.NET.SPIRV.Cross" Version="2.23.0"/>
+        <PackageReference Include="Silk.NET.SPIRV.Cross.Native"
+                          Version="2.23.0"/>
+        <PackageReference Include="Slangc.NET" Version="2026.14.1"/>
+        
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Drawie.Shaders.Common\Drawie.Shaders.Common.csproj"/>
+    </ItemGroup>
+
+</Project>

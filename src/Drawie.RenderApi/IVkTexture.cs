@@ -1,3 +1,5 @@
+using Drawie.RenderApi.Abstraction.Textures;
+
 namespace Drawie.RenderApi;
 
 public interface IVkTexture : ITexture
@@ -11,4 +13,5 @@ public interface IVkTexture : ITexture
    public uint Tiling { get; }
    public void MakeReadOnly();
    public void MakeWriteable();
+   event Action Disposing;
 }

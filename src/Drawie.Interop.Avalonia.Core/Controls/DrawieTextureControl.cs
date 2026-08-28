@@ -55,9 +55,9 @@ public class DrawieTextureControl : DrawieControl
         {
             x.QueueNextFrame();
             if (e.OldValue is Texture oldTexture && x.RepaintOnChanged)
-                oldTexture.Changed -= x.Texture_Changed;
+                oldTexture.Changed -= x.TextureChanged;
             if (e.NewValue is Texture newTexture && x.RepaintOnChanged)
-                newTexture.Changed += x.Texture_Changed;
+                newTexture.Changed += x.TextureChanged;
         });
         SamplingOptionsProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) => x.QueueNextFrame());
         StretchProperty.Changed.AddClassHandler<DrawieTextureControl>((x,e) => x.QueueNextFrame());
@@ -67,12 +67,12 @@ public class DrawieTextureControl : DrawieControl
             {
                 x.QueueNextFrame();
                 if(x.Texture != null)
-                    x.Texture.Changed += x.Texture_Changed;
+                    x.Texture.Changed += x.TextureChanged;
             }
             else
             {
                 if(x.Texture != null)
-                    x.Texture.Changed -= x.Texture_Changed;
+                    x.Texture.Changed -= x.TextureChanged;
             }
         });
     }
@@ -118,7 +118,7 @@ public class DrawieTextureControl : DrawieControl
         return new Size();
     }
 
-    private void Texture_Changed(RectD? changedRect)
+    private void TextureChanged(RectD? changedRect)
     {
         QueueNextFrame();
     }

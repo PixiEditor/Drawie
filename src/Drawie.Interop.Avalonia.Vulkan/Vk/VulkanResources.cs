@@ -2,6 +2,7 @@
 using Avalonia.Rendering.Composition;
 using Drawie.Interop.Avalonia.Core;
 using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 

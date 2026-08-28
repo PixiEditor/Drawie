@@ -30,12 +30,12 @@ public class VulkanWindowContext : VulkanContext
     public override void Initialize(IVulkanContextInfo contextInfo)
     {
         Api = Vk.GetApi();
-        
         TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
         
         deviceExtensions.Add(KhrSwapchain.ExtensionName);
         
         SetupInstance(contextInfo);
+        
         SetupDebugMessenger();
 
         if (contextInfo.HasSurface)

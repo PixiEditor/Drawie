@@ -5,11 +5,11 @@ namespace Drawie.RenderApi.WebGl;
 
 public class WebGlContext : IWebGlContext
 {
-    public WebGlWindowRenderApi WebGlWindowRenderApi { get; }
+    public WebGlHostViewRenderApi WebGlHostViewRenderApi { get; }
     
-    public WebGlContext(WebGlWindowRenderApi webGlWindowRenderApi)
+    public WebGlContext(WebGlHostViewRenderApi webGlHostViewRenderApi)
     {
-        WebGlWindowRenderApi = webGlWindowRenderApi;
+        WebGlHostViewRenderApi = webGlHostViewRenderApi;
     }
     
     public IntPtr GetGlInterface(string name)

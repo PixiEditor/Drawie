@@ -1,14 +1,14 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
-using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Backend.Core;
 
-public class Texture : IDisposable, ICloneable, IPixelsMap
+public class Texture : IDisposable, ICloneable, IPixelsMap, INativeSurfaceInfo, ITexture
 {
     public VecI Size { get; }
     public DrawingSurface DrawingSurface { get; private set; }
@@ -21,6 +21,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
     public ColorSpace ColorSpace { get; }
 
     public ImageInfo ImageInfo { get; }
+    public ulong TextureId => SurfaceId;
 
     private DrawingSurface? cpuSurface;
     private Pixmap? cpuPixmap;
@@ -32,7 +33,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
     private HashSet<object> lockDisposes = new();
 
     private Paint nearestNeighborReplacingPaint =
-        new() { BlendMode = BlendMode.Src, FilterQuality = FilterQuality.None };
+        new() { BlendMode = BlendMode.Src };
 
     public Texture(VecI size)
         : this(new ImageInfo(size.X, size.Y, ColorType.RgbaF16, AlphaType.Premul, ColorSpace.CreateSrgb())
@@ -86,7 +87,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
 
         return tex;
     }
-    
+
     public static Texture ForProcessing(Canvas copySizeAndMatrixFrom, ColorSpace colorSpace)
     {
         Texture tex = new Texture(
@@ -120,11 +121,12 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
                         throw new Exception("Could not create DrawingSurface for Texture.");
                     }
                 }
+
+                DrawingSurface.Changed += DrawingSurfaceOnChanged;
             }
         );
 
         ImageInfo = imageImageInfo;
-        DrawingSurface.Changed += DrawingSurfaceOnChanged;
         Changed += OnChanged;
     }
 
@@ -209,8 +211,6 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
             _ => FilterQuality.None
         };
 
-        paint.FilterQuality = filterQuality;
-
         newTexture.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y), paint);
 
         return newTexture;
@@ -245,7 +245,6 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         using var ctx = EnsureContext();
         using Image image = DrawingSurface.Snapshot();
         using Paint paint = new();
-        paint.FilterQuality = quality;
         Texture newSurface = new(newSize);
         newSurface.DrawingSurface.Canvas.DrawImage(image, new RectD(0, 0, newSize.X, newSize.Y),
             paint);
@@ -304,7 +303,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         if (isDisposed)
             throw new ObjectDisposedException("Texture");
 
-        if(cpuSurface == null)
+        if (cpuSurface == null)
             return;
 
         using var ctx = EnsureContext();
@@ -411,4 +410,8 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         surf.SaveToDesktop();
     }
 #endif
+
+    public ulong SurfaceId =>
+        DrawingBackendApi.Current.SurfaceImplementation.GetNativeSurfaceInfo(DrawingSurface.ObjectPointer)
+            ?.SurfaceId ?? throw new Exception("Framebuffer info not available.");
 }

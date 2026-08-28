@@ -1,26 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk.WebAssembly">
   <PropertyGroup>
-    <TargetFramework>net8.0-browser</TargetFramework>
+    <TargetFramework>net10.0-browser</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <IsBrowserProject>true</IsBrowserProject>
+    <IsBrowserBuild>true</IsBrowserBuild>
     <EmccExtraLDFlags>$(EmccExtraLDFlags) --js-library="$(MSBuildThisFileDirectory)\SkiaSharpGLInterop.js"</EmccExtraLDFlags>
     <PublishTrimmed>true</PublishTrimmed>
     <WasmBuildNative>true</WasmBuildNative>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Drawie2Sample\Drawie2Sample.csproj" />
     <ProjectReference Include="..\DrawiEngine.Browser\DrawiEngine.Browser.csproj"/>
     <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj"/>
-    <ProjectReference Include="..\DrawieSample\DrawieSample.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\scripts\drawie.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="10.0.11" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="8.0.10" />
+    <None Include="wwwroot\scripts\drawie.js" />
   </ItemGroup>
 </Project>

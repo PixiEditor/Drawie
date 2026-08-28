@@ -12,8 +12,6 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 {
     private readonly SkiaPathImplementation pathImplementation;
 
-    private volatile int fontCounter = 0;
-
     public SkiaFontImplementation(SkiaPathImplementation pathImplementation)
     {
         this.pathImplementation = pathImplementation;
@@ -30,8 +28,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
             var path = font.GetTextPath(text);
-            pathImplementation.AddManagedInstance(path);
-            return new VectorPath(path.Handle);
+            return new VectorPath(pathImplementation.AddManagedInstance(path));
         }
 
         throw new InvalidOperationException("Native font object not found");
@@ -47,8 +44,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         }
 
         SKFont font = new(typeface, fontSize, scaleX, skewY);
-        int handle = Interlocked.Increment(ref fontCounter);
-        AddManagedInstance(handle, font);
+        IntPtr handle = AddManagedInstance(font);
         return new Font(handle, new FontFamilyName(typeface.FamilyName));
     }
 
@@ -316,8 +312,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
     public Font CreateDefault(float fontSize)
     {
         SKFont font = new(SKTypeface.Default, fontSize);
-        int handle = Interlocked.Increment(ref fontCounter);
-        AddManagedInstance(handle, font);
+        IntPtr handle = AddManagedInstance(font);
         return new Font(handle, new FontFamilyName(SKTypeface.Default.FamilyName));
     }
 
@@ -330,8 +325,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         }
 
         SKFont font = new(typeface);
-        int handle = Interlocked.Increment(ref fontCounter);
-        AddManagedInstance(handle, font);
+        IntPtr handle = AddManagedInstance(font);
         return new Font(handle, new FontFamilyName(familyName));
     }
 
@@ -345,8 +339,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         }
 
         SKFont font = new(typeface);
-        int handle = Interlocked.Increment(ref fontCounter);
-        AddManagedInstance(handle, font);
+        IntPtr handle = AddManagedInstance(font);
         return new Font(handle, new FontFamilyName(familyName));
     }
 

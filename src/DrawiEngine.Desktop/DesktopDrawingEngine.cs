@@ -8,9 +8,9 @@ namespace DrawiEngine.Desktop;
 
 public static class DesktopDrawingEngine
 {
-    public static DrawingEngine CreateDefaultDesktop()
+    public static DrawingEngine CreateDefaultDesktop(bool preferVulkan = true)
     {
-        IRenderApi renderApi = new VulkanRenderApi();
+        IRenderApi renderApi = preferVulkan ? new VulkanRenderApi() : new OpenGlRenderApi();
 
         if (OperatingSystem.IsMacOS())
         {

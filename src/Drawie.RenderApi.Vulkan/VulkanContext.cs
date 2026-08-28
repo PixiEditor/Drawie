@@ -1,9 +1,9 @@
-﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using Drawie.RenderApi.Abstraction.Textures;
+using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.RenderApi.Vulkan.ContextObjects;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Extensions;
-using Drawie.RenderApi.Vulkan.Helpers;
 using Silk.NET.Core;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
@@ -12,7 +12,7 @@ using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace Drawie.RenderApi.Vulkan;
 
-public abstract class VulkanContext : IDisposable, IVulkanContext
+public abstract class VulkanContext : IDisposable, IVulkanContext, IGraphicsContext
 {
     public Vk? Api { get; protected set; }
 
@@ -38,6 +38,11 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
 
     public GpuInfo GpuInfo { get; set; }
 
+    public IReadOnlyDictionary<ulong, IVkTexture> ManagedTextures => managedTextures;
+    
+    
+    private Dictionary<ulong, IVkTexture> managedTextures = new Dictionary<ulong, IVkTexture>();
+    
     private Instance instance;
 
     protected List<string> validationLayers = new List<string>();
@@ -63,6 +68,27 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
 
     public abstract void Initialize(IVulkanContextInfo contextInfo);
 
+    void IGraphicsContext.MakeCurrent()
+    {
+        // no op
+    }
+
+    public void AddManagedTexture(ITexture texture, ulong handle)
+    {
+        if (texture is not IVkTexture vkTexture) throw new ArgumentException("Can't manage non IVkTexture");
+        managedTextures[handle] = vkTexture;
+        
+        vkTexture.Disposing += () =>
+        {
+            RemoveManagedTexture(texture.TextureId);
+        };
+    }
+
+    public void RemoveManagedTexture(ulong handle)
+    {
+        managedTextures.Remove(handle);
+    }
+
     protected unsafe void SetupInstance(IVulkanContextInfo contextInfo)
     {
         ThrowIfValidationLayersNotSupported();
@@ -74,13 +100,14 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
             ApplicationVersion = new Version32(1, 0, 0),
             PEngineName = (byte*)Marshal.StringToHGlobalAnsi("Drawie Engine"),
             EngineVersion = new Version32(1, 0, 0),
-            ApiVersion = Vk.Version12
+            ApiVersion = Vk.Version11
         };
 
         InstanceCreateInfo createInfo = new()
         {
             SType = StructureType.InstanceCreateInfo,
-            PApplicationInfo = &appInfo
+            PApplicationInfo = &appInfo,
+            Flags = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? InstanceCreateFlags.EnumeratePortabilityBitKhr : default
         };
 
         var extensions = GetExtensions(contextInfo);
@@ -131,6 +158,7 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
     protected unsafe GpuInfo PickPhysicalDevice()
     {
         var devices = Api!.GetPhysicalDevices(Instance);
+        List<(GpuInfo, PhysicalDevice)?> suitableDevices = new List<(GpuInfo, PhysicalDevice)?>();
         foreach (var device in devices)
         {
             if (IsDeviceSuitable(device))
@@ -141,15 +169,22 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
 
                 if (deviceName == null) throw new VulkanException("Failed to get device name.");
 
-                GpuInfo gpuInfo = new(deviceName, VendorById(props.VendorID));
-                PhysicalDevice = device;
-                return gpuInfo;
+                GpuInfo gpuInfo = new(deviceName, VendorById(props.VendorID), props.DeviceType == PhysicalDeviceType.DiscreteGpu);
+                suitableDevices.Add((gpuInfo, device));
             }
+        }
+
+        if(suitableDevices.Count > 0)
+        {
+            var selectedGpu =
+                suitableDevices.FirstOrDefault(x => x?.Item1.IsDiscreteGpu is true, null) ?? suitableDevices[0];
+            PhysicalDevice = selectedGpu?.Item2 ?? default;
+            return selectedGpu?.Item1 ?? new GpuInfo("Unknown", "Unknown", false);
         }
 
         if (PhysicalDevice.Handle == 0) throw new VulkanException("Failed to find a suitable Vulkan GPU.");
 
-        return new GpuInfo("Unknown", "Unknown");
+        return new GpuInfo("Unknown", "Unknown", false);
     }
 
     private string VendorById(uint vendorId)
@@ -173,11 +208,6 @@ public abstract class VulkanContext : IDisposable, IVulkanContext
     private unsafe string[] GetExtensions(IVulkanContextInfo contextInfo)
     {
         string[] contextExtensions = contextInfo.GetInstanceExtensions();
-        if (EnableValidationLayers)
-        {
-            return contextExtensions.Append(ExtDebugUtils.ExtensionName).ToArray();
-        }
-
         return contextExtensions;
     }
 

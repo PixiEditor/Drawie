@@ -9,10 +9,9 @@ namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
 public class VulkanSemaphorePair : IDisposable
 {
-     private readonly VulkanInteropContext _resources;
+    private readonly VulkanInteropContext _resources;
 
-    public unsafe VulkanSemaphorePair(VulkanInteropContext resources,
-        IReadOnlyList<string> supportedHandleTypes, bool exportable)
+    public unsafe VulkanSemaphorePair(VulkanInteropContext resources, bool exportable)
     {
         _resources = resources;
 
@@ -20,29 +19,26 @@ public class VulkanSemaphorePair : IDisposable
         {
             SType = StructureType.ExportSemaphoreCreateInfo,
             HandleTypes = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? (supportedHandleTypes.Contains(KnownPlatformGraphicsExternalImageHandleTypes.D3D11TextureNtHandle)
-               && !supportedHandleTypes.Contains(KnownPlatformGraphicsExternalImageHandleTypes.VulkanOpaqueNtHandle)
-                ? ExternalSemaphoreHandleTypeFlags.D3D11FenceBit
-                : ExternalSemaphoreHandleTypeFlags.OpaqueWin32Bit)
-            : ExternalSemaphoreHandleTypeFlags.OpaqueFDBit
+                ? ExternalSemaphoreHandleTypeFlags.OpaqueWin32Bit
+                : ExternalSemaphoreHandleTypeFlags.OpaqueFDBit
         };
 
         var semaphoreCreateInfo = new SemaphoreCreateInfo
         {
-            SType = StructureType.SemaphoreCreateInfo,
-            PNext = exportable ? &semaphoreExportInfo : null
+            SType = StructureType.SemaphoreCreateInfo, PNext = exportable ? &semaphoreExportInfo : null
         };
 
-        resources.Api!.CreateSemaphore(resources.LogicalDevice.Device, semaphoreCreateInfo, null, out var semaphore).ThrowOnError("Failed to create semaphore");
+        resources.Api.CreateSemaphore(resources.LogicalDevice.Device, in semaphoreCreateInfo, null, out var semaphore).ThrowOnError();
         ImageAvailableSemaphore = semaphore;
 
-        resources.Api.CreateSemaphore(resources.LogicalDevice.Device, semaphoreCreateInfo, null, out semaphore).ThrowOnError("Failed to create semaphore");
+        resources.Api.CreateSemaphore(resources.LogicalDevice.Device, in semaphoreCreateInfo, null, out semaphore).ThrowOnError();
         RenderFinishedSemaphore = semaphore;
     }
 
     public int ExportFd(bool renderFinished)
     {
-        if (!_resources.Api!.TryGetDeviceExtension<KhrExternalSemaphoreFd>(_resources.Instance, _resources.LogicalDevice.Device,
+        if (!_resources.Api!.TryGetDeviceExtension<KhrExternalSemaphoreFd>(_resources.Instance,
+                _resources.LogicalDevice.Device,
                 out var ext))
             throw new InvalidOperationException();
         var info = new SemaphoreGetFdInfoKHR()
@@ -54,10 +50,11 @@ public class VulkanSemaphorePair : IDisposable
         ext.GetSemaphoreF(_resources.LogicalDevice.Device, info, out var fd).ThrowOnError("Failed to export semaphore");
         return fd;
     }
-    
+
     public IntPtr ExportWin32(bool renderFinished)
     {
-        if (!_resources.Api!.TryGetDeviceExtension<KhrExternalSemaphoreWin32>(_resources.Instance, _resources.LogicalDevice.Device,
+        if (!_resources.Api!.TryGetDeviceExtension<KhrExternalSemaphoreWin32>(_resources.Instance,
+                _resources.LogicalDevice.Device,
                 out var ext))
             throw new InvalidOperationException();
         var info = new SemaphoreGetWin32HandleInfoKHR()
@@ -66,7 +63,8 @@ public class VulkanSemaphorePair : IDisposable
             Semaphore = renderFinished ? RenderFinishedSemaphore : ImageAvailableSemaphore,
             HandleType = ExternalSemaphoreHandleTypeFlags.OpaqueWin32Bit
         };
-        ext.GetSemaphoreWin32Handle(_resources.LogicalDevice.Device, info, out var fd).ThrowOnError("Failed to export semaphore");
+        ext.GetSemaphoreWin32Handle(_resources.LogicalDevice.Device, info, out var fd)
+            .ThrowOnError("Failed to export semaphore");
         return fd;
     }
 
@@ -86,5 +84,5 @@ public class VulkanSemaphorePair : IDisposable
     {
         _resources.Api!.DestroySemaphore(_resources.LogicalDevice.Device, ImageAvailableSemaphore, null);
         _resources.Api!.DestroySemaphore(_resources.LogicalDevice.Device, RenderFinishedSemaphore, null);
-    } 
+    }
 }

@@ -1,9 +1,13 @@
-﻿using Drawie.Backend.Core.Bridge.Operations;
+﻿using Drawie.Backend.Core;
+using Drawie.Backend.Core.Bridge;
+using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Numerics;
+using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.Skia.Encoders;
 using Drawie.Skia.Extensions;
 using SkiaSharp;
@@ -14,8 +18,11 @@ namespace Drawie.Skia.Implementations
     {
         private readonly SkObjectImplementation<SKData> _imgImplementation;
         private readonly SkiaPixmapImplementation _pixmapImplementation;
-        private SkObjectImplementation<SKSurface>? _surfaceImplementation;
+        private SkiaSurfaceImplementation _surfaceImplementation;
         private SkiaShaderImplementation shaderImpl;
+        /*
+        private Dictionary<IntPtr, ITexture> textureInfos = new Dictionary<IntPtr, ITexture>();
+        */
 
         private Dictionary<EncodedImageFormat, IImageEncoder> nonSkiaEncoders = new Dictionary<EncodedImageFormat, IImageEncoder>()
         {
@@ -30,7 +37,7 @@ namespace Drawie.Skia.Implementations
             shaderImpl = shaderImplementation;
         }
 
-        public void SetSurfaceImplementation(SkObjectImplementation<SKSurface> surfaceImplementation)
+        public void SetSurfaceImplementation(SkiaSurfaceImplementation surfaceImplementation)
         {
             _surfaceImplementation = surfaceImplementation;
         }
@@ -40,8 +47,7 @@ namespace Drawie.Skia.Implementations
             var surface = _surfaceImplementation![drawingSurface.ObjectPointer];
             SKImage snapshot = surface.Snapshot();
 
-            AddManagedInstance(snapshot);
-            return new Image(snapshot.Handle);
+            return new Image(AddManagedInstance(snapshot));
         }
 
         public Image Snapshot(DrawingSurface drawingSurface, RectI bounds)
@@ -49,8 +55,115 @@ namespace Drawie.Skia.Implementations
             var surface = _surfaceImplementation![drawingSurface.ObjectPointer];
             SKImage snapshot = surface.Snapshot(bounds.ToSkRectI());
 
+            return new Image(AddManagedInstance(snapshot));
+        }
+
+        /*public Image? TextureSnapshot(DrawingSurface drawingSurface)
+        {
+            var surface = _surfaceImplementation![drawingSurface.ObjectPointer];
+
+            VecI size = new VecI(surface.Canvas.DeviceClipBounds.Width, surface.Canvas.DeviceClipBounds.Height);
+            
+            /*
+            var fbInfo = DrawingBackendApi.Current.SurfaceImplementation.GetFramebufferInfo(drawingSurface.ObjectPointer);
+
+            if (fbInfo is not SkiaFramebufferInfo skiaFramebufferInfo)
+            {
+                return null;
+            }
+            
+            SKImage? snapshot = CreateFromFramebuffer(skiaFramebufferInfo, size, SurfaceOrigin.BottomLeft, out var textureInfo);
+            if (snapshot == null) return null;#1#
+
+            var nativeTexture =_surfaceImplementation.GraphicsDevice.CreateTexture(new TextureDesc()
+            {
+                Width = size.X,
+                Height = size.Y,
+                Format = TextureFormat.RGBA8_Unorm
+            });
+
+            SKImage snapshot = SnapshotToOwnedTexture(surface, (uint)nativeTexture.TextureId, size.X, size.Y,
+                SurfaceOrigin.BottomLeft, out var textureInfo);
+
             AddManagedInstance(snapshot);
+            textureInfos[snapshot.Handle] = textureInfo;
             return new Image(snapshot.Handle);
+        }
+        
+        internal SKImage? SnapshotToOwnedTexture(
+            SKSurface source,
+            uint textureId,
+            int width,
+            int height,
+            SurfaceOrigin origin, out SkiaTextureInfo info)
+        {
+            const uint GL_TEXTURE_2D = 3553;
+            const uint GL_RGBA8 = 0x8058;
+
+            var textureInfo = new GRGlTextureInfo(
+                GL_TEXTURE_2D,
+                textureId,
+                GL_RGBA8);
+
+            var backendTexture = new GRBackendTexture(
+                width,
+                height,
+                false,
+                textureInfo);
+
+            var targetSurface = SKSurface.Create(
+                _surfaceImplementation.GrContext,
+                backendTexture,
+                (GRSurfaceOrigin)origin,
+                SKColorType.Rgba8888);
+
+            info = new SkiaTextureInfo(backendTexture);
+            
+            if (targetSurface == null)
+                return null;
+
+            using var snapshot = source.Snapshot();
+
+            targetSurface.Canvas.DrawImage(snapshot, 0, 0, SKSamplingOptions.Default);
+            
+            return SKImage.FromTexture(
+                _surfaceImplementation.GrContext,
+                backendTexture,
+                (GRSurfaceOrigin)origin,
+                SKColorType.Rgba8888,
+                SKAlphaType.Premul);
+        }*/
+        
+        internal SKImage? CreateFromFramebuffer(SkiaNativeSurfaceInfo skiaNativeSurfaceInfo, VecI size, SurfaceOrigin surfaceOrigin, out ITexture fbInfo)
+        {
+            if (skiaNativeSurfaceInfo.VkImageInfo != null)
+            {
+                var imageInfo = skiaNativeSurfaceInfo.VkImageInfo.Value;
+                var backendRenderTarget = new GRBackendTexture(size.X, size.Y, imageInfo);
+                var surface = SKImage.FromTexture(_surfaceImplementation.GrContext, backendRenderTarget,
+                    (GRSurfaceOrigin)surfaceOrigin, SKColorType.Rgba8888, SKAlphaType.Premul);
+
+                fbInfo = new SkiaTextureInfo(backendRenderTarget);
+                return surface;
+            }
+
+            if (skiaNativeSurfaceInfo.GlFramebufferInfo != null)
+            {
+                uint textureId = skiaNativeSurfaceInfo.GlFramebufferInfo.Value.FramebufferObjectId;
+
+                const uint OpenGlTexture2D = 3553;
+                const uint RGBA8 = 0x8058;
+                GRBackendTexture backendRenderTarget =
+                    new GRBackendTexture(size.X, size.Y, false, new GRGlTextureInfo(OpenGlTexture2D, textureId, RGBA8));
+                
+                var surface = SKImage.FromTexture(_surfaceImplementation.GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
+                    SKColorType.Rgba8888, SKAlphaType.Premul);
+
+                fbInfo = new SkiaTextureInfo(backendRenderTarget);
+                return surface;
+            }
+
+            throw new ArgumentException("Unsupported texture type.");
         }
 
         public Image? FromEncodedData(byte[] dataBytes)
@@ -58,14 +171,16 @@ namespace Drawie.Skia.Implementations
             SKImage img = SKImage.FromEncodedData(dataBytes);
             if (img is null)
                 return null;
-            AddManagedInstance(img);
 
-            return new Image(img.Handle);
+            return new Image(AddManagedInstance(img));
         }
 
         public void DisposeImage(Image image)
         {
             UnmanageAndDispose(image.ObjectPointer);
+            /*
+            textureInfos.Remove(image.ObjectPointer);
+        */
         }
 
         public Image? FromEncodedData(string path)
@@ -73,8 +188,7 @@ namespace Drawie.Skia.Implementations
             var nativeImg = SKImage.FromEncodedData(path);
             if (nativeImg is null)
                 return null;
-            AddManagedInstance(nativeImg);
-            return new Image(nativeImg.Handle);
+            return new Image(AddManagedInstance(nativeImg));
         }
 
         public Image? FromPixelCopy(ImageInfo info, byte[] pixels)
@@ -82,8 +196,7 @@ namespace Drawie.Skia.Implementations
             var nativeImg = SKImage.FromPixelCopy(info.ToSkImageInfo(), pixels);
             if (nativeImg is null)
                 return null;
-            AddManagedInstance(nativeImg);
-            return new Image(nativeImg.Handle);
+            return new Image(AddManagedInstance(nativeImg));
         }
 
         public Pixmap PeekPixels(Image image)
@@ -107,8 +220,7 @@ namespace Drawie.Skia.Implementations
         {
             var native = this[image.ObjectPointer];
             var encoded = native.Encode();
-            _imgImplementation.AddManagedInstance(encoded);
-            return new ImgData(encoded.Handle);
+            return new ImgData(_imgImplementation.AddManagedInstance(encoded));
         }
 
         public ImgData Encode(Image image, EncodedImageFormat format, int quality)
@@ -133,8 +245,7 @@ namespace Drawie.Skia.Implementations
                 encoded = native.Encode((SKEncodedImageFormat)format, quality);
             }
 
-            _imgImplementation.AddManagedInstance(encoded);
-            return new ImgData(encoded.Handle);
+            return new ImgData(_imgImplementation.AddManagedInstance(encoded));
         }
 
         public int GetWidth(IntPtr objectPointer)
@@ -152,8 +263,7 @@ namespace Drawie.Skia.Implementations
             var native = this[image.ObjectPointer];
             var encoded = native.Encode();
             var clone = SKImage.FromEncodedData(encoded);
-            AddManagedInstance(clone);
-            return new Image(clone.Handle);
+            return new Image(AddManagedInstance(clone));
         }
 
         public Pixmap PeekPixels(IntPtr objectPointer)
@@ -172,8 +282,7 @@ namespace Drawie.Skia.Implementations
         public Shader ToShader(IntPtr objectPointer)
         {
             var shader = this[objectPointer].ToShader();
-            shaderImpl.AddManagedInstance(shader);
-            return new Shader(shader.Handle);
+            return new Shader(shaderImpl.AddManagedInstance(shader));
         }
 
 
@@ -181,15 +290,14 @@ namespace Drawie.Skia.Implementations
         {
             var shader = this[objectPointer]
                 .ToShader((SKShaderTileMode)tileX, (SKShaderTileMode)tileY, samplingOptions.ToSkSamplingOptions(), localMatrix.ToSkMatrix());
-            shaderImpl.AddManagedInstance(shader);
-            return new Shader(shader.Handle);
+
+            return new Shader(shaderImpl.AddManagedInstance(shader));
         }
 
         public Shader ToRawShader(IntPtr objectPointer)
         {
             var shader = this[objectPointer].ToRawShader();
-            shaderImpl.AddManagedInstance(shader);
-            return new Shader(shader.Handle);
+            return new Shader(shaderImpl.AddManagedInstance(shader));
         }
 
         public Shader? ToShader(IntPtr objectPointer, TileMode clamp, TileMode tileMode, Matrix3X3 fillMatrixValue)
@@ -199,9 +307,25 @@ namespace Drawie.Skia.Implementations
             if (shader is null)
                 return null;
 
-            shaderImpl.AddManagedInstance(shader);
-            return new Shader(shader.Handle);
+            return new Shader(shaderImpl.AddManagedInstance(shader));
         }
+
+        public uint GetUniqueId(IntPtr objectPointer)
+        {
+            return this[objectPointer].UniqueId;
+        }
+
+        /*
+        public ulong? GetTextureId(IntPtr objectPointer)
+        {
+            if (textureInfos.TryGetValue(objectPointer, out var info))
+            {
+                return info.TextureId;
+            }
+            
+            return null;
+        }
+        */
 
         public object GetNativeImage(IntPtr objectPointer)
         {

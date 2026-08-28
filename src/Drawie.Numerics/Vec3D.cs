@@ -1,7 +1,14 @@
-﻿namespace Drawie.Numerics;
+﻿using System.Numerics;
+
+namespace Drawie.Numerics;
 
 public struct Vec3D
 {
+    public static Vec3D Zero { get; } = new(0, 0, 0);
+    public static Vec3D UnitX { get; } = new(1, 0, 0);
+    public static Vec3D UnitY { get; } = new(0, 1, 0);
+    public static Vec3D UnitZ { get; } = new(0, 0, 1);
+    
     public double X { get; set; }
     public double Y { get; set; }
     public double Z { get; set; }
@@ -12,7 +19,6 @@ public struct Vec3D
     public double Length => Math.Sqrt(LengthSquared);
     public double LengthSquared => X * X + Y * Y + Z * Z;
 
-    public static Vec3D Zero { get; } = new(0, 0, 0);
 
     public Vec3D(double x, double y, double z)
     {
@@ -66,6 +72,15 @@ public struct Vec3D
 
     public double Dot(Vec3D other) => (X * other.X) + (Y * other.Y) + (Z * other.Z);
 
+    public Vec3D Cross(Vec3D other)
+    {
+        return new Vec3D(
+            Y * other.Z - Z * other.Y,
+            Z * other.X - X * other.Z,
+            X * other.Y - Y * other.X
+        );
+    }
+    
     public Vec3D Multiply(Vec3D other)
     {
         return new Vec3D(X * other.X, Y * other.Y, Z * other.Z);
@@ -172,5 +187,13 @@ public struct Vec3D
         double dY = Math.Abs(Y - other.Y);
         double dZ = Math.Abs(Z - other.Z);
         return dX < axisEpsilon && dY < axisEpsilon && dZ < axisEpsilon;
+    }
+
+    public static Vec3D Transform(Vec3D vector, Quaternion rotation)
+    {
+        // Maybe one day we can implement our own formula ;P
+        var v = new Vector3((float)vector.X, (float)vector.Y, (float)vector.Z);
+        var transformed = Vector3.Transform(v, rotation);
+        return new Vec3D(transformed.X, transformed.Y, transformed.Z);
     }
 }

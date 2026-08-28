@@ -24,6 +24,11 @@ public class AvaloniaRenderingDispatcher : IRenderingDispatcher
         });
     };
 
+    public void RenderApiReady()
+    {
+
+    }
+
     public async Task<TResult> InvokeAsync<TResult>(Func<TResult> func)
     {
         return await Dispatcher.UIThread.InvokeAsync(() =>

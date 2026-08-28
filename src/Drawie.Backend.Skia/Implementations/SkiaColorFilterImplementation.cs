@@ -19,17 +19,13 @@ namespace Drawie.Skia.Implementations
         public IntPtr CreateColorMatrix(float[] matrix)
         {
             var skColorFilter = SKColorFilter.CreateColorMatrix(matrix);
-            AddManagedInstance(skColorFilter);
-
-            return skColorFilter.Handle;
+            return AddManagedInstance(skColorFilter);
         }
 
         public IntPtr CreateHighContrast(bool grayscale, ContrastInvertMode invert, float contrast)
         {
             var skColorFilter = SKColorFilter.CreateHighContrast(grayscale, (SKHighContrastConfigInvertStyle)invert, contrast);
-            AddManagedInstance(skColorFilter);
-
-            return skColorFilter.Handle;
+            return AddManagedInstance(skColorFilter);
         }
 
         public IntPtr CreateCompose(ColorFilter outer, ColorFilter inner)
@@ -38,9 +34,7 @@ namespace Drawie.Skia.Implementations
             var skInner = this[inner.ObjectPointer];
 
             var skColorFilter = SKColorFilter.CreateCompose(skOuter, skInner);
-            AddManagedInstance(skColorFilter);
-
-            return skColorFilter.Handle;
+            return AddManagedInstance(skColorFilter);
         }
 
         public void Dispose(ColorFilter colorFilter)
@@ -56,33 +50,25 @@ namespace Drawie.Skia.Implementations
         public IntPtr CreateLumaColor()
         {
             var skColorFilter = SKColorFilter.CreateLumaColor();
-            AddManagedInstance(skColorFilter);
-
-            return skColorFilter.Handle;
+            return AddManagedInstance(skColorFilter);
         }
 
         public IntPtr CreateLighting(Color mul, Color add)
         {
             var skColorFilter = SKColorFilter.CreateLighting(mul.ToSKColor(), add.ToSKColor());
-            AddManagedInstance(skColorFilter);
-
-            return skColorFilter.Handle;
+            return AddManagedInstance(skColorFilter);
         }
 
         public IntPtr CreateSrgbToLinearGamma()
         {
             var skColorFilter = SKColorFilter.CreateSrgbToLinearGamma();
-            AddManagedInstance(skColorFilter);
-
-            return skColorFilter.Handle;
+            return AddManagedInstance(skColorFilter);
         }
 
         public IntPtr CreateLinearToSrgbGamma()
         {
             var skColorFilter = SKColorFilter.CreateLinearToSrgbGamma();
-            AddManagedInstance(skColorFilter);
-
-            return skColorFilter.Handle;
+            return AddManagedInstance(skColorFilter);
         }
     }
 }

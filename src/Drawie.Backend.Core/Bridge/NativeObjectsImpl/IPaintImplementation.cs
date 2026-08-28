@@ -15,8 +15,6 @@ namespace Drawie.Backend.Core.Bridge.NativeObjectsImpl
         public void SetColor(Paint paint, Color value);
         public BlendMode GetBlendMode(Paint paint);
         public void SetBlendMode(Paint paint, BlendMode value);
-        public FilterQuality GetFilterQuality(Paint paint);
-        public void SetFilterQuality(Paint paint, FilterQuality value);
         public bool GetIsAntiAliased(Paint paint);
         public void SetIsAntiAliased(Paint paint, bool value);
         public PaintStyle GetStyle(Paint paint);

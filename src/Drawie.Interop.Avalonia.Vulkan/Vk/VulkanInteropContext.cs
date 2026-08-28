@@ -5,10 +5,12 @@ using Drawie.Backend.Core.Debug;
 using Drawie.Interop.Avalonia.Core;
 using Drawie.RenderApi;
 using Drawie.RenderApi.Vulkan;
+using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.RenderApi.Vulkan.ContextObjects;
 using Drawie.RenderApi.Vulkan.Extensions;
 using DrawiEngine;
 using Silk.NET.Core.Native;
+using Silk.NET.Direct3D11;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 
@@ -17,11 +19,11 @@ namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
 {
     public VulkanCommandBufferPool Pool { get; private set; }
+    public ComPtr<ID3D11Device> D3DDevice { get; private set; }
 
     private List<string> requiredDeviceExtensions = new List<string>();
 
     private ICompositionGpuInterop gpuInterop;
-    private DescriptorPool descriptorPool;
 
     public VulkanInteropContext(ICompositionGpuInterop gpuInterop)
     {
@@ -37,14 +39,17 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
 
         Api = Silk.NET.Vulkan.Vk.GetApi();
 
-        TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
 
         deviceExtensions.Add("VK_KHR_get_physical_device_properties2");
         deviceExtensions.Add("VK_KHR_external_memory_capabilities");
         deviceExtensions.Add("VK_KHR_external_semaphore_capabilities");
-        
-        if(EnableValidationLayers)
+        //TODO if it crashes with vertie, try adding VK_KHR_dynamic_rendering
+
+        if (EnableValidationLayers)
+        {
+            TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
             deviceExtensions.Add("VK_EXT_debug_utils");
+        }
 
         SetupInstance(contextInfo);
         SetupDebugMessenger();
@@ -57,6 +62,19 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
         GpuInfo = PickPhysicalDevice();
         CreateLogicalDevice();
         CreatePool();
+        CreateD3D11DeviceIfNeeded();
+    }
+
+    private unsafe void CreateD3D11DeviceIfNeeded()
+    {
+        var physicalDeviceIDProperties = GetPhysicalDeviceIDProperties(PhysicalDevice);
+        ComPtr<ID3D11Device> d3dDevice = null;
+        if (physicalDeviceIDProperties.DeviceLuidvalid &&
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+            !gpuInterop.SupportedImageHandleTypes.Contains(KnownPlatformGraphicsExternalImageHandleTypes.VulkanOpaqueNtHandle)
+           )
+            d3dDevice = D3DMemoryHelper.CreateDeviceByLuid(
+                MemoryMarshal.Read<Luid>(new Span<byte>(physicalDeviceIDProperties.DeviceLuid, 8)));
     }
 
     private bool SetRequiredDeviceExtensions()
@@ -76,6 +94,13 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
             requiredDeviceExtensions.Add(KhrExternalSemaphoreWin32.ExtensionName);
             requiredDeviceExtensions.Add("VK_KHR_dedicated_allocation");
             requiredDeviceExtensions.Add("VK_KHR_get_memory_requirements2");
+        }
+        else if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            if (!gpuInterop.SupportedImageHandleTypes.Contains(KnownPlatformGraphicsExternalImageHandleTypes
+                    .IOSurfaceRef))
+                return false;
+            requiredDeviceExtensions.AddRange(["VK_EXT_metal_objects", "VK_KHR_timeline_semaphore"]);
         }
         else
         {
@@ -181,6 +206,23 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
         }
 
         return true;
+    }
+
+    private unsafe PhysicalDeviceIDProperties GetPhysicalDeviceIDProperties(PhysicalDevice device)
+    {
+        var physicalDeviceIDProperties = new PhysicalDeviceIDProperties()
+        {
+            SType = StructureType.PhysicalDeviceIDProperties
+        };
+
+        var physicalDeviceProperties2 = new PhysicalDeviceProperties2()
+        {
+            SType = StructureType.PhysicalDeviceProperties2, PNext = &physicalDeviceIDProperties
+        };
+
+        Api!.GetPhysicalDeviceProperties2(device, &physicalDeviceProperties2);
+
+        return physicalDeviceIDProperties;
     }
 
     public override unsafe void Dispose()

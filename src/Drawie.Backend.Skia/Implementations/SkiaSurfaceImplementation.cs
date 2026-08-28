@@ -1,9 +1,13 @@
 ﻿using System.Diagnostics;
+using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
+using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction;
+using Drawie.RenderApi.Abstraction.Textures;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations
@@ -14,15 +18,25 @@ namespace Drawie.Skia.Implementations
         private readonly SkiaCanvasImplementation _canvasImplementation;
         private readonly SkiaPaintImplementation _paintImplementation;
 
-        internal GRContext? GrContext { get; set; }
+        private Dictionary<SKSurface, INativeSurfaceInfo> nativeSurfaceInfos =
+            new Dictionary<SKSurface, INativeSurfaceInfo>();
 
-        public SkiaSurfaceImplementation(GRContext context, SkiaPixmapImplementation pixmapImplementation,
+        internal GRContext? GrContext { get; set; }
+        internal IGraphicsDevice GraphicsDevice { get; set; }
+
+        private readonly SurfaceOrigin defaultSurfaceOrigin;
+
+        private HashSet<IntPtr> surfacesInUse = new HashSet<IntPtr>();
+
+        public SkiaSurfaceImplementation(GRContext context, SurfaceOrigin surfaceOrigin,
+            SkiaPixmapImplementation pixmapImplementation,
             SkiaCanvasImplementation canvasImplementation, SkiaPaintImplementation paintImplementation)
         {
             _pixmapImplementation = pixmapImplementation;
             _canvasImplementation = canvasImplementation;
             _paintImplementation = paintImplementation;
             GrContext = context;
+            defaultSurfaceOrigin = surfaceOrigin;
         }
 
         public Pixmap PeekPixels(DrawingSurface drawingSurface)
@@ -129,12 +143,109 @@ namespace Drawie.Skia.Implementations
                 return SKSurface.Create(info);
             }
 
-            return SKSurface.Create(GrContext, false, info);
+            if (GraphicsDevice == null)
+            {
+                throw new InvalidOperationException("GraphicsDevice is not initialized.");
+            }
+
+            var texture = GraphicsDevice.CreateTexture(new TextureDesc()
+            {
+                Format = TextureFormat.RGBA8_Unorm, Width = info.Width, Height = info.Height
+            });
+
+            var surface = CreateFromNativeTexture(texture, new VecI(info.Width, info.Height), defaultSurfaceOrigin,
+                false,
+                out var framebufferInfo);
+            if (surface == null) return null;
+
+            nativeSurfaceInfos[surface] = framebufferInfo;
+            return surface;
+        }
+
+        internal SKSurface? CreateFromNativeTexture(ITexture renderTexture, VecI size, SurfaceOrigin surfaceOrigin,
+            bool asRenderTarget,
+            out INativeSurfaceInfo fbInfo)
+        {
+            if (renderTexture is IVkTexture texture)
+            {
+                var imageInfo = new GRVkImageInfo()
+                {
+                    CurrentQueueFamily = texture.QueueFamily,
+                    Format = texture.ImageFormat,
+                    Image = texture.ImageHandle,
+                    ImageLayout = texture.Layout,
+                    ImageTiling = texture.Tiling,
+                    ImageUsageFlags = texture.UsageFlags,
+                    LevelCount = 1,
+                    SampleCount = 1,
+                    Protected = false,
+                    SharingMode = texture.TargetSharingMode,
+                };
+
+                var backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, imageInfo);
+                var surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
+                    SKColorType.Rgba8888, new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
+
+                fbInfo = new SkiaNativeSurfaceInfo(backendRenderTarget, imageInfo);
+                return surface;
+            }
+
+            if (renderTexture is IWebGlTexture or IOpenGlTexture)
+            {
+                uint textureId = renderTexture switch
+                {
+                    IWebGlTexture wgl => wgl.TextureId,
+                    IOpenGlTexture ogl => (uint)ogl.TextureId,
+                    _ => throw new ArgumentException("Unsupported texture type.")
+                };
+
+                SKSurface? surface;
+                if (!asRenderTarget)
+                {
+                    const uint OpenGlTexture2D = 3553;
+                    const uint RGBA8 = 0x8058;
+                    var info = new GRGlTextureInfo(OpenGlTexture2D, textureId, RGBA8);
+                    var backendRenderTarget = new GRBackendTexture(size.X, size.Y, false, info);
+
+                    surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
+                        SKColorType.Rgba8888);
+                    fbInfo = new SkiaNativeSurfaceInfo(backendRenderTarget, info);
+                }
+                else
+                {
+                    GRGlFramebufferInfo grGlFramebufferInfo =
+                        new GRGlFramebufferInfo(textureId, SKColorType.Rgba8888.ToGlSizedFormat());
+                    GRBackendRenderTarget backendRenderTarget = new GRBackendRenderTarget(size.X, size.Y, 1, 0,
+                        grGlFramebufferInfo);
+
+                    surface = SKSurface.Create(GrContext, backendRenderTarget, (GRSurfaceOrigin)surfaceOrigin,
+                        SKColorType.Rgba8888);
+
+                    fbInfo = new SkiaNativeSurfaceInfo(backendRenderTarget, grGlFramebufferInfo);
+                }
+
+                return surface;
+            }
+
+            throw new ArgumentException("Unsupported texture type.");
         }
 
         public void Dispose(DrawingSurface drawingSurface)
         {
+            var instance = this.GetInstanceOrDefault(drawingSurface.ObjectPointer);
+            ulong? surfaceId = null;
+            if (instance != null)
+            {
+                nativeSurfaceInfos.Remove(instance, out var surfaceInfo);
+                surfaceId = surfaceInfo?.SurfaceId;
+            }
+
             UnmanageAndDispose(drawingSurface.ObjectPointer);
+            if (surfaceId != null)
+            {
+                throw new NotImplementedException("Implement a proper lifetime management for GPU-backed surfaces.");
+                GraphicsDevice.DisposeTexture(surfaceId.Value);
+            }
         }
 
         public object GetNativeSurface(IntPtr objectPointer)
@@ -153,11 +264,11 @@ namespace Drawie.Skia.Implementations
             Trace(skSurface);
 #endif
 
-            _canvasImplementation.AddManagedInstance(skSurface.Canvas.Handle, skSurface.Canvas);
-            Canvas canvas = new Canvas(skSurface.Canvas.Handle);
+            IntPtr canvasHandle = _canvasImplementation.AddManagedInstance(skSurface.Canvas);
+            Canvas canvas = new Canvas(canvasHandle);
 
-            DrawingSurface surface = new DrawingSurface(skSurface.Handle, canvas);
-            AddManagedInstance(skSurface);
+            IntPtr surfaceHandle = AddManagedInstance(skSurface);
+            DrawingSurface surface = new DrawingSurface(surfaceHandle, canvas);
 
             return surface;
         }
@@ -192,6 +303,16 @@ namespace Drawie.Skia.Implementations
         {
             SKRect skRect = this[objectPointer].Canvas.LocalClipBounds;
             return new RectD(skRect.Left, skRect.Top, skRect.Width, skRect.Height);
+        }
+
+        public INativeSurfaceInfo? GetNativeSurfaceInfo(IntPtr objectPointer)
+        {
+            return nativeSurfaceInfos.GetValueOrDefault(this[objectPointer]);
+        }
+
+        public void AddManagedFramebuffer(SKSurface nativeHandle, INativeSurfaceInfo fbInfo)
+        {
+            nativeSurfaceInfos.Add(nativeHandle, fbInfo);
         }
     }
 }

@@ -45,8 +45,7 @@ namespace Drawie.Skia.Implementations
         public IntPtr Construct(IntPtr dataPtr, ImageInfo imgInfo)
         {
             SKPixmap pixmap = new SKPixmap(imgInfo.ToSkImageInfo(), dataPtr);
-            AddManagedInstance(pixmap);
-            return pixmap.Handle;
+            return AddManagedInstance(pixmap);
         }
 
         public int GetWidth(Pixmap pixmap)
@@ -71,8 +70,7 @@ namespace Drawie.Skia.Implementations
 
         public Pixmap CreateFrom(SKPixmap pixmap)
         {
-            AddManagedInstance(pixmap);
-            return Pixmap.InternalCreateFromExistingPointer(pixmap.Handle);
+            return new Pixmap(AddManagedInstance(pixmap));
         }
     }
 }

@@ -1,6 +1,6 @@
+using Drawie2Sample;
 using DrawiEngine;
 using DrawiEngine.Browser;
-using DrawieSample;
 
 public static class Program
 {
@@ -8,7 +8,7 @@ public static class Program
     {
         DrawingEngine engine = BrowserDrawingEngine.CreateDefaultBrowser();
 
-        DrawieSampleApp sampleApp = new DrawieSampleApp();
+        Drawie2SampleApp sampleApp = new Drawie2SampleApp();
 
         engine.RunWithApp(sampleApp);
     }

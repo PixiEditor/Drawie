@@ -124,7 +124,7 @@ public abstract class InteropControl : Control
     void UpdateFrame()
     {
         updateQueued = false;
-        var root = this.GetVisualRoot();
+        var root = this.VisualRoot;
         if (root == null)
         {
             return;
