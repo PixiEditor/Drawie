@@ -23,6 +23,8 @@ namespace Drawie.Skia.Implementations
         private readonly SkObjectImplementation<SKFont> _fontImpl;
         private readonly SkObjectImplementation<SKVertices> _verticesImpl;
 
+        private SKFont defaultFont => new SKFont(SKTypeface.Default, 12);
+
         public SkiaCanvasImplementation(SkObjectImplementation<SKPaint> paintImpl,
             SkObjectImplementation<SKImage> imageImpl, SkObjectImplementation<SKBitmap> bitmapImpl,
             SkObjectImplementation<SKPath> pathImpl, SkObjectImplementation<SKFont> fontImpl,
@@ -278,7 +280,7 @@ namespace Drawie.Skia.Implementations
 
         public void DrawText(IntPtr objPtr, string text, float x, float y, Paint paint)
         {
-            this[objPtr].DrawText(text, x, y, _paintImpl[paint.ObjectPointer]);
+            this[objPtr].DrawText(SKTextBlob.Create(text, defaultFont), x, y, _paintImpl[paint.ObjectPointer]);
         }
         
         public void DrawText(IntPtr objPtr, string text, float x, float y, Font font, Paint paint)
@@ -362,14 +364,16 @@ namespace Drawie.Skia.Implementations
                 if (skSurface != null)
                 {
                     var surfaceImpl = _surfaceImpl;
-                    if (!surfaceImpl.TryGetInstance(skSurface.Handle, out var surface))
+                    IntPtr? foundHandle = _surfaceImpl.FindManagedInstanceHandle(skSurface);
+                    if (foundHandle == null)
                     {
-                        surfaceImpl.AddManagedInstance(skSurface.Handle, skSurface);
-                        surface = skSurface;
+                        foundHandle = surfaceImpl.AddManagedInstance(skSurface);
                     }
 
-                    return surface != null ? new DrawingSurface(surface.Handle, canvas) : null;
+                    return new DrawingSurface(foundHandle.Value, canvas);
                 }
+
+                return null;
             }
 
             throw new ObjectDisposedException(nameof(canvas));

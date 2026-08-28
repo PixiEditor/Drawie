@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -18,11 +18,12 @@
 
     <ItemGroup>
         <Reference Include="Avalonia.Vulkan">
-            <HintPath>..\Drawie.AvaloniaInterop\bin\Debug\net8.0\Avalonia.Vulkan.dll</HintPath>
+            <HintPath>..\Drawie.AvaloniaInterop\bin\Debug\net10.0\Avalonia.Vulkan.dll</HintPath>
         </Reference>
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)"/>
+        <PackageReference Include="Silk.NET.Direct3D11" Version="2.23.0" />
     </ItemGroup>
 </Project>

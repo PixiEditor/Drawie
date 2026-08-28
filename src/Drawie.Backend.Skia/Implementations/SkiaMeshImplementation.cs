@@ -20,8 +20,7 @@ public class SkiaMeshImplementation : SkObjectImplementation<SKVertices>, IMeshI
         SKColor[] skColors = CastUtility.UnsafeArrayCast<Color, SKColor>(colors);
         var vertices = SKVertices.CreateCopy((SKVertexMode)mode, skPoints, skTexs, skColors, indices);
 
-        AddManagedInstance(vertices);
-        return vertices.Handle;
+        return AddManagedInstance(vertices);
     }
 
     public void Dispose(IntPtr verticesPointer)

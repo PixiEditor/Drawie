@@ -108,7 +108,7 @@ public class EditableVectorPath
             {
                 isSubShapeClosed = true;
                 VecF[] verbData = data.points.ToArray();
-                if(verbData.Length < 2)
+                if (verbData.Length < 2)
                 {
                     var newData = new VecF[2];
                     if (verbData.Length == 1)
@@ -119,6 +119,7 @@ public class EditableVectorPath
 
                     verbData = newData;
                 }
+
                 if (currentSubShapePoints[^1].Verb.IsEmptyVerb())
                 {
                     int lastIndex = currentSubShapePoints.Count - 2;

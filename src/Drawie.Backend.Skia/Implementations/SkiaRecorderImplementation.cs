@@ -41,8 +41,7 @@ public class SkiaRecorderImplementation : SkObjectImplementation<SKPictureRecord
             
             if (canvas != null)
             {
-                _canvasImpl.AddManagedInstance(canvas);
-                return new Canvas(canvas.Handle);
+                return new Canvas(_canvasImpl.AddManagedInstance(canvas));
             }
             else
             {
@@ -62,8 +61,7 @@ public class SkiaRecorderImplementation : SkObjectImplementation<SKPictureRecord
             var skPicture = skRecorder?.EndRecording();
             if (skPicture != null)
             {
-                _pictureImplementation.AddManagedInstance(skPicture);
-                return new Picture(skPicture.Handle);
+                return new Picture(_pictureImplementation.AddManagedInstance(skPicture));
             }
 
             throw new InvalidOperationException("Failed to end recording on SKPictureRecorder.");
@@ -75,7 +73,6 @@ public class SkiaRecorderImplementation : SkObjectImplementation<SKPictureRecord
     public IntPtr CreateRecorder()
     {
         var recorder = new SKPictureRecorder();
-        AddManagedInstance(recorder);
-        return recorder.Handle;
+        return AddManagedInstance(recorder);
     }
 }

@@ -74,15 +74,13 @@ namespace Drawie.Skia.Implementations
         public IntPtr Create()
         {
             SKPath path = new SKPath();
-            AddManagedInstance(path);
-            return path.Handle;
+            return AddManagedInstance(path);
         }
 
         public IntPtr Clone(VectorPath other)
         {
             SKPath path = new SKPath(this[other.ObjectPointer]);
-            AddManagedInstance(path);
-            return path.Handle;
+            return AddManagedInstance(path);
         }
 
         public RectD GetTightBounds(VectorPath vectorPath)
@@ -186,8 +184,8 @@ namespace Drawie.Skia.Implementations
                 return null;
             }
 
-            AddManagedInstance(skPath);
-            return new VectorPath(skPath.Handle);
+            IntPtr handle = AddManagedInstance(skPath);
+            return new VectorPath(handle);
         }
 
         public VecF[] GetPoints(IntPtr objectPointer)
@@ -316,19 +314,16 @@ namespace Drawie.Skia.Implementations
             if (skPath == null)
             {
                 var emptyPath = new SKPath();
-                AddManagedInstance(emptyPath);
-                return new VectorPath(emptyPath.Handle);
+                return new VectorPath(AddManagedInstance(emptyPath));
             }
 
-            AddManagedInstance(skPath);
-            return new VectorPath(skPath.Handle);
+            return new VectorPath(AddManagedInstance(skPath));
         }
 
         public VectorPath Simplify(VectorPath path)
         {
             SKPath skPath = this[path.ObjectPointer].Simplify();
-            AddManagedInstance(skPath);
-            return new VectorPath(skPath.Handle);
+            return new VectorPath(AddManagedInstance(skPath));
         }
 
         public void Close(VectorPath vectorPath)

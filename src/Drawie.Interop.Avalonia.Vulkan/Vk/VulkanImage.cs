@@ -2,8 +2,13 @@
 using Avalonia;
 using Avalonia.Platform;
 using Drawie.RenderApi.Vulkan.Extensions;
+using Silk.NET.Core.Native;
+using Silk.NET.Direct3D11;
+using Silk.NET.DXGI;
 using Silk.NET.Vulkan;
+using Silk.NET.Vulkan.Extensions.EXT;
 using Silk.NET.Vulkan.Extensions.KHR;
+using Format = Silk.NET.Vulkan.Format;
 
 namespace Drawie.Interop.Avalonia.Vulkan.Vk;
 
@@ -30,11 +35,14 @@ public class VulkanImage : IDisposable
     public uint UsageFlags => (uint)_imageUsageFlags;
     public ulong MemoryHandle => _imageMemory.Handle;
     public DeviceMemory DeviceMemory => _imageMemory;
+    private ComPtr<ID3D11Texture2D> _d3dTexture2D;
     public uint MipLevels { get; }
     public Silk.NET.Vulkan.Vk Api { get; }
     public PixelSize Size { get; }
     public ulong MemorySize { get; }
     public uint CurrentLayout => (uint)_currentLayout;
+
+    private bool hasIOSurface;
 
     public unsafe VulkanImage(VulkanInteropContext vk, uint format, PixelSize size,
         bool exportable, IReadOnlyList<string> supportedHandleTypes)
@@ -66,9 +74,20 @@ public class VulkanImage : IDisposable
             SType = StructureType.ExternalMemoryImageCreateInfo, HandleTypes = handleType
         };
 
+        var ioSurfaceCreateInfo = new ExportMetalObjectCreateInfoEXT
+        {
+            SType = StructureType.ExportMetalObjectCreateInfoExt,
+            ExportObjectType = ExportMetalObjectTypeFlagsEXT.IosurfaceBitExt
+        };
+
+        hasIOSurface = exportable && RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
         var imageCreateInfo = new ImageCreateInfo
         {
-            PNext = exportable ? &externalMemoryCreateInfo : null,
+            PNext =
+                exportable
+                    ? RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? &ioSurfaceCreateInfo : &externalMemoryCreateInfo
+                    : null,
             SType = StructureType.ImageCreateInfo,
             ImageType = ImageType.Type2D,
             Format = Format,
@@ -89,86 +108,107 @@ public class VulkanImage : IDisposable
             .CreateImage(_device, imageCreateInfo, null, out var image).ThrowOnError("Failed to create image");
         InternalHandle = image;
 
-        Api.GetImageMemoryRequirements(_device, InternalHandle,
-            out var memoryRequirements);
-
-        var dedicatedAllocation = new MemoryDedicatedAllocateInfoKHR
+        if (!exportable || !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            SType = StructureType.MemoryDedicatedAllocateInfoKhr, Image = image
-        };
+            Api.GetImageMemoryRequirements(_device, InternalHandle,
+                out var memoryRequirements);
 
-        var fdExport = new ExportMemoryAllocateInfo
-        {
-            HandleTypes = handleType, SType = StructureType.ExportMemoryAllocateInfo, PNext = &dedicatedAllocation
-        };
-
-        ImportMemoryWin32HandleInfoKHR handleImport = default;
-        /*if (handleType == ExternalMemoryHandleTypeFlags.D3D11TextureBit && exportable)
-        {
-            var d3dDevice = vk.D3DDevice ?? throw new NotSupportedException("Vulkan D3DDevice wasn't created");
-            _d3dTexture2D = D3DMemoryHelper.CreateMemoryHandle(d3dDevice, size, Format);
-            using var dxgi = _d3dTexture2D.QueryInterface<SharpDX.DXGI.Resource1>();
-
-            handleImport = new ImportMemoryWin32HandleInfoKHR
+            var dedicatedAllocation = new MemoryDedicatedAllocateInfoKHR
             {
-                PNext = &dedicatedAllocation,
-                SType = StructureType.ImportMemoryWin32HandleInfoKhr,
-                HandleType = ExternalMemoryHandleTypeFlags.D3D11TextureBit,
-                Handle = dxgi.CreateSharedHandle(null, SharedResourceFlags.Read | SharedResourceFlags.Write),
+                SType = StructureType.MemoryDedicatedAllocateInfoKhr, Image = image
             };
-        }*/
 
-        var memoryAllocateInfo = new MemoryAllocateInfo
-        {
-            PNext =
-                exportable ? handleImport.Handle != IntPtr.Zero ? &handleImport : &fdExport : null,
-            SType = StructureType.MemoryAllocateInfo,
-            AllocationSize = memoryRequirements.Size,
-            MemoryTypeIndex = (uint)VulkanMemoryHelper.FindSuitableMemoryTypeIndex(
-                Api,
-                _physicalDevice,
-                memoryRequirements.MemoryTypeBits, MemoryPropertyFlags.DeviceLocalBit)
-        };
+            var fdExport = new ExportMemoryAllocateInfo
+            {
+                HandleTypes = handleType,
+                SType = StructureType.ExportMemoryAllocateInfo,
+                PNext = &dedicatedAllocation
+            };
 
-        Api.AllocateMemory(_device, memoryAllocateInfo, null,
-            out var imageMemory).ThrowOnError("Failed to allocate image memory");
+            ImportMemoryWin32HandleInfoKHR handleImport = default;
+            if (handleType == ExternalMemoryHandleTypeFlags.D3D11TextureBit && exportable)
+            {
+                if (vk.D3DDevice.Handle == null)
+                    throw new NotSupportedException("Vulkan D3DDevice wasn't created");
+                _d3dTexture2D = D3DMemoryHelper.CreateMemoryHandle(vk.D3DDevice, size, Format);
 
-        _imageMemory = imageMemory;
+                handleImport = new ImportMemoryWin32HandleInfoKHR
+                {
+                    PNext = &dedicatedAllocation,
+                    SType = StructureType.ImportMemoryWin32HandleInfoKhr,
+                    HandleType = ExternalMemoryHandleTypeFlags.D3D11TextureBit,
+                    Handle = CreateDxgiSharedHandle()
+                };
+            }
+
+            var memoryAllocateInfo = new MemoryAllocateInfo
+            {
+                PNext =
+                    exportable ? handleImport.Handle != IntPtr.Zero ? &handleImport : &fdExport : null,
+                SType = StructureType.MemoryAllocateInfo,
+                AllocationSize = memoryRequirements.Size,
+                MemoryTypeIndex = (uint)VulkanMemoryHelper.FindSuitableMemoryTypeIndex(
+                    Api,
+                    _physicalDevice,
+                    memoryRequirements.MemoryTypeBits, MemoryPropertyFlags.DeviceLocalBit)
+            };
+
+            Api.AllocateMemory(_device, memoryAllocateInfo, null,
+                out var imageMemory).ThrowOnError("Failed to allocate image memory");
+
+            _imageMemory = imageMemory;
 
 
-        MemorySize = memoryRequirements.Size;
+            MemorySize = memoryRequirements.Size;
 
-        Api.BindImageMemory(_device, InternalHandle, _imageMemory, 0).ThrowOnError("Failed to bind image memory");
-        var componentMapping = new ComponentMapping(
-            ComponentSwizzle.Identity,
-            ComponentSwizzle.Identity,
-            ComponentSwizzle.Identity,
-            ComponentSwizzle.Identity);
+            Api.BindImageMemory(_device, InternalHandle, _imageMemory, 0).ThrowOnError("Failed to bind image memory");
+            var componentMapping = new ComponentMapping(
+                ComponentSwizzle.Identity,
+                ComponentSwizzle.Identity,
+                ComponentSwizzle.Identity,
+                ComponentSwizzle.Identity);
 
-        AspectFlags = ImageAspectFlags.ColorBit;
+            AspectFlags = ImageAspectFlags.ColorBit;
 
-        var subresourceRange = new ImageSubresourceRange(AspectFlags, 0, MipLevels, 0, 1);
+            var subresourceRange = new ImageSubresourceRange(AspectFlags, 0, MipLevels, 0, 1);
 
-        var imageViewCreateInfo = new ImageViewCreateInfo
-        {
-            SType = StructureType.ImageViewCreateInfo,
-            Image = InternalHandle,
-            ViewType = ImageViewType.Type2D,
-            Format = Format,
-            Components = componentMapping,
-            SubresourceRange = subresourceRange
-        };
+            var imageViewCreateInfo = new ImageViewCreateInfo
+            {
+                SType = StructureType.ImageViewCreateInfo,
+                Image = InternalHandle,
+                ViewType = ImageViewType.Type2D,
+                Format = Format,
+                Components = componentMapping,
+                SubresourceRange = subresourceRange
+            };
 
-        Api
-            .CreateImageView(_device, imageViewCreateInfo, null, out var imageView)
-            .ThrowOnError("Failed to create image view");
+            Api
+                .CreateImageView(_device, imageViewCreateInfo, null, out var imageView)
+                .ThrowOnError("Failed to create image view");
 
-        _imageView = imageView;
+            _imageView = imageView;
 
-        _currentLayout = ImageLayout.Undefined;
+            _currentLayout = ImageLayout.Undefined;
 
-        TransitionLayout(ImageLayout.ColorAttachmentOptimal, AccessFlags.NoneKhr);
+            TransitionLayout(ImageLayout.ColorAttachmentOptimal, AccessFlags.NoneKhr);
+        }
     }
+
+
+    private unsafe IntPtr CreateDxgiSharedHandle()
+    {
+        using var dxgiResource = _d3dTexture2D.QueryInterface<IDXGIResource1>();
+
+        void* sharedHandle;
+        SilkMarshal.ThrowHResult(dxgiResource.CreateSharedHandle(
+            (SecurityAttributes*)null,
+            DXGI.SharedResourceRead | DXGI.SharedResourceWrite,
+            (char*)null,
+            &sharedHandle));
+
+        return (IntPtr)sharedHandle;
+    }
+
 
     public int ExportFd()
     {
@@ -198,29 +238,50 @@ public class VulkanImage : IDisposable
         return fd;
     }
 
-    public IPlatformHandle Export()
+    public unsafe IntPtr ExportIOSurface()
+    {
+        if (!Api.TryGetDeviceExtension<ExtMetalObjects>(_instance, _device, out var ext))
+            throw new InvalidOperationException();
+        var surfaceExport = new ExportMetalIOSurfaceInfoEXT
+        {
+            SType = StructureType.ExportMetalIOSurfaceInfoExt, Image = InternalHandle
+        };
+        var export = new ExportMetalObjectsInfoEXT()
+        {
+            SType = StructureType.ExportMetalObjectsInfoExt, PNext = &surfaceExport
+        };
+        ext.ExportMetalObjects(_device, ref export);
+        if (surfaceExport.IoSurface == IntPtr.Zero)
+            throw new Exception("Unable to export IOSurfaceRef");
+        return surfaceExport.IoSurface;
+    }
+
+    public unsafe IPlatformHandle Export()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            /*if (_d3dTexture2D != null)
+            if (_d3dTexture2D.Handle != null)
             {
-                using var dxgi = _d3dTexture2D!.QueryInterface<Resource1>();
                 return new PlatformHandle(
-                    dxgi.CreateSharedHandle(null, SharedResourceFlags.Read | SharedResourceFlags.Write),
+                    CreateDxgiSharedHandle(),
                     KnownPlatformGraphicsExternalImageHandleTypes.D3D11TextureNtHandle);
-            }*/
+            }
 
             return new PlatformHandle(ExportOpaqueNtHandle(),
                 KnownPlatformGraphicsExternalImageHandleTypes.VulkanOpaqueNtHandle);
         }
-        else
-            return new PlatformHandle(new IntPtr(ExportFd()),
-                KnownPlatformGraphicsExternalImageHandleTypes.VulkanOpaquePosixFileDescriptor);
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            return new PlatformHandle(ExportIOSurface(),
+                KnownPlatformGraphicsExternalImageHandleTypes.IOSurfaceRef);
+
+        return new PlatformHandle(new IntPtr(ExportFd()),
+            KnownPlatformGraphicsExternalImageHandleTypes.VulkanOpaquePosixFileDescriptor);
     }
 
     public ImageTiling Tiling => ImageTiling.Optimal;
 
-    //public bool IsDirectXBacked => _d3dTexture2D != null;
+    public unsafe bool IsDirectXBacked => _d3dTexture2D.Handle != null;
 
     internal void TransitionLayout(CommandBuffer commandBuffer,
         ImageLayout fromLayout, AccessFlags fromAccessFlags,

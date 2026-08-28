@@ -1,4 +1,5 @@
-﻿using Avalonia.Vulkan;
+﻿using System.Runtime.InteropServices;
+using Avalonia.Vulkan;
 using Drawie.RenderApi;
 
 namespace Drawie.Interop.Avalonia.Vulkan;
@@ -14,7 +15,10 @@ public class AvaloniaInteropContextInfo : IVulkanContextInfo
             "VK_KHR_external_semaphore_capabilities",
             "VK_EXT_debug_utils"
         };
-        
+
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            enabledExtensions.Add("VK_KHR_portability_enumeration");
+
         return enabledExtensions.ToArray();
     }
 

@@ -26,16 +26,14 @@ namespace Drawie.Skia.Implementations
         public Bitmap Decode(ReadOnlySpan<byte> buffer)
         {
             SKBitmap skBitmap = SKBitmap.Decode(buffer);
-            AddManagedInstance(skBitmap);
-            return new Bitmap(skBitmap.Handle);
+            return new Bitmap(AddManagedInstance(skBitmap));
         }
 
         public Bitmap FromImage(IntPtr ptr)
         {
             SKImage image = ImageImplementation[ptr];
             SKBitmap skBitmap = SKBitmap.FromImage(image);
-            AddManagedInstance(skBitmap);
-            return new Bitmap(skBitmap.Handle);
+            return new Bitmap(AddManagedInstance(skBitmap));
         }
 
         public VecI GetSize(IntPtr objectPointer)
@@ -67,8 +65,8 @@ namespace Drawie.Skia.Implementations
         {
             SKImageInfo imageInfo = info.ToSkImageInfo();
             SKBitmap bitmap = new SKBitmap(imageInfo);
-            AddManagedInstance(bitmap);
-            return bitmap.Handle;
+            return AddManagedInstance(bitmap);
+;
         }
 
         public bool InstallPixels(IntPtr objectPointer, ImageInfo info, IntPtr pixels)

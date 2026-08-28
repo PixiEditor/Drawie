@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Drawie.Skia</RootNamespace>
-    <SkiaSharpVersion>3.119.2</SkiaSharpVersion>
+    <SkiaSharpVersion>4.151.1</SkiaSharpVersion>
   </PropertyGroup>
 
   <ItemGroup>

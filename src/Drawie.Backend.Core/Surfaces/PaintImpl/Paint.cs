@@ -47,12 +47,6 @@ namespace Drawie.Backend.Core.Surfaces.PaintImpl
             set => DrawingBackendApi.Current.PaintImplementation.SetStrokeJoin(this, value);
         }
 
-        public FilterQuality FilterQuality
-        {
-            get => DrawingBackendApi.Current.PaintImplementation.GetFilterQuality(this);
-            set => DrawingBackendApi.Current.PaintImplementation.SetFilterQuality(this, value);
-        }
-
         public bool IsAntiAliased
         {
             get => DrawingBackendApi.Current.PaintImplementation.GetIsAntiAliased(this);
