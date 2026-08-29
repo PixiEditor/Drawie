@@ -76,7 +76,8 @@ public class VulkanWindowContext : VulkanContext
 
         PhysicalDeviceFeatures deviceFeatures = new()
         {
-            SamplerAnisotropy = false
+            SamplerAnisotropy = false,
+            FillModeNonSolid = true
         };
 
         DeviceCreateInfo createInfo = new()

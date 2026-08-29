@@ -57,7 +57,7 @@ public static class TextureFramebufferExtensions
                 Height = fb.Size.Y,
                 Format = TextureFormat.RGBA8_Unorm,
                 Depth = DepthFormat.Depth24Stencil8,
-                Samples = 1
+                Samples = 4
             });
         }
 
@@ -75,7 +75,7 @@ public static class TextureFramebufferExtensions
             Rasterizer = new RasterizerDesc()
             {
                 RenderMode = options.RenderMode,
-                Samples = 1
+                Samples = 4
             },
             ShaderProgram = program,
             Viewport = new RectI(0, 0, fb.Size.X, fb.Size.Y),

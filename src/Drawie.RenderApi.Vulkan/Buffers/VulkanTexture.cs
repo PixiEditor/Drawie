@@ -227,5 +227,6 @@ public class VulkanTexture : IDisposable, IVkTexture
         }
         ColorAttachment.Dispose();
         DepthAttachment?.Dispose();
+        MsaaResolvedColorAttachment?.Dispose();
     }
 }

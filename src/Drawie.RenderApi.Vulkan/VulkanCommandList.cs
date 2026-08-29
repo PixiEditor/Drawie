@@ -389,7 +389,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
         ClearValue clearMsaaResolved = new()
         {
-            Color = new ClearColorValue() { Float32_0 = 0, Float32_1 = 0, Float32_2 = 0, Float32_3 = 1 }
+            Color = new ClearColorValue() { Float32_0 = 1, Float32_1 = 1, Float32_2 = 1, Float32_3 = 1 }
         };
 
         ClearValue* clearValues = stackalloc ClearValue[(int)target.Texture.Attachments];
@@ -510,7 +510,8 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         VulkanTexture source,
         VulkanTexture destination)
     {
-        source.ColorAttachment.TransitionLayout(ImageLayout.TransferSrcOptimal, commandBuffer);
+        var sourceAttachment = source.MsaaResolvedColorAttachment ?? source.ColorAttachment;
+        sourceAttachment.TransitionLayout(ImageLayout.TransferSrcOptimal, commandBuffer);
         destination.ColorAttachment.TransitionLayout(ImageLayout.TransferDstOptimal, commandBuffer);
 
         ImageBlit region = new()
@@ -547,7 +548,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
         context.Api!.CmdBlitImage(
             commandBuffer,
-            source.VkImage,
+            sourceAttachment.Image,
             ImageLayout.TransferSrcOptimal,
             destination.VkImage,
             ImageLayout.TransferDstOptimal,

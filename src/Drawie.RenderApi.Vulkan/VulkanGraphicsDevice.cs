@@ -87,8 +87,6 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
 
     public IPipeline CreatePipeline(PipelineDesc desc)
     {
-        context.Api!.DeviceWaitIdle(context.LogicalDevice.Device);
-
         if (pipeline == null || !pipeline.Description.Equals(desc))
         {
             if (pipeline != null)

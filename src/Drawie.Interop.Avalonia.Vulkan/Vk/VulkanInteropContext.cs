@@ -138,7 +138,7 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
                 priorities[j] = 1.0f;
             }
 
-            var features = new PhysicalDeviceFeatures() { SamplerAnisotropy = false };
+            var features = new PhysicalDeviceFeatures() { SamplerAnisotropy = false, FillModeNonSolid = true };
 
             var queueCreateInfo = new DeviceQueueCreateInfo()
             {
