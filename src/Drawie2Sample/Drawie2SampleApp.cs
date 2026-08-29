@@ -29,7 +29,7 @@ public class Drawie2SampleApp : DrawieApp
         "Wireframe",
     };
 
-    private RenderOptions renderOptions = new RenderOptions();
+    private RenderOptions renderOptions = new RenderOptions() { MsaaSamples = MsaaSamples.X4 };
 
     public override IHost CreateMainWindow()
     {
