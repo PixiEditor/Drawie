@@ -60,6 +60,8 @@ namespace Drawie.Skia
         public IPictureImplementation PictureImplementation { get; }
         public IBlenderImplementation BlenderImplementation { get; }
         public IMeshImplementation MeshImplementation { get; }
+        
+        public event Action AfterFlush;
 
         private GRContext _grContext;
 
@@ -125,7 +127,7 @@ namespace Drawie.Skia
             SkiaCanvasImplementation canvasImpl =
                 new SkiaCanvasImplementation(paintImpl, imgImpl, bitmapImpl, pathImpl, fontImpl, meshImplementation);
 
-            SurfaceImplementation = new SkiaSurfaceImplementation(SkiaGraphicsContext, SurfaceOrigin.BottomLeft,
+            SurfaceImplementation = new SkiaSurfaceImplementation(this, SkiaGraphicsContext, SurfaceOrigin.BottomLeft,
                 pixmapImpl, canvasImpl, paintImpl);
 
             canvasImpl.SetSurfaceImplementation(SurfaceImplementation);
@@ -235,6 +237,7 @@ namespace Drawie.Skia
         public void Flush()
         {
             SkiaGraphicsContext?.Flush();
+            AfterFlush?.Invoke();
         }
 
         public void ResetContext()

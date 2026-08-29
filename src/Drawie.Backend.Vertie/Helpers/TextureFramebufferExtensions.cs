@@ -38,6 +38,16 @@ public static class TextureFramebufferExtensions
         RenderOptions options = default)
     {
         IGraphicsDevice device = DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice;
+        foreach (var mesh in scene.Meshes)
+        {
+            foreach (var texture in mesh.Material.Textures)
+            {
+                if (texture is ILazyExternallyAccessibleTexture extTexture)
+                {
+                    extTexture.EnsureExternallyAccessible();
+                }
+            }
+        }
 
         fb.Canvas?.Flush();
         DrawScene(fb, scene, camera, device, options);

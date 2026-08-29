@@ -17,7 +17,6 @@ public class TextureFramebuffer : IDisposable, IRenderTarget
     public VecI Size { get; }
     public Canvas? Canvas => IsOpen ? UnderlyingTexture?.DrawingSurface?.Canvas : null;
 
-
     internal TextureFramebuffer(Texture texture)
     {
         UnderlyingTexture = texture;
@@ -63,7 +62,6 @@ public class TextureFramebuffer : IDisposable, IRenderTarget
         if (!IsOpen) return;
         
         IsOpen = false;
-        DrawingBackendApi.Current.Flush();
     }
 
     ulong IRenderTarget.SurfaceId => UnderlyingTexture.SurfaceId;

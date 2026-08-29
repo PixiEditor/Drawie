@@ -8,7 +8,7 @@ using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Backend.Core;
 
-public class Texture : IDisposable, ICloneable, IPixelsMap, INativeSurfaceInfo, ITexture
+public class Texture : IDisposable, ICloneable, IPixelsMap, INativeSurfaceInfo, ILazyExternallyAccessibleTexture
 {
     public VecI Size { get; }
     public DrawingSurface DrawingSurface { get; private set; }
@@ -410,8 +410,17 @@ public class Texture : IDisposable, ICloneable, IPixelsMap, INativeSurfaceInfo, 
         surf.SaveToDesktop();
     }
 #endif
+    
+    public void EnsureExternallyAccessible()
+    {
+        if (DrawingBackendApi.Current.SurfaceImplementation.GetNativeSurfaceInfo(DrawingSurface.ObjectPointer) == null)
+        {
+            DrawingBackendApi.Current.SurfaceImplementation.ToExternallyAccessibleSurface(DrawingSurface.ObjectPointer);
+        }
+    }
 
     public ulong SurfaceId =>
         DrawingBackendApi.Current.SurfaceImplementation.GetNativeSurfaceInfo(DrawingSurface.ObjectPointer)
-            ?.SurfaceId ?? throw new Exception("Framebuffer info not available.");
+            ?.SurfaceId ?? DrawingBackendApi.Current.SurfaceImplementation
+            .ToExternallyAccessibleSurface(DrawingSurface.ObjectPointer)?.SurfaceId ?? throw new Exception("Unable to get native texture info.");
 }

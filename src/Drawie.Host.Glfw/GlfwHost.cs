@@ -238,6 +238,8 @@ public class GlfwHost : Drawie.Host.IHost
         {
             layer.Render(fbo, dt);
         }
+        
+        DrawingBackendApi.Current.Flush();
     }
 
     public void Close()

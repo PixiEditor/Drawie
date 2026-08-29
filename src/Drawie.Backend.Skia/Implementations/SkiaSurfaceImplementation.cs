@@ -21,14 +21,14 @@ namespace Drawie.Skia.Implementations
         private Dictionary<SKSurface, INativeSurfaceInfo> nativeSurfaceInfos =
             new Dictionary<SKSurface, INativeSurfaceInfo>();
 
+        private HashSet<ulong> nativeSurfacesToDispose = new HashSet<ulong>();
+
         internal GRContext? GrContext { get; set; }
         internal IGraphicsDevice GraphicsDevice { get; set; }
 
         private readonly SurfaceOrigin defaultSurfaceOrigin;
 
-        private HashSet<IntPtr> surfacesInUse = new HashSet<IntPtr>();
-
-        public SkiaSurfaceImplementation(GRContext context, SurfaceOrigin surfaceOrigin,
+        public SkiaSurfaceImplementation(SkiaDrawingBackend backendApi, GRContext context, SurfaceOrigin surfaceOrigin,
             SkiaPixmapImplementation pixmapImplementation,
             SkiaCanvasImplementation canvasImplementation, SkiaPaintImplementation paintImplementation)
         {
@@ -37,6 +37,15 @@ namespace Drawie.Skia.Implementations
             _paintImplementation = paintImplementation;
             GrContext = context;
             defaultSurfaceOrigin = surfaceOrigin;
+            backendApi.AfterFlush += () =>
+            {
+                foreach (var toDispose in nativeSurfacesToDispose)
+                {
+                    GraphicsDevice.DisposeTexture(toDispose);
+                }
+                
+                nativeSurfacesToDispose.Clear();
+            };  
         }
 
         public Pixmap PeekPixels(DrawingSurface drawingSurface)
@@ -78,7 +87,7 @@ namespace Drawie.Skia.Implementations
         {
             if (isGpuBacked)
             {
-                SKSurface? skSurface = CreateSkiaSurface(imageInfo, true);
+                SKSurface? skSurface = CreateSkiaSurface(imageInfo, true, false);
                 if (skSurface == null)
                 {
                     return null;
@@ -99,7 +108,7 @@ namespace Drawie.Skia.Implementations
         {
             if (isGpuBacked)
             {
-                SKSurface? skSurface = CreateSkiaSurface(imageInfo, true);
+                SKSurface? skSurface = CreateSkiaSurface(imageInfo, true, false);
                 if (skSurface == null)
                 {
                     return null;
@@ -132,34 +141,39 @@ namespace Drawie.Skia.Implementations
 
         public DrawingSurface? Create(ImageInfo imageInfo)
         {
-            SKSurface? skSurface = CreateSkiaSurface(imageInfo.ToSkImageInfo(), imageInfo.GpuBacked);
+            SKSurface? skSurface = CreateSkiaSurface(imageInfo.ToSkImageInfo(), imageInfo.GpuBacked, false);
             return CreateDrawingSurface(skSurface);
         }
 
-        private SKSurface? CreateSkiaSurface(SKImageInfo info, bool gpu)
+        private SKSurface? CreateSkiaSurface(SKImageInfo info, bool gpu, bool externallyAccessible)
         {
             if (!gpu || GrContext == null)
             {
                 return SKSurface.Create(info);
             }
 
-            if (GraphicsDevice == null)
+            if (externallyAccessible)
             {
-                throw new InvalidOperationException("GraphicsDevice is not initialized.");
+                if (GraphicsDevice == null)
+                {
+                    throw new InvalidOperationException("GraphicsDevice is not initialized.");
+                }
+
+                var texture = GraphicsDevice.CreateTexture(new TextureDesc()
+                {
+                    Format = TextureFormat.RGBA8_Unorm, Width = info.Width, Height = info.Height
+                });
+
+                var surface = CreateFromNativeTexture(texture, new VecI(info.Width, info.Height), defaultSurfaceOrigin,
+                    false,
+                    out var framebufferInfo);
+                if (surface == null) return null;
+
+                nativeSurfaceInfos[surface] = framebufferInfo;
+                return surface;
             }
 
-            var texture = GraphicsDevice.CreateTexture(new TextureDesc()
-            {
-                Format = TextureFormat.RGBA8_Unorm, Width = info.Width, Height = info.Height
-            });
-
-            var surface = CreateFromNativeTexture(texture, new VecI(info.Width, info.Height), defaultSurfaceOrigin,
-                false,
-                out var framebufferInfo);
-            if (surface == null) return null;
-
-            nativeSurfaceInfos[surface] = framebufferInfo;
-            return surface;
+            return SKSurface.Create(GrContext, false, info);
         }
 
         internal SKSurface? CreateFromNativeTexture(ITexture renderTexture, VecI size, SurfaceOrigin surfaceOrigin,
@@ -240,13 +254,10 @@ namespace Drawie.Skia.Implementations
                 surfaceId = surfaceInfo?.SurfaceId;
             }
 
-            // TODO: Maybe queue for disposal after a global flush + add texture type variations, so some are managed by skia and some have native textures
-            instance.Flush(true, true);
-            
             UnmanageAndDispose(drawingSurface.ObjectPointer);
             if (surfaceId != null)
             {
-                GraphicsDevice.DisposeTexture(surfaceId.Value);
+                nativeSurfacesToDispose.Add(surfaceId.Value);
             }
         }
 
@@ -310,6 +321,23 @@ namespace Drawie.Skia.Implementations
         public INativeSurfaceInfo? GetNativeSurfaceInfo(IntPtr objectPointer)
         {
             return nativeSurfaceInfos.GetValueOrDefault(this[objectPointer]);
+        }
+
+        public INativeSurfaceInfo? ToExternallyAccessibleSurface(IntPtr objectPointer)
+        {
+            var original = this[objectPointer];
+            using var snapshot = original.Snapshot();
+
+            var surface = CreateSkiaSurface(snapshot.Info, true, true);
+            if (surface == null)
+            {
+                return null;
+            }
+            
+            surface.Canvas.DrawImage(snapshot, 0, 0, SKSamplingOptions.Default);
+            UpdateManagedInstance(objectPointer, surface);
+            surface.Canvas.Flush();
+            return nativeSurfaceInfos[surface];
         }
 
         public void AddManagedFramebuffer(SKSurface nativeHandle, INativeSurfaceInfo fbInfo)
