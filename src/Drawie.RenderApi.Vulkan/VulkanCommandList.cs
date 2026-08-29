@@ -1,3 +1,4 @@
+using Drawie.Backend.Shaders.Common;
 using Drawie.RenderApi.Abstraction.Buffers;
 using Drawie.RenderApi.Abstraction.CommandRecording;
 using Drawie.RenderApi.Abstraction.Pipeline;

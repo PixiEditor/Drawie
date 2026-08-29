@@ -1,3 +1,4 @@
+using Drawie.Backend.Shaders.Common;
 using Drawie.Backend.Vertie.Core;
 using Drawie.RenderApi.Abstraction.Shaders;
 using Drawie.RenderApi.Abstraction.Textures;

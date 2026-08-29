@@ -1,3 +1,4 @@
+using Drawie.Backend.Shaders.Common;
 using Drawie.Backend.Vertie.Helpers;
 
 namespace Drawie.Backend.Vertie.Rendering;

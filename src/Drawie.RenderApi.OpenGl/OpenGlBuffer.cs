@@ -42,6 +42,22 @@ public class OpenGlBuffer<TData> : IBuffer<TData> where TData : unmanaged
             VertexAttributePointer(2, 2, VertexAttribPointerType.Float, 8, 6);
         }
     }
+    
+    public void SetData(TData[] data)
+    {
+        if (data != null)
+        {
+            unsafe
+            {
+                fixed (void* d = data)
+                {
+                    BufferTargetARB bufferType = ToBufferType();
+                    api.BindBuffer(bufferType, openglHandle);
+                    api.BufferData(bufferType, (nuint)(Size * (uint)sizeof(TData)), d, BufferUsageARB.StaticDraw);
+                }
+            }
+        } 
+    }
 
     public void Dispose()
     {

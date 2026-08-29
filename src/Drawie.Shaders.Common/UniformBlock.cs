@@ -1,7 +1,4 @@
-using System.Numerics;
-using Drawie.Backend.Shaders.Common;
-
-namespace Drawie.RenderApi.Abstraction.Shaders;
+namespace Drawie.Backend.Shaders.Common;
 
 public class UniformBlock
 {

@@ -70,8 +70,11 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
         Builder.DoNotDisposeStages = true;
         Builder.WithRenderPass(builder =>
         {
-            builder.WithDepth(Description.Depth.Format.ToVkFormat())
-                .WithSamples(Description.Rasterizer.Samples);
+            if (Description.Depth.Enabled)
+            {
+                builder.WithDepth(Description.Depth.Format.ToVkFormat())
+                    .WithSamples(Description.Rasterizer.Samples);
+            }
         });
         Builder.WithDepth();
         

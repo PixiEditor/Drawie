@@ -8,4 +8,5 @@ public interface IBuffer
 public interface IBuffer<T> : IBuffer where T : unmanaged
 {
     public ulong Size { get; }
+    public void SetData(T[] data);
 }

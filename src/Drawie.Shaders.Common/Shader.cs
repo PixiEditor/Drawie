@@ -1,7 +1,4 @@
-using Drawie.Backend.Shaders.Common;
-using Drawie.RenderApi.Abstraction.Shaders;
-
-namespace Drawie.Backend.Vertie.Rendering;
+namespace Drawie.Backend.Shaders.Common;
 
 public class Shader(byte[] shaderBytes, ShaderReflection reflection)
 {

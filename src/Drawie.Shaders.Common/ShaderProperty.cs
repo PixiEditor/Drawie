@@ -1,4 +1,4 @@
-﻿namespace Drawie.RenderApi.Abstraction.Shaders;
+﻿namespace Drawie.Backend.Shaders.Common;
 
 public class ShaderProperty
 {

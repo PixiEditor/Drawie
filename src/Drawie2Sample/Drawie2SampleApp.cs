@@ -1,4 +1,6 @@
 ﻿using System.Numerics;
+using Drawie.Backend.Arco;
+using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Vertie.Core;
@@ -93,12 +95,12 @@ public class Drawie2SampleApp : DrawieApp
         camera = new Camera(new Vector3(0, 0, 5), Vector3.UnitZ, Vector3.UnitY, (float)window.Size.X / window.Size.Y);
 
         //"Shiba" (https://skfb.ly/6WxVW) by zixisun02 is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
-        Scene scene = new Scene("Assets/shiba.fbx", Path.Combine("Assets", "textures"));
+        /*Scene scene = new Scene("Assets/shiba.fbx", Path.Combine("Assets", "textures"));
 
         foreach (var sceneMesh in scene.Meshes)
         {
             sceneMesh.Transform.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, float.DegreesToRadians(-90));
-        }
+        }*/
 
         RegisterMouse(window.InputController);
 
@@ -108,10 +110,18 @@ public class Drawie2SampleApp : DrawieApp
             HandleMovement((float)d, camera, window.InputController.PrimaryKeyboard);
         };
 
+        Drawie.Backend.Arco.Canvas cnvs = null;
+        
         window.Render += (targetTexture, deltaTime) =>
         {
+            if (cnvs == null)
+            {
+                cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, targetTexture, targetTexture.Size);
+            }
             targetTexture.Clear();
-            targetTexture.DrawScene(scene, camera, renderOptions);
+            cnvs.DrawRect(50, 50, 100, 100, Colors.Red);
+            //targetTexture.DrawScene(scene, camera, renderOptions);
+            
         };
     }
 

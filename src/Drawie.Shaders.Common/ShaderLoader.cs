@@ -1,18 +1,16 @@
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
-using Drawie.Backend.Shaders.Common;
-using Drawie.Backend.Vertie.Rendering;
 
-namespace Drawie.Backend.Vertie.Helpers;
+namespace Drawie.Backend.Shaders.Common;
 
 public static class ShaderLoader
 {
     public static Shader? LoadShader(string name)
     {
-        using var shaderStream = ReadFromAssemblyStream(name + ".shader");
-        using var reflectionStream = ReadFromAssemblyStream(name + ".reflection.json");
+        Assembly assembly = Assembly.GetCallingAssembly();
+        using var shaderStream = ReadFromAssemblyStream(assembly, name + ".shader");
+        using var reflectionStream = ReadFromAssemblyStream(assembly, name + ".reflection.json");
+
 
         using var memoryStream = new MemoryStream();
         shaderStream.CopyTo(memoryStream);
@@ -32,13 +30,13 @@ public static class ShaderLoader
         return new Shader(shaderBytes, reflection);
     }
 
-    private static Stream ReadFromAssemblyStream(string name)
+    private static Stream ReadFromAssemblyStream(Assembly assembly, string name)
     {
         Stream? stream = null;
         try
         {
-            stream = Assembly.GetExecutingAssembly()
-                                   .GetManifestResourceStream("Drawie.Backend.Vertie.BuiltInShaders." + name)
+            var assemblyName = assembly.GetName().Name;
+            stream = assembly.GetManifestResourceStream($"{assemblyName}.BuiltInShaders." + name)
                                ?? throw new InvalidOperationException("Shader not found");
             return stream;
         }

@@ -181,6 +181,7 @@ internal sealed class VulkanBuffer<T> : IVkBuffer, IBuffer<T>, IDisposable where
 
     public BufferUsage Usage { get; }
     public ulong Size { get; }
+
     public BufferObject NativeBuffer { get; }
 
     public VulkanBuffer(VulkanContext context, CommandPool commandPool, BufferUsage usage, T[] data)
@@ -211,6 +212,11 @@ internal sealed class VulkanBuffer<T> : IVkBuffer, IBuffer<T>, IDisposable where
             BufferUsage.Storage => new VulkanStorageBuffer(context, size),
             _ => throw new ArgumentOutOfRangeException(nameof(usage), usage, null)
         };
+    }
+    
+    public void SetData(T[] data)
+    {
+        Upload(data);
     }
 
     private void Upload(T[] data)

@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Backends/">
+    <Project Path="Drawie.Backend.Arco/Drawie.Backend.Arco.csproj" />
     <Project Path="Drawie.Backend.Core/Drawie.Backend.Core.csproj" />
     <Project Path="Drawie.Backend.Skia/Drawie.Backend.Skia.csproj" />
     <Project Path="Drawie.Backend.Vertie/Drawie.Backend.Vertie.csproj" />

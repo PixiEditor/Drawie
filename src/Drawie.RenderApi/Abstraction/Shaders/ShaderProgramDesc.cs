@@ -24,4 +24,11 @@ public struct ShaderDesc
         Bytes = bytes;
         Type = type;
     }
+
+    public ShaderDesc(Shader shader)
+    {
+        EntryName = shader.EntryName;
+        Bytes = shader.ShaderBytes;
+        Type = shader.ShaderType;
+    }
 }
