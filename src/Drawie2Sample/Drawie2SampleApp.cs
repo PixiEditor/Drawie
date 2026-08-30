@@ -114,16 +114,19 @@ public class Drawie2SampleApp : DrawieApp
         
         window.Render += (targetTexture, deltaTime) =>
         {
-            /*
             if (cnvs == null)
             {
                 cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, targetTexture, targetTexture.Size);
             }
-            */
+            else
+            {
+                cnvs.renderTarget = targetTexture;
+            }
             targetTexture.Clear();
-            //cnvs.DrawRect(50, 50, 100, 100, Colors.Red);
-            targetTexture.DrawScene(scene, camera, renderOptions);
-            
+            targetTexture.Canvas.Flush();
+            cnvs.DrawRect(50, 50, 100, 100, Colors.Green);
+            //targetTexture.DrawScene(scene, camera, renderOptions);
+            DrawingBackendApi.Current.ResetContext();
         };
     }
 

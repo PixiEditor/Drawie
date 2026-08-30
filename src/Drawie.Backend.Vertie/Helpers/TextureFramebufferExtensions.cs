@@ -85,6 +85,7 @@ public static class TextureFramebufferExtensions
             Rasterizer = new RasterizerDesc()
             {
                 RenderMode = options.RenderMode,
+                CullMode = CullMode.Back,
                 Samples = (int)options.MsaaSamples
             },
             ShaderProgram = program,

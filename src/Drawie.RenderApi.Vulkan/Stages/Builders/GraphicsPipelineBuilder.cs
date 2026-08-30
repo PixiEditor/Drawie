@@ -89,7 +89,7 @@ public class GraphicsPipelineBuilder
         var stages = stackalloc PipelineShaderStageCreateInfo[Stages.Count];
         for (var i = 0; i < Stages.Count; i++) stages[i] = Stages[i].Build();
 
-
+        
         DescriptorSetLayout* layouts = stackalloc DescriptorSetLayout[descriptorSetLayouts.Length];
         for (var i = 0; i < descriptorSetLayouts.Length; i++)
         {
@@ -101,6 +101,7 @@ public class GraphicsPipelineBuilder
         {
             SType = StructureType.PipelineVertexInputStateCreateInfo,
             VertexBindingDescriptionCount = 0,
+            VertexAttributeDescriptionCount = 0
         };
         
         if (VertexLayoutBuilder != null)
@@ -208,7 +209,7 @@ public class GraphicsPipelineBuilder
             SType = StructureType.PipelineLayoutCreateInfo,
             PushConstantRangeCount = 0,
             SetLayoutCount = (uint)descriptorSetLayouts.Length,
-            PSetLayouts = layouts
+            PSetLayouts = descriptorSetLayouts.Length > 0 ? layouts : null
         };
 
         if (Vk!.CreatePipelineLayout(LogicalDevice, in pipelineLayoutInfo, null, out var pipelineLayout) !=

@@ -20,7 +20,7 @@ public class GraphicsPipelineDescriptorBuilder
     public DescriptorSetLayoutBinding[] Build()
     {
         if (BindingBuilders.Count == 0) 
-            throw new ArgumentException("No bindings have been added");
+            return Array.Empty<DescriptorSetLayoutBinding>();
 
         var flattened = FlattenBuilders(BindingBuilders);
 

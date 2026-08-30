@@ -62,7 +62,7 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
         Builder.WithPolygonMode(Description.Rasterizer.RenderMode == RenderMode.Default
                 ? PolygonMode.Fill
                 : PolygonMode.Line)
-            .WithCullMode(CullModeFlags.BackBit)
+            .WithCullMode(ToCullFlags(Description.Rasterizer.CullMode))
             .WithFrontFace(FrontFace.Clockwise);
 
         Builder.Stages.Add(program.VertexStageBuilder);
@@ -82,6 +82,18 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
             Format.R8G8B8A8Unorm, ImageLayout.ColorAttachmentOptimal, [program.DescriptorSetLayout]);
 
         return pipeline;
+    }
+
+    private CullModeFlags ToCullFlags(CullMode rasterizerCullMode)
+    {
+        return rasterizerCullMode switch
+        {
+            CullMode.None => CullModeFlags.None,
+            CullMode.Back => CullModeFlags.BackBit,
+            CullMode.Front => CullModeFlags.FrontBit,
+            CullMode.BackAndFront => CullModeFlags.FrontAndBack,
+            _ => throw new ArgumentOutOfRangeException(nameof(rasterizerCullMode), rasterizerCullMode, null)
+        };
     }
 
     public void Dispose()
