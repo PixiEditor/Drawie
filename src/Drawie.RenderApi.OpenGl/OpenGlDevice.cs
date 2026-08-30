@@ -67,17 +67,17 @@ public class OpenGlDevice : IGraphicsDevice
         {
             var shader = desc.Shaders[i];
             shaders[i] = Api.CreateShader(
-                ToOpenGlShaderType(shader.Type));
+                ToOpenGlShaderType(shader.ShaderType));
 
             uint shaderPtr = shaders[i];
-            fixed (byte* bytes = shader.Bytes)
+            fixed (byte* bytes = shader.ShaderBytes)
             {
                 Api.ShaderBinary(
                     1,
                     &shaderPtr,
                     ShaderBinaryFormat.ShaderBinaryFormatSpirV,
                     bytes,
-                    (uint)shader.Bytes.Length);
+                    (uint)shader.ShaderBytes.Length);
             }
 
             Api.SpecializeShader(

@@ -14,10 +14,12 @@ public interface ICommandList
     void SetBuffers(IBufferGroup bufferGroup);
     void BindTexture(PreparedTexture texture, ISampler sampler);
     void DrawIndexed(int indexCount);
+    void Draw(int vertexCount, int instanceCount);
     RecordedRenderPass EndRenderPass(IRenderTarget blitTo);
     RecordedRenderPass EndRenderPass();
     void BindPipeline();
     PreparedTexture PrepareTexture(ITexture texture);
-    void UpdateUniforms(List<UniformBlock> blocks, List<PreparedTexture> textures, List<ISampler> samplers);
+    void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures, IEnumerable<ISampler> samplers);
+    void UpdateUniforms(IEnumerable<NamedBuffer> properties);
     void RestoreTexture(PreparedTexture preparedTextureValue);
 }

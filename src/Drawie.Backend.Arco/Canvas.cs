@@ -23,7 +23,7 @@ public class Canvas
     private ICommandList commandList;
     private IPipeline pipeline;
     private IBuffer<DrawInstance> instancesBuffer;
-    private IBufferGroup bufferGroup;
+    private List<NamedBuffer> uniformBlocks;
 
     public Canvas(IGraphicsDevice device, IRenderTarget renderTarget, VecI size)
     {
@@ -36,7 +36,7 @@ public class Canvas
 
         shaderProgram =
             GraphicsDevice.CreateShaderProgram(new ShaderProgramDesc([
-                new ShaderDesc(instancedRectVertex), new ShaderDesc(fillFragment)
+                instancedRectVertex, fillFragment
             ]));
 
         pipeline = GraphicsDevice.CreatePipeline(new PipelineDesc()
@@ -55,8 +55,10 @@ public class Canvas
         });
 
         instancesBuffer = GraphicsDevice.CreateBuffer<DrawInstance>(BufferUsage.Storage, new DrawInstance[1]);
-        bufferGroup = GraphicsDevice.CreateBufferGroup();
-        bufferGroup.Open(list => list.Buffers.Add(instancesBuffer));
+        uniformBlocks = new List<NamedBuffer>()
+        {
+            new NamedBuffer("instances", instancesBuffer),
+        };
 
         commandList = GraphicsDevice.CreateCommandList();
     }
@@ -71,18 +73,18 @@ public class Canvas
             Depth = DepthFormat.NoDepth,
             Format = TextureFormat.RGBA8_Unorm
         });
-        
+       
         instancesBuffer.SetData([
             new DrawInstance()
                 { Color = new Vector4(fill.R / 255f, fill.G / 255f, fill.B / 255f, fill.A / 255f), Position = new Vector2(x, y), Size = new Vector2(width, height) }
         ]);
         
         commandList.SetPipeline(pipeline);
-
+        
         commandList.BeginRenderPass(target);
         commandList.BindPipeline();
-        commandList.SetBuffers(bufferGroup);
-        commandList.DrawIndexed(4);
+        commandList.UpdateUniforms(uniformBlocks);
+        commandList.Draw(6, 1);
 
         var recordedRenderPass = commandList.EndRenderPass(renderTarget);
         GraphicsDevice.Submit(recordedRenderPass);

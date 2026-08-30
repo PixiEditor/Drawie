@@ -34,6 +34,7 @@ public class VulkanWindowContext : VulkanContext
         TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
         
         deviceExtensions.Add(KhrSwapchain.ExtensionName);
+        deviceExtensions.Add("VK_KHR_shader_draw_parameters");
         
         SetupInstance(contextInfo);
         
@@ -77,7 +78,7 @@ public class VulkanWindowContext : VulkanContext
         PhysicalDeviceFeatures deviceFeatures = new()
         {
             SamplerAnisotropy = false,
-            FillModeNonSolid = true
+            FillModeNonSolid = true,
         };
 
         DeviceCreateInfo createInfo = new()

@@ -48,7 +48,13 @@ public class OpenGlCommandList(GL api) : CommandList
         return new PreparedTexture(texture.TextureId);
     }
 
-    public override void UpdateUniforms(List<UniformBlock> blocks, List<PreparedTexture> textures, List<ISampler> samplers)
+    public override void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures,
+        IEnumerable<ISampler> samplers)
+    {
+        
+    }
+
+    public override void UpdateUniforms(IEnumerable<NamedBuffer> properties)
     {
         
     }
@@ -84,6 +90,15 @@ public class OpenGlCommandList(GL api) : CommandList
         RecordInstruction(() =>
         {
             Api.DrawElements(PrimitiveType.Triangles, (uint)indexCount, DrawElementsType.UnsignedInt, (void*)0);
+        });
+    }
+
+    public override void Draw(int vertexCount, int instanceCount)
+    {
+        RecordInstruction(() =>
+        {
+            // TODO: Doesn't seem rights
+            Api.DrawArrays(PrimitiveType.Triangles, 0, (uint)vertexCount);
         });
     }
 

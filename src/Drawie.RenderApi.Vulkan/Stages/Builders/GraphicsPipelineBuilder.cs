@@ -11,7 +11,7 @@ public class GraphicsPipelineBuilder
     public Device LogicalDevice { get; set; }
     public List<GraphicsPipelineStageBuilder> Stages { get; } = new();
     public RenderPassBuilder RenderPassBuilder { get; set; }
-    public GraphicsPipelineVertexLayoutBuilder  VertexLayoutBuilder { get; set; }
+    public GraphicsPipelineVertexLayoutBuilder? VertexLayoutBuilder { get; set; }
 
     public CullModeFlags CullMode { get; set; } = CullModeFlags.None;
     public FrontFace FrontFace { get; set; } = FrontFace.Clockwise;
@@ -83,15 +83,13 @@ public class GraphicsPipelineBuilder
         if (Stages.Count == 0) throw new GraphicsPipelineBuilderException("No stages were added to the pipeline.");
         if (RenderPassBuilder == null)
             throw new GraphicsPipelineBuilderException("No render pass was added to the pipeline.");
-        if(VertexLayoutBuilder == null) throw new GraphicsPipelineBuilderException("No vertex layout was added to the pipeline.");
 
         RenderPass renderPass = RenderPassBuilder.Create(imageFormat, finalLayout);
 
         var stages = stackalloc PipelineShaderStageCreateInfo[Stages.Count];
         for (var i = 0; i < Stages.Count; i++) stages[i] = Stages[i].Build();
 
-        var (bindingDescription, attributeDescriptions) = VertexLayoutBuilder.Build();
-        
+
         DescriptorSetLayout* layouts = stackalloc DescriptorSetLayout[descriptorSetLayouts.Length];
         for (var i = 0; i < descriptorSetLayouts.Length; i++)
         {
@@ -99,139 +97,150 @@ public class GraphicsPipelineBuilder
             layouts[i] = descriptorSetLayout;
         }
 
-        fixed (VertexInputAttributeDescription* attributeDescriptionsPtr = attributeDescriptions)
+        PipelineVertexInputStateCreateInfo vertexInputInfo = new PipelineVertexInputStateCreateInfo()
         {
-            PipelineVertexInputStateCreateInfo vertexInputInfo = new()
+            SType = StructureType.PipelineVertexInputStateCreateInfo,
+            VertexBindingDescriptionCount = 0,
+        };
+        
+        if (VertexLayoutBuilder != null)
+        {
+            var (bindingDescription, attributeDescriptions) = VertexLayoutBuilder.Build();
+            fixed (VertexInputAttributeDescription* attributeDescriptionsPtr = attributeDescriptions)
             {
-                SType = StructureType.PipelineVertexInputStateCreateInfo,
-                VertexBindingDescriptionCount = 1,
-                VertexAttributeDescriptionCount = (uint)attributeDescriptions.Length,
-                PVertexBindingDescriptions = &bindingDescription,
-                PVertexAttributeDescriptions = attributeDescriptionsPtr
-            };
-
-            PipelineInputAssemblyStateCreateInfo inputAssembly = new()
-            {
-                SType = StructureType.PipelineInputAssemblyStateCreateInfo,
-                Topology = PrimitiveTopology.TriangleList,
-                PrimitiveRestartEnable = false
-            };
-
-            Viewport viewport = new()
-            {
-                X = 0.0f,
-                Y = 0.0f,
-                Width = extent.Width,
-                Height = extent.Height,
-                MinDepth = 0.0f,
-                MaxDepth = 1.0f
-            };
-
-            Rect2D scissor = new()
-            {
-                Offset = new Offset2D(0, 0),
-                Extent = extent
-            };
-
-            PipelineViewportStateCreateInfo viewportState = new()
-            {
-                SType = StructureType.PipelineViewportStateCreateInfo,
-                ViewportCount = 1,
-                PViewports = &viewport,
-                ScissorCount = 1,
-                PScissors = &scissor
-            };
-
-            PipelineRasterizationStateCreateInfo rasterizer = new()
-            {
-                SType = StructureType.PipelineRasterizationStateCreateInfo,
-                DepthClampEnable = false,
-                RasterizerDiscardEnable = false,
-                PolygonMode = PolygonMode,
-                LineWidth = 1.0f,
-                CullMode = CullMode,
-                FrontFace = FrontFace,
-                DepthBiasEnable = false
-            };
-
-            PipelineDepthStencilStateCreateInfo depthStencil = new()
-            {
-                SType = StructureType.PipelineDepthStencilStateCreateInfo,
-
-                DepthTestEnable = HasDepthStencil,
-                DepthWriteEnable = HasDepthStencil,
-                DepthCompareOp = CompareOp.Less,
-
-                DepthBoundsTestEnable = false,
-                StencilTestEnable = false
-            };
-
-            PipelineMultisampleStateCreateInfo multisampling = new()
-            {
-                SType = StructureType.PipelineMultisampleStateCreateInfo,
-                SampleShadingEnable = false,
-                RasterizationSamples = FormatExtensions.ToSampleFlags(RenderPassBuilder.Samples)
-            };
-
-            PipelineColorBlendAttachmentState colorBlendAttachment = new()
-            {
-                ColorWriteMask = ColorComponentFlags.RBit | ColorComponentFlags.GBit | ColorComponentFlags.BBit |
-                                 ColorComponentFlags.ABit,
-                BlendEnable = false
-            };
-
-            PipelineColorBlendStateCreateInfo colorBlending = new()
-            {
-                SType = StructureType.PipelineColorBlendStateCreateInfo,
-                LogicOpEnable = false,
-                LogicOp = LogicOp.Copy,
-                AttachmentCount = 1,
-                PAttachments = &colorBlendAttachment
-            };
-
-            colorBlending.BlendConstants[0] = 0.0f;
-            colorBlending.BlendConstants[1] = 0.0f;
-            colorBlending.BlendConstants[2] = 0.0f;
-            colorBlending.BlendConstants[3] = 0.0f;
-
-            PipelineLayoutCreateInfo pipelineLayoutInfo = new()
-            {
-                SType = StructureType.PipelineLayoutCreateInfo,
-                PushConstantRangeCount = 0,
-                SetLayoutCount = (uint)descriptorSetLayouts.Length,
-                PSetLayouts = layouts
-            };
-
-            if (Vk!.CreatePipelineLayout(LogicalDevice, in pipelineLayoutInfo, null, out var pipelineLayout) !=
-                Result.Success)
-                throw new VulkanException("Failed to create pipeline layout.");
-
-            GraphicsPipelineCreateInfo pipelineCreateInfo = new()
-            {
-                SType = StructureType.GraphicsPipelineCreateInfo,
-                StageCount = (uint)Stages.Count,
-                PStages = stages,
-                PVertexInputState = &vertexInputInfo,
-                PInputAssemblyState = &inputAssembly,
-                PViewportState = &viewportState,
-                PRasterizationState = &rasterizer,
-                PMultisampleState = &multisampling,
-                PColorBlendState = &colorBlending,
-                PDepthStencilState = &depthStencil,
-                Layout = pipelineLayout,
-                RenderPass = renderPass,
-                Subpass = 0,
-                BasePipelineHandle = default
-            };
-
-            if (Vk!.CreateGraphicsPipelines(LogicalDevice, default, 1, &pipelineCreateInfo, null,
-                    out var graphicsPipeline) !=
-                Result.Success) throw new VulkanException("Failed to create graphics pipeline.");
-
-            if(!DoNotDisposeStages)
-                foreach (var stage in Stages) stage.Dispose();
-
-            return new GraphicsPipeline(Vk, LogicalDevice, pipelineLayout, graphicsPipeline, renderPass);
+                vertexInputInfo = new()
+                {
+                    SType = StructureType.PipelineVertexInputStateCreateInfo,
+                    VertexBindingDescriptionCount = 1,
+                    VertexAttributeDescriptionCount = (uint)attributeDescriptions.Length,
+                    PVertexBindingDescriptions = &bindingDescription,
+                    PVertexAttributeDescriptions = attributeDescriptionsPtr,
+                };
+            }
         }
+
+        PipelineInputAssemblyStateCreateInfo inputAssembly = new()
+        {
+            SType = StructureType.PipelineInputAssemblyStateCreateInfo,
+            Topology = PrimitiveTopology.TriangleList,
+            PrimitiveRestartEnable = false
+        };
+
+        Viewport viewport = new()
+        {
+            X = 0.0f,
+            Y = 0.0f,
+            Width = extent.Width,
+            Height = extent.Height,
+            MinDepth = 0.0f,
+            MaxDepth = 1.0f
+        };
+
+        Rect2D scissor = new()
+        {
+            Offset = new Offset2D(0, 0),
+            Extent = extent
+        };
+
+        PipelineViewportStateCreateInfo viewportState = new()
+        {
+            SType = StructureType.PipelineViewportStateCreateInfo,
+            ViewportCount = 1,
+            PViewports = &viewport,
+            ScissorCount = 1,
+            PScissors = &scissor
+        };
+
+        PipelineRasterizationStateCreateInfo rasterizer = new()
+        {
+            SType = StructureType.PipelineRasterizationStateCreateInfo,
+            DepthClampEnable = false,
+            RasterizerDiscardEnable = false,
+            PolygonMode = PolygonMode,
+            LineWidth = 1.0f,
+            CullMode = CullMode,
+            FrontFace = FrontFace,
+            DepthBiasEnable = false
+        };
+
+        PipelineDepthStencilStateCreateInfo depthStencil = new()
+        {
+            SType = StructureType.PipelineDepthStencilStateCreateInfo,
+
+            DepthTestEnable = HasDepthStencil,
+            DepthWriteEnable = HasDepthStencil,
+            DepthCompareOp = CompareOp.Less,
+
+            DepthBoundsTestEnable = false,
+            StencilTestEnable = false
+        };
+
+        PipelineMultisampleStateCreateInfo multisampling = new()
+        {
+            SType = StructureType.PipelineMultisampleStateCreateInfo,
+            SampleShadingEnable = false,
+            RasterizationSamples = FormatExtensions.ToSampleFlags(RenderPassBuilder.Samples)
+        };
+
+        PipelineColorBlendAttachmentState colorBlendAttachment = new()
+        {
+            ColorWriteMask = ColorComponentFlags.RBit | ColorComponentFlags.GBit | ColorComponentFlags.BBit |
+                             ColorComponentFlags.ABit,
+            BlendEnable = false
+        };
+
+        PipelineColorBlendStateCreateInfo colorBlending = new()
+        {
+            SType = StructureType.PipelineColorBlendStateCreateInfo,
+            LogicOpEnable = false,
+            LogicOp = LogicOp.Copy,
+            AttachmentCount = 1,
+            PAttachments = &colorBlendAttachment
+        };
+
+        colorBlending.BlendConstants[0] = 0.0f;
+        colorBlending.BlendConstants[1] = 0.0f;
+        colorBlending.BlendConstants[2] = 0.0f;
+        colorBlending.BlendConstants[3] = 0.0f;
+
+        PipelineLayoutCreateInfo pipelineLayoutInfo = new()
+        {
+            SType = StructureType.PipelineLayoutCreateInfo,
+            PushConstantRangeCount = 0,
+            SetLayoutCount = (uint)descriptorSetLayouts.Length,
+            PSetLayouts = layouts
+        };
+
+        if (Vk!.CreatePipelineLayout(LogicalDevice, in pipelineLayoutInfo, null, out var pipelineLayout) !=
+            Result.Success)
+            throw new VulkanException("Failed to create pipeline layout.");
+
+        GraphicsPipelineCreateInfo pipelineCreateInfo = new()
+        {
+            SType = StructureType.GraphicsPipelineCreateInfo,
+            StageCount = (uint)Stages.Count,
+            PStages = stages,
+            PVertexInputState = &vertexInputInfo,
+            PInputAssemblyState = &inputAssembly,
+            PViewportState = &viewportState,
+            PRasterizationState = &rasterizer,
+            PMultisampleState = &multisampling,
+            PColorBlendState = &colorBlending,
+            PDepthStencilState = &depthStencil,
+            Layout = pipelineLayout,
+            RenderPass = renderPass,
+            Subpass = 0,
+            BasePipelineHandle = default
+        };
+
+        if (Vk!.CreateGraphicsPipelines(LogicalDevice, default, 1, &pipelineCreateInfo, null,
+                out var graphicsPipeline) !=
+            Result.Success) throw new VulkanException("Failed to create graphics pipeline.");
+
+        if (!DoNotDisposeStages)
+            foreach (var stage in Stages)
+                stage.Dispose();
+
+        return new GraphicsPipeline(Vk, LogicalDevice, pipelineLayout, graphicsPipeline, renderPass);
     }
 }

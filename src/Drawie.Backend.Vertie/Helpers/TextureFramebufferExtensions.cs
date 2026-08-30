@@ -158,8 +158,7 @@ public static class TextureFramebufferExtensions
 
         var program =
             graphicsDevice.CreateShaderProgram(new ShaderProgramDesc(
-                scene.Meshes.SelectMany(x => x.Material.Original.Shaders)
-                    .Select(x => new ShaderDesc(x.EntryName, x.ShaderBytes, x.ShaderType))));
+                scene.Meshes.SelectMany(x => x.Material.Original.Shaders)));
         cachedShaderPrograms.Add(scene, program);
 
         return program;

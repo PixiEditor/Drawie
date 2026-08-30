@@ -58,7 +58,7 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
 
     private GraphicsPipeline CreatePipeline()
     {
-        Builder.WithVertexLayout(layout => layout.WithVec3().WithVec3().WithVec2());
+        Builder.VertexLayoutBuilder = program.VertexLayoutBuilder;
         Builder.WithPolygonMode(Description.Rasterizer.RenderMode == RenderMode.Default
                 ? PolygonMode.Fill
                 : PolygonMode.Line)

@@ -23,6 +23,11 @@ public class VulkanDescriptorPool
     public void Reset()
     {
         sets.Clear();
+        
+        Context.Api.ResetDescriptorPool(
+            Context.LogicalDevice.Device,
+            DescriptorPool,
+            0);
     }
     
     public unsafe DescriptorSet GetOrAllocateDescriptorSet(int layoutIndex, ulong forHandle)

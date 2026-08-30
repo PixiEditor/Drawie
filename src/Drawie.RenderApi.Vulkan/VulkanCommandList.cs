@@ -98,8 +98,8 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         return new PreparedTexture(texture.TextureId);
     }
 
-    public override void UpdateUniforms(List<UniformBlock> blocks, List<PreparedTexture> textures,
-        List<ISampler> samplers)
+    public override void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures,
+        IEnumerable<ISampler> samplers)
     {
         foreach (var block in blocks)
         {
@@ -117,18 +117,79 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
             UniformUtility.SerializeToBuffer(block, buffer);
             // TODO first texture is temporary as shader only supports single texture
-            UpdateUniformDescriptor(buffer, (ulong)block.ShaderLayout.Size, textures.FirstOrDefault(), samplers.FirstOrDefault());
+            UpdateUniformDescriptor(buffer, (ulong)block.ShaderLayout.Size, textures.FirstOrDefault(),
+                samplers.FirstOrDefault());
+        }
+    }
+
+    public override void UpdateUniforms(IEnumerable<NamedBuffer> properties)
+    {
+        foreach (var namedBuffer in properties)
+        {
+            if (namedBuffer.Buffer is IVkBuffer vkBuffer)
+            {
+                UpdateDescriptor(namedBuffer.Name, vkBuffer);
+            }
+            else
+            {
+                throw new ArgumentException("Only IVkBuffer is valid buffer type");
+            }
         }
     }
 
     public override void RestoreTexture(PreparedTexture preparedTextureValue)
     {
         var target = context.ManagedTextures[preparedTextureValue.Handle];
-        if(target is not VulkanTexture vkTex) throw new ArgumentException("Only VulkanTexture's are valid");
+        if (target is not VulkanTexture vkTex) throw new ArgumentException("Only VulkanTexture's are valid");
         vkTex.MakeReadOnly(commandBuffer);
     }
 
-    private unsafe void UpdateUniformDescriptor(UniformBuffer buffer, ulong size, PreparedTexture texture, ISampler sampler)
+    private unsafe void UpdateDescriptor(string name, IVkBuffer buffer)
+    {
+        var set = pipeline.DescriptorPool.GetOrAllocateDescriptorSet(0, buffer.NativeBuffer.VkBuffer.Handle);
+        DescriptorBufferInfo bufferInfo = new()
+        {
+            Buffer = buffer.NativeBuffer.VkBuffer,
+            Offset = 0,
+            Range = buffer.NativeBuffer.Size
+        };
+
+        WriteDescriptorSet write = new()
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = set,
+            DstBinding = 0,
+            DstArrayElement = 0,
+            DescriptorCount = 1,
+            DescriptorType = UsageToDescriptor(buffer.Usage),
+            PBufferInfo = &bufferInfo
+        };
+        
+        context.Api.UpdateDescriptorSets(context.LogicalDevice.Device, 1, &write, 0, null);
+
+        context.Api!.CmdBindDescriptorSets(
+            commandBuffer,
+            PipelineBindPoint.Graphics,
+            pipeline.GraphicsPipeline.VkPipelineLayout,
+            0,
+            1,
+            in set,
+            0,
+            null);
+    }
+
+    private DescriptorType UsageToDescriptor(BufferUsage bufferUsage)
+    {
+        return bufferUsage switch
+        {
+            BufferUsage.Uniform => DescriptorType.UniformBuffer,
+            BufferUsage.Storage => DescriptorType.StorageBuffer,
+            _ => throw new ArgumentException("Invalid buffer type: " + bufferUsage)
+        };
+    }
+
+    private unsafe void UpdateUniformDescriptor(UniformBuffer buffer, ulong size, PreparedTexture texture,
+        ISampler sampler)
     {
         if (texture.Handle == 0 || sampler == default)
             return;
@@ -154,7 +215,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             DescriptorType = DescriptorType.UniformBuffer,
             PBufferInfo = &bufferInfo
         };
-        
+
         var imageInfo = new DescriptorImageInfo
         {
             Sampler = vkSampler.VkSampler,
@@ -183,7 +244,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             sets,
             0,
             null);
-        
+
         context.Api!.CmdBindDescriptorSets(
             commandBuffer,
             PipelineBindPoint.Graphics,
@@ -224,6 +285,15 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
                 "BeginRenderPass must be called first.");
 
         context.Api!.CmdDrawIndexed(commandBuffer, (uint)indexCount, 1, 0, 0, 0);
+    }
+
+    public override void Draw(int vertexCount, int instanceCount)
+    {
+        if (!recording)
+            throw new InvalidOperationException(
+                "BeginRenderPass must be called first.");
+
+        context.Api!.CmdDraw(commandBuffer, (uint)vertexCount, (uint)instanceCount, 0, 0);
     }
 
     public override RecordedRenderPass EndRenderPass()
@@ -416,7 +486,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
     /*private unsafe void BeginDynamicRendering(VulkanRenderTarget target)
     {
         target.Texture.MakeWriteable(commandBuffer);
-        
+
         RenderingAttachmentInfo colorAttachment = new()
         {
             SType = StructureType.RenderingAttachmentInfo,
@@ -474,7 +544,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
         if (target.Texture.DepthAttachment is not null)
             renderingInfo.PDepthAttachment = &depthAttachment;
-        
+
         context.DynamicRendering?.CmdBeginRendering(commandBuffer, &renderingInfo);
     }*/
 

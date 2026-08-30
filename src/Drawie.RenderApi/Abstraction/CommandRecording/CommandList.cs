@@ -38,12 +38,13 @@ public abstract class CommandList : ICommandList
     public abstract void SetBuffers(IBufferGroup bufferGroup);
     public abstract void BindTexture(PreparedTexture texture, ISampler sampler);
     public abstract void DrawIndexed(int indexCount);
+    public abstract void Draw(int vertexCount, int instanceCount);
+
     public abstract RecordedRenderPass EndRenderPass(IRenderTarget blitTo);
     public abstract RecordedRenderPass EndRenderPass();
     public abstract void BindPipeline();
     public abstract PreparedTexture PrepareTexture(ITexture texture);
-    public abstract void UpdateUniforms(List<UniformBlock> blocks, List<PreparedTexture> textures,
-        List<ISampler> samplers);
-
+    public abstract void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures, IEnumerable<ISampler> samplers);
+    public abstract void UpdateUniforms(IEnumerable<NamedBuffer> properties);
     public abstract void RestoreTexture(PreparedTexture preparedTextureValue);
 }

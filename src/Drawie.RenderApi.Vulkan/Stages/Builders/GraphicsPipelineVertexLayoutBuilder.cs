@@ -10,13 +10,13 @@ public class GraphicsPipelineVertexLayoutBuilder
 
     public GraphicsPipelineVertexLayoutBuilder WithVec2()
     {
-        Components.Add(new VertexAttributeLayout { ComponentCount = 2, Format = Format.R32G32Sfloat });
+        Components.Add(new VertexAttributeLayout(Format.R32G32Sfloat, 2 * sizeof(float)));
         return this;
     }
 
     public GraphicsPipelineVertexLayoutBuilder WithVec3()
     {
-        Components.Add(new VertexAttributeLayout() { ComponentCount = 3, Format = Format.R32G32B32Sfloat });
+        Components.Add(new VertexAttributeLayout(Format.R32G32B32Sfloat, 3 * sizeof(float)));
         return this;
     }
 
@@ -48,7 +48,7 @@ public class GraphicsPipelineVertexLayoutBuilder
                 Offset = (uint)offset,
             };
 
-            offset += component.ComponentCount * sizeof(float);
+            offset += component.Size;
         }
 
         return (bindingDesc, descriptions);
@@ -58,7 +58,11 @@ public class GraphicsPipelineVertexLayoutBuilder
 public struct VertexAttributeLayout
 {
     public Format Format { get; set; }
-    public int ComponentCount { get; set; }
-
-    public int Size => ComponentCount * sizeof(float);
+    public int Size { get; }
+    
+    public VertexAttributeLayout(Format format, int size)
+    {
+        Format = format;
+        Size  = size;
+    }
 }

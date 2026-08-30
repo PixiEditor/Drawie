@@ -64,7 +64,8 @@ public class ShaderCompiler
             shaderReflection.EntryPoints.Add(new EntryPoint
             {
                 Name = entryPoint.Name,
-                Type = StageToType(entryPoint.Stage)
+                Type = StageToType(entryPoint.Stage),
+                Params = entryPoint.Parameters.Select(CreateShaderVar).ToArray()
             });
         }
 
@@ -98,14 +99,18 @@ public class ShaderCompiler
 
         var shaderVar = new ShaderVar
         {
+            Name = parameter.Name,
+            SemanticName = parameter.SemanticName,
             Layout = new PropertyLayout
             {
                 Name = parameter.Name
             },
-            Fields = new List<PropertyLayout>()
+            Fields = new List<PropertyLayout>(),
+            Type = (ShaderVarType)type.Kind,
+            HasBindings = parameter.Bindings.Length > 0,
+            ResourceType = type.Resource != null ? (ShaderVarShape)type.Resource.BaseShape : null
         };
 
-        // ConstantBuffer -> ElementVarLayout
         var elementVarLayout = type.ConstantBuffer?.ElementVarLayout;
 
         if (elementVarLayout != null)
@@ -113,22 +118,17 @@ public class ShaderCompiler
             shaderVar.Layout = CreatePropertyLayout(
                 elementVarLayout,
                 parameter.Name);
-
+            
             var fields = elementVarLayout.Type.Struct?.Fields;
 
             if (fields != null)
             {
-                foreach (var field in fields)
-                {
-                    if (field.Binding == null)
-                        continue;
-
-                    shaderVar.Fields.Add(
-                        CreatePropertyLayout(
-                            field,
-                            field.Name));
-                }
+                shaderVar.Fields.AddRange(CreateFields(fields));
             }
+        }
+        else if (type.Struct != null)
+        {
+            shaderVar.Fields.AddRange(CreateFields(type.Struct.Fields));
         }
         else
         {
@@ -150,22 +150,96 @@ public class ShaderCompiler
         return shaderVar;
     }
 
+    private static PropertyLayout[] CreateFields(SlangVar[] fields)
+    {
+        PropertyLayout[] layouts = new PropertyLayout[fields.Length];
+        int offset = 0;
+        for (var i = 0; i < fields.Length; i++)
+        {
+            var field = fields[i];
+
+            layouts[i] = CreatePropertyLayout(field, field.Name);
+            layouts[i].Offset = offset;
+            offset += layouts[i].Size;
+        }
+
+        return layouts;
+    }
+
     private static PropertyLayout CreatePropertyLayout(
         SlangVar variable,
         string name)
     {
-        var binding = variable.Binding;
+        int size = GetSize(variable);
+        int offset = GetOffset(variable);
 
         return new PropertyLayout
         {
             Name = name,
-            Offset = binding != null
-                ? (int)binding.Offset
-                : 0,
-            Size = binding != null
-                ? (int)binding.Size
-                : 0
+            Offset = offset,
+            Size = size,
+            ScalarType = (ScalarType?)(variable.Type.Vector?.ElementType.Scalar?.ScalarType ?? variable.Type.Scalar?.ScalarType),
+            ScalarsCount = (int)(variable.Type.Vector?.ElementCount ?? 1)
         };
+    }
+
+    private static int GetOffset(SlangVar variable)
+    {
+        if (variable.Binding != null) return (int)variable.Binding.Offset;
+
+        return 0;
+    }
+    
+    private static int GetSize(SlangVar variable)
+    {
+        if (variable.Type.Vector != null)
+        {
+            return GetScalarSize(variable.Type.Vector.ElementType.Scalar!.ScalarType) * (int)variable.Type.Vector.ElementCount;
+        }
+        if (variable.Binding != null) return (int)variable.Binding.Size;
+
+        if (variable.Type.Kind == SlangTypeKind.Scalar)
+        {
+            var scalar = variable.Type.Scalar!.ScalarType;
+            return GetScalarSize(scalar);
+        }
+
+        return 0;
+    }
+
+    private static int GetScalarSize(SlangScalarType scalar)
+    {
+        switch (scalar)
+        {
+            case SlangScalarType.Bool:
+                return 4;
+            case SlangScalarType.Int8:
+                return 1;
+            case SlangScalarType.UInt8:
+                return 1;
+            case SlangScalarType.Int16:
+                return 2;
+            case SlangScalarType.UInt16:
+                return 2;
+            case SlangScalarType.Int32:
+                return 4;
+            case SlangScalarType.UInt32:
+                 return 4;
+            case SlangScalarType.Int64:
+                return 8;
+            case SlangScalarType.UInt64:
+                return 8;
+            case SlangScalarType.Float16:
+                return 2;
+            case SlangScalarType.Float32:
+                return 4;
+            case SlangScalarType.Float64:
+                return 8;
+            case SlangScalarType.Unknown:
+            case SlangScalarType.Void:
+            default:
+                return 0;
+        }
     }
 
     private static ShaderType StageToType(SlangStage stage)

@@ -5,6 +5,7 @@ struct Instance
     float4 color;
 };
 
+[[vk::binding(0, 0)]]
 StructuredBuffer<Instance> instances;
 
 struct VSInput
@@ -24,12 +25,14 @@ VSOutput vertexMain(VSInput input)
 {
     Instance instance = instances[input.instanceId];
 
-    float2 vertices[4] =
+    float2 vertices[6] =
     {
         float2(0, 0),
         float2(1, 0),
         float2(0, 1),
-        float2(1, 1)
+        float2(1, 0),
+        float2(1, 1),
+        float2(0, 1)
     };
 
     float2 position = instance.position + vertices[input.vertexId] * instance.size;
