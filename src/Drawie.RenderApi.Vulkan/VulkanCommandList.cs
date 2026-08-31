@@ -128,7 +128,13 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         {
             if (namedBuffer.Buffer is IVkBuffer vkBuffer)
             {
-                UpdateDescriptor(namedBuffer.Name, vkBuffer);
+                int binding = pipeline.Program.DescriptorSetLayout.Bindings.IndexOf(namedBuffer.Name);
+                if (binding == -1)
+                    throw new ArgumentException($"Could not find {namedBuffer.Name} inside current shader program.");
+                if (binding < 0) 
+                    throw new ArgumentOutOfRangeException(nameof(binding));
+                
+                UpdateDescriptor(0, (uint)binding, vkBuffer);
             }
             else
             {
@@ -144,9 +150,9 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         vkTex.MakeReadOnly(commandBuffer);
     }
 
-    private unsafe void UpdateDescriptor(string name, IVkBuffer buffer)
+    private unsafe void UpdateDescriptor(int setIndex, uint binding, IVkBuffer buffer)
     {
-        var set = pipeline.DescriptorPool.GetOrAllocateDescriptorSet(0, buffer.NativeBuffer.VkBuffer.Handle);
+        var set = pipeline.DescriptorPool.GetOrAllocateDescriptorSet(setIndex, (ulong)setIndex);
         DescriptorBufferInfo bufferInfo = new()
         {
             Buffer = buffer.NativeBuffer.VkBuffer,
@@ -158,7 +164,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         {
             SType = StructureType.WriteDescriptorSet,
             DstSet = set,
-            DstBinding = 0,
+            DstBinding = binding,
             DstArrayElement = 0,
             DescriptorCount = 1,
             DescriptorType = UsageToDescriptor(buffer.Usage),

@@ -116,16 +116,43 @@ public class Drawie2SampleApp : DrawieApp
         {
             if (cnvs == null)
             {
-                cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, targetTexture, targetTexture.Size);
+                cnvs = new Canvas(
+                    DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice,
+                    targetTexture,
+                    targetTexture.Size);
             }
             else
             {
                 cnvs.renderTarget = targetTexture;
             }
+
             targetTexture.Clear();
             targetTexture.Canvas.Flush();
-            cnvs.DrawRect(50, 50, 100, 100, Colors.Green);
-            //targetTexture.DrawScene(scene, camera, renderOptions);
+
+            const int columns = 50;
+            const int rows = 30;
+            const float size = 20;
+            const float spacing = 4;
+
+            for (int y = 0; y < rows; y++)
+            {
+                for (int x = 0; x < columns; x++)
+                {
+                    cnvs.DrawRect(
+                        x * (size + spacing),
+                        y * (size + spacing),
+                        size,
+                        size,
+                        new Color(
+                            (byte)(x * 255 / columns),
+                            (byte)(y * 255 / rows),
+                            100,
+                            255));
+                }
+            }
+
+            cnvs.Flush();
+
             DrawingBackendApi.Current.ResetContext();
         };
     }

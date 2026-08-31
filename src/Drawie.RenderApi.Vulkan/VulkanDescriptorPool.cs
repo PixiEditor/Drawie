@@ -30,11 +30,11 @@ public class VulkanDescriptorPool
             0);
     }
     
-    public unsafe DescriptorSet GetOrAllocateDescriptorSet(int layoutIndex, ulong forHandle)
+    public unsafe DescriptorSet GetOrAllocateDescriptorSet(int setIndex, ulong forHandle)
     {
         if (sets.TryGetValue(forHandle, out var set)) return set;
         
-        DescriptorSetLayout layout = DescriptorSetLayouts[layoutIndex];
+        DescriptorSetLayout layout = DescriptorSetLayouts[setIndex];
 
         DescriptorSetAllocateInfo allocInfo = new()
         {

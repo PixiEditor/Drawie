@@ -1,4 +1,6 @@
 using System.Numerics;
+using Drawie.Backend.Arco.Buffers;
+using Drawie.Backend.Arco.Numerics;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Shaders.Common;
@@ -22,14 +24,17 @@ public class Canvas
     private IShaderProgram shaderProgram;
     private ICommandList commandList;
     private IPipeline pipeline;
-    private IBuffer<DrawInstance> instancesBuffer;
+    private GrowableBuffer<RectDrawInstance> instancesBuffer;
+    private RectDrawInstance[] recordedInstances = new RectDrawInstance[256];
+    private int recordedInstanceCount;
+    private IBuffer<Globals> globalsBuffer;
     private List<NamedBuffer> uniformBlocks;
     private IRenderTarget? cachedRenderTarget;
 
     public Canvas(IGraphicsDevice device, IRenderTarget renderTarget, VecI size)
     {
         this.renderTarget = renderTarget;
-        GraphicsDevice  = device;
+        GraphicsDevice = device;
         var instancedRectVertex = ShaderLoader.LoadShader("RectInstancedVertex");
         var fillFragment = ShaderLoader.LoadShader("FillFragment");
 
@@ -56,15 +61,38 @@ public class Canvas
             Viewport = new RectI(0, 0, size.X, size.Y),
         });
 
-        instancesBuffer = GraphicsDevice.CreateBuffer<DrawInstance>(BufferUsage.Storage, new DrawInstance[1]);
-        uniformBlocks = new List<NamedBuffer>()
-        {
-            new NamedBuffer("instances", instancesBuffer),
-        };
+        instancesBuffer = new GrowableBuffer<RectDrawInstance>(GraphicsDevice, BufferUsage.Storage);
+        globalsBuffer = GraphicsDevice.CreateBuffer<Globals>(BufferUsage.Uniform, [
+            new() { ViewportSize = renderTarget.Size.ToVector2() }
+        ]);
 
+        uniformBlocks = new List<NamedBuffer>(2)
+        {
+            new NamedBuffer("instances", instancesBuffer.Buffer),
+            new NamedBuffer("globals", globalsBuffer)
+        };
     }
 
     public void DrawRect(float x, float y, float width, float height, Color fill)
+    {
+        if (recordedInstanceCount == recordedInstances.Length)
+        {
+            Array.Resize(ref recordedInstances, recordedInstances.Length * 2);
+        }
+        
+        recordedInstances[recordedInstanceCount++] = new RectDrawInstance()
+        {
+            Color = new Vector4(
+                fill.R / 255f,
+                fill.G / 255f,
+                fill.B / 255f,
+                fill.A / 255f),
+            Position = new Vector2(x, y),
+            Size = new Vector2(width, height)
+        };
+    }
+
+    public void Flush()
     {
         if (cachedRenderTarget == null || cachedRenderTarget.Size != renderTarget.Size)
         {
@@ -78,23 +106,26 @@ public class Canvas
                 Depth = DepthFormat.NoDepth,
                 Format = TextureFormat.RGBA8_Unorm
             });
+
+            globalsBuffer.SetData([new Globals() { ViewportSize = renderTarget.Size.ToVector2() }]);
         }
 
+        instancesBuffer.SetData(recordedInstances.ToArray());
+
+        uniformBlocks[0].Buffer = instancesBuffer.Buffer;
+
         commandList = GraphicsDevice.CreateCommandList();
-        
-        instancesBuffer.SetData([
-            new DrawInstance()
-                { Color = new Vector4(fill.R / 255f, fill.G / 255f, fill.B / 255f, fill.A / 255f), Position = new Vector2(x, y), Size = new Vector2(width, height) }
-        ]);
-        
+
         commandList.SetPipeline(pipeline);
-        
+
         commandList.BeginRenderPass(cachedRenderTarget);
         commandList.BindPipeline();
         commandList.UpdateUniforms(uniformBlocks);
-        commandList.Draw(6, 1);
+        commandList.Draw(6, recordedInstanceCount);
 
         var recordedRenderPass = commandList.EndRenderPass(renderTarget);
         GraphicsDevice.Submit(recordedRenderPass);
+        
+        recordedInstanceCount = 0;
     }
 }

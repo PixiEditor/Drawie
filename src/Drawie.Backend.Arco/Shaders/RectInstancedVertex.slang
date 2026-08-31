@@ -5,8 +5,13 @@ struct Instance
     float4 color;
 };
 
-[[vk::binding(0, 0)]]
+struct Globals
+{
+    float2 ViewportSize;
+}
+
 StructuredBuffer<Instance> instances;
+ConstantBuffer<Globals> globals;
 
 struct VSInput
 {
@@ -40,11 +45,9 @@ VSOutput vertexMain(VSInput input)
             vertices[input.vertexId] * instance.size;
     
         float2 clipPosition = float2(
-            pixelPosition.x / 1920.0 * 2.0 - 1.0,
-            1.0 - pixelPosition.y / 1080.0 * 2.0
+            pixelPosition.x / globals.ViewportSize.x * 2.0 - 1.0,
+            1.0 - pixelPosition.y / globals.ViewportSize.y * 2.0
         );
-
-    //float2 position = instance.position + vertices[input.vertexId] * instance.size;
 
     VSOutput output;
     output.position = float4(clipPosition, 0, 1);

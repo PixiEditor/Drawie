@@ -2,8 +2,8 @@ namespace Drawie.RenderApi.Abstraction.Buffers;
 
 public class NamedBuffer
 {
-    public string Name { get; }
-    public IBuffer Buffer { get; }
+    public string Name { get; set; }
+    public IBuffer Buffer { get; set; }
     
     public NamedBuffer(string name, IBuffer buffer)
     {

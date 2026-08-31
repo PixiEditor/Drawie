@@ -18,6 +18,7 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
     public Pipeline Pipeline { get; }
     public GraphicsPipeline GraphicsPipeline => graphicsPipeline;
     public VulkanDescriptorPool DescriptorPool => program.DescriptorPool;
+    public VulkanShaderProgram Program => program;
 
     public GraphicsPipelineBuilder Builder { get; }
 
@@ -79,7 +80,7 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
         Builder.WithDepth();
         
         var pipeline = Builder.Create(new Extent2D((uint)Description.Viewport.Width, (uint)Description.Viewport.Height),
-            Format.R8G8B8A8Unorm, ImageLayout.ColorAttachmentOptimal, [program.DescriptorSetLayout]);
+            Format.R8G8B8A8Unorm, ImageLayout.ColorAttachmentOptimal, [program.DescriptorSetLayout.DescriptorSetLayout]);
 
         return pipeline;
     }

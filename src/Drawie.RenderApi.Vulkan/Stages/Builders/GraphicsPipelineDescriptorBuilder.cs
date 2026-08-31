@@ -46,6 +46,7 @@ public class GraphicsPipelineDescriptorBindingBuilder
     public int Binding { get; set; }
     public DescriptorType DescriptorType { get; set; }
     public ShaderStageFlags ShaderStageFlags { get; set; }
+    public string Name { get; set; }
 
     public GraphicsPipelineDescriptorBindingBuilder AtPosition(int position)
     {
@@ -64,6 +65,12 @@ public class GraphicsPipelineDescriptorBindingBuilder
         DescriptorType = type;
         return this;
     }
+    
+    public GraphicsPipelineDescriptorBindingBuilder WithName(string name)
+    {
+        Name = name;
+        return this;
+    }
 
     public unsafe DescriptorSetLayoutBinding Build()
     {
@@ -71,4 +78,5 @@ public class GraphicsPipelineDescriptorBindingBuilder
         
         return new DescriptorSetLayoutBinding((uint)Binding, DescriptorType, 1, ShaderStageFlags);
     }
+
 }

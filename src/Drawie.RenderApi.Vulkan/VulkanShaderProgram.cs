@@ -19,8 +19,7 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
     public GraphicsPipelineStageBuilder VertexStageBuilder { get; }
     public GraphicsPipelineVertexLayoutBuilder VertexLayoutBuilder { get; }
     public GraphicsPipelineStageBuilder FragmentStageBuilder { get; }
-    public DescriptorSetLayout DescriptorSetLayout { get; set; }
-
+    public VulkanDescriptorSetLayout DescriptorSetLayout { get; set; }
     public VulkanDescriptorPool DescriptorPool { get; set; }
 
 
@@ -71,13 +70,14 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
                         .ForStages(shader.ShaderType == ShaderType.Vertex
                             ? ShaderStageFlags.VertexBit
                             : ShaderStageFlags.FragmentBit)
-                        .OfType(ToDescriptorType(reflectionParameter.Var.Type, reflectionParameter.Var.ResourceType));
+                        .OfType(ToDescriptorType(reflectionParameter.Var.Type, reflectionParameter.Var.ResourceType))
+                        .WithName(reflectionParameter.Name);
                 });
             }
         }
 
         var descriptors = descriptorBuilder.Build();
-        DescriptorSetLayout = CreateDescriptorSetLayout(descriptors);
+        DescriptorSetLayout = CreateDescriptorSetLayout(descriptors, descriptorBuilder);
         DescriptorPool = CreateDescriptorPool(descriptors);
     }
 
@@ -202,10 +202,11 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
         Context.Api.CreateDescriptorPool(Context.LogicalDevice.Device, &poolInfo, null, out var descriptorPool)
             .ThrowOnError("Failed to create descriptor pool.");
 
-        return new VulkanDescriptorPool(Context, descriptorPool, [DescriptorSetLayout]);
+        return new VulkanDescriptorPool(Context, descriptorPool, [DescriptorSetLayout.DescriptorSetLayout]);
     }
 
-    private unsafe DescriptorSetLayout CreateDescriptorSetLayout(DescriptorSetLayoutBinding[] descriptors)
+    private unsafe VulkanDescriptorSetLayout CreateDescriptorSetLayout(DescriptorSetLayoutBinding[] descriptors,
+        GraphicsPipelineDescriptorBuilder descriptorBuilder)
     {
         fixed (DescriptorSetLayoutBinding* bindingPtr = descriptors)
         {
@@ -226,7 +227,8 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
                     "Failed to create Vulkan descriptor set layout.");
             }
 
-            return layout;
+            return new VulkanDescriptorSetLayout(layout,
+                descriptorBuilder.BindingBuilders.OrderBy(x => x.Binding).Select(y => y.Name).ToArray());
         }
     }
 
@@ -312,7 +314,7 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
 
     public unsafe void Dispose()
     {
-        Context.Api.DestroyDescriptorSetLayout(Context.LogicalDevice.Device, DescriptorSetLayout, null);
+        Context.Api.DestroyDescriptorSetLayout(Context.LogicalDevice.Device, DescriptorSetLayout.DescriptorSetLayout, null);
         DescriptorPool.Dispose();
     }
 }
