@@ -1,3 +1,4 @@
+using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Helpers;
 using Drawie.RenderApi.Vulkan.Structs;
@@ -17,7 +18,15 @@ public class GraphicsPipelineBuilder
     public FrontFace FrontFace { get; set; } = FrontFace.Clockwise;
     public bool HasDepthStencil { get; set; }
     public PolygonMode PolygonMode { get; set; } = PolygonMode.Fill;
+    public bool BlendingEnabled { get; set; } = false;
     public bool DoNotDisposeStages { get; set; }
+    public BlendFactor SrcColorBlendFactor { get; set; } = BlendFactor.SrcAlpha;
+    public BlendFactor DstColorBlendFactor { get; set; } = BlendFactor.OneMinusSrcAlpha;
+    public BlendOp ColorBlendOp { get; set; } = BlendOp.Add;
+    public BlendFactor SrcAlphaBlendFactor { get; set; } = BlendFactor.One;
+    public BlendFactor DstAlphaBlendFactor { get; set; } = BlendFactor.Zero;
+    public BlendOp AlphaBlendOp { get; set; } = BlendOp.Add;
+
 
     public GraphicsPipelineBuilder(Vk vk, Device logicalDevice)
     {
@@ -40,6 +49,125 @@ public class GraphicsPipelineBuilder
     public GraphicsPipelineBuilder WithFrontFace(FrontFace frontFace)
     {
         FrontFace = frontFace;
+        return this;
+    }
+
+    public GraphicsPipelineBuilder WithBlendingPreset(BlendingPreset preset)
+    {
+        if (preset is BlendingPreset.Src or BlendingPreset.None)
+        {
+            BlendingEnabled = false;
+        }
+        else
+        {
+            BlendingEnabled = true;
+
+            switch (preset)
+            {
+                case BlendingPreset.Dst:
+                    SrcColorBlendFactor = BlendFactor.Zero;
+                    DstColorBlendFactor = BlendFactor.One;
+                    ColorBlendOp = BlendOp.Add;
+                    SrcAlphaBlendFactor = BlendFactor.Zero;
+                    DstAlphaBlendFactor = BlendFactor.One;
+                    AlphaBlendOp = BlendOp.Add;
+                    break;
+
+                case BlendingPreset.Normal:
+                    SrcColorBlendFactor = BlendFactor.SrcAlpha;
+                    DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha;
+                    ColorBlendOp = BlendOp.Add;
+                    SrcAlphaBlendFactor = BlendFactor.One;
+                    DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha;
+                    AlphaBlendOp = BlendOp.Add;
+                    break;
+
+                case BlendingPreset.DstOver:
+                    SrcColorBlendFactor = BlendFactor.OneMinusDstAlpha;
+                    DstColorBlendFactor = BlendFactor.One;
+                    ColorBlendOp = BlendOp.Add;
+                    SrcAlphaBlendFactor = BlendFactor.OneMinusDstAlpha;
+                    DstAlphaBlendFactor = BlendFactor.One;
+                    AlphaBlendOp = BlendOp.Add;
+                    break;
+
+                case BlendingPreset.SrcIn:
+                    SrcColorBlendFactor = BlendFactor.DstAlpha;
+                    DstColorBlendFactor = BlendFactor.Zero;
+                    ColorBlendOp = BlendOp.Add;
+                    SrcAlphaBlendFactor = BlendFactor.DstAlpha;
+                    DstAlphaBlendFactor = BlendFactor.Zero;
+                    AlphaBlendOp = BlendOp.Add;
+                    break;
+
+                case BlendingPreset.DstIn:
+                    SrcColorBlendFactor = BlendFactor.Zero;
+                    DstColorBlendFactor = BlendFactor.SrcAlpha;
+                    ColorBlendOp = BlendOp.Add;
+                    SrcAlphaBlendFactor = BlendFactor.Zero;
+                    DstAlphaBlendFactor = BlendFactor.SrcAlpha;
+                    AlphaBlendOp = BlendOp.Add;
+                    break;
+
+                case BlendingPreset.SrcOut:
+                    SrcColorBlendFactor = BlendFactor.OneMinusDstAlpha;
+                    DstColorBlendFactor = BlendFactor.Zero;
+                    ColorBlendOp = BlendOp.Add;
+                    SrcAlphaBlendFactor = BlendFactor.OneMinusDstAlpha;
+                    DstAlphaBlendFactor = BlendFactor.Zero;
+                    AlphaBlendOp = BlendOp.Add;
+                    break;
+
+                case BlendingPreset.DstOut:
+                    SrcColorBlendFactor = BlendFactor.Zero;
+                    DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha;
+                    ColorBlendOp = BlendOp.Add;
+                    SrcAlphaBlendFactor = BlendFactor.Zero;
+                    DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha;
+                    AlphaBlendOp = BlendOp.Add;
+                    break;
+
+                case BlendingPreset.SrcATop:
+                    SrcColorBlendFactor = BlendFactor.DstAlpha;
+                    DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha;
+                    ColorBlendOp = BlendOp.Add;
+                    SrcAlphaBlendFactor = BlendFactor.DstAlpha;
+                    DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha;
+                    AlphaBlendOp = BlendOp.Add;
+                    break;
+
+                case BlendingPreset.DstATop:
+                    SrcColorBlendFactor = BlendFactor.OneMinusDstAlpha;
+                    DstColorBlendFactor = BlendFactor.SrcAlpha;
+                    ColorBlendOp = BlendOp.Add;
+                    SrcAlphaBlendFactor = BlendFactor.OneMinusDstAlpha;
+                    DstAlphaBlendFactor = BlendFactor.SrcAlpha;
+                    AlphaBlendOp = BlendOp.Add;
+                    break;
+
+                case BlendingPreset.Xor:
+                    SrcColorBlendFactor = BlendFactor.OneMinusDstAlpha;
+                    DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha;
+                    ColorBlendOp = BlendOp.Add;
+                    SrcAlphaBlendFactor = BlendFactor.OneMinusDstAlpha;
+                    DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha;
+                    AlphaBlendOp = BlendOp.Add;
+                    break;
+
+                case BlendingPreset.Plus:
+                    SrcColorBlendFactor = BlendFactor.One;
+                    DstColorBlendFactor = BlendFactor.One;
+                    ColorBlendOp = BlendOp.Add;
+                    SrcAlphaBlendFactor = BlendFactor.One;
+                    DstAlphaBlendFactor = BlendFactor.One;
+                    AlphaBlendOp = BlendOp.Add;
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
+            }
+        }
+
         return this;
     }
 
@@ -89,7 +217,7 @@ public class GraphicsPipelineBuilder
         var stages = stackalloc PipelineShaderStageCreateInfo[Stages.Count];
         for (var i = 0; i < Stages.Count; i++) stages[i] = Stages[i].Build();
 
-        
+
         DescriptorSetLayout* layouts = stackalloc DescriptorSetLayout[descriptorSetLayouts.Length];
         for (var i = 0; i < descriptorSetLayouts.Length; i++)
         {
@@ -103,7 +231,7 @@ public class GraphicsPipelineBuilder
             VertexBindingDescriptionCount = 0,
             VertexAttributeDescriptionCount = 0
         };
-        
+
         if (VertexLayoutBuilder != null)
         {
             var (bindingDescription, attributeDescriptions) = VertexLayoutBuilder.Build();
@@ -187,7 +315,13 @@ public class GraphicsPipelineBuilder
         {
             ColorWriteMask = ColorComponentFlags.RBit | ColorComponentFlags.GBit | ColorComponentFlags.BBit |
                              ColorComponentFlags.ABit,
-            BlendEnable = false
+            BlendEnable = BlendingEnabled,
+            SrcColorBlendFactor = SrcColorBlendFactor,
+            DstColorBlendFactor = DstColorBlendFactor,
+            ColorBlendOp = ColorBlendOp,
+            SrcAlphaBlendFactor = SrcAlphaBlendFactor,
+            DstAlphaBlendFactor = DstAlphaBlendFactor,
+            AlphaBlendOp = AlphaBlendOp
         };
 
         PipelineColorBlendStateCreateInfo colorBlending = new()

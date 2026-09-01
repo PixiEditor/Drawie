@@ -21,17 +21,18 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
     public VulkanShaderProgram Program => program;
 
     public GraphicsPipelineBuilder Builder { get; }
+    public RenderPassBuilder RenderPassBuilder => Builder.RenderPassBuilder;
 
     private VulkanShaderProgram program;
 
     private GraphicsPipeline graphicsPipeline;
+    private RenderPassBuilder? exisitngRenderPass;
 
-    public VulkanPipeline(
-        VulkanContext context,
-        PipelineDesc desc)
+    public VulkanPipeline(VulkanContext context, PipelineDesc desc, RenderPassBuilder? renderPass = null)
     {
         this.context = context;
         Description = desc;
+        exisitngRenderPass = renderPass;
         if (desc.ShaderProgram is not VulkanShaderProgram vulkanShaderProgram)
             throw new ArgumentException("Invalid Shader Program type");
         program = vulkanShaderProgram;
@@ -46,10 +47,7 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
         if (cmdList is not VulkanCommandList commandList)
             throw new ArgumentNullException("Only vulkan command list is supported");
 
-        context.Api!.CmdBindPipeline(
-            commandList.CommandBuffer,
-            PipelineBindPoint.Graphics,
-            Pipeline);
+        context.Api!.CmdBindPipeline(commandList.CommandBuffer, PipelineBindPoint.Graphics, Pipeline);
 
         /*
         context.Api.CmdBindDescriptorSets(commandList.CommandBuffer, PipelineBindPoint.Graphics,
@@ -64,23 +62,34 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
                 ? PolygonMode.Fill
                 : PolygonMode.Line)
             .WithCullMode(ToCullFlags(Description.Rasterizer.CullMode))
-            .WithFrontFace(FrontFace.Clockwise);
+            .WithFrontFace(FrontFace.Clockwise)
+            .WithBlendingPreset(Description.Blend.Preset);
 
         Builder.Stages.Add(program.VertexStageBuilder);
         Builder.Stages.Add(program.FragmentStageBuilder);
         Builder.DoNotDisposeStages = true;
-        Builder.WithRenderPass(builder =>
+
+        if (exisitngRenderPass != null)
         {
-            if (Description.Depth.Enabled)
+            Builder.RenderPassBuilder = exisitngRenderPass;
+        }
+        else
+        {
+            Builder.WithRenderPass(builder =>
             {
-                builder.WithDepth(Description.Depth.Format.ToVkFormat())
-                    .WithSamples(Description.Rasterizer.Samples);
-            }
-        });
+                if (Description.Depth.Enabled)
+                {
+                    builder.WithDepth(Description.Depth.Format.ToVkFormat())
+                        .WithSamples(Description.Rasterizer.Samples);
+                }
+            });
+        }
+
         Builder.WithDepth();
-        
+
         var pipeline = Builder.Create(new Extent2D((uint)Description.Viewport.Width, (uint)Description.Viewport.Height),
-            Format.R8G8B8A8Unorm, ImageLayout.ColorAttachmentOptimal, [program.DescriptorSetLayout.DescriptorSetLayout]);
+            Format.R8G8B8A8Unorm, ImageLayout.ColorAttachmentOptimal,
+            [program.DescriptorSetLayout.DescriptorSetLayout]);
 
         return pipeline;
     }

@@ -97,8 +97,15 @@ public class OpenGlCommandList(GL api) : CommandList
     {
         RecordInstruction(() =>
         {
-            // TODO: Doesn't seem rights
-            Api.DrawArrays(PrimitiveType.Triangles, 0, (uint)vertexCount);
+            Api.DrawArraysInstancedBaseInstance(PrimitiveType.Triangles, 0, (uint)vertexCount, (uint)instanceCount, 0);
+        });
+    }
+
+    public override void Draw(int vertexCount, int instanceIndex, int instanceCount)
+    {
+        RecordInstruction(() =>
+        {
+            Api.DrawArraysInstancedBaseInstance(PrimitiveType.Triangles, 0, (uint)vertexCount, (uint)instanceCount, (uint)instanceIndex);
         });
     }
 

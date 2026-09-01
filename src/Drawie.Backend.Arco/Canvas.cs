@@ -1,8 +1,10 @@
 using System.Numerics;
+using Drawie.Backend.Arco.Blending;
 using Drawie.Backend.Arco.Buffers;
 using Drawie.Backend.Arco.Numerics;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
+using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Shaders.Common;
 using Drawie.Backend.Vertie.Core;
 using Drawie.Numerics;
@@ -23,13 +25,14 @@ public class Canvas
 
     private IShaderProgram shaderProgram;
     private ICommandList commandList;
-    private IPipeline pipeline;
     private GrowableBuffer<RectDrawInstance> instancesBuffer;
-    private RectDrawInstance[] recordedInstances = new RectDrawInstance[256];
+    private RecordedOperation[] recordedInstances = new RecordedOperation[256];
     private int recordedInstanceCount;
     private IBuffer<Globals> globalsBuffer;
     private List<NamedBuffer> uniformBlocks;
     private IRenderTarget? cachedRenderTarget;
+
+    private Dictionary<BlendMode, IPipeline> blendModePipelines = new Dictionary<BlendMode, IPipeline>();
 
     public Canvas(IGraphicsDevice device, IRenderTarget renderTarget, VecI size)
     {
@@ -45,21 +48,7 @@ public class Canvas
                 instancedRectVertex, fillFragment
             ]));
 
-        pipeline = GraphicsDevice.CreatePipeline(new PipelineDesc()
-        {
-            Depth = new DepthDesc()
-            {
-                Enabled = false,
-            },
-            Rasterizer = new RasterizerDesc()
-            {
-                RenderMode = RenderMode.Default,
-                Samples = 1,
-                CullMode = CullMode.None
-            },
-            ShaderProgram = shaderProgram,
-            Viewport = new RectI(0, 0, size.X, size.Y),
-        });
+       CreatePipelineForBlendMode(size, BlendMode.SrcOver);
 
         instancesBuffer = new GrowableBuffer<RectDrawInstance>(GraphicsDevice, BufferUsage.Storage);
         globalsBuffer = GraphicsDevice.CreateBuffer<Globals>(BufferUsage.Uniform, [
@@ -72,23 +61,26 @@ public class Canvas
             new NamedBuffer("globals", globalsBuffer)
         };
     }
-
-    public void DrawRect(float x, float y, float width, float height, Color fill)
+    
+    public void DrawRect(float x, float y, float width, float height, Paint paint)
     {
         if (recordedInstanceCount == recordedInstances.Length)
         {
             Array.Resize(ref recordedInstances, recordedInstances.Length * 2);
         }
-        
-        recordedInstances[recordedInstanceCount++] = new RectDrawInstance()
+
+        var fill = paint.Color;
+
+        recordedInstances[recordedInstanceCount++] = new()
         {
-            Color = new Vector4(
-                fill.R / 255f,
-                fill.G / 255f,
-                fill.B / 255f,
-                fill.A / 255f),
-            Position = new Vector2(x, y),
-            Size = new Vector2(width, height)
+            RecordedInstance = new RectDrawInstance()
+            {
+                Color = new Vector4(fill.R / 255f, fill.G / 255f, fill.B / 255f, fill.A / 255f),
+                Position = new Vector2(x, y),
+                Size = new Vector2(width, height)
+            },
+
+            BlendMode = paint.BlendMode
         };
     }
 
@@ -107,25 +99,76 @@ public class Canvas
                 Format = TextureFormat.RGBA8_Unorm
             });
 
-            globalsBuffer.SetData([new Globals() { ViewportSize = renderTarget.Size.ToVector2() }]);
+            globalsBuffer.SetData([new Globals { ViewportSize = renderTarget.Size.ToVector2() }]);
         }
 
-        instancesBuffer.SetData(recordedInstances.ToArray());
-
-        uniformBlocks[0].Buffer = instancesBuffer.Buffer;
+        if (recordedInstanceCount == 0) return;
 
         commandList = GraphicsDevice.CreateCommandList();
-
-        commandList.SetPipeline(pipeline);
-
+        
+        commandList.SetPipeline(blendModePipelines[BlendMode.SrcOver]);
         commandList.BeginRenderPass(cachedRenderTarget);
-        commandList.BindPipeline();
+        
+        instancesBuffer.SetData(recordedInstances.Select(x => x.RecordedInstance).ToArray());
+        uniformBlocks[0].Buffer = instancesBuffer.Buffer;
+        
         commandList.UpdateUniforms(uniformBlocks);
-        commandList.Draw(6, recordedInstanceCount);
+        
+        BlendMode currentBlendMode = recordedInstances[0].BlendMode;
+        int batchStart = 0;
+
+        for (int i = 1; i < recordedInstanceCount; i++)
+        {
+            if (recordedInstances[i].BlendMode != currentBlendMode)
+            {
+                DrawBatch(currentBlendMode, batchStart, i - batchStart);
+                currentBlendMode = recordedInstances[i].BlendMode;
+                batchStart = i;
+            }
+        }
+
+        DrawBatch(currentBlendMode, batchStart, recordedInstanceCount - batchStart);
 
         var recordedRenderPass = commandList.EndRenderPass(renderTarget);
         GraphicsDevice.Submit(recordedRenderPass);
         
         recordedInstanceCount = 0;
+    }
+
+    private void DrawBatch(BlendMode blendMode, int at, int count)
+    {
+        if (!blendModePipelines.ContainsKey(blendMode))
+        {
+            CreatePipelineForBlendMode(renderTarget.Size, blendMode);
+        }
+        
+        commandList.SetPipeline(blendModePipelines[blendMode]);
+
+        commandList.BindPipeline();
+        commandList.Draw(6, at, count);
+    }
+    
+    
+    private void CreatePipelineForBlendMode(VecI size, BlendMode blendMode)
+    {
+        blendModePipelines[blendMode] = GraphicsDevice.CreatePipeline(new PipelineDesc()
+        {
+            Depth = new DepthDesc()
+            {
+                Enabled = false,
+            },
+            Rasterizer = new RasterizerDesc()
+            {
+                RenderMode = RenderMode.Default,
+                Samples = 1,
+                CullMode = CullMode.None
+            },
+            Blend = new BlendDesc()
+            {
+                Preset = blendMode.ToBlendingPreset()
+            },
+            ShaderProgram = shaderProgram,
+            Viewport = new RectI(0, 0, size.X, size.Y),
+        });
     }
 }

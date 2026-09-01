@@ -13,6 +13,8 @@ public class RenderPassBuilder : IDisposable
     public Format DepthStencilFormat { get; set; }
     public int Samples { get; set; } = 1;
 
+    private RenderPass? createdRenderPass;
+
     public RenderPassBuilder(Vk vk, Device logicalDevice)
     {
         Vk = vk;
@@ -34,6 +36,8 @@ public class RenderPassBuilder : IDisposable
 
     public unsafe RenderPass Create(Format format, ImageLayout imageLayout)
     {
+        if (createdRenderPass != null) return createdRenderPass.Value;
+
         AttachmentDescription colorAttachment = new()
         {
             Format = format,
@@ -89,7 +93,7 @@ public class RenderPassBuilder : IDisposable
             InitialLayout = ImageLayout.Undefined,
             FinalLayout = imageLayout
         };
-        
+
         if (Samples > 1)
         {
             AttachmentReference colorResolveAttachmentRef = new()
@@ -120,7 +124,8 @@ public class RenderPassBuilder : IDisposable
             {
                 SrcSubpass = Vk.SubpassExternal,
                 DstSubpass = 0,
-                SrcStageMask = PipelineStageFlags.ColorAttachmentOutputBit | PipelineStageFlags.EarlyFragmentTestsBit | PipelineStageFlags.LateFragmentTestsBit,
+                SrcStageMask = PipelineStageFlags.ColorAttachmentOutputBit | PipelineStageFlags.EarlyFragmentTestsBit |
+                               PipelineStageFlags.LateFragmentTestsBit,
                 SrcAccessMask = AccessFlags.ColorAttachmentWriteBit | AccessFlags.DepthStencilAttachmentWriteBit,
 
                 DstStageMask = PipelineStageFlags.ColorAttachmentOutputBit | PipelineStageFlags.EarlyFragmentTestsBit,
@@ -166,6 +171,7 @@ public class RenderPassBuilder : IDisposable
         if (Vk!.CreateRenderPass(LogicalDevice, in renderPassInfo, null, out var renderPass) != Result.Success)
             throw new VulkanException("Failed to create render pass.");
 
+        createdRenderPass = renderPass;
         return renderPass;
     }
 

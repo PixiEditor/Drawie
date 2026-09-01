@@ -10,6 +10,7 @@ using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Helpers;
+using Drawie.RenderApi.Vulkan.Stages.Builders;
 using Silk.NET.Vulkan;
 using IAbstractionTexture = Drawie.RenderApi.Abstraction.Textures.ITexture;
 
@@ -21,6 +22,8 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
     private readonly CommandPool commandPool;
     private VulkanPipeline? pipeline;
     private VulkanSampler globalSampler;
+
+    private List<RenderPassBuilder> existingRenderPasses = new List<RenderPassBuilder>();
 
     private Dictionary<Guid, UniformBuffer> bufferCache = new Dictionary<Guid, UniformBuffer>();
 
@@ -59,11 +62,7 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
         TData[]? data)
         where TData : unmanaged
     {
-        var buffer = new VulkanBuffer<TData>(
-            context,
-            commandPool,
-            usage,
-            data);
+        var buffer = new VulkanBuffer<TData>(context, commandPool, usage, data);
         disposables.Add(buffer);
 
         return buffer;
@@ -71,14 +70,9 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
 
     public IAbstractionTexture CreateTexture(TextureDesc desc)
     {
-        var vkTex = new VulkanTexture(
-            context.Api!,
-            context.LogicalDevice.Device,
-            context.PhysicalDevice,
-            commandPool,
+        var vkTex = new VulkanTexture(context.Api!, context.LogicalDevice.Device, context.PhysicalDevice, commandPool,
             context.GraphicsQueue,
-            context.GraphicsQueueFamilyIndex,
-            desc, globalSampler.VkSampler);
+            context.GraphicsQueueFamilyIndex, desc, globalSampler.VkSampler);
 
         context.AddManagedTexture(vkTex, vkTex.ImageHandle);
         disposables.Add(vkTex);
@@ -87,20 +81,15 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
 
     public IPipeline CreatePipeline(PipelineDesc desc)
     {
-        if (pipeline == null || !pipeline.Description.Equals(desc))
+        var existingRenderPass = TryFindExistingPass(desc);
+        pipeline = new VulkanPipeline(context, desc, existingRenderPass);
+        if (existingRenderPass == null)
         {
-            if (pipeline != null)
-            {
-                disposables.Remove(pipeline);
-            }
-
-            pipeline?.Dispose();
-            pipeline = new VulkanPipeline(context, desc);
-            disposables.Add(pipeline);
+            existingRenderPasses.Add(pipeline.RenderPassBuilder);
         }
-
         return pipeline;
     }
+
 
     public ICommandList CreateCommandList()
     {
@@ -167,6 +156,20 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
             disposable.Dispose();
         }
     }
+    
+    private RenderPassBuilder? TryFindExistingPass(PipelineDesc desc)
+    {
+        foreach (var existingRenderPass in existingRenderPasses)
+        {
+            if (existingRenderPass.WithDepthStencil == desc.Depth.Enabled && (desc.Depth.Format == DepthFormat.NoDepth || existingRenderPass.DepthStencilFormat == desc.Depth.Format.ToVkFormat())
+                && existingRenderPass.Samples == desc.Rasterizer.Samples)
+            {
+                return existingRenderPass;
+            }
+        }
+
+        return null;
+    }
 }
 
 internal interface IVkBuffer : IBuffer
@@ -213,7 +216,7 @@ internal sealed class VulkanBuffer<T> : IVkBuffer, IBuffer<T>, IDisposable where
             _ => throw new ArgumentOutOfRangeException(nameof(usage), usage, null)
         };
     }
-    
+
     public void SetData(T[] data)
     {
         Upload(data);

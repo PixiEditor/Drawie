@@ -15,6 +15,7 @@ public interface ICommandList
     void BindTexture(PreparedTexture texture, ISampler sampler);
     void DrawIndexed(int indexCount);
     void Draw(int vertexCount, int instanceCount);
+    void Draw(int vertexCount, int instanceIndex, int instanceCount);
     RecordedRenderPass EndRenderPass(IRenderTarget blitTo);
     RecordedRenderPass EndRenderPass();
     void BindPipeline();

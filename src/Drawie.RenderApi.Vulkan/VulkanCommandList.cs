@@ -302,6 +302,15 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         context.Api!.CmdDraw(commandBuffer, (uint)vertexCount, (uint)instanceCount, 0, 0);
     }
 
+    public override void Draw(int vertexCount, int instanceIndex, int instanceCount)
+    {
+        if (!recording)
+            throw new InvalidOperationException(
+                "BeginRenderPass must be called first.");
+
+        context.Api!.CmdDraw(commandBuffer, (uint)vertexCount, (uint)instanceCount, 0, (uint)instanceIndex);
+    }
+
     public override RecordedRenderPass EndRenderPass()
     {
         EnsureRecording();
@@ -611,17 +620,11 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         };
 
         region.SrcOffsets[0] = new Offset3D(0, 0, 0);
-        region.SrcOffsets[1] = new Offset3D(
-            (int)source.Width,
-            (int)source.Height,
-            1);
+        region.SrcOffsets[1] = new Offset3D((int)source.Width, (int)source.Height, 1);
 
         // Y is flipped at blit level
         region.DstOffsets[0] = new Offset3D(0, (int)destination.Height, 0);
-        region.DstOffsets[1] = new Offset3D(
-            (int)destination.Width,
-            0,
-            1);
+        region.DstOffsets[1] = new Offset3D((int)destination.Width, 0, 1);
 
         context.Api!.CmdBlitImage(
             commandBuffer,

@@ -39,6 +39,7 @@ public abstract class CommandList : ICommandList
     public abstract void BindTexture(PreparedTexture texture, ISampler sampler);
     public abstract void DrawIndexed(int indexCount);
     public abstract void Draw(int vertexCount, int instanceCount);
+    public abstract void Draw(int vertexCount, int instanceIndex, int instanceCount);
 
     public abstract RecordedRenderPass EndRenderPass(IRenderTarget blitTo);
     public abstract RecordedRenderPass EndRenderPass();

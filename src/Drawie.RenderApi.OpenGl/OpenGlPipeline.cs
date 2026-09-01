@@ -23,7 +23,7 @@ public class OpenGlPipeline : IPipeline
         Api.Viewport(new Rectangle(Description.Viewport.X, Description.Viewport.Y, Description.Viewport.Width,
             Description.Viewport.Height));
 
-        if (Description.Blend.Enabled)
+        if (Description.Blend.Preset != BlendingPreset.None && Description.Blend.Preset != BlendingPreset.Src)
         {
             Api.Enable(EnableCap.Blend);
         }

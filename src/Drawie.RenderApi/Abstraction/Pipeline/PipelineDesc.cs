@@ -49,5 +49,5 @@ public enum DepthCompareType
 
 public record struct BlendDesc
 {
-    public bool Enabled;
+    public BlendingPreset Preset { get; set; }
 }
