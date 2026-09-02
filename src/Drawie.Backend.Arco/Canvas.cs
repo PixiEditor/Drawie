@@ -15,13 +15,13 @@ using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Abstraction.RenderTargets;
 using Drawie.RenderApi.Abstraction.Shaders;
 using Drawie.RenderApi.Abstraction.Textures;
+using Drawie.Rendering;
 
 namespace Drawie.Backend.Arco;
 
 public class Canvas
 {
     public IGraphicsDevice GraphicsDevice { get; }
-    public IRenderTarget renderTarget;
 
     private IShaderProgram shaderProgram;
     private ICommandList commandList;
@@ -30,13 +30,21 @@ public class Canvas
     private int recordedInstanceCount;
     private IBuffer<Globals> globalsBuffer;
     private List<NamedBuffer> uniformBlocks;
-    private IRenderTarget? cachedRenderTarget;
+    private IRenderTarget renderTarget;
 
     private Dictionary<BlendMode, IPipeline> blendModePipelines = new Dictionary<BlendMode, IPipeline>();
 
-    public Canvas(IGraphicsDevice device, IRenderTarget renderTarget, VecI size)
+    public Canvas(IGraphicsDevice device, VecI size)
     {
-        this.renderTarget = renderTarget;
+        renderTarget = device.CreateRenderTarget(new TextureDesc()
+        {
+            Depth = DepthFormat.NoDepth,
+            Format = TextureFormat.RGBA8_Unorm,
+            Width = size.X,
+            Height = size.Y,
+            Samples = 1,
+        });
+
         GraphicsDevice = device;
         var instancedRectVertex = ShaderLoader.LoadShader("RectInstancedVertex");
         var fillFragment = ShaderLoader.LoadShader("FillFragment");
@@ -48,12 +56,14 @@ public class Canvas
                 instancedRectVertex, fillFragment
             ]));
 
-       CreatePipelineForBlendMode(size, BlendMode.SrcOver);
+        CreatePipelineForBlendMode(size, BlendMode.SrcOver);
 
         instancesBuffer = new GrowableBuffer<RectDrawInstance>(GraphicsDevice, BufferUsage.Storage);
         globalsBuffer = GraphicsDevice.CreateBuffer<Globals>(BufferUsage.Uniform, [
             new() { ViewportSize = renderTarget.Size.ToVector2() }
         ]);
+
+        globalsBuffer.SetData([new Globals { ViewportSize = renderTarget.Size.ToVector2() }]);
 
         uniformBlocks = new List<NamedBuffer>(2)
         {
@@ -61,7 +71,7 @@ public class Canvas
             new NamedBuffer("globals", globalsBuffer)
         };
     }
-    
+
     public void DrawRect(float x, float y, float width, float height, Paint paint)
     {
         if (recordedInstanceCount == recordedInstances.Length)
@@ -84,36 +94,21 @@ public class Canvas
         };
     }
 
-    public void Flush()
+    public void Flush(TextureFramebuffer? blitTo = null)
     {
-        if (cachedRenderTarget == null || cachedRenderTarget.Size != renderTarget.Size)
-        {
-            (cachedRenderTarget as IDisposable)?.Dispose();
-
-            cachedRenderTarget ??= GraphicsDevice.CreateRenderTarget(new TextureDesc()
-            {
-                Width = this.renderTarget.Size.X,
-                Height = this.renderTarget.Size.Y,
-                Samples = 1,
-                Depth = DepthFormat.NoDepth,
-                Format = TextureFormat.RGBA8_Unorm
-            });
-
-            globalsBuffer.SetData([new Globals { ViewportSize = renderTarget.Size.ToVector2() }]);
-        }
-
         if (recordedInstanceCount == 0) return;
 
         commandList = GraphicsDevice.CreateCommandList();
-        
+
         commandList.SetPipeline(blendModePipelines[BlendMode.SrcOver]);
-        commandList.BeginRenderPass(cachedRenderTarget);
-        
-        instancesBuffer.SetData(recordedInstances.Select(x => x.RecordedInstance).ToArray());
+        commandList.BeginRenderPass(renderTarget);
+
+        instancesBuffer.SetData(recordedInstances.Take(recordedInstanceCount).Select(x => x.RecordedInstance)
+            .ToArray());
         uniformBlocks[0].Buffer = instancesBuffer.Buffer;
-        
+
         commandList.UpdateUniforms(uniformBlocks);
-        
+
         BlendMode currentBlendMode = recordedInstances[0].BlendMode;
         int batchStart = 0;
 
@@ -129,9 +124,9 @@ public class Canvas
 
         DrawBatch(currentBlendMode, batchStart, recordedInstanceCount - batchStart);
 
-        var recordedRenderPass = commandList.EndRenderPass(renderTarget);
+        var recordedRenderPass = commandList.EndRenderPass(blitTo);
         GraphicsDevice.Submit(recordedRenderPass);
-        
+
         recordedInstanceCount = 0;
     }
 
@@ -141,14 +136,14 @@ public class Canvas
         {
             CreatePipelineForBlendMode(renderTarget.Size, blendMode);
         }
-        
+
         commandList.SetPipeline(blendModePipelines[blendMode]);
 
         commandList.BindPipeline();
         commandList.Draw(6, at, count);
     }
-    
-    
+
+
     private void CreatePipelineForBlendMode(VecI size, BlendMode blendMode)
     {
         blendModePipelines[blendMode] = GraphicsDevice.CreatePipeline(new PipelineDesc()
@@ -166,6 +161,10 @@ public class Canvas
             Blend = new BlendDesc()
             {
                 Preset = blendMode.ToBlendingPreset()
+            },
+            RenderPass = new RenderPassDesc()
+            {
+                ColorLoadOp = ColorLoadOp.Load
             },
             ShaderProgram = shaderProgram,
             Viewport = new RectI(0, 0, size.X, size.Y),

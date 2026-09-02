@@ -7,6 +7,7 @@ namespace Drawie.RenderApi.Abstraction.Pipeline;
 public struct PipelineDesc : IEquatable<PipelineDesc>
 {
     public IShaderProgram? ShaderProgram { get; set; }
+    public RenderPassDesc RenderPass { get; set; }
     public DepthDesc Depth { get; set; }
     public BlendDesc  Blend { get; set; }
     public RasterizerDesc Rasterizer { get; set; }

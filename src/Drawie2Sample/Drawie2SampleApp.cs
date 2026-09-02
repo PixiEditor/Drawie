@@ -10,6 +10,8 @@ using Drawie.Host.Input;
 using Drawie.Layer.UI.MiniUi;
 using Drawie.Layer.UI.MiniUi.Controls;
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction;
+using Drawie.RenderApi.Abstraction.RenderTargets;
 using DrawiEngine;
 using ImGuiNET;
 using Label = Drawie.Layer.UI.MiniUi.Controls.Label;
@@ -109,14 +111,15 @@ public class Drawie2SampleApp : DrawieApp
             camera.AspectRatio = (float)window.Size.X / window.Size.Y;
             HandleMovement((float)d, camera, window.InputController.PrimaryKeyboard);
         };
-
         
         window.Render += (targetTexture, deltaTime) =>
         {
             targetTexture.Clear();
             targetTexture.Canvas.Flush();
             
+            //ColorfulRectanglesSample.Draw(targetTexture);
             BlendingSample.Draw(targetTexture);
+            //targetTexture.DrawScene(scene, camera, renderOptions);
 
             DrawingBackendApi.Current.ResetContext();
         };

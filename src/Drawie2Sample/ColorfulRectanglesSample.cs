@@ -13,11 +13,7 @@ public static class ColorfulRectanglesSample
     {
         if (cnvs == null)
         {
-            cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, fb, fb.Size);
-        }
-        else
-        {
-            cnvs.renderTarget = fb;
+            cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, fb.Size);
         }
 
         const int columns = 50;
@@ -38,6 +34,6 @@ public static class ColorfulRectanglesSample
             }
         }
 
-        cnvs.Flush();
+        cnvs.Flush(fb);
     }
 }

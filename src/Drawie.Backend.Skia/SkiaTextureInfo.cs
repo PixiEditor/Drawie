@@ -1,4 +1,5 @@
 using Drawie.Backend.Core.Surfaces;
+using Drawie.Numerics;
 using Drawie.RenderApi.Abstraction.Textures;
 using SkiaSharp;
 
@@ -15,4 +16,5 @@ public class SkiaTextureInfo : ITexture
     }
 
     public ulong TextureId => target.GetGlTextureInfo().Id;
+    public VecI Size => new VecI(target.Width, target.Height);
 }

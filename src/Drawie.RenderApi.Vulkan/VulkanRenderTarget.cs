@@ -50,6 +50,7 @@ internal sealed class VulkanRenderTarget(VulkanContext context, Buffers.VulkanTe
         Context.Api.CreateFramebuffer(Context.LogicalDevice.Device, &framebufferCreateInfo, null, out var framebuffer)
             .ThrowOnError("Failed to create framebuffer");
         Framebuffer = framebuffer;
+        lastCreatedRenderPass = renderPass;
     }
 
     private unsafe void DestroyFramebuffer()

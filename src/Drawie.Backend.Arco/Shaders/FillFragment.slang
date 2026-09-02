@@ -7,5 +7,7 @@ struct VSOutput
 [shader("fragment")]
 float4 fragmentMain(VSOutput input) : SV_Target
 {
+    /*float alpha = input.color.a;
+    return float4(input.color.r * alpha, input.color.g * alpha, input.color.b * alpha, alpha);*/
     return input.color;
 }

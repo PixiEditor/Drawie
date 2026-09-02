@@ -22,6 +22,7 @@ public static class FormatExtensions
     {
         return samples switch
         {
+            0 => SampleCountFlags.Count1Bit,
             1 => SampleCountFlags.Count1Bit,
             2 => SampleCountFlags.Count2Bit,
             4 => SampleCountFlags.Count4Bit,

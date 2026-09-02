@@ -82,10 +82,13 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
                     builder.WithDepth(Description.Depth.Format.ToVkFormat())
                         .WithSamples(Description.Rasterizer.Samples);
                 }
+
+                builder.WithColorLoadOp(Description.RenderPass.ColorLoadOp);
             });
         }
 
-        Builder.WithDepth();
+        if(Description.Depth.Enabled)
+            Builder.WithDepth();
 
         var pipeline = Builder.Create(new Extent2D((uint)Description.Viewport.Width, (uint)Description.Viewport.Height),
             Format.R8G8B8A8Unorm, ImageLayout.ColorAttachmentOptimal,

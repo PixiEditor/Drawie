@@ -9,7 +9,6 @@ public static class BlendModeExtensions
     {
         return mode switch
         {
-            BlendMode.Clear => throw new NotSupportedException("Clear is not supported by hardware blending."),
             BlendMode.Src => BlendingPreset.Src,
             BlendMode.Dst => BlendingPreset.Dst,
             BlendMode.SrcOver => BlendingPreset.Normal,

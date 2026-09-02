@@ -27,6 +27,7 @@ public class VulkanTexture : IDisposable, IVkTexture
     public uint Layout => (uint)ImageLayout.ColorAttachmentOptimal;
     public uint TargetSharingMode { get; } = (uint)SharingMode.Exclusive;
     ulong ITexture.TextureId => ImageHandle;
+    public VecI Size => new VecI((int)Width, (int)Height);
     public uint Width { get; }
     public uint Height { get; }
 

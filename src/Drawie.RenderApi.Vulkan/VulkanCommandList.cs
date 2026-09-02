@@ -131,9 +131,9 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
                 int binding = pipeline.Program.DescriptorSetLayout.Bindings.IndexOf(namedBuffer.Name);
                 if (binding == -1)
                     throw new ArgumentException($"Could not find {namedBuffer.Name} inside current shader program.");
-                if (binding < 0) 
+                if (binding < 0)
                     throw new ArgumentOutOfRangeException(nameof(binding));
-                
+
                 UpdateDescriptor(0, (uint)binding, vkBuffer);
             }
             else
@@ -170,7 +170,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             DescriptorType = UsageToDescriptor(buffer.Usage),
             PBufferInfo = &bufferInfo
         };
-        
+
         context.Api.UpdateDescriptorSets(context.LogicalDevice.Device, 1, &write, 0, null);
 
         context.Api!.CmdBindDescriptorSets(
@@ -327,20 +327,22 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
     }
 
     public override RecordedRenderPass EndRenderPass(
-        IRenderTarget blitTo)
+        IRenderTarget? blitTo)
     {
         EnsureRecording();
 
-        var vkTex = context.ManagedTextures[blitTo.SurfaceId];
-
-        if (vkTex is not VulkanTexture destination)
-            throw new ArgumentException(
-                "Destination must be a Vulkan render target.",
-                nameof(blitTo));
-
         context.Api!.CmdEndRenderPass(commandBuffer);
 
-        Blit(renderTarget!.Texture, destination);
+        if (blitTo != null)
+        {
+            var vkTex = context.ManagedTextures[blitTo.SurfaceId];
+
+            if (vkTex is not VulkanTexture destination)
+                throw new ArgumentException(
+                    "Destination must be a Vulkan render target.",
+                    nameof(blitTo));
+            Blit(renderTarget!.Texture, destination);
+        }
 
         EndCommandBuffer(commandBuffer);
 

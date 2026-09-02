@@ -6,6 +6,6 @@ namespace Drawie.Backend.Arco;
 
 public class Paint
 {
-    public BlendMode BlendMode { get; set; }
+    public BlendMode BlendMode { get; set; } = BlendMode.SrcOver;
     public Color Color { get; set; }
 }

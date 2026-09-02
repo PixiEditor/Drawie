@@ -1,10 +1,12 @@
-﻿using Silk.NET.OpenGL;
+﻿using Drawie.Numerics;
+using Silk.NET.OpenGL;
 
 namespace Drawie.RenderApi.OpenGL;
 
 public class OpenGlTexture : IOpenGlTexture, IDisposable
 {
     public ulong TextureId { get; }
+    public VecI Size => new VecI(Width, Height);
 
     public int Width { get; }
     public int Height { get; }

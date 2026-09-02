@@ -1,3 +1,5 @@
+using System.Drawing;
+using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Helpers;
 using Silk.NET.Vulkan;
@@ -13,6 +15,8 @@ public class RenderPassBuilder : IDisposable
     public Format DepthStencilFormat { get; set; }
     public int Samples { get; set; } = 1;
 
+    public ColorLoadOp LoadOp { get; set; } = ColorLoadOp.Clear;
+    
     private RenderPass? createdRenderPass;
 
     public RenderPassBuilder(Vk vk, Device logicalDevice)
@@ -34,6 +38,12 @@ public class RenderPassBuilder : IDisposable
         return this;
     }
 
+    public RenderPassBuilder WithColorLoadOp(ColorLoadOp colorLoadOp)
+    {
+        LoadOp = colorLoadOp;
+        return this;
+    }
+
     public unsafe RenderPass Create(Format format, ImageLayout imageLayout)
     {
         if (createdRenderPass != null) return createdRenderPass.Value;
@@ -42,11 +52,11 @@ public class RenderPassBuilder : IDisposable
         {
             Format = format,
             Samples = FormatExtensions.ToSampleFlags(Samples),
-            LoadOp = AttachmentLoadOp.Clear,
+            LoadOp = LoadOp == ColorLoadOp.Clear ? AttachmentLoadOp.Clear : AttachmentLoadOp.Load,
             StoreOp = AttachmentStoreOp.Store,
             StencilLoadOp = AttachmentLoadOp.DontCare,
             StencilStoreOp = AttachmentStoreOp.DontCare,
-            InitialLayout = ImageLayout.Undefined,
+            InitialLayout = LoadOp == ColorLoadOp.Load ? ImageLayout.ColorAttachmentOptimal : ImageLayout.Undefined,
             FinalLayout = Samples == 1 ? imageLayout : ImageLayout.ColorAttachmentOptimal
         };
 

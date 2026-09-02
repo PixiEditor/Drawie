@@ -326,8 +326,8 @@ public class GraphicsPipelineBuilder
 
         PipelineColorBlendStateCreateInfo colorBlending = new()
         {
-            SType = StructureType.PipelineColorBlendStateCreateInfo,
             LogicOpEnable = false,
+            SType = StructureType.PipelineColorBlendStateCreateInfo,
             LogicOp = LogicOp.Copy,
             AttachmentCount = 1,
             PAttachments = &colorBlendAttachment
