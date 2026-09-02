@@ -18,9 +18,11 @@ public interface ICommandList
     void Draw(int vertexCount, int instanceIndex, int instanceCount);
     RecordedRenderPass EndRenderPass(IRenderTarget? blitTo);
     RecordedRenderPass EndRenderPass();
+    RecordedRenderPass End();
     void BindPipeline();
     PreparedTexture PrepareTexture(ITexture texture);
     void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures, IEnumerable<ISampler> samplers);
     void UpdateUniforms(IEnumerable<NamedBuffer> properties);
     void RestoreTexture(PreparedTexture preparedTextureValue);
+    public void Blit(IRenderTarget renderTarget, IRenderTarget target);
 }

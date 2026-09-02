@@ -101,30 +101,24 @@ public class Canvas
         if (recordedInstanceCount == 0) return;
 
         commandList = GraphicsDevice.CreateCommandList();
-
-        commandList.SetPipeline(blendModePipelines[BlendMode.SrcOver]);
-        commandList.BeginRenderPass(renderTarget);
-
-        instancesBuffer.SetData(recordedInstances.Take(recordedInstanceCount).Select(x => x.RecordedInstance)
-            .ToArray());
-        uniformBlocks[0].Buffer = instancesBuffer.Buffer;
-
-        commandList.UpdateUniforms(uniformBlocks);
-
+        
         BlendMode currentBlendMode = recordedInstances[0].BlendMode;
         int batchStart = 0;
+
+        bool renderPassStarted = false;
 
         for (int i = 1; i < recordedInstanceCount; i++)
         {
             if (recordedInstances[i].BlendMode != currentBlendMode)
             {
-                DrawBatch(currentBlendMode, batchStart, i - batchStart);
+                DrawBatch(currentBlendMode, batchStart, i - batchStart, renderPassStarted);
+                renderPassStarted = true;
                 currentBlendMode = recordedInstances[i].BlendMode;
                 batchStart = i;
             }
         }
 
-        DrawBatch(currentBlendMode, batchStart, recordedInstanceCount - batchStart);
+        DrawBatch(currentBlendMode, batchStart, recordedInstanceCount - batchStart, renderPassStarted);
 
         var recordedRenderPass = commandList.EndRenderPass(blitTo);
         GraphicsDevice.Submit(recordedRenderPass);
@@ -132,7 +126,18 @@ public class Canvas
         recordedInstanceCount = 0;
     }
 
-    private void DrawBatch(BlendMode blendMode, int at, int count)
+    private void BeginRender()
+    {
+        commandList.BeginRenderPass(renderTarget);
+
+        instancesBuffer.SetData(recordedInstances.Take(recordedInstanceCount).Select(x => x.RecordedInstance)
+            .ToArray());
+        uniformBlocks[0].Buffer = instancesBuffer.Buffer;
+
+        commandList.UpdateUniforms(uniformBlocks);
+    }
+
+    private void DrawBatch(BlendMode blendMode, int at, int count, bool renderPassStarted)
     {
         if (!blendModePipelines.ContainsKey(blendMode))
         {
@@ -141,7 +146,13 @@ public class Canvas
 
         commandList.SetPipeline(blendModePipelines[blendMode]);
 
+        if (!renderPassStarted)
+        {
+            BeginRender();
+        }
+        
         commandList.BindPipeline();
+
         commandList.Draw(6, at, count);
     }
 
@@ -172,5 +183,12 @@ public class Canvas
             Viewport = new RectI(0, 0, size.X, size.Y),
             PipelineVariantGroupId = pipelineGroupId
         });
+    }
+
+    public void BlitTo(TextureFramebuffer target)
+    {
+        commandList = GraphicsDevice.CreateCommandList();
+        commandList.Blit(renderTarget, target);
+        GraphicsDevice.Submit(commandList.End());
     }
 }

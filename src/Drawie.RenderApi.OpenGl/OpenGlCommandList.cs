@@ -21,10 +21,13 @@ public class OpenGlCommandList(GL api) : CommandList
     private int lastBoundTextureSlot = 0;
     private IPipeline boundPipeline;
 
+    private bool recording;
+
     public override void BeginRenderPass(IRenderTarget fb)
     {
         source = fb;
         lastBoundTextureSlot = 0;
+        recording = true;
         ClearInstructions();
         RecordInstruction(() =>
         {
@@ -37,7 +40,17 @@ public class OpenGlCommandList(GL api) : CommandList
     {
         boundPipeline = pipeline;
     }
-    
+
+    public override RecordedRenderPass End()
+    {
+        if (recording)
+        {
+            throw new ArgumentException("Render pass must be ended with EndRenderPass");
+        }
+
+        return ToRenderPass();
+    }
+
     public override void BindPipeline()
     {
         RecordInstruction(() => boundPipeline.Apply(this));
@@ -51,17 +64,31 @@ public class OpenGlCommandList(GL api) : CommandList
     public override void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures,
         IEnumerable<ISampler> samplers)
     {
-        
     }
 
     public override void UpdateUniforms(IEnumerable<NamedBuffer> properties)
     {
-        
     }
 
     public override void RestoreTexture(PreparedTexture preparedTextureValue)
     {
         // no op
+    }
+
+    public override void Blit(IRenderTarget renderTarget, IRenderTarget target)
+    {
+        RecordInstruction(() =>
+        {
+            var previousFb = (uint)Api.GetInteger(GLEnum.FramebufferBinding);
+            Api.BindFramebuffer(FramebufferTarget.ReadFramebuffer, (uint)source.SurfaceId);
+            Api.BindFramebuffer(FramebufferTarget.DrawFramebuffer, (uint)target.SurfaceId);
+            Api.BlitFramebuffer(
+                0, 0, source.Size.X, source.Size.Y,
+                0, 0, target.Size.X, target.Size.Y,
+                ClearBufferMask.ColorBufferBit,
+                BlitFramebufferFilter.Nearest);
+            Api.BindFramebuffer(FramebufferTarget.Framebuffer, previousFb);
+        });
     }
 
     public override void SetBuffers(IBufferGroup bufferGroup)
@@ -97,7 +124,8 @@ public class OpenGlCommandList(GL api) : CommandList
     {
         RecordInstruction(() =>
         {
-            Api.DrawArraysInstancedBaseInstance(PrimitiveType.Triangles, 0, (uint)vertexCount, (uint)instanceCount, 0);
+            Api.DrawArraysInstancedBaseInstance(PrimitiveType.Triangles, 0, (uint)vertexCount, (uint)instanceCount,
+                0);
         });
     }
 
@@ -105,12 +133,14 @@ public class OpenGlCommandList(GL api) : CommandList
     {
         RecordInstruction(() =>
         {
-            Api.DrawArraysInstancedBaseInstance(PrimitiveType.Triangles, 0, (uint)vertexCount, (uint)instanceCount, (uint)instanceIndex);
+            Api.DrawArraysInstancedBaseInstance(PrimitiveType.Triangles, 0, (uint)vertexCount, (uint)instanceCount,
+                (uint)instanceIndex);
         });
     }
 
     public override RecordedRenderPass EndRenderPass(IRenderTarget blitTo)
     {
+        recording = false;
         RecordInstruction(() =>
         {
             Api.BindFramebuffer(FramebufferTarget.ReadFramebuffer, (uint)source.SurfaceId);
@@ -127,6 +157,7 @@ public class OpenGlCommandList(GL api) : CommandList
 
     public override RecordedRenderPass EndRenderPass()
     {
+        recording = false;
         RecordInstruction(() => Api.BindFramebuffer(FramebufferTarget.Framebuffer, originalFb));
         return ToRenderPass();
     }

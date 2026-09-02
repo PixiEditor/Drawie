@@ -49,7 +49,10 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
         renderTarget = target;
 
-        renderTarget.CreateFramebufferFor(pipeline.GraphicsPipeline.VkRenderPass);
+        if (pipeline != null)
+        {
+            renderTarget.CreateFramebufferFor(pipeline.GraphicsPipeline.VkRenderPass);
+        }
 
         recording = true;
 
@@ -75,6 +78,17 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
                 nameof(bufferGroup));
 
         BindBuffers(vkBuffers);
+    }
+
+    public override RecordedRenderPass End()
+    {
+        if (recording)
+        {
+            throw new ArgumentException("Render pass must be ended with EndRenderPass");
+        }
+
+        EndCommandBuffer(commandBuffer);
+        return new VulkanRecordedRenderPass(context, commandBuffer, commandPool);
     }
 
     public override void BindPipeline()
@@ -148,6 +162,16 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         var target = context.ManagedTextures[preparedTextureValue.Handle];
         if (target is not VulkanTexture vkTex) throw new ArgumentException("Only VulkanTexture's are valid");
         vkTex.MakeReadOnly(commandBuffer);
+    }
+
+    public override void Blit(IRenderTarget source, IRenderTarget target)
+    {
+        if (source == null || target == null) throw new ArgumentException("Blit source and target must be not null");
+
+        var vkSource = context.ManagedTextures[source.SurfaceId] as VulkanTexture;
+        var vkTarget = context.ManagedTextures[target.SurfaceId] as VulkanTexture;
+
+        Blit(vkSource, vkTarget);
     }
 
     private unsafe void UpdateDescriptor(int setIndex, uint binding, IVkBuffer buffer)

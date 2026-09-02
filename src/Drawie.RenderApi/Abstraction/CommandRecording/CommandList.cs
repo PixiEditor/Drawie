@@ -43,9 +43,12 @@ public abstract class CommandList : ICommandList
 
     public abstract RecordedRenderPass EndRenderPass(IRenderTarget blitTo);
     public abstract RecordedRenderPass EndRenderPass();
+    public abstract RecordedRenderPass End();
+
     public abstract void BindPipeline();
     public abstract PreparedTexture PrepareTexture(ITexture texture);
     public abstract void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures, IEnumerable<ISampler> samplers);
     public abstract void UpdateUniforms(IEnumerable<NamedBuffer> properties);
     public abstract void RestoreTexture(PreparedTexture preparedTextureValue);
+    public abstract void Blit(IRenderTarget renderTarget, IRenderTarget target);
 }
