@@ -32,7 +32,9 @@ public class Canvas
     private List<NamedBuffer> uniformBlocks;
     private IRenderTarget renderTarget;
 
-    private Dictionary<BlendMode, IPipeline> blendModePipelines = new Dictionary<BlendMode, IPipeline>();
+    private static Guid pipelineGroupId = Guid.NewGuid();
+
+    private static Dictionary<BlendMode, IPipeline> blendModePipelines = new Dictionary<BlendMode, IPipeline>();
 
     public Canvas(IGraphicsDevice device, VecI size)
     {
@@ -168,6 +170,7 @@ public class Canvas
             },
             ShaderProgram = shaderProgram,
             Viewport = new RectI(0, 0, size.X, size.Y),
+            PipelineVariantGroupId = pipelineGroupId
         });
     }
 }

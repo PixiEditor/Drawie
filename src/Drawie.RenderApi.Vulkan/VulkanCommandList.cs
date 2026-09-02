@@ -152,7 +152,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
     private unsafe void UpdateDescriptor(int setIndex, uint binding, IVkBuffer buffer)
     {
-        var set = pipeline.DescriptorPool.GetOrAllocateDescriptorSet(setIndex, (ulong)setIndex);
+        var set = pipeline.Program.DescriptorPool.GetOrAllocateDescriptorSet(setIndex, (ulong)setIndex);
         DescriptorBufferInfo bufferInfo = new()
         {
             Buffer = buffer.NativeBuffer.VkBuffer,

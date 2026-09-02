@@ -12,10 +12,11 @@ public struct PipelineDesc : IEquatable<PipelineDesc>
     public BlendDesc  Blend { get; set; }
     public RasterizerDesc Rasterizer { get; set; }
     public RectI Viewport { get; set; }
+    public Guid? PipelineVariantGroupId { get; set; }
     
     public bool Equals(PipelineDesc other)
     {
-        return Equals(ShaderProgram, other.ShaderProgram) && Depth.Equals(other.Depth) && Blend.Equals(other.Blend) && Rasterizer.Equals(other.Rasterizer) && Viewport.Equals(other.Viewport);
+        return Equals(ShaderProgram, other.ShaderProgram) && Depth.Equals(other.Depth) && Blend.Equals(other.Blend) && Rasterizer.Equals(other.Rasterizer) && Viewport.Equals(other.Viewport) && PipelineVariantGroupId.Equals(other.PipelineVariantGroupId);
     }
 
     public override bool Equals(object? obj)
@@ -25,7 +26,7 @@ public struct PipelineDesc : IEquatable<PipelineDesc>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(ShaderProgram, Depth, Blend, Rasterizer, Viewport);
+        return HashCode.Combine(ShaderProgram, Depth, Blend, Rasterizer, Viewport, RenderPass, PipelineVariantGroupId);
     }
 }
 

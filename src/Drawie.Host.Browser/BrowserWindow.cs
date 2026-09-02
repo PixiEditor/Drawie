@@ -183,6 +183,6 @@ public class BrowserWindow(IHostViewRenderApi hostViewRenderApi) : IHost
 
     private Texture CreateRenderTexture()
     {
-        return new Texture(NativeTexture.FromExisting(DrawingBackendApi.Current.CreateRenderSurface(UsableWindowSize, RenderApi.RenderTexture, SurfaceOrigin.BottomLeft)));
+        return new Texture(Texture.FromExisting(DrawingBackendApi.Current.CreateRenderSurface(UsableWindowSize, RenderApi.RenderTexture, SurfaceOrigin.BottomLeft)));
     }
 }

@@ -555,12 +555,13 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
             .AddStage(stage => stage.OfType(GraphicsPipelineStageType.Vertex).WithShader("Drawie.RenderApi.Vulkan.Shaders.vert.spv"))
             .AddStage(stage => stage.OfType(GraphicsPipelineStageType.Fragment).WithShader("Drawie.RenderApi.Vulkan.Shaders.frag.spv"))
             .WithVertexLayout(layout => layout.WithVec2().WithVec3().WithVec2())
+            .WithPipelineLayout(pipelineLayout => pipelineLayout.WithDescriptorSetLayouts(descriptorSetLayout))
             .WithRenderPass(renderPass =>
             {
                 renderPass.WithSamples(1);
             });
 
-        graphicsPipeline = builder.Create(swapChainExtent, swapChainImageFormat, ImageLayout.PresentSrcKhr, [descriptorSetLayout]);
+        graphicsPipeline = builder.Create(swapChainExtent, swapChainImageFormat, ImageLayout.PresentSrcKhr);
     }
 
     private unsafe void CreateImageViews()

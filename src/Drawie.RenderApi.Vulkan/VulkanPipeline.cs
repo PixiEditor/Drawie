@@ -22,17 +22,20 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
 
     public GraphicsPipelineBuilder Builder { get; }
     public RenderPassBuilder RenderPassBuilder => Builder.RenderPassBuilder;
+    public GraphicsPipelineLayoutBuilder PipelineLayoutBuilder => Builder.PipelineLayoutBuilder;
 
     private VulkanShaderProgram program;
 
     private GraphicsPipeline graphicsPipeline;
     private RenderPassBuilder? exisitngRenderPass;
+    private GraphicsPipelineLayoutBuilder? exisitngLayoutBuilder;
 
-    public VulkanPipeline(VulkanContext context, PipelineDesc desc, RenderPassBuilder? renderPass = null)
+    public VulkanPipeline(VulkanContext context, PipelineDesc desc, RenderPassBuilder? renderPass = null, GraphicsPipelineLayoutBuilder? layoutBuilder = null)
     {
         this.context = context;
         Description = desc;
         exisitngRenderPass = renderPass;
+        exisitngLayoutBuilder = layoutBuilder;
         if (desc.ShaderProgram is not VulkanShaderProgram vulkanShaderProgram)
             throw new ArgumentException("Invalid Shader Program type");
         program = vulkanShaderProgram;
@@ -87,12 +90,21 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
             });
         }
 
+        if (exisitngLayoutBuilder != null)
+        {
+            Builder.PipelineLayoutBuilder = exisitngLayoutBuilder;
+        }
+        else
+        {
+            Builder.WithPipelineLayout(builder =>
+                builder.WithDescriptorSetLayouts(program.DescriptorSetLayout.DescriptorSetLayout));
+        }
+
         if(Description.Depth.Enabled)
             Builder.WithDepth();
 
         var pipeline = Builder.Create(new Extent2D((uint)Description.Viewport.Width, (uint)Description.Viewport.Height),
-            Format.R8G8B8A8Unorm, ImageLayout.ColorAttachmentOptimal,
-            [program.DescriptorSetLayout.DescriptorSetLayout]);
+            Format.R8G8B8A8Unorm, ImageLayout.ColorAttachmentOptimal);
 
         return pipeline;
     }

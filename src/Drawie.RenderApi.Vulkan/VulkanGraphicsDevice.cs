@@ -23,7 +23,8 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
     private VulkanPipeline? pipeline;
     private VulkanSampler globalSampler;
 
-    private List<RenderPassBuilder> existingRenderPasses = new List<RenderPassBuilder>();
+    private Dictionary<Guid, RenderPassBuilder> existingRenderPasses = new();
+    private Dictionary<Guid, GraphicsPipelineLayoutBuilder> existingLayoutBuilders = new();
 
     private Dictionary<Guid, UniformBuffer> bufferCache = new Dictionary<Guid, UniformBuffer>();
 
@@ -82,11 +83,18 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
     public IPipeline CreatePipeline(PipelineDesc desc)
     {
         var existingRenderPass = TryFindExistingPass(desc);
-        pipeline = new VulkanPipeline(context, desc, existingRenderPass);
-        if (existingRenderPass == null)
+        var existingLayoutBuilder = TryFindExistingLayoutBuilder(desc);
+        pipeline = new VulkanPipeline(context, desc, existingRenderPass, existingLayoutBuilder);
+        if (existingRenderPass == null && desc.PipelineVariantGroupId != null)
         {
-            existingRenderPasses.Add(pipeline.RenderPassBuilder);
+            existingRenderPasses[desc.PipelineVariantGroupId.Value] = pipeline.RenderPassBuilder;
         }
+
+        if (existingLayoutBuilder == null && desc.PipelineVariantGroupId != null)
+        {
+            existingLayoutBuilders[desc.PipelineVariantGroupId.Value] = pipeline.PipelineLayoutBuilder;
+        }
+        
         return pipeline;
     }
 
@@ -159,13 +167,19 @@ public sealed class VulkanGraphicsDevice : IGraphicsDevice
     
     private RenderPassBuilder? TryFindExistingPass(PipelineDesc desc)
     {
-        foreach (var existingRenderPass in existingRenderPasses)
+        if (desc.PipelineVariantGroupId != null)
         {
-            if (existingRenderPass.WithDepthStencil == desc.Depth.Enabled && (desc.Depth.Format == DepthFormat.NoDepth || existingRenderPass.DepthStencilFormat == desc.Depth.Format.ToVkFormat())
-                && existingRenderPass.Samples == desc.Rasterizer.Samples)
-            {
-                return existingRenderPass;
-            }
+            return existingRenderPasses.TryGetValue(desc.PipelineVariantGroupId.Value, out var builder)  ? builder : null;
+        }
+
+        return null;
+    }
+    
+    private GraphicsPipelineLayoutBuilder? TryFindExistingLayoutBuilder(PipelineDesc desc)
+    {
+        if (desc.PipelineVariantGroupId != null)
+        {
+            return existingLayoutBuilders.TryGetValue(desc.PipelineVariantGroupId.Value, out var builder)  ? builder : null;
         }
 
         return null;

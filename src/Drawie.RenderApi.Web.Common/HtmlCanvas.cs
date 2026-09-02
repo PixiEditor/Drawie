@@ -3,7 +3,7 @@ using Drawie.Numerics;
 
 namespace Drawie.RenderApi.Web.Common;
 
-public class HtmlCanvas(VecI size) : HtmlObject("canvas"), ICanvasTexture
+public class HtmlCanvas() : HtmlObject("canvas"), ICanvasTexture
 {
     public string CanvasId => Id;
     public ulong TextureId { get; } = ulong.MaxValue;

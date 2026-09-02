@@ -3,7 +3,9 @@ using Avalonia.OpenGL;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
 using Drawie.Interop.Avalonia.Core;
+using Drawie.Numerics;
 using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Interop.Avalonia.OpenGl;
 
@@ -57,6 +59,7 @@ internal class DxgiMutexOpenGlSwapChainImage : IGlSwapchainImage
     private readonly IGlExportableExternalImageTexture _texture;
     private Task? _lastPresent;
     private ICompositionImportedGpuImage? _imported;
+    private VecI _size;
 
     public DxgiMutexOpenGlSwapChainImage(ICompositionGpuInterop interop, CompositionDrawingSurface surface,
         IGlContextExternalObjectsFeature externalObjects, PixelSize size)
@@ -89,6 +92,9 @@ internal class DxgiMutexOpenGlSwapChainImage : IGlSwapchainImage
     }
 
     public ulong TextureId => (ulong)_texture.TextureId;
+
+    VecI ITexture.Size => _size;
+
     public int InternalFormat => _texture.InternalFormat;
     public PixelSize Size => new(_texture.Properties.Width, _texture.Properties.Height);
     public Task? LastPresent => _lastPresent;
@@ -108,6 +114,7 @@ internal class CompositionOpenGlSwapChainImage : IGlSwapchainImage
     private readonly CompositionDrawingSurface _target;
     private readonly ICompositionImportableOpenGlSharedTexture _texture;
     private ICompositionImportedGpuImage? _imported;
+    private VecI _size;
 
     public CompositionOpenGlSwapChainImage(
         IGlContext context,
@@ -143,6 +150,9 @@ internal class CompositionOpenGlSwapChainImage : IGlSwapchainImage
     }
 
     public ulong TextureId => (ulong)_texture.TextureId;
+
+    VecI ITexture.Size => _size;
+
     public int InternalFormat => _texture.InternalFormat;
     public PixelSize Size => _texture.Size;
     public Task? LastPresent { get; private set; }

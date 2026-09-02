@@ -26,6 +26,8 @@ public class GraphicsPipelineBuilder
     public BlendFactor SrcAlphaBlendFactor { get; set; } = BlendFactor.One;
     public BlendFactor DstAlphaBlendFactor { get; set; } = BlendFactor.Zero;
     public BlendOp AlphaBlendOp { get; set; } = BlendOp.Add;
+    
+    public GraphicsPipelineLayoutBuilder PipelineLayoutBuilder { get; set; }
 
 
     public GraphicsPipelineBuilder(Vk vk, Device logicalDevice)
@@ -198,15 +200,20 @@ public class GraphicsPipelineBuilder
         return this;
     }
 
+    public GraphicsPipelineBuilder WithPipelineLayout(Action<GraphicsPipelineLayoutBuilder> layoutBuilder)
+    {
+        PipelineLayoutBuilder = new(Vk, LogicalDevice);
+        layoutBuilder(PipelineLayoutBuilder);
+        return this;
+    }
+
     public GraphicsPipelineBuilder WithDepth()
     {
         HasDepthStencil = true;
         return this;
     }
 
-    public unsafe GraphicsPipeline Create(Extent2D extent, Format imageFormat,
-        ImageLayout finalLayout,
-        DescriptorSetLayout[] descriptorSetLayouts)
+    public unsafe GraphicsPipeline Create(Extent2D extent, Format imageFormat, ImageLayout finalLayout)
     {
         if (Stages.Count == 0) throw new GraphicsPipelineBuilderException("No stages were added to the pipeline.");
         if (RenderPassBuilder == null)
@@ -217,13 +224,6 @@ public class GraphicsPipelineBuilder
         var stages = stackalloc PipelineShaderStageCreateInfo[Stages.Count];
         for (var i = 0; i < Stages.Count; i++) stages[i] = Stages[i].Build();
 
-
-        DescriptorSetLayout* layouts = stackalloc DescriptorSetLayout[descriptorSetLayouts.Length];
-        for (var i = 0; i < descriptorSetLayouts.Length; i++)
-        {
-            var descriptorSetLayout = descriptorSetLayouts[i];
-            layouts[i] = descriptorSetLayout;
-        }
 
         PipelineVertexInputStateCreateInfo vertexInputInfo = new PipelineVertexInputStateCreateInfo()
         {
@@ -338,17 +338,10 @@ public class GraphicsPipelineBuilder
         colorBlending.BlendConstants[2] = 0.0f;
         colorBlending.BlendConstants[3] = 0.0f;
 
-        PipelineLayoutCreateInfo pipelineLayoutInfo = new()
-        {
-            SType = StructureType.PipelineLayoutCreateInfo,
-            PushConstantRangeCount = 0,
-            SetLayoutCount = (uint)descriptorSetLayouts.Length,
-            PSetLayouts = descriptorSetLayouts.Length > 0 ? layouts : null
-        };
-
-        if (Vk!.CreatePipelineLayout(LogicalDevice, in pipelineLayoutInfo, null, out var pipelineLayout) !=
-            Result.Success)
-            throw new VulkanException("Failed to create pipeline layout.");
+        if(PipelineLayoutBuilder == null)
+            throw new GraphicsPipelineBuilderException("No pipeline layout was added to the pipeline.");
+        
+        var pipelineLayout = PipelineLayoutBuilder.Create();
 
         GraphicsPipelineCreateInfo pipelineCreateInfo = new()
         {
