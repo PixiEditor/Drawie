@@ -1,16 +1,14 @@
 using Drawie.Backend.Arco;
+using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Surfaces;
-using Drawie.Numerics;
-using Drawie.RenderApi.Abstraction.RenderTargets;
-using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.Rendering;
-using Canvas = Drawie.Backend.Arco.Canvas;
+using Paint = Drawie.Backend.Core.Surfaces.PaintImpl.Paint;
 
-public static class BlendingSample
+public static class BlendingSampleSkia
 {
-    static Canvas cnvs = null;
+    static Texture cnvs = null;
 
     private static readonly BlendMode[] HardwareBlendModes =
     [
@@ -33,7 +31,7 @@ public static class BlendingSample
     {
         if (cnvs == null)
         {
-            cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, target.Size);
+            cnvs = new Texture(target.Size);
             const int columns = 4;
             const float padding = 20;
             const float labelHeight = 30;
@@ -57,31 +55,31 @@ public static class BlendingSample
                 float centerX = cellX + cellWidth / 2f;
                 float centerY = cellY + labelHeight + (cellHeight - labelHeight) / 2f;
 
-                cnvs.DrawRect(
+                cnvs.DrawingSurface.Canvas.DrawRect(
                     centerX - size * 0.65f,
                     centerY - size * 0.5f,
                     size,
                     size,
-                    new Paint
+                    new Drawie.Backend.Core.Surfaces.PaintImpl.Paint()
                     {
                         Color = Colors.Red.WithAlpha(128),
                     });
 
-                cnvs.DrawRect(
+                cnvs.DrawingSurface.Canvas.DrawRect(
                     centerX - size * 0.15f,
                     centerY - size * 0.5f,
                     size,
                     size,
-                    new Paint
+                    new Paint()
                     {
                         Color = Colors.Green.WithAlpha(128),
                         BlendMode = mode
                     });
             }
 
-            cnvs.Flush();
+            cnvs.DrawingSurface.Flush();
         }
         
-        cnvs.BlitTo(target);
+        target.Canvas.DrawSurface(cnvs.DrawingSurface, 0, 0);
     }
 }

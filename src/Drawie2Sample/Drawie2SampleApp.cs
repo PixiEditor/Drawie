@@ -27,6 +27,8 @@ public class Drawie2SampleApp : DrawieApp
     private int activeRenderMode = 0;
     private bool handleMovement;
 
+    private bool skia = false;
+
     private string[] renderModes = new[]
     {
         "Default",
@@ -59,6 +61,12 @@ public class Drawie2SampleApp : DrawieApp
                 renderOptions.RenderMode = renderOptions.RenderMode == RenderMode.Default
                     ? RenderMode.Wireframe
                     : RenderMode.Default;
+            }
+            
+            string skiaText = !skia ? "Enable skia" : "Disable skia";
+            if (Button.Show(skiaText))
+            {
+                skia = !skia;
             }
 
             Panel.EndColumn();
@@ -118,7 +126,10 @@ public class Drawie2SampleApp : DrawieApp
             targetTexture.Canvas.Flush();
             
             //ColorfulRectanglesSample.Draw(targetTexture);
-            BlendingSample.Draw(targetTexture);
+            if(!skia)
+                BlendingSample.Draw(targetTexture);
+            else
+                BlendingSampleSkia.Draw(targetTexture);
             //targetTexture.DrawScene(scene, camera, renderOptions);
 
             DrawingBackendApi.Current.ResetContext();
