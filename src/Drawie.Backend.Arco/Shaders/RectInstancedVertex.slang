@@ -17,7 +17,8 @@ struct VSInput
 {
     uint vertexId : SV_VertexID;
     uint instanceId : SV_InstanceID;
-};
+    uint startInstance : SV_StartInstanceLocation;
+}
 
 struct VSOutput
 {
@@ -28,7 +29,7 @@ struct VSOutput
 [shader("vertex")]
 VSOutput vertexMain(VSInput input)
 {
-    Instance instance = instances[input.instanceId];
+    Instance instance = instances[input.instanceId + input.startInstance];
 
     float2 vertices[6] =
     {

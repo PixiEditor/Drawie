@@ -129,7 +129,7 @@ public class Canvas
     private void BeginRender()
     {
         commandList.BeginRenderPass(renderTarget);
-
+        
         instancesBuffer.SetData(recordedInstances.Take(recordedInstanceCount).Select(x => x.RecordedInstance)
             .ToArray());
         uniformBlocks[0].Buffer = instancesBuffer.Buffer;
@@ -152,7 +152,7 @@ public class Canvas
         }
         
         commandList.BindPipeline();
-
+        
         commandList.Draw(6, at, count);
     }
 

@@ -73,8 +73,6 @@ public static class BlendingSample
                         Color = Colors.Red.WithAlpha(128),
                     });
 
-                //cnvs.Flush();
-
                 cnvs.DrawRect(
                     centerX - size * 0.15f,
                     centerY - size * 0.5f,
@@ -85,7 +83,6 @@ public static class BlendingSample
                         Color = Colors.Green.WithAlpha(128),
                         BlendMode = mode
                     });
-                //cnvs.Flush();
             }
 
             cnvs.Flush();

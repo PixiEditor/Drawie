@@ -368,7 +368,7 @@ public class GraphicsPipelineBuilder
         if (!DoNotDisposeStages)
             foreach (var stage in Stages)
                 stage.Dispose();
-
+        
         return new GraphicsPipeline(Vk, LogicalDevice, pipelineLayout, graphicsPipeline, renderPass);
     }
 }
