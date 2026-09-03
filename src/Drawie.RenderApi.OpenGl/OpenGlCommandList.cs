@@ -41,6 +41,14 @@ public class OpenGlCommandList(GL api) : CommandList
         boundPipeline = pipeline;
     }
 
+    public override void SetViewportSize(float width, float height)
+    {
+        RecordInstruction(() =>
+        {
+            Api.Viewport(0, 0, (uint)width, (uint)height);
+        });
+    }
+
     public override RecordedRenderPass End()
     {
         if (recording)

@@ -2,6 +2,7 @@ using Drawie.Backend.Vertie.Core;
 using Drawie.RenderApi.Abstraction.CommandRecording;
 using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Abstraction.Textures;
+using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Helpers;
 using Drawie.RenderApi.Vulkan.Stages;
 using Drawie.RenderApi.Vulkan.Stages.Builders;
@@ -103,8 +104,21 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
         if(Description.Depth.Enabled)
             Builder.WithDepth();
 
-        var pipeline = Builder.Create(new Extent2D((uint)Description.Viewport.Width, (uint)Description.Viewport.Height),
-            Format.R8G8B8A8Unorm, ImageLayout.ColorAttachmentOptimal);
+        if (Description.DynamicViewport)
+        {
+            Builder.WithDynamicViewport();
+        }
+        else if(Description.StaticViewport != null)
+        {
+            Builder.WithStaticViewport(Description.StaticViewport.Value);
+        }
+
+        if (!Description.DynamicViewport && Description.StaticViewport is null)
+        {
+            throw new GraphicsPipelineBuilderException("Viewport is not set and dynamic viewport is disabled.");
+        }
+
+        var pipeline = Builder.Create(Format.R8G8B8A8Unorm, ImageLayout.ColorAttachmentOptimal);
 
         return pipeline;
     }

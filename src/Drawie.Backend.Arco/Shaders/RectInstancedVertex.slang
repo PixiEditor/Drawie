@@ -23,6 +23,7 @@ struct VSInput
 struct VSOutput
 {
     float4 position : SV_Position;
+    float2 normPosition : TEXCOORD0;
     float4 color : COLOR0;
 };
 
@@ -52,6 +53,7 @@ VSOutput vertexMain(VSInput input)
 
     VSOutput output;
     output.position = float4(clipPosition, 0, 1);
+    output.normPosition = vertices[input.vertexId];
     output.color = instance.color;
 
     return output;

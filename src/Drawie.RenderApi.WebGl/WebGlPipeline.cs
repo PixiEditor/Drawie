@@ -18,7 +18,7 @@ public class WebGlPipeline : IPipeline
 
     public void Apply(VulkanCommandList vulkanCommandList)
     {
-        JSRuntime.Viewport(Gl, Description.Viewport.X, Description.Viewport.Y, Description.Viewport.Width, Description.Viewport.Height);
+        JSRuntime.Viewport(Gl, Description.StaticViewport.X, Description.StaticViewport.Y, Description.StaticViewport.Width, Description.StaticViewport.Height);
         
         if (Description.Blend.Enabled)
         {

@@ -2,7 +2,6 @@ using Drawie.Backend.Shaders.Common;
 using Drawie.RenderApi.Abstraction.Buffers;
 using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Abstraction.RenderTargets;
-using Drawie.RenderApi.Abstraction.Shaders;
 using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.RenderApi.Abstraction.CommandRecording;
@@ -35,6 +34,8 @@ public abstract class CommandList : ICommandList
 
     public abstract void BeginRenderPass(IRenderTarget fb);
     public abstract void SetPipeline(IPipeline pipeline);
+    public abstract void SetViewportSize(float width, float height);
+
     public abstract void SetBuffers(IBufferGroup bufferGroup);
     public abstract void BindTexture(PreparedTexture texture, ISampler sampler);
     public abstract void DrawIndexed(int indexCount);

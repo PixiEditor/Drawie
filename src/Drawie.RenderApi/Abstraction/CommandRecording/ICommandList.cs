@@ -11,6 +11,7 @@ public interface ICommandList
 {
     void BeginRenderPass(IRenderTarget fb);
     void SetPipeline(IPipeline pipeline);
+    void SetViewportSize(float width, float height);
     void SetBuffers(IBufferGroup bufferGroup);
     void BindTexture(PreparedTexture texture, ISampler sampler);
     void DrawIndexed(int indexCount);

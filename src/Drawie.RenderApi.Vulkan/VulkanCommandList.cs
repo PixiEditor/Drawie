@@ -66,6 +66,29 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         //vkPipeline.DescriptorPool.Reset();
     }
 
+    public override unsafe void SetViewportSize(float width, float height)
+    {
+        EnsureRecording();
+
+        Viewport viewport = new Viewport()
+        {
+            X = 0,
+            Y = 0,
+            Width = width,
+            Height = height,
+            MinDepth = 0,
+            MaxDepth = 1
+        };
+
+        Rect2D scissor = new Rect2D()
+        {
+            Extent = new Extent2D((uint)width, (uint)height)
+        };
+        
+        context.Api.CmdSetViewport(CommandBuffer, 0, 1, &viewport);
+        context.Api.CmdSetScissor(CommandBuffer, 0, 1, &scissor);
+    }
+
     public override void SetBuffers(IBufferGroup bufferGroup)
     {
         if (!recording)

@@ -1,3 +1,4 @@
+using Drawie.Numerics;
 using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Helpers;
@@ -14,6 +15,9 @@ public class GraphicsPipelineBuilder
     public RenderPassBuilder RenderPassBuilder { get; set; }
     public GraphicsPipelineVertexLayoutBuilder? VertexLayoutBuilder { get; set; }
 
+    public bool DynamicViewport { get; set; }
+    public RectI? StaticViewport { get; set; }
+
     public CullModeFlags CullMode { get; set; } = CullModeFlags.None;
     public FrontFace FrontFace { get; set; } = FrontFace.Clockwise;
     public bool HasDepthStencil { get; set; }
@@ -26,7 +30,7 @@ public class GraphicsPipelineBuilder
     public BlendFactor SrcAlphaBlendFactor { get; set; } = BlendFactor.One;
     public BlendFactor DstAlphaBlendFactor { get; set; } = BlendFactor.Zero;
     public BlendOp AlphaBlendOp { get; set; } = BlendOp.Add;
-    
+
     public GraphicsPipelineLayoutBuilder PipelineLayoutBuilder { get; set; }
 
 
@@ -213,7 +217,29 @@ public class GraphicsPipelineBuilder
         return this;
     }
 
-    public unsafe GraphicsPipeline Create(Extent2D extent, Format imageFormat, ImageLayout finalLayout)
+    public GraphicsPipelineBuilder WithDynamicViewport(bool enabled = true)
+    {
+        if (StaticViewport != null)
+        {
+            throw new ArgumentException("Cannot set dynamic viewport with static viewport enabled");
+        }
+
+        DynamicViewport = enabled;
+        return this;
+    }
+
+    public GraphicsPipelineBuilder WithStaticViewport(RectI viewport)
+    {
+        if (DynamicViewport)
+        {
+            throw new ArgumentException("Cannot set static viewport with dynamic viewport enabled");
+        }
+
+        StaticViewport = viewport;
+        return this;
+    }
+
+    public unsafe GraphicsPipeline Create(Format imageFormat, ImageLayout finalLayout)
     {
         if (Stages.Count == 0) throw new GraphicsPipelineBuilderException("No stages were added to the pipeline.");
         if (RenderPassBuilder == null)
@@ -255,30 +281,55 @@ public class GraphicsPipelineBuilder
             PrimitiveRestartEnable = false
         };
 
-        Viewport viewport = new()
+        int dynamicStates = DynamicViewport ? 2 : 0;
+        DynamicState* viewportDynamicStates = stackalloc DynamicState[dynamicStates];
+        if (DynamicViewport)
         {
-            X = 0.0f,
-            Y = 0.0f,
-            Width = extent.Width,
-            Height = extent.Height,
-            MinDepth = 0.0f,
-            MaxDepth = 1.0f
+            viewportDynamicStates[0] = DynamicState.Viewport;
+            viewportDynamicStates[1] = DynamicState.Scissor;
+        }
+
+        PipelineDynamicStateCreateInfo dynamicState = new()
+        {
+            SType = StructureType.PipelineDynamicStateCreateInfo,
+            DynamicStateCount = (uint)dynamicStates,
+            PDynamicStates = viewportDynamicStates
         };
 
-        Rect2D scissor = new()
-        {
-            Offset = new Offset2D(0, 0),
-            Extent = extent
-        };
-
-        PipelineViewportStateCreateInfo viewportState = new()
+        PipelineViewportStateCreateInfo viewportState = new PipelineViewportStateCreateInfo()
         {
             SType = StructureType.PipelineViewportStateCreateInfo,
             ViewportCount = 1,
-            PViewports = &viewport,
-            ScissorCount = 1,
-            PScissors = &scissor
+            ScissorCount = 1
         };
+        if (StaticViewport != null)
+        {
+            Extent2D extent = new Extent2D((uint)StaticViewport.Value.Width, (uint)StaticViewport.Value.Height);
+            Viewport viewport = new()
+            {
+                X = 0.0f,
+                Y = 0.0f,
+                Width = StaticViewport.Value.Width,
+                Height = StaticViewport.Value.Height,
+                MinDepth = 0.0f,
+                MaxDepth = 1.0f
+            };
+
+            Rect2D scissor = new()
+            {
+                Offset = new Offset2D(0, 0),
+                Extent = extent
+            };
+
+            viewportState = new()
+            {
+                SType = StructureType.PipelineViewportStateCreateInfo,
+                ViewportCount = 1,
+                PViewports = &viewport,
+                ScissorCount = 1,
+                PScissors = &scissor
+            };
+        }
 
         PipelineRasterizationStateCreateInfo rasterizer = new()
         {
@@ -338,9 +389,9 @@ public class GraphicsPipelineBuilder
         colorBlending.BlendConstants[2] = 0.0f;
         colorBlending.BlendConstants[3] = 0.0f;
 
-        if(PipelineLayoutBuilder == null)
+        if (PipelineLayoutBuilder == null)
             throw new GraphicsPipelineBuilderException("No pipeline layout was added to the pipeline.");
-        
+
         var pipelineLayout = PipelineLayoutBuilder.Create();
 
         GraphicsPipelineCreateInfo pipelineCreateInfo = new()
@@ -348,6 +399,7 @@ public class GraphicsPipelineBuilder
             SType = StructureType.GraphicsPipelineCreateInfo,
             StageCount = (uint)Stages.Count,
             PStages = stages,
+            PDynamicState = &dynamicState,
             PVertexInputState = &vertexInputInfo,
             PInputAssemblyState = &inputAssembly,
             PViewportState = &viewportState,
@@ -368,7 +420,7 @@ public class GraphicsPipelineBuilder
         if (!DoNotDisposeStages)
             foreach (var stage in Stages)
                 stage.Dispose();
-        
+
         return new GraphicsPipeline(Vk, LogicalDevice, pipelineLayout, graphicsPipeline, renderPass);
     }
 }

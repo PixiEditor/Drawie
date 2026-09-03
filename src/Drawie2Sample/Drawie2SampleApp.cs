@@ -126,11 +126,16 @@ public class Drawie2SampleApp : DrawieApp
             targetTexture.Canvas.Flush();
             
             //ColorfulRectanglesSample.Draw(targetTexture);
+            //ColorfulCirclesSample.Draw(targetTexture);
+            /*
             if(!skia)
                 BlendingSample.Draw(targetTexture);
             else
                 BlendingSampleSkia.Draw(targetTexture);
+            */
             //targetTexture.DrawScene(scene, camera, renderOptions);
+            
+            Sandbox.Draw(targetTexture);
 
             DrawingBackendApi.Current.ResetContext();
         };

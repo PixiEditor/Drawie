@@ -89,7 +89,7 @@ public static class TextureFramebufferExtensions
                 Samples = (int)options.MsaaSamples
             },
             ShaderProgram = program,
-            Viewport = new RectI(0, 0, fb.Size.X, fb.Size.Y),
+            StaticViewport = new RectI(0, 0, fb.Size.X, fb.Size.Y),
         });
 
         cmdList = device.CreateCommandList();

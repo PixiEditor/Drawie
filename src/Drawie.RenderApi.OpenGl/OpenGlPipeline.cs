@@ -20,8 +20,11 @@ public class OpenGlPipeline : IPipeline
 
     public void Apply(ICommandList list)
     {
-        Api.Viewport(new Rectangle(Description.Viewport.X, Description.Viewport.Y, Description.Viewport.Width,
-            Description.Viewport.Height));
+        if (Description.StaticViewport != null)
+        {
+            Api.Viewport(new Rectangle(Description.StaticViewport.Value.X, Description.StaticViewport.Value.Y,
+                Description.StaticViewport.Value.Width, Description.StaticViewport.Value.Height));
+        }
 
         if (Description.Blend.Preset != BlendingPreset.None && Description.Blend.Preset != BlendingPreset.Src)
         {
