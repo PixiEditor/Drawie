@@ -8,4 +8,5 @@ public class Paint
 {
     public BlendMode BlendMode { get; set; } = BlendMode.SrcOver;
     public Color Color { get; set; }
+    public bool IsAntiAliased { get; set; }
 }

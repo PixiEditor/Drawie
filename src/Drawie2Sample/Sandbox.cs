@@ -14,9 +14,16 @@ public static class Sandbox
         if (cnvs == null)
         {
             cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, fb.Size);
-            cnvs.DrawCircle(0, 0, 300, 100, new Paint()
+            cnvs.DrawCircle(200, 200, 200, new Paint()
             {
-                Color = Colors.Green
+                Color = Colors.Green,
+                IsAntiAliased = false
+            });
+            
+            cnvs.DrawCircle(650, 200, 200, new Paint()
+            {
+                Color = Colors.Green,
+                IsAntiAliased = true
             });
             cnvs.Flush();
         }

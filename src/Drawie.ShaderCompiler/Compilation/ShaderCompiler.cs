@@ -8,6 +8,7 @@ namespace Drawie.ShaderCompiler.Compilation;
 
 public class ShaderCompiler
 {
+    public string ModulesPath { get; set; }
     public string OutputPath { get; set; }
     public string ShaderName { get; set; }
 
@@ -25,7 +26,8 @@ public class ShaderCompiler
                 "-matrix-layout-column-major",
                 "-fvk-use-entrypoint-name",
                 "-target", "spirv",
-                "-profile", "spirv_1_3"
+                "-profile", "spirv_1_3",
+                "-I", ModulesPath
             ],
             out var reflection);
         

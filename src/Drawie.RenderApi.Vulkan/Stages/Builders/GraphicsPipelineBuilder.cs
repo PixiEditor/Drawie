@@ -359,7 +359,7 @@ public class GraphicsPipelineBuilder
         {
             SType = StructureType.PipelineMultisampleStateCreateInfo,
             SampleShadingEnable = false,
-            RasterizationSamples = FormatExtensions.ToSampleFlags(RenderPassBuilder.Samples)
+            RasterizationSamples = FormatExtensions.ToSampleFlags(RenderPassBuilder.Samples),
         };
 
         PipelineColorBlendAttachmentState colorBlendAttachment = new()

@@ -19,7 +19,7 @@ public sealed class ShaderCompilerTask : Task
         {
             Directory.CreateDirectory(OutputDirectory);
 
-            foreach (var source in Directory.GetFiles(ShaderRoot, "*.slang", SearchOption.AllDirectories))
+            foreach (var source in Directory.GetFiles(ShaderRoot, "*.slang", SearchOption.TopDirectoryOnly))
             {
                 try
                 {
@@ -55,9 +55,9 @@ public sealed class ShaderCompilerTask : Task
 
         var sourceCode = File.ReadAllText(sourcePath);
 
-
         Compilation.ShaderCompiler compiler =
             new Compilation.ShaderCompiler(OutputDirectory, Path.GetFileNameWithoutExtension(sourcePath));
+        compiler.ModulesPath = Path.Combine(Path.GetDirectoryName(sourcePath), "Modules");
         compiler.Compile(sourceCode, target);
 
         Log.LogMessage(

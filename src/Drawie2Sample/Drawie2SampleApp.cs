@@ -15,6 +15,7 @@ using Drawie.RenderApi.Abstraction.RenderTargets;
 using DrawiEngine;
 using ImGuiNET;
 using Label = Drawie.Layer.UI.MiniUi.Controls.Label;
+using Paint = Drawie.Backend.Core.Surfaces.PaintImpl.Paint;
 
 namespace Drawie2Sample;
 
@@ -52,7 +53,7 @@ public class Drawie2SampleApp : DrawieApp
             Panel.BeginColumn();
 
             Panel.BeginRow();
-                Label.Show($"FPS: {1f / dt:F1}");
+            Label.Show($"FPS: {1f / dt:F1}");
             Panel.EndRow();
 
             string text = renderOptions.RenderMode == RenderMode.Default ? "Enable wireframe" : "Enable solid fill";
@@ -62,7 +63,7 @@ public class Drawie2SampleApp : DrawieApp
                     ? RenderMode.Wireframe
                     : RenderMode.Default;
             }
-            
+
             string skiaText = !skia ? "Enable skia" : "Disable skia";
             if (Button.Show(skiaText))
             {
@@ -119,23 +120,24 @@ public class Drawie2SampleApp : DrawieApp
             camera.AspectRatio = (float)window.Size.X / window.Size.Y;
             HandleMovement((float)d, camera, window.InputController.PrimaryKeyboard);
         };
-        
+
         window.Render += (targetTexture, deltaTime) =>
         {
             targetTexture.Clear();
             targetTexture.Canvas.Flush();
-            
+
             //ColorfulRectanglesSample.Draw(targetTexture);
-            //ColorfulCirclesSample.Draw(targetTexture);
-            /*
-            if(!skia)
+            if (!skia)
+                ColorfulCirclesSample.Draw(targetTexture);
+            else
+                ColorfulCirclesSampleSkia.Draw(targetTexture);
+            /*if(!skia)
                 BlendingSample.Draw(targetTexture);
             else
-                BlendingSampleSkia.Draw(targetTexture);
-            */
+                BlendingSampleSkia.Draw(targetTexture);*/
             //targetTexture.DrawScene(scene, camera, renderOptions);
-            
-            Sandbox.Draw(targetTexture);
+
+            //Sandbox.Draw(targetTexture);
 
             DrawingBackendApi.Current.ResetContext();
         };

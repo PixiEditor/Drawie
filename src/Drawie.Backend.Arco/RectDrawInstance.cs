@@ -9,4 +9,6 @@ public struct RectDrawInstance
     public Vector2 Position { get; set; }
     public Vector2 Size { get; set; }
     public Vector4 Color { get; set; }
+    public Vector2 AntiAliasing { get; set; }
+    public Vector2 Padding { get; set; }
 }

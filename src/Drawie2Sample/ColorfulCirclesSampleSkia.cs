@@ -3,10 +3,11 @@ using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Numerics;
 using Drawie.Rendering;
+using Paint = Drawie.Backend.Core.Surfaces.PaintImpl.Paint;
 
 namespace Drawie2Sample;
 
-public static class ColorfulCirclesSample
+public static class ColorfulCirclesSampleSkia
 {
     static Drawie.Backend.Arco.Canvas cnvs = null;
 
@@ -28,8 +29,8 @@ public static class ColorfulCirclesSample
             for (int x = 0; x < columns; x++)
             {
                 RectD rect = new RectD(x * (size + spacing), y * (size + spacing), size, size);
-                cnvs.DrawCircle((float)rect.Center.X, (float)rect.Center.Y, size / 2f, 
-                    new Paint
+                fb.Canvas.DrawCircle((float)rect.Center.X, (float)rect.Center.Y, size / 2f, 
+                    new Paint()
                     {
                         Color = new Color((byte)(x * 255 / columns), (byte)(y * 255 / rows), 100, 255),
                         IsAntiAliased = i % 2 == 0

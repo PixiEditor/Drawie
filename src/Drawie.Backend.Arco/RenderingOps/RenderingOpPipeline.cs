@@ -21,7 +21,7 @@ public class RenderingOpPipeline
         GraphicsDevice = device;
         ShaderProgram = GraphicsDevice.CreateShaderProgram(new ShaderProgramDesc([vertex, fragment]));
 
-        CreatePipelineForBlendMode( BlendMode.SrcOver);
+        CreatePipelineForBlendMode(BlendMode.SrcOver);
     }
 
     private void CreatePipelineForBlendMode(BlendMode blendMode)

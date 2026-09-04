@@ -89,6 +89,7 @@ public class Canvas
                 Color = new Vector4(fill.R / 255f, fill.G / 255f, fill.B / 255f, fill.A / 255f),
                 Position = new Vector2(x, y),
                 Size = new Vector2(width, height),
+                AntiAliasing = new Vector2(paint.IsAntiAliased ? 1 : 0, 2f / height),
             },
 
             BlendMode = paint.BlendMode,
@@ -96,7 +97,7 @@ public class Canvas
         };
     }
 
-    public void DrawCircle(float x, float y, float width, float height, Paint paint)
+    public void DrawCircle(float cx, float cy, float radius, Paint paint)
     {
         if (recordedInstanceCount == recordedInstances.Length)
         {
@@ -110,8 +111,9 @@ public class Canvas
             RecordedInstance = new RectDrawInstance()
             {
                 Color = new Vector4(fill.R / 255f, fill.G / 255f, fill.B / 255f, fill.A / 255f),
-                Position = new Vector2(x, y),
-                Size = new Vector2(width, height),
+                Position = new Vector2(cx - radius, cy - radius),
+                Size = new Vector2(radius * 2, radius * 2),
+                AntiAliasing = new Vector2(paint.IsAntiAliased ? 1 : 0, 1),
             },
 
             BlendMode = paint.BlendMode,
@@ -172,7 +174,7 @@ public class Canvas
         }
 
         commandList.BindPipeline();
-        
+
         commandList.SetViewportSize(renderTarget.Size.X, renderTarget.Size.Y);
 
         commandList.Draw(6, at, count);
