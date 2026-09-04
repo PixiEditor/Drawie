@@ -58,6 +58,15 @@ namespace Drawie.Skia.Implementations
                 paint != null ? _paintImpl[paint.ObjectPointer] : null);
         }
 
+        public void DrawSurface(IntPtr objPtr, DrawingSurface drawingSurface, float x, float y, SamplingOptions samplingOptions, Paint? paint)
+        {
+            var canvas = this[objPtr];
+            canvas.DrawSurface(
+                _surfaceImpl[drawingSurface.ObjectPointer],
+                x, y, samplingOptions.ToSkSamplingOptions(),
+                paint != null ? _paintImpl[paint.ObjectPointer] : null);
+        }
+
         public void DrawImage(IntPtr objPtr, Image image, float x, float y)
         {
             var canvas = this[objPtr];

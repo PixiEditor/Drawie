@@ -53,6 +53,12 @@ namespace Drawie.Backend.Core.Surfaces
             Changed?.Invoke(null);
         }
 
+        public void DrawSurface(DrawingSurface original, float x, float y, SamplingOptions samplingOptions, Paint? paint)
+        {
+            DrawingBackendApi.Current.CanvasImplementation.DrawSurface(ObjectPointer, original, x, y, samplingOptions, paint);
+            Changed?.Invoke(null);
+        }
+
         public void DrawSurface(DrawingSurface original, float x, float y) => DrawSurface(original, x, y, null);
 
         public void DrawSurface(DrawingSurface surfaceToDraw, VecD size, Paint paint)
