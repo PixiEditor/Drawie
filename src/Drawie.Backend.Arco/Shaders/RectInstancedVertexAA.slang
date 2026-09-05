@@ -38,7 +38,9 @@ VSOutput vertexMain(VSInput input)
         float2(0, 1)
     };
     
-     float2 vertexPos = vertices[input.vertexId];
+     float pixelSize = 1 / instance.size.x;
+     float grow = instance.size.x * pixelSize + pixelSize;
+     float2 vertexPos = vertices[input.vertexId] * grow;
      
      float2 localPosition = vertexPos;
      
@@ -55,6 +57,10 @@ VSOutput vertexMain(VSInput input)
     VSOutput output;
     output.position = float4(clipPosition, 0, 1);
     output.normPosition = uv;
+   output.antiAliasing = float2(
+       instance.antiAliasing.x,
+       pixelSize
+   );
     output.color = instance.color;
 
     return output;

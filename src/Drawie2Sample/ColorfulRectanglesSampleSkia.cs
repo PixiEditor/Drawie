@@ -1,19 +1,20 @@
 using Drawie.Backend.Arco;
+using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Rendering;
 
 namespace Drawie2Sample;
 
-public static class ColorfulRectanglesSample
+public static class ColorfulRectanglesSampleSkia
 {
-    static Drawie.Backend.Arco.Canvas cnvs = null;
+    private static Texture texture;
 
     public static void Draw(TextureFramebuffer fb)
     {
-        if (cnvs == null)
+        if (texture == null)
         {
-            cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, fb.Size);
+            texture = Texture.ForDisplay(fb.Size);
 
             const int columns = 50;
             const int rows = 30;
@@ -24,18 +25,16 @@ public static class ColorfulRectanglesSample
             {
                 for (int x = 0; x < columns; x++)
                 {
-                    cnvs.DrawRect(
+                    texture.DrawingSurface.Canvas.DrawRect(
                         x * (size + spacing),
                         y * (size + spacing),
                         size,
                         size,
-                        new Paint { Color = new Color((byte)(x * 255 / columns), (byte)(y * 255 / rows), 100, 255) });
+                        new Drawie.Backend.Core.Surfaces.PaintImpl.Paint() { Color = new Color((byte)(x * 255 / columns), (byte)(y * 255 / rows), 100, 255) });
                 }
             }
-
-            cnvs.Flush();
         }
         
-        cnvs.BlitTo(fb);
+        fb.Canvas.DrawSurface(texture.DrawingSurface, 0, 0);
     }
 }

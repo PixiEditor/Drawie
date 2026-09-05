@@ -48,16 +48,17 @@ public class Canvas
 
         GraphicsDevice = device;
         var instancedRectVertex = ShaderLoader.LoadShader("RectInstancedVertex");
+        var instancedRectVertexAA = ShaderLoader.LoadShader("RectInstancedVertexAA");
         var rectFillFragment = ShaderLoader.LoadShader("RectFillFragment");
         var circleFillFragment = ShaderLoader.LoadShader("CircleFillFragment");
 
-        if (instancedRectVertex == null || rectFillFragment == null || circleFillFragment == null)
+        if (instancedRectVertex == null || rectFillFragment == null || circleFillFragment == null || instancedRectVertexAA == null)
             throw new Exception("Unable to load shaders");
 
         renderingOps[RenderOpType.Rect] =
             new RenderingOpPipeline(GraphicsDevice, instancedRectVertex, rectFillFragment);
         renderingOps[RenderOpType.Circle] =
-            new RenderingOpPipeline(GraphicsDevice, instancedRectVertex, circleFillFragment);
+            new RenderingOpPipeline(GraphicsDevice, instancedRectVertexAA, circleFillFragment);
 
         instancesBuffer = new GrowableBuffer<RectDrawInstance>(GraphicsDevice);
         globalsBuffer = GraphicsDevice.CreateBuffer<Globals>(BufferUsage.Uniform, [
@@ -121,6 +122,30 @@ public class Canvas
         };
     }
 
+    /*public void DrawSurface(ITexture texture, float x, float y, Paint paint)
+    {
+        if (recordedInstanceCount == recordedInstances.Length)
+        {
+            Array.Resize(ref recordedInstances, recordedInstances.Length * 2);
+        }
+
+        var fill = paint.Color;
+
+        recordedInstances[recordedInstanceCount++] = new()
+        {
+            RecordedInstance = new RectDrawInstance()
+            {
+                Color = new Vector4(fill.R / 255f, fill.G / 255f, fill.B / 255f, fill.A / 255f),
+                Position = new Vector2(cx - radius, cy - radius),
+                Size = new Vector2(radius * 2, radius * 2),
+                AntiAliasing = new Vector2(paint.IsAntiAliased ? 1 : 0, 1),
+            },
+
+            BlendMode = paint.BlendMode,
+            RenderOp = RenderOpType.Circle
+        };
+    }*/
+    
     public void Flush(TextureFramebuffer? blitTo = null)
     {
         if (recordedInstanceCount == 0) return;
