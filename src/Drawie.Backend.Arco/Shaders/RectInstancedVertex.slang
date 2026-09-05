@@ -37,26 +37,29 @@ VSOutput vertexMain(VSInput input)
         float2(1, 1),
         float2(0, 1)
     };
-
-    float aaPixels = 1.0 / instance.size.x;//instance.antiAliasing.y;
-
-    float2 expandedSize = instance.size + aaPixels * 2.0;
-    float2 localPosition = vertices[input.vertexId] * expandedSize - aaPixels;
-    float2 pixelPosition = instance.position + localPosition;
-
+    
+     float pixelSize = 1 / instance.size.x;
+     float grow = instance.size.x * pixelSize + pixelSize;
+     float2 vertexPos = vertices[input.vertexId] * grow;
+     
+     float2 localPosition = vertexPos;
+     
+     float2 pixelPosition =
+            instance.position + vertexPos * instance.size;
+    
     float2 clipPosition = float2(
         pixelPosition.x / globals.ViewportSize.x * 2.0 - 1.0,
         1.0 - pixelPosition.y / globals.ViewportSize.y * 2.0
     );
 
-    float2 normPosition = (localPosition + aaPixels) / instance.size;
+    float2 uv = localPosition;
 
     VSOutput output;
     output.position = float4(clipPosition, 0, 1);
-    output.normPosition = normPosition;
+    output.normPosition = uv;
    output.antiAliasing = float2(
        instance.antiAliasing.x,
-       aaPixels
+       pixelSize
    );
     output.color = instance.color;
 

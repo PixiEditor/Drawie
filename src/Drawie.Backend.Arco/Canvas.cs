@@ -180,7 +180,6 @@ public class Canvas
         commandList.Draw(6, at, count);
     }
 
-
     public void BlitTo(TextureFramebuffer target)
     {
         commandList = GraphicsDevice.CreateCommandList();

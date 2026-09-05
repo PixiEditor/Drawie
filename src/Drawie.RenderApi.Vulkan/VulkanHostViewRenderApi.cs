@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using Drawie.Numerics;
 using Drawie.RenderApi.Abstraction;
+using Drawie.RenderApi.Abstraction.Pipeline;
 using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.Vulkan.Buffers;
 using Drawie.RenderApi.Vulkan.Exceptions;
@@ -557,6 +558,7 @@ public class VulkanHostViewRenderApi : IVulkanHostViewRenderApi
             .WithVertexLayout(layout => layout.WithVec2().WithVec3().WithVec2())
             .WithPipelineLayout(pipelineLayout => pipelineLayout.WithDescriptorSetLayouts(descriptorSetLayout))
             .WithStaticViewport(new RectI(0, 0, (int)swapChainExtent.Width, (int)swapChainExtent.Height))
+            .WithBlendingPreset(BlendingPreset.Normal)
             .WithRenderPass(renderPass =>
             {
                 renderPass.WithSamples(1);

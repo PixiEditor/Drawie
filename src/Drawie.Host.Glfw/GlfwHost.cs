@@ -83,7 +83,8 @@ public class GlfwHost : Drawie.Host.IHost
             Title = name,
             Size = size.ToVector2DInt(),
             API = renderApi is IVulkanHostViewRenderApi ? GraphicsAPI.DefaultVulkan : GraphicsAPI.Default,
-            Samples = 4
+            Samples = 4,
+            TransparentFramebuffer = true
         });
 
         window.Load += () => Loaded?.Invoke();
