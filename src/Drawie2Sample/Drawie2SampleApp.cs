@@ -127,17 +127,24 @@ public class Drawie2SampleApp : DrawieApp
             targetTexture.Canvas.Flush();
 
             //ColorfulRectanglesSample.Draw(targetTexture);
-            /*if (!skia)
+            /*
+            if (!skia)
                 ColorfulCirclesSample.Draw(targetTexture);
             else
-                ColorfulCirclesSampleSkia.Draw(targetTexture);*/
+                ColorfulCirclesSampleSkia.Draw(targetTexture);
+            */
             /*if(!skia)
                 BlendingSample.Draw(targetTexture);
             else
                 BlendingSampleSkia.Draw(targetTexture);*/
             //targetTexture.DrawScene(scene, camera, renderOptions);
 
-            Sandbox.Draw(targetTexture);
+            if(!skia)
+                AntiAliasingCircleSample.Draw(targetTexture);
+            else
+                AntiAliasingCircleSampleSkia.Draw(targetTexture);
+            
+            //Sandbox.Draw(targetTexture);
 
             DrawingBackendApi.Current.ResetContext();
         };

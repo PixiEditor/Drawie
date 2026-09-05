@@ -6,7 +6,7 @@ using Drawie.Rendering;
 
 namespace Drawie2Sample;
 
-public static class Sandbox
+public static class AntiAliasingCircleSample
 {
     static Drawie.Backend.Arco.Canvas cnvs = null;
 
@@ -15,14 +15,7 @@ public static class Sandbox
         if (cnvs == null)
         {
             cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, new VecI(fb.Size.X / 4, fb.Size.Y / 4));
-            cnvs.DrawCircle(400, 400, 200, new Paint()
-            {
-                Color = Colors.Green,
-                IsAntiAliased = false
-            });
-            
-            
-            cnvs.DrawCircle(850, 400, 200, new Paint()
+            cnvs.DrawCircle(100, 100, 50, new Paint()
             {
                 Color = Colors.Green,
                 IsAntiAliased = true
