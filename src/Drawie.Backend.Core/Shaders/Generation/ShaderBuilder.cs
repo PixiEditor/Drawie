@@ -74,7 +74,7 @@ public class ShaderBuilder
         string name = $"texture_{GetUniqueNameNumber()}";
         using var snapshot = surface.Snapshot();
         Uniforms[name] = new Uniform(name,
-            sampleMode == ColorSampleMode.ColorManaged ? snapshot.ToShader() : snapshot.ToRawShader());
+            sampleMode == ColorSampleMode.ColorManaged ? snapshot.ToShader(TileMode.Decal, TileMode.Decal, Matrix3X3.Identity) : snapshot.ToRawShader(TileMode.Decal, TileMode.Decal));
         var newSampler = new SurfaceSampler(name, sampleMode);
         _samplers[surface] = newSampler;
 
