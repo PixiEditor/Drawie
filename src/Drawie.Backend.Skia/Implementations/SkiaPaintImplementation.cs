@@ -115,13 +115,14 @@ namespace Drawie.Skia.Implementations
                     return null;
                 }
 
-                if(!blenderImplementation.TryGetInstance(paint.Blender.ObjectPointer, out _))
+                var blenderHandle = blenderImplementation.FindManagedInstanceHandle(skPaint.Blender);
+                if(blenderHandle == null)
                 {
                     throw new Exception("Blender needs managed instance. How did we get here?");
                     //blenderImplementation.AddManagedInstance(skPaint.Blender);
                 }
 
-                return new Blender(skPaint.Blender.Handle);
+                return new Blender(blenderHandle.Value);
             }
 
             return null;
