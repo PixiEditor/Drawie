@@ -90,7 +90,7 @@ public class OpenGlCommandList(GL api) : CommandList
         // no op
     }
 
-    public override void Blit(IRenderTarget renderTarget, IRenderTarget target)
+    public override void Blit(IRenderTarget renderTarget, IRenderTarget target, bool flipY)
     {
         RecordInstruction(() =>
         {
@@ -99,7 +99,7 @@ public class OpenGlCommandList(GL api) : CommandList
             Api.BindFramebuffer(FramebufferTarget.DrawFramebuffer, (uint)target.SurfaceId);
             Api.BlitFramebuffer(
                 0, 0, source.Size.X, source.Size.Y,
-                0, 0, target.Size.X, target.Size.Y,
+                0, 0, target.Size.X, target.Size.Y, // TODO: FlipY
                 ClearBufferMask.ColorBufferBit,
                 BlitFramebufferFilter.Nearest);
             Api.BindFramebuffer(FramebufferTarget.Framebuffer, previousFb);

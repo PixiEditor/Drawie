@@ -1,5 +1,6 @@
 using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.Vulkan.Exceptions;
+using Drawie.RenderApi.Vulkan.Extensions;
 using Silk.NET.Vulkan;
 
 namespace Drawie.RenderApi.Vulkan;
@@ -32,22 +33,22 @@ internal sealed class VulkanSampler : ISampler, IDisposable
         {
             SType = StructureType.SamplerCreateInfo,
 
-            MagFilter = Filter.Linear,
-            MinFilter = Filter.Linear,
+            MagFilter = desc.MagFilter.ToFilter(),
+            MinFilter = desc.MinFilter.ToFilter(),
 
-            AddressModeU = SamplerAddressMode.Repeat,
-            AddressModeV = SamplerAddressMode.Repeat,
-            AddressModeW = SamplerAddressMode.Repeat,
+            AddressModeU = desc.WrapU.ToAddressMode(),
+            AddressModeV = desc.WrapV.ToAddressMode(),
+            AddressModeW = desc.WrapW.ToAddressMode(),
 
             AnisotropyEnable = false,
             MaxAnisotropy = 1,
 
             BorderColor = BorderColor.IntOpaqueBlack,
 
-            UnnormalizedCoordinates = false,
+            UnnormalizedCoordinates = desc.UnnormalizedCoordinates,
 
-            CompareEnable = false,
-            CompareOp = CompareOp.Always,
+            CompareEnable = desc.EnableCompare,
+            CompareOp = desc.CompareOp.ToCompareOp(),
 
             MipmapMode = SamplerMipmapMode.Linear
         };

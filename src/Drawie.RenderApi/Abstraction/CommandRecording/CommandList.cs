@@ -52,5 +52,5 @@ public abstract class CommandList : ICommandList
     public abstract void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures, IEnumerable<ISampler> samplers);
     public abstract void UpdateUniforms(IEnumerable<NamedBuffer> properties);
     public abstract void RestoreTexture(PreparedTexture preparedTextureValue);
-    public abstract void Blit(IRenderTarget renderTarget, IRenderTarget target);
+    public abstract void Blit(IRenderTarget renderTarget, IRenderTarget target, bool flipY);
 }

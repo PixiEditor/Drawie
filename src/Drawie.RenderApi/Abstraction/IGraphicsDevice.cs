@@ -13,9 +13,7 @@ public interface IGraphicsDevice : IDisposable
     ITexture CreateTexture(TextureDesc desc);
     IPipeline CreatePipeline(PipelineDesc desc);
     ICommandList CreateCommandList();
-
     ISampler CreateSampler(SamplerDesc desc);
-
     void Submit(RecordedRenderPass cmdList);
     IShaderProgram CreateShaderProgram(ShaderProgramDesc shaderProgramDesc);
     IRenderTarget CreateRenderTarget(TextureDesc textureDesc);

@@ -26,5 +26,5 @@ public interface ICommandList
     void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures, IEnumerable<ISampler> samplers);
     void UpdateUniforms(IEnumerable<NamedBuffer> properties);
     void RestoreTexture(PreparedTexture preparedTextureValue);
-    public void Blit(IRenderTarget renderTarget, IRenderTarget target);
+    public void Blit(IRenderTarget renderTarget, IRenderTarget target, bool flipY);
 }

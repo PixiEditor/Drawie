@@ -217,7 +217,6 @@ public class Canvas
         }
 
         commandList.BeginRenderPass(renderTarget);
-
         instancesBuffer.SetData(recordedInstances.Take(recordedInstanceCount).Select(x => x.RecordedInstance)
             .ToArray());
         uniformBlocks[0].Buffer = instancesBuffer.Buffer;
@@ -229,7 +228,7 @@ public class Canvas
     {
         commandList.SetPipeline(renderingOps[op].GetPipelineFor(blendMode));
 
-        if (!renderPassStarted)
+        if(!renderPassStarted)
         {
             BeginRender();
         }
@@ -244,7 +243,7 @@ public class Canvas
     public void BlitTo(TextureFramebuffer target)
     {
         commandList = GraphicsDevice.CreateCommandList();
-        commandList.Blit(renderTarget, target);
+        commandList.Blit(renderTarget, target, false);
         GraphicsDevice.Submit(commandList.End());
     }
 }

@@ -126,7 +126,7 @@ public class Drawie2SampleApp : DrawieApp
             targetTexture.Clear();
             targetTexture.Canvas.Flush();
 
-            targetTexture.DrawScene(scene, camera, renderOptions);
+            //targetTexture.DrawScene(scene, camera, renderOptions);
             //Sandbox.Draw(targetTexture);
             
             if (!skia)
@@ -135,7 +135,7 @@ public class Drawie2SampleApp : DrawieApp
                 //ColorfulCirclesSample.Draw(targetTexture);
                 //BlendingSample.Draw(targetTexture);
                 //AntiAliasingCircleSample.Draw(targetTexture);
-                //TextureSample.Draw(targetTexture);
+                TextureSample.Draw(targetTexture);
             }
             else
             {

@@ -17,10 +17,11 @@ public static class TextureSample
     {
         if (cnvs == null)
         {
+            Texture tex = Texture.Load("Assets/arco.png");
+            Texture tex2 = Texture.Load("Assets/textures/diffuse.png");
             cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, target.Size);
-
-            Texture tex = Texture.Load("Assets/textures/diffuse.png");
             
+            cnvs.DrawSurface(tex2, 0, 0, new Paint());
             cnvs.DrawSurface(tex, 0, 0, new Paint());
 
             cnvs.Flush();

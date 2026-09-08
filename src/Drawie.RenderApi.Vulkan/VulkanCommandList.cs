@@ -222,14 +222,14 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         vkTex.MakeReadOnly(commandBuffer);
     }
 
-    public override void Blit(IRenderTarget source, IRenderTarget target)
+    public override void Blit(IRenderTarget source, IRenderTarget target, bool flipY)
     {
         if (source == null || target == null) throw new ArgumentException("Blit source and target must be not null");
 
         var vkSource = context.ManagedTextures[source.SurfaceId] as VulkanTexture;
         var vkTarget = context.ManagedTextures[target.SurfaceId] as VulkanTexture;
 
-        Blit(vkSource, vkTarget);
+        Blit(vkSource, vkTarget, flipY);
     }
 
     private (int set, int binding) FindSetAndBinding(string name)
@@ -464,8 +464,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         return new VulkanRecordedRenderPass(context, commandBuffer, commandPool);
     }
 
-    public override RecordedRenderPass EndRenderPass(
-        IRenderTarget? blitTo)
+    public override RecordedRenderPass EndRenderPass(IRenderTarget? blitTo)
     {
         EnsureRecording();
 
@@ -479,7 +478,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
                 throw new ArgumentException(
                     "Destination must be a Vulkan render target.",
                     nameof(blitTo));
-            Blit(renderTarget!.Texture, destination);
+            Blit(renderTarget!.Texture, destination, true); // TODO: Auto flip handling
         }
 
         EndCommandBuffer(commandBuffer);
@@ -734,7 +733,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
 
     private void Blit(
         VulkanTexture source,
-        VulkanTexture destination)
+        VulkanTexture destination, bool flipY)
     {
         var sourceAttachment = source.MsaaResolvedColorAttachment ?? source.ColorAttachment;
         sourceAttachment.TransitionLayout(ImageLayout.TransferSrcOptimal, commandBuffer);
@@ -763,8 +762,16 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         region.SrcOffsets[1] = new Offset3D((int)source.Width, (int)source.Height, 1);
 
         // Y is flipped at blit level
-        region.DstOffsets[0] = new Offset3D(0, (int)destination.Height, 0);
-        region.DstOffsets[1] = new Offset3D((int)destination.Width, 0, 1);
+        if (flipY)
+        {
+            region.DstOffsets[0] = new Offset3D(0, (int)destination.Height, 0);
+            region.DstOffsets[1] = new Offset3D((int)destination.Width, 0, 1);
+        }
+        else
+        {
+            region.DstOffsets[0] = new Offset3D(0, 0, 0);
+            region.DstOffsets[1] = new Offset3D((int)destination.Width, (int)destination.Height, 1);
+        }
 
         context.Api!.CmdBlitImage(
             commandBuffer,
