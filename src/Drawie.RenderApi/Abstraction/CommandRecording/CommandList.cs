@@ -47,7 +47,8 @@ public abstract class CommandList : ICommandList
     public abstract RecordedRenderPass End();
 
     public abstract void BindPipeline();
-    public abstract PreparedTexture PrepareTexture(ITexture texture);
+    public abstract PreparedTexture PrepareTexture(ITexture texture, string name);
+    public abstract void UpdateUniforms(IEnumerable<NamedBuffer> buffers, IEnumerable<PreparedTexture>? textures, IEnumerable<ISampler>? samplers);
     public abstract void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures, IEnumerable<ISampler> samplers);
     public abstract void UpdateUniforms(IEnumerable<NamedBuffer> properties);
     public abstract void RestoreTexture(PreparedTexture preparedTextureValue);

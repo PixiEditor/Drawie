@@ -64,18 +64,25 @@ public class OpenGlCommandList(GL api) : CommandList
         RecordInstruction(() => boundPipeline.Apply(this));
     }
 
-    public override PreparedTexture PrepareTexture(ITexture texture)
+    public override PreparedTexture PrepareTexture(ITexture texture, string name)
     {
-        return new PreparedTexture(texture.TextureId);
+        return new PreparedTexture(name, texture.TextureId);
+    }
+
+    public override void UpdateUniforms(IEnumerable<NamedBuffer> buffers, IEnumerable<PreparedTexture>? textures, IEnumerable<ISampler>? samplers)
+    {
+        // TODO
     }
 
     public override void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures,
         IEnumerable<ISampler> samplers)
     {
+        // TODO
     }
 
     public override void UpdateUniforms(IEnumerable<NamedBuffer> properties)
     {
+        // TODO
     }
 
     public override void RestoreTexture(PreparedTexture preparedTextureValue)

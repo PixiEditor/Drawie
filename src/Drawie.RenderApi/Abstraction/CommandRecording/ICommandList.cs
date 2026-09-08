@@ -21,7 +21,8 @@ public interface ICommandList
     RecordedRenderPass EndRenderPass();
     RecordedRenderPass End();
     void BindPipeline();
-    PreparedTexture PrepareTexture(ITexture texture);
+    PreparedTexture PrepareTexture(ITexture texture, string name);
+    void UpdateUniforms(IEnumerable<NamedBuffer> buffers, IEnumerable<PreparedTexture>? textures, IEnumerable<ISampler>? samplers);
     void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures, IEnumerable<ISampler> samplers);
     void UpdateUniforms(IEnumerable<NamedBuffer> properties);
     void RestoreTexture(PreparedTexture preparedTextureValue);

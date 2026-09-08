@@ -66,5 +66,6 @@ public class RenderingOpPipeline
 public enum RenderOpType
 {
     Rect,
-    Circle
+    Circle,
+    Texture
 }

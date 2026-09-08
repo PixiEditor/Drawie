@@ -99,7 +99,7 @@ internal sealed class VulkanPipeline : IPipeline, IDisposable
         else
         {
             Builder.WithPipelineLayout(builder =>
-                builder.WithDescriptorSetLayouts(program.DescriptorSetLayout.DescriptorSetLayout));
+                builder.WithDescriptorSetLayouts(program.DescriptorSetLayouts.Select(x => x.DescriptorSetLayout).ToArray()));
         }
 
         if(Description.Depth.Enabled)

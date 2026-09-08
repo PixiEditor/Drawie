@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace Drawie.Backend.Arco;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct RectDrawInstance
+public struct DrawInstance
 {
     public Vector2 Position { get; set; }
     public Vector2 Size { get; set; }

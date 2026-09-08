@@ -19,9 +19,8 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
     public GraphicsPipelineStageBuilder VertexStageBuilder { get; }
     public GraphicsPipelineVertexLayoutBuilder VertexLayoutBuilder { get; }
     public GraphicsPipelineStageBuilder FragmentStageBuilder { get; }
-    public VulkanDescriptorSetLayout DescriptorSetLayout { get; set; }
+    public VulkanDescriptorSetLayout[] DescriptorSetLayouts { get; set; }
     public VulkanDescriptorPool DescriptorPool { get; set; }
-
 
     public VulkanShaderProgram(VulkanContext context, ShaderProgramDesc desc)
     {
@@ -30,6 +29,7 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
 
         GraphicsPipelineDescriptorBuilder descriptorBuilder = new GraphicsPipelineDescriptorBuilder();
 
+        int set = 0;
         foreach (var shader in desc.Shaders)
         {
             GraphicsPipelineStageBuilder stageBuilder =
@@ -66,7 +66,9 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
             {
                 descriptorBuilder.WithBinding(bindingBuilder =>
                 {
-                    bindingBuilder.AtPosition(reflectionParameter.Index)
+                    bindingBuilder
+                        .AtSet(set)
+                        .AtPosition(reflectionParameter.Index)
                         .ForStages(shader.ShaderType == ShaderType.Vertex
                             ? ShaderStageFlags.VertexBit
                             : ShaderStageFlags.FragmentBit)
@@ -74,104 +76,107 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
                         .WithName(reflectionParameter.Name);
                 });
             }
+
+            set++;
         }
 
         var descriptors = descriptorBuilder.Build();
-        DescriptorSetLayout = CreateDescriptorSetLayout(descriptors, descriptorBuilder);
-        DescriptorPool = CreateDescriptorPool(descriptors);
+        DescriptorSetLayouts = CreateDescriptorSetLayouts(descriptors, descriptorBuilder);
+        DescriptorPool = CreateDescriptorPool(descriptors.SelectMany(x => x.Value).ToArray());
     }
 
     public void Use()
     {
     }
-    
+
     private void BuildVertexLayoutFromReflection(EntryPoint? vertexEntryPoint)
     {
         if (vertexEntryPoint == null) return;
-        
+
         foreach (var param in vertexEntryPoint.Params)
         {
-            if(!param.HasBindings) continue;
+            if (!param.HasBindings) continue;
             foreach (var field in param.Fields)
             {
-                VertexLayoutBuilder.Components.Add(new VertexAttributeLayout(ScalarToFormat(field.ScalarType, field.ScalarsCount),
+                VertexLayoutBuilder.Components.Add(new VertexAttributeLayout(
+                    ScalarToFormat(field.ScalarType, field.ScalarsCount),
                     field.Size));
             }
         }
     }
 
-   private Format ScalarToFormat(ScalarType? fieldScalarType, int fieldScalarsCount)
-{
-    if (fieldScalarType == null) return Format.Undefined;
-
-    return (fieldScalarType.Value, fieldScalarsCount) switch
+    private Format ScalarToFormat(ScalarType? fieldScalarType, int fieldScalarsCount)
     {
-        (ScalarType.Unknown, _) => Format.Undefined,
-        (ScalarType.Void, _) => Format.Undefined,
+        if (fieldScalarType == null) return Format.Undefined;
 
-        (ScalarType.Bool, 1) => Format.R8Uint,
-        (ScalarType.Bool, 2) => Format.R8G8Uint,
-        (ScalarType.Bool, 3) => Format.R8G8B8Uint,
-        (ScalarType.Bool, 4) => Format.R8G8B8A8Uint,
+        return (fieldScalarType.Value, fieldScalarsCount) switch
+        {
+            (ScalarType.Unknown, _) => Format.Undefined,
+            (ScalarType.Void, _) => Format.Undefined,
 
-        (ScalarType.Int8, 1) => Format.R8Sint,
-        (ScalarType.Int8, 2) => Format.R8G8Sint,
-        (ScalarType.Int8, 3) => Format.R8G8B8Sint,
-        (ScalarType.Int8, 4) => Format.R8G8B8A8Sint,
+            (ScalarType.Bool, 1) => Format.R8Uint,
+            (ScalarType.Bool, 2) => Format.R8G8Uint,
+            (ScalarType.Bool, 3) => Format.R8G8B8Uint,
+            (ScalarType.Bool, 4) => Format.R8G8B8A8Uint,
 
-        (ScalarType.UInt8, 1) => Format.R8Uint,
-        (ScalarType.UInt8, 2) => Format.R8G8Uint,
-        (ScalarType.UInt8, 3) => Format.R8G8B8Uint,
-        (ScalarType.UInt8, 4) => Format.R8G8B8A8Uint,
+            (ScalarType.Int8, 1) => Format.R8Sint,
+            (ScalarType.Int8, 2) => Format.R8G8Sint,
+            (ScalarType.Int8, 3) => Format.R8G8B8Sint,
+            (ScalarType.Int8, 4) => Format.R8G8B8A8Sint,
 
-        (ScalarType.Int16, 1) => Format.R16Sint,
-        (ScalarType.Int16, 2) => Format.R16G16Sint,
-        (ScalarType.Int16, 3) => Format.R16G16B16Sint,
-        (ScalarType.Int16, 4) => Format.R16G16B16A16Sint,
+            (ScalarType.UInt8, 1) => Format.R8Uint,
+            (ScalarType.UInt8, 2) => Format.R8G8Uint,
+            (ScalarType.UInt8, 3) => Format.R8G8B8Uint,
+            (ScalarType.UInt8, 4) => Format.R8G8B8A8Uint,
 
-        (ScalarType.UInt16, 1) => Format.R16Uint,
-        (ScalarType.UInt16, 2) => Format.R16G16Uint,
-        (ScalarType.UInt16, 3) => Format.R16G16B16Uint,
-        (ScalarType.UInt16, 4) => Format.R16G16B16A16Uint,
+            (ScalarType.Int16, 1) => Format.R16Sint,
+            (ScalarType.Int16, 2) => Format.R16G16Sint,
+            (ScalarType.Int16, 3) => Format.R16G16B16Sint,
+            (ScalarType.Int16, 4) => Format.R16G16B16A16Sint,
 
-        (ScalarType.Int32, 1) => Format.R32Sint,
-        (ScalarType.Int32, 2) => Format.R32G32Sint,
-        (ScalarType.Int32, 3) => Format.R32G32B32Sint,
-        (ScalarType.Int32, 4) => Format.R32G32B32A32Sint,
+            (ScalarType.UInt16, 1) => Format.R16Uint,
+            (ScalarType.UInt16, 2) => Format.R16G16Uint,
+            (ScalarType.UInt16, 3) => Format.R16G16B16Uint,
+            (ScalarType.UInt16, 4) => Format.R16G16B16A16Uint,
 
-        (ScalarType.UInt32, 1) => Format.R32Uint,
-        (ScalarType.UInt32, 2) => Format.R32G32Uint,
-        (ScalarType.UInt32, 3) => Format.R32G32B32Uint,
-        (ScalarType.UInt32, 4) => Format.R32G32B32A32Uint,
+            (ScalarType.Int32, 1) => Format.R32Sint,
+            (ScalarType.Int32, 2) => Format.R32G32Sint,
+            (ScalarType.Int32, 3) => Format.R32G32B32Sint,
+            (ScalarType.Int32, 4) => Format.R32G32B32A32Sint,
 
-        (ScalarType.Int64, 1) => Format.R64Sint,
-        (ScalarType.Int64, 2) => Format.R64G64Sint,
-        (ScalarType.Int64, 3) => Format.R64G64B64Sint,
-        (ScalarType.Int64, 4) => Format.R64G64B64A64Sint,
+            (ScalarType.UInt32, 1) => Format.R32Uint,
+            (ScalarType.UInt32, 2) => Format.R32G32Uint,
+            (ScalarType.UInt32, 3) => Format.R32G32B32Uint,
+            (ScalarType.UInt32, 4) => Format.R32G32B32A32Uint,
 
-        (ScalarType.UInt64, 1) => Format.R64Uint,
-        (ScalarType.UInt64, 2) => Format.R64G64Uint,
-        (ScalarType.UInt64, 3) => Format.R64G64B64Uint,
-        (ScalarType.UInt64, 4) => Format.R64G64B64A64Uint,
+            (ScalarType.Int64, 1) => Format.R64Sint,
+            (ScalarType.Int64, 2) => Format.R64G64Sint,
+            (ScalarType.Int64, 3) => Format.R64G64B64Sint,
+            (ScalarType.Int64, 4) => Format.R64G64B64A64Sint,
 
-        (ScalarType.Float16, 1) => Format.R16Sfloat,
-        (ScalarType.Float16, 2) => Format.R16G16Sfloat,
-        (ScalarType.Float16, 3) => Format.R16G16B16Sfloat,
-        (ScalarType.Float16, 4) => Format.R16G16B16A16Sfloat,
+            (ScalarType.UInt64, 1) => Format.R64Uint,
+            (ScalarType.UInt64, 2) => Format.R64G64Uint,
+            (ScalarType.UInt64, 3) => Format.R64G64B64Uint,
+            (ScalarType.UInt64, 4) => Format.R64G64B64A64Uint,
 
-        (ScalarType.Float32, 1) => Format.R32Sfloat,
-        (ScalarType.Float32, 2) => Format.R32G32Sfloat,
-        (ScalarType.Float32, 3) => Format.R32G32B32Sfloat,
-        (ScalarType.Float32, 4) => Format.R32G32B32A32Sfloat,
+            (ScalarType.Float16, 1) => Format.R16Sfloat,
+            (ScalarType.Float16, 2) => Format.R16G16Sfloat,
+            (ScalarType.Float16, 3) => Format.R16G16B16Sfloat,
+            (ScalarType.Float16, 4) => Format.R16G16B16A16Sfloat,
 
-        (ScalarType.Float64, 1) => Format.R64Sfloat,
-        (ScalarType.Float64, 2) => Format.R64G64Sfloat,
-        (ScalarType.Float64, 3) => Format.R64G64B64Sfloat,
-        (ScalarType.Float64, 4) => Format.R64G64B64A64Sfloat,
+            (ScalarType.Float32, 1) => Format.R32Sfloat,
+            (ScalarType.Float32, 2) => Format.R32G32Sfloat,
+            (ScalarType.Float32, 3) => Format.R32G32B32Sfloat,
+            (ScalarType.Float32, 4) => Format.R32G32B32A32Sfloat,
 
-        _ => throw new ArgumentOutOfRangeException(nameof(fieldScalarsCount), fieldScalarsCount, null)
-    };
-}
+            (ScalarType.Float64, 1) => Format.R64Sfloat,
+            (ScalarType.Float64, 2) => Format.R64G64Sfloat,
+            (ScalarType.Float64, 3) => Format.R64G64B64Sfloat,
+            (ScalarType.Float64, 4) => Format.R64G64B64A64Sfloat,
+
+            _ => throw new ArgumentOutOfRangeException(nameof(fieldScalarsCount), fieldScalarsCount, null)
+        };
+    }
 
     private unsafe VulkanDescriptorPool CreateDescriptorPool(DescriptorSetLayoutBinding[] descriptors)
     {
@@ -202,34 +207,45 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
         Context.Api.CreateDescriptorPool(Context.LogicalDevice.Device, &poolInfo, null, out var descriptorPool)
             .ThrowOnError("Failed to create descriptor pool.");
 
-        return new VulkanDescriptorPool(Context, descriptorPool, [DescriptorSetLayout.DescriptorSetLayout]);
+        return new VulkanDescriptorPool(Context, descriptorPool,
+            DescriptorSetLayouts.Select(x => x.DescriptorSetLayout).ToArray());
     }
 
-    private unsafe VulkanDescriptorSetLayout CreateDescriptorSetLayout(DescriptorSetLayoutBinding[] descriptors,
+    private unsafe VulkanDescriptorSetLayout[] CreateDescriptorSetLayouts(
+        Dictionary<int, List<DescriptorSetLayoutBinding>> descriptors,
         GraphicsPipelineDescriptorBuilder descriptorBuilder)
     {
-        fixed (DescriptorSetLayoutBinding* bindingPtr = descriptors)
+        List<VulkanDescriptorSetLayout> finalSets = new List<VulkanDescriptorSetLayout>();
+
+        for (int i = 0; i < descriptors.Count; i++)
         {
-            DescriptorSetLayoutCreateInfo info = new()
+            var descriptorSetLayoutBinding = descriptors[i].ToArray();
+            fixed (DescriptorSetLayoutBinding* bindingPtr = descriptorSetLayoutBinding)
             {
-                SType = StructureType.DescriptorSetLayoutCreateInfo,
-                BindingCount = (uint)descriptors.Length,
-                PBindings = bindingPtr
-            };
+                DescriptorSetLayoutCreateInfo info = new()
+                {
+                    SType = StructureType.DescriptorSetLayoutCreateInfo,
+                    BindingCount = (uint)descriptors[i].Count,
+                    PBindings = bindingPtr,
+                };
 
-            if (Context.Api!.CreateDescriptorSetLayout(
-                    Context.LogicalDevice.Device,
-                    in info,
-                    null,
-                    out var layout) != Result.Success)
-            {
-                throw new VulkanException(
-                    "Failed to create Vulkan descriptor set layout.");
+                if (Context.Api!.CreateDescriptorSetLayout(
+                        Context.LogicalDevice.Device,
+                        in info,
+                        null,
+                        out var layout) != Result.Success)
+                {
+                    throw new VulkanException(
+                        "Failed to create Vulkan descriptor set layout.");
+                }
+
+                finalSets.Add(new VulkanDescriptorSetLayout(Context, layout,
+                    descriptorBuilder.BindingBuilders.Where(cond => cond.Set == i).OrderBy(x => x.Binding)
+                        .Select(y => y.Name).ToArray()));
             }
-
-            return new VulkanDescriptorSetLayout(layout,
-                descriptorBuilder.BindingBuilders.OrderBy(x => x.Binding).Select(y => y.Name).ToArray());
         }
+
+        return finalSets.ToArray();
     }
 
     private DescriptorType ToDescriptorType(ShaderVarType varType, ShaderVarShape? varResourceType)
@@ -287,7 +303,7 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
         {
             case ShaderVarShape.Texture2D:
                 return DescriptorType.CombinedImageSampler;
-            case ShaderVarShape.StructuredBuffer: 
+            case ShaderVarShape.StructuredBuffer:
                 return DescriptorType.StorageBuffer;
             /*
             case ShaderVarShape.Unknown:
@@ -314,7 +330,11 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
 
     public unsafe void Dispose()
     {
-        Context.Api.DestroyDescriptorSetLayout(Context.LogicalDevice.Device, DescriptorSetLayout.DescriptorSetLayout, null);
+        foreach (var vulkanDescriptorSetLayout in DescriptorSetLayouts)
+        {
+            vulkanDescriptorSetLayout.Dispose();
+        }
+
         DescriptorPool.Dispose();
     }
 }

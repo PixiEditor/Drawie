@@ -26,12 +26,13 @@ public class Canvas
 
     private IShaderProgram rectShaderProgram;
     private ICommandList commandList;
-    private GrowableBuffer<RectDrawInstance> instancesBuffer;
+    private GrowableBuffer<DrawInstance> instancesBuffer;
     private RecordedOperation[] recordedInstances = new RecordedOperation[256];
     private int recordedInstanceCount;
     private IBuffer<Globals> globalsBuffer;
     private List<NamedBuffer> uniformBlocks;
     private IRenderTarget renderTarget;
+    private ISampler globalSampler;
 
     private Dictionary<RenderOpType, RenderingOpPipeline> renderingOps = new();
 
@@ -51,8 +52,12 @@ public class Canvas
         var instancedRectVertexAA = ShaderLoader.LoadShader("RectInstancedVertexAA");
         var rectFillFragment = ShaderLoader.LoadShader("RectFillFragment");
         var circleFillFragment = ShaderLoader.LoadShader("CircleFillFragment");
+        var textureFragment = ShaderLoader.LoadShader("TextureFragment");
 
-        if (instancedRectVertex == null || rectFillFragment == null || circleFillFragment == null || instancedRectVertexAA == null)
+        globalSampler = GraphicsDevice.CreateSampler(new SamplerDesc());
+
+        if (instancedRectVertex == null || rectFillFragment == null || circleFillFragment == null ||
+            instancedRectVertexAA == null || textureFragment == null)
             throw new Exception("Unable to load shaders");
 
         renderingOps[RenderOpType.Rect] =
@@ -60,7 +65,10 @@ public class Canvas
         renderingOps[RenderOpType.Circle] =
             new RenderingOpPipeline(GraphicsDevice, instancedRectVertexAA, circleFillFragment);
 
-        instancesBuffer = new GrowableBuffer<RectDrawInstance>(GraphicsDevice);
+        renderingOps[RenderOpType.Texture] =
+            new RenderingOpPipeline(GraphicsDevice, instancedRectVertex, textureFragment);
+
+        instancesBuffer = new GrowableBuffer<DrawInstance>(GraphicsDevice);
         globalsBuffer = GraphicsDevice.CreateBuffer<Globals>(BufferUsage.Uniform, [
             new() { ViewportSize = renderTarget.Size.ToVector2() }
         ]);
@@ -85,7 +93,7 @@ public class Canvas
 
         recordedInstances[recordedInstanceCount++] = new()
         {
-            RecordedInstance = new RectDrawInstance()
+            RecordedInstance = new DrawInstance()
             {
                 Color = new Vector4(fill.R / 255f, fill.G / 255f, fill.B / 255f, fill.A / 255f),
                 Position = new Vector2(x, y),
@@ -109,7 +117,7 @@ public class Canvas
 
         recordedInstances[recordedInstanceCount++] = new()
         {
-            RecordedInstance = new RectDrawInstance()
+            RecordedInstance = new DrawInstance()
             {
                 Color = new Vector4(fill.R / 255f, fill.G / 255f, fill.B / 255f, fill.A / 255f),
                 Position = new Vector2(cx - radius, cy - radius),
@@ -122,7 +130,7 @@ public class Canvas
         };
     }
 
-    /*public void DrawSurface(ITexture texture, float x, float y, Paint paint)
+    public void DrawSurface(ITexture texture, float x, float y, Paint paint)
     {
         if (recordedInstanceCount == recordedInstances.Length)
         {
@@ -133,19 +141,20 @@ public class Canvas
 
         recordedInstances[recordedInstanceCount++] = new()
         {
-            RecordedInstance = new RectDrawInstance()
+            RecordedInstance = new DrawInstance()
             {
                 Color = new Vector4(fill.R / 255f, fill.G / 255f, fill.B / 255f, fill.A / 255f),
-                Position = new Vector2(cx - radius, cy - radius),
-                Size = new Vector2(radius * 2, radius * 2),
+                Position = new Vector2(x, y),
+                Size = new Vector2(texture.Size.X, texture.Size.Y),
                 AntiAliasing = new Vector2(paint.IsAntiAliased ? 1 : 0, 1),
             },
 
             BlendMode = paint.BlendMode,
-            RenderOp = RenderOpType.Circle
+            RenderOp = RenderOpType.Texture,
+            Texture = texture
         };
-    }*/
-    
+    }
+
     public void Flush(TextureFramebuffer? blitTo = null)
     {
         if (recordedInstanceCount == 0) return;
@@ -180,13 +189,40 @@ public class Canvas
 
     private void BeginRender()
     {
+        List<PreparedTexture>? textures = null;
+        List<ISampler>? samplers = null;
+        DrawInstance[] instances = new DrawInstance[recordedInstanceCount];
+
+        for (int i = 0; i < recordedInstanceCount; i++)
+        {
+            var recorded = recordedInstances[i];
+            instances[i] = recorded.RecordedInstance;
+            if (recordedInstances[i].RenderOp == RenderOpType.Texture)
+            {
+                if (textures == null)
+                {
+                    textures = new List<PreparedTexture>(recordedInstanceCount);
+                    samplers = new List<ISampler>(recordedInstanceCount);
+                }
+
+                if (recorded.Texture == null)
+                {
+                    throw new NullReferenceException("Render operation was set to Texture, but texture is null.");
+                }
+
+                // TODO: wip, better name handling
+                textures.Add(commandList.PrepareTexture(recorded.Texture, "texture"));
+                samplers.Add(globalSampler);
+            }
+        }
+
         commandList.BeginRenderPass(renderTarget);
 
         instancesBuffer.SetData(recordedInstances.Take(recordedInstanceCount).Select(x => x.RecordedInstance)
             .ToArray());
         uniformBlocks[0].Buffer = instancesBuffer.Buffer;
 
-        commandList.UpdateUniforms(uniformBlocks);
+        commandList.UpdateUniforms(uniformBlocks, textures, samplers);
     }
 
     private void DrawBatch(RenderOpType op, BlendMode blendMode, int at, int count, bool renderPassStarted)

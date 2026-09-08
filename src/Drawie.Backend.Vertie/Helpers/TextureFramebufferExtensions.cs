@@ -99,7 +99,8 @@ public static class TextureFramebufferExtensions
             foreach (var texture in mesh.Material.Textures)
             {
                 if (preparedTextures.ContainsKey(texture.TextureId)) continue;
-                preparedTextures.Add(texture.TextureId, cmdList.PrepareTexture(texture));
+                // TODO: handle names
+                preparedTextures.Add(texture.TextureId, cmdList.PrepareTexture(texture, "uTexture"));
             }
         }
 

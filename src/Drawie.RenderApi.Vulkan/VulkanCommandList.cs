@@ -84,7 +84,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         {
             Extent = new Extent2D((uint)width, (uint)height)
         };
-        
+
         context.Api.CmdSetViewport(CommandBuffer, 0, 1, &viewport);
         context.Api.CmdSetScissor(CommandBuffer, 0, 1, &scissor);
     }
@@ -125,14 +125,49 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         pipeline.Apply(this);
     }
 
-    public override PreparedTexture PrepareTexture(ITexture texture)
+    public override PreparedTexture PrepareTexture(ITexture texture, string name)
     {
         var vkTex = context.ManagedTextures[texture.TextureId];
 
         if (vkTex is not VulkanTexture vkTexture) throw new ArgumentException("Only IVkTexture's are valid");
         vkTexture.MakeReadOnly(commandBuffer);
 
-        return new PreparedTexture(texture.TextureId);
+        return new PreparedTexture(name, texture.TextureId);
+    }
+
+    public override void UpdateUniforms(IEnumerable<NamedBuffer> buffers, IEnumerable<PreparedTexture>? textures,
+        IEnumerable<ISampler>? samplers)
+    {
+        foreach (var namedBuffer in buffers)
+        {
+            if (namedBuffer.Buffer is IVkBuffer vkBuffer)
+            {
+                (int set, int binding) = FindSetAndBinding(namedBuffer.Name);
+                if (binding == -1)
+                    throw new ArgumentException($"Could not find {namedBuffer.Name} inside current shader program.");
+                if (binding < 0)
+                    throw new ArgumentOutOfRangeException(nameof(binding));
+
+                UpdateDescriptor(set, (uint)binding, vkBuffer);
+            }
+            else
+            {
+                throw new ArgumentException("Only IVkBuffer is valid buffer type");
+            }
+        }
+
+        int i = 0;
+        foreach (var preparedTexture in textures)
+        {
+            (int set, int binding) = FindSetAndBinding(preparedTexture.Name);
+            if (binding == -1)
+                throw new ArgumentException($"Could not find {preparedTexture.Name} inside current shader program.");
+            if (binding < 0)
+                throw new ArgumentOutOfRangeException(nameof(binding));
+
+            UpdateDescriptor(set, (uint)binding, preparedTexture, samplers.ElementAt(i));
+            i++;
+        }
     }
 
     public override void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures,
@@ -165,13 +200,13 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         {
             if (namedBuffer.Buffer is IVkBuffer vkBuffer)
             {
-                int binding = pipeline.Program.DescriptorSetLayout.Bindings.IndexOf(namedBuffer.Name);
+                (int set, int binding) = FindSetAndBinding(namedBuffer.Name);
                 if (binding == -1)
                     throw new ArgumentException($"Could not find {namedBuffer.Name} inside current shader program.");
                 if (binding < 0)
                     throw new ArgumentOutOfRangeException(nameof(binding));
 
-                UpdateDescriptor(0, (uint)binding, vkBuffer);
+                UpdateDescriptor(set, (uint)binding, vkBuffer);
             }
             else
             {
@@ -195,6 +230,18 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         var vkTarget = context.ManagedTextures[target.SurfaceId] as VulkanTexture;
 
         Blit(vkSource, vkTarget);
+    }
+
+    private (int set, int binding) FindSetAndBinding(string name)
+    {
+        var foundSet = pipeline.Program.DescriptorSetLayouts.FirstOrDefault(x => x.Bindings.Contains(name));
+
+        if (foundSet != null)
+        {
+            return (pipeline.Program.DescriptorSetLayouts.IndexOf(foundSet), foundSet.Bindings.IndexOf(name));
+        }
+
+        return (-1, -1);
     }
 
     private unsafe void UpdateDescriptor(int setIndex, uint binding, IVkBuffer buffer)
@@ -224,7 +271,45 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             commandBuffer,
             PipelineBindPoint.Graphics,
             pipeline.GraphicsPipeline.VkPipelineLayout,
+            (uint)setIndex,
+            1,
+            in set,
             0,
+            null);
+    }
+
+    private unsafe void UpdateDescriptor(int setIndex, uint binding, PreparedTexture preparedTexture, ISampler sampler)
+    {
+        var vkTexture = context.ManagedTextures[preparedTexture.Handle] as VulkanTexture;
+        var vkSampler = sampler as VulkanSampler;
+
+        var set = pipeline.Program.DescriptorPool.GetOrAllocateDescriptorSet(setIndex, (ulong)setIndex);
+
+        var imageInfo = new DescriptorImageInfo
+        {
+            Sampler = vkSampler.VkSampler,
+            ImageView = vkTexture.ColorAttachment.View,
+            ImageLayout = ImageLayout.ShaderReadOnlyOptimal
+        };
+
+        var writeImgSampler = new WriteDescriptorSet
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = set,
+            DstBinding = binding,
+            DstArrayElement = 0,
+            DescriptorCount = 1,
+            DescriptorType = DescriptorType.CombinedImageSampler,
+            PImageInfo = &imageInfo
+        };
+
+        context.Api.UpdateDescriptorSets(context.LogicalDevice.Device, 1, &writeImgSampler, 0, null);
+
+        context.Api!.CmdBindDescriptorSets(
+            commandBuffer,
+            PipelineBindPoint.Graphics,
+            pipeline.GraphicsPipeline.VkPipelineLayout,
+            (uint)setIndex,
             1,
             in set,
             0,
@@ -250,7 +335,8 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         var vkTexture = context.ManagedTextures[texture.Handle] as VulkanTexture;
         var vkSampler = sampler as VulkanSampler;
         // TODO: better id
-        var set = pipeline.DescriptorPool.GetOrAllocateDescriptorSet(0, buffer.VkBuffer.Handle);
+        var vertSet = pipeline.DescriptorPool.GetOrAllocateDescriptorSet(0, buffer.VkBuffer.Handle);
+        var fragSet = pipeline.DescriptorPool.GetOrAllocateDescriptorSet(1, texture.Handle);
         DescriptorBufferInfo bufferInfo = new()
         {
             Buffer = buffer.VkBuffer,
@@ -261,7 +347,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         WriteDescriptorSet write = new()
         {
             SType = StructureType.WriteDescriptorSet,
-            DstSet = set,
+            DstSet = vertSet,
             DstBinding = 0,
             DstArrayElement = 0,
             DescriptorCount = 1,
@@ -279,22 +365,27 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         var writeImgSampler = new WriteDescriptorSet
         {
             SType = StructureType.WriteDescriptorSet,
-            DstSet = set,
-            DstBinding = 1,
+            DstSet = fragSet,
+            DstBinding = 0,
             DstArrayElement = 0,
             DescriptorCount = 1,
             DescriptorType = DescriptorType.CombinedImageSampler,
             PImageInfo = &imageInfo
         };
 
-        WriteDescriptorSet* sets = stackalloc WriteDescriptorSet[2];
-        sets[0] = write;
-        sets[1] = writeImgSampler;
+        WriteDescriptorSet* writes = stackalloc WriteDescriptorSet[2];
+        writes[0] = write;
+        writes[1] = writeImgSampler;
+
+
+        DescriptorSet* sets = stackalloc DescriptorSet[2];
+        sets[0] = vertSet;
+        sets[1] = fragSet;
 
         context.Api.UpdateDescriptorSets(
             context.LogicalDevice.Device,
             2,
-            sets,
+            writes,
             0,
             null);
 
@@ -303,8 +394,8 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             PipelineBindPoint.Graphics,
             pipeline.GraphicsPipeline.VkPipelineLayout,
             0,
-            1,
-            in set,
+            2,
+            sets,
             0,
             null);
     }

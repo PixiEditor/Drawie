@@ -17,32 +17,30 @@ public class GraphicsPipelineDescriptorBuilder
         return this;
     }
 
-    public DescriptorSetLayoutBinding[] Build()
+    public Dictionary<int, List<DescriptorSetLayoutBinding>> Build()
     {
-        if (BindingBuilders.Count == 0) 
-            return Array.Empty<DescriptorSetLayoutBinding>();
+        if (BindingBuilders.Count == 0)
+            return new Dictionary<int, List<DescriptorSetLayoutBinding>>();
 
-        var flattened = FlattenBuilders(BindingBuilders);
-
-        return flattened.Select(b => b.Build()).ToArray();
-    }
-
-    private List<GraphicsPipelineDescriptorBindingBuilder> FlattenBuilders(List<GraphicsPipelineDescriptorBindingBuilder> bindingBuilders)
-    {
-        var flattened = new List<GraphicsPipelineDescriptorBindingBuilder>();
-        
-        foreach (var bindingBuilder in bindingBuilders)
+        var dict = new Dictionary<int, List<DescriptorSetLayoutBinding>>();
+        for (int i = 0; i < BindingBuilders.Count; i++)
         {
-            if(flattened.Any(x => x.Binding == bindingBuilder.Binding)) continue;
-            flattened.Add(bindingBuilder);
+            var builder = BindingBuilders[i];
+            if (!dict.ContainsKey(builder.Set))
+            {
+                dict[builder.Set] = new List<DescriptorSetLayoutBinding>();
+            }
+            
+            dict[builder.Set].Add(builder.Build());
         }
-
-        return flattened;
+        
+        return dict;
     }
 }
 
 public class GraphicsPipelineDescriptorBindingBuilder
 {
+    public int Set { get; set; }
     public int Binding { get; set; }
     public DescriptorType DescriptorType { get; set; }
     public ShaderStageFlags ShaderStageFlags { get; set; }
@@ -79,4 +77,9 @@ public class GraphicsPipelineDescriptorBindingBuilder
         return new DescriptorSetLayoutBinding((uint)Binding, DescriptorType, 1, ShaderStageFlags);
     }
 
+    public GraphicsPipelineDescriptorBindingBuilder AtSet(int set)
+    {
+        Set = set;
+        return this;
+    }
 }
