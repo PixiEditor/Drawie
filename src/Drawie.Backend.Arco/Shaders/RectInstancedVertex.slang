@@ -5,7 +5,8 @@ struct Instance
     float2 position; 
     float2 size; 
     float4 color; 
-    float2 antiAliasing; 
+    float2 antiAliasing;
+    uint textureIndex;
 }; 
 
 struct Globals 
@@ -56,6 +57,7 @@ VSOutput vertexMain(VSInput input)
     output.position = float4(clipPosition, 0, 1);
     output.normPosition = uv;
     output.color = instance.color;
+    output.textureIndex = instance.textureIndex;
 
     return output;
 }

@@ -73,6 +73,7 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
                             ? ShaderStageFlags.VertexBit
                             : ShaderStageFlags.FragmentBit)
                         .OfType(ToDescriptorType(reflectionParameter.Var.Type, reflectionParameter.Var.ResourceType))
+                        .WithDescriptorCount(reflectionParameter.Var.Type == ShaderVarType.Array ? 4096 : 1)
                         .WithName(reflectionParameter.Name);
                 });
             }
@@ -184,7 +185,7 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
         foreach (var descriptorSetLayoutBinding in descriptors)
         {
             pools.TryAdd(descriptorSetLayoutBinding.DescriptorType, 0);
-            pools[descriptorSetLayoutBinding.DescriptorType]++;
+            pools[descriptorSetLayoutBinding.DescriptorType] += (int)descriptorSetLayoutBinding.DescriptorCount;
         }
 
         DescriptorPoolSize* poolSizes = stackalloc DescriptorPoolSize[pools.Count];
@@ -257,7 +258,7 @@ internal sealed class VulkanShaderProgram : IShaderProgram, IDisposable
             case ShaderVarType.Struct:
                 break;
             case ShaderVarType.Array:
-                break;
+                return ResourceTypeToDescriptor(varResourceType);
             case ShaderVarType.Matrix:
                 break;
             case ShaderVarType.Vector:

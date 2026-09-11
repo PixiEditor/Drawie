@@ -157,7 +157,9 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
         }
 
         int i = 0;
-        foreach (var preparedTexture in textures)
+
+        var preparedTextures = textures as PreparedTexture[] ?? textures.ToArray();
+        foreach (var preparedTexture in preparedTextures)
         {
             (int set, int binding) = FindSetAndBinding(preparedTexture.Name);
             if (binding == -1)
@@ -165,9 +167,34 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             if (binding < 0)
                 throw new ArgumentOutOfRangeException(nameof(binding));
 
-            UpdateDescriptor(set, (uint)binding, preparedTexture, samplers.ElementAt(i));
+            var arrIndex = GetTextureArrayIndex(preparedTexture, preparedTextures);
+
+            UpdateDescriptor(set, (uint)binding, preparedTexture, samplers.ElementAt(i), arrIndex);
             i++;
         }
+    }
+
+    private static int GetTextureArrayIndex(PreparedTexture preparedTexture, PreparedTexture[] preparedTextures)
+    {
+        int arrIndex = 0;
+        if (preparedTexture.IsPartOfArray)
+        {
+            for (int j = 0; j < preparedTextures.Length; j++)
+            {
+                var tex = preparedTextures[j];
+                if (preparedTexture.Handle == tex.Handle)
+                {
+                    break;
+                }
+                    
+                if (preparedTexture.Name == tex.Name)
+                {
+                    arrIndex++;
+                }
+            }
+        }
+
+        return arrIndex;
     }
 
     public override void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures,
@@ -278,7 +305,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             null);
     }
 
-    private unsafe void UpdateDescriptor(int setIndex, uint binding, PreparedTexture preparedTexture, ISampler sampler)
+    private unsafe void UpdateDescriptor(int setIndex, uint binding, PreparedTexture preparedTexture, ISampler sampler, int arrayIndex = 0)
     {
         var vkTexture = context.ManagedTextures[preparedTexture.Handle] as VulkanTexture;
         var vkSampler = sampler as VulkanSampler;
@@ -297,7 +324,7 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             SType = StructureType.WriteDescriptorSet,
             DstSet = set,
             DstBinding = binding,
-            DstArrayElement = 0,
+            DstArrayElement = (uint)arrayIndex,
             DescriptorCount = 1,
             DescriptorType = DescriptorType.CombinedImageSampler,
             PImageInfo = &imageInfo

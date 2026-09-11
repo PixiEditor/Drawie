@@ -26,7 +26,7 @@ public class ShaderCompiler
                 "-matrix-layout-column-major",
                 "-fvk-use-entrypoint-name",
                 "-target", "spirv",
-                "-profile", "spirv_1_3",
+                "-profile", "spirv_1_5",
                 "-I", ModulesPath
             ],
             out var reflection);
@@ -110,7 +110,7 @@ public class ShaderCompiler
             Fields = new List<PropertyLayout>(),
             Type = (ShaderVarType)type.Kind,
             HasBindings = parameter.Bindings.Length > 0,
-            ResourceType = type.Resource != null ? (ShaderVarShape)type.Resource.BaseShape : null
+            ResourceType = (ShaderVarShape?)(type.Resource?.BaseShape ?? type.Array?.ElementType.Resource?.BaseShape)
         };
 
         var elementVarLayout = type.ConstantBuffer?.ElementVarLayout;

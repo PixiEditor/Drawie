@@ -138,7 +138,17 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
                 priorities[j] = 1.0f;
             }
 
-            var features = new PhysicalDeviceFeatures() { SamplerAnisotropy = false, FillModeNonSolid = true };
+            var features = new PhysicalDeviceFeatures()
+            {
+                SamplerAnisotropy = false, 
+                FillModeNonSolid = true,
+            };
+
+            var features12 = new PhysicalDeviceVulkan12Features()
+            {
+                SType = StructureType.PhysicalDeviceVulkan12Features,
+                RuntimeDescriptorArray = true,
+            };
 
             var queueCreateInfo = new DeviceQueueCreateInfo()
             {
@@ -148,14 +158,15 @@ public class VulkanInteropContext : VulkanContext, IDrawieInteropContext
                 PQueuePriorities = priorities
             };
 
-            var deviceCreateInfo = new DeviceCreateInfo
+            var deviceCreateInfo = new DeviceCreateInfo()
             {
                 SType = StructureType.DeviceCreateInfo,
                 QueueCreateInfoCount = 1,
                 PQueueCreateInfos = &queueCreateInfo,
                 PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(requiredDeviceExtensions.ToArray()),
                 EnabledExtensionCount = (uint)requiredDeviceExtensions.Count,
-                PEnabledFeatures = &features
+                PEnabledFeatures = &features,
+                PNext = &features12
             };
 
             Device logicalDevice = default;

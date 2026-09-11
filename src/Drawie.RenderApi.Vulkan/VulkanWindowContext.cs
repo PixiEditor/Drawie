@@ -80,6 +80,12 @@ public class VulkanWindowContext : VulkanContext
             SamplerAnisotropy = false,
             FillModeNonSolid = true,
         };
+        
+        var features12 = new PhysicalDeviceVulkan12Features()
+        {
+            SType = StructureType.PhysicalDeviceVulkan12Features,
+            RuntimeDescriptorArray = true,
+        };
 
         DeviceCreateInfo createInfo = new()
         {
@@ -90,7 +96,8 @@ public class VulkanWindowContext : VulkanContext
             PEnabledFeatures = &deviceFeatures,
 
             EnabledExtensionCount = (uint)deviceExtensions.Count,
-            PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions.ToArray())
+            PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions.ToArray()),
+            PNext = &features12
         };
 
         if (EnableValidationLayers)

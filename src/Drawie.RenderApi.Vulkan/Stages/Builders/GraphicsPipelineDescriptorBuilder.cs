@@ -42,6 +42,7 @@ public class GraphicsPipelineDescriptorBindingBuilder
 {
     public int Set { get; set; }
     public int Binding { get; set; }
+    public int DescriptorCount { get; set; } = 1;
     public DescriptorType DescriptorType { get; set; }
     public ShaderStageFlags ShaderStageFlags { get; set; }
     public string Name { get; set; }
@@ -70,11 +71,17 @@ public class GraphicsPipelineDescriptorBindingBuilder
         return this;
     }
 
+    public GraphicsPipelineDescriptorBindingBuilder WithDescriptorCount(int count)
+    {
+        DescriptorCount = count;
+        return this;
+    }
+
     public unsafe DescriptorSetLayoutBinding Build()
     {
         if (Binding < 0) throw new ArgumentException("Binding can't be negative");
         
-        return new DescriptorSetLayoutBinding((uint)Binding, DescriptorType, 1, ShaderStageFlags);
+        return new DescriptorSetLayoutBinding((uint)Binding, DescriptorType, (uint)DescriptorCount, ShaderStageFlags);
     }
 
     public GraphicsPipelineDescriptorBindingBuilder AtSet(int set)

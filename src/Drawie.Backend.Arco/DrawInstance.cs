@@ -10,5 +10,6 @@ public struct DrawInstance
     public Vector2 Size { get; set; }
     public Vector4 Color { get; set; }
     public Vector2 AntiAliasing { get; set; }
-    public Vector2 Padding { get; set; }
+    public uint TextureIndex { get; set; }
+    public float Padding { get; set; }
 }

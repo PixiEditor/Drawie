@@ -28,6 +28,7 @@ public class Canvas
     private ICommandList commandList;
     private GrowableBuffer<DrawInstance> instancesBuffer;
     private RecordedOperation[] recordedInstances = new RecordedOperation[256];
+    private Dictionary<ITexture, int> recordedTextures = new();
     private int recordedInstanceCount;
     private IBuffer<Globals> globalsBuffer;
     private List<NamedBuffer> uniformBlocks;
@@ -138,6 +139,11 @@ public class Canvas
         }
 
         var fill = paint.Color;
+        
+        if(!recordedTextures.TryGetValue(texture, out var index))
+        {
+            index = recordedTextures.Count;
+        }
 
         recordedInstances[recordedInstanceCount++] = new()
         {
@@ -147,12 +153,15 @@ public class Canvas
                 Position = new Vector2(x, y),
                 Size = new Vector2(texture.Size.X, texture.Size.Y),
                 AntiAliasing = new Vector2(paint.IsAntiAliased ? 1 : 0, 1),
+                TextureIndex = (uint)index
             },
 
             BlendMode = paint.BlendMode,
             RenderOp = RenderOpType.Texture,
             Texture = texture
         };
+        
+        recordedTextures[texture] = index;
     }
 
     public void Flush(TextureFramebuffer? blitTo = null)
@@ -185,6 +194,7 @@ public class Canvas
         GraphicsDevice.Submit(recordedRenderPass);
 
         recordedInstanceCount = 0;
+        recordedTextures.Clear();
     }
 
     private void BeginRender()
@@ -211,7 +221,7 @@ public class Canvas
                 }
 
                 // TODO: wip, better name handling
-                textures.Add(commandList.PrepareTexture(recorded.Texture, "texture"));
+                textures.Add(commandList.PrepareTexture(recorded.Texture, "textures") with { IsPartOfArray = true });
                 samplers.Add(globalSampler);
             }
         }

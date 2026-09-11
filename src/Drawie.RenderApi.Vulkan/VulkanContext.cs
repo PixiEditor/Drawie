@@ -100,7 +100,7 @@ public abstract class VulkanContext : IDisposable, IVulkanContext, IGraphicsCont
             ApplicationVersion = new Version32(1, 0, 0),
             PEngineName = (byte*)Marshal.StringToHGlobalAnsi("Drawie"),
             EngineVersion = new Version32(2, 0, 0),
-            ApiVersion = Vk.Version11
+            ApiVersion = Vk.Version12
         };
 
         InstanceCreateInfo createInfo = new()

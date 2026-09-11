@@ -48,6 +48,7 @@ public abstract class CommandList : ICommandList
 
     public abstract void BindPipeline();
     public abstract PreparedTexture PrepareTexture(ITexture texture, string name);
+
     public abstract void UpdateUniforms(IEnumerable<NamedBuffer> buffers, IEnumerable<PreparedTexture>? textures, IEnumerable<ISampler>? samplers);
     public abstract void UpdateUniforms(IEnumerable<UniformBlock> blocks, IEnumerable<PreparedTexture> textures, IEnumerable<ISampler> samplers);
     public abstract void UpdateUniforms(IEnumerable<NamedBuffer> properties);
