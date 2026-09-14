@@ -28,8 +28,6 @@ public class Drawie2SampleApp : DrawieApp
     private int activeRenderMode = 0;
     private bool handleMovement;
 
-    private bool skia = false;
-
     private string[] renderModes = new[]
     {
         "Default",
@@ -38,11 +36,15 @@ public class Drawie2SampleApp : DrawieApp
 
     private RenderOptions renderOptions = new RenderOptions() { MsaaSamples = MsaaSamples.X4 };
 
+    private List<ArcoSample> samples = new List<ArcoSample>();
+    private ArcoSample? current;
+
     public override IHost CreateMainWindow()
     {
         window = Engine.WindowingPlatform.CreateWindow("Drawie 2 Sample", new VecI(1920, 1080));
         //window.AddLayer(new ImGuiLayer(RenderImGui));
         window.AddLayer(new MiniUILayer(RenderMiniUi));
+
         return window;
     }
 
@@ -64,10 +66,14 @@ public class Drawie2SampleApp : DrawieApp
                     : RenderMode.Default;
             }
 
-            string skiaText = !skia ? "Enable skia" : "Disable skia";
-            if (Button.Show(skiaText))
+            Panel.BeginColumn();
+            foreach (var arcoSample in samples)
             {
-                skia = !skia;
+                if (Button.Show(arcoSample.ToString().Split(".").Last()))
+                {
+                    current = arcoSample;
+                    current.Init();
+                }
             }
 
             Panel.EndColumn();
@@ -114,6 +120,17 @@ public class Drawie2SampleApp : DrawieApp
         }
 
         RegisterMouse(window.InputController);
+        
+        
+        samples = new List<ArcoSample>();
+        ArcoGraphicsContext ctx = new ArcoGraphicsContext(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice);
+        samples.Add(new ColorfulRectanglesSample(ctx, window.Size));
+        samples.Add(new ColorfulCirclesSample(ctx, window.Size));
+        samples.Add(new AntiAliasingCircleSample(ctx, window.Size));
+        samples.Add(new TextureSample(ctx, window.Size));
+        samples.Add(new BlendingSample(ctx, window.Size));
+        current = samples[0];
+        current.Init();
 
         window.Update += d =>
         {
@@ -126,25 +143,12 @@ public class Drawie2SampleApp : DrawieApp
             targetTexture.Clear();
             targetTexture.Canvas.Flush();
 
+            current.RenderSurface.Canvas.Flush();
+            current.RenderSurface.Canvas.BlitTo(targetTexture, true);
             //targetTexture.DrawScene(scene, camera, renderOptions);
             //Sandbox.Draw(targetTexture);
             
-            if (!skia)
-            {
-                //ColorfulRectanglesSample.Draw(targetTexture);
-                //ColorfulCirclesSample.Draw(targetTexture);
-                //BlendingSample.Draw(targetTexture);
-                //AntiAliasingCircleSample.Draw(targetTexture);
-                TextureSample.Draw(targetTexture);
-            }
-            else
-            {
-                //ColorfulRectanglesSampleSkia.Draw(targetTexture);
-                //ColorfulCirclesSampleSkia.Draw(targetTexture);
-                //BlendingSampleSkia.Draw(targetTexture);
-                //AntiAliasingCircleSampleSkia.Draw(targetTexture);
-            }
-
+           
             DrawingBackendApi.Current.ResetContext();
         };
     }

@@ -22,7 +22,8 @@ namespace Drawie.Backend.Arco;
 
 public class Canvas
 {
-    public IGraphicsDevice GraphicsDevice { get; }
+    public IGraphicsDevice GraphicsDevice => GraphicsContext.Device;
+    public ArcoGraphicsContext GraphicsContext { get; }
 
     private IShaderProgram rectShaderProgram;
     private ICommandList commandList;
@@ -33,42 +34,13 @@ public class Canvas
     private IBuffer<Globals> globalsBuffer;
     private List<NamedBuffer> uniformBlocks;
     private IRenderTarget renderTarget;
-    private ISampler globalSampler;
 
-    private Dictionary<RenderOpType, RenderingOpPipeline> renderingOps = new();
 
-    public Canvas(IGraphicsDevice device, VecI size)
+    public Canvas(ArcoGraphicsContext context, IRenderTarget renderTarget)
     {
-        renderTarget = device.CreateRenderTarget(new TextureDesc()
-        {
-            Depth = DepthFormat.NoDepth,
-            Format = TextureFormat.RGBA8_Unorm,
-            Width = size.X,
-            Height = size.Y,
-            Samples = 1,
-        });
-
-        GraphicsDevice = device;
-        var instancedRectVertex = ShaderLoader.LoadShader("RectInstancedVertex");
-        var instancedRectVertexAA = ShaderLoader.LoadShader("RectInstancedVertexAA");
-        var rectFillFragment = ShaderLoader.LoadShader("RectFillFragment");
-        var circleFillFragment = ShaderLoader.LoadShader("CircleFillFragment");
-        var textureFragment = ShaderLoader.LoadShader("TextureFragment");
-
-        globalSampler = GraphicsDevice.CreateSampler(new SamplerDesc());
-
-        if (instancedRectVertex == null || rectFillFragment == null || circleFillFragment == null ||
-            instancedRectVertexAA == null || textureFragment == null)
-            throw new Exception("Unable to load shaders");
-
-        renderingOps[RenderOpType.Rect] =
-            new RenderingOpPipeline(GraphicsDevice, instancedRectVertex, rectFillFragment);
-        renderingOps[RenderOpType.Circle] =
-            new RenderingOpPipeline(GraphicsDevice, instancedRectVertexAA, circleFillFragment);
-
-        renderingOps[RenderOpType.Texture] =
-            new RenderingOpPipeline(GraphicsDevice, instancedRectVertex, textureFragment);
-
+        GraphicsContext = context;
+        this.renderTarget = renderTarget;
+        
         instancesBuffer = new GrowableBuffer<DrawInstance>(GraphicsDevice);
         globalsBuffer = GraphicsDevice.CreateBuffer<Globals>(BufferUsage.Uniform, [
             new() { ViewportSize = renderTarget.Size.ToVector2() }
@@ -222,7 +194,7 @@ public class Canvas
 
                 // TODO: wip, better name handling
                 textures.Add(commandList.PrepareTexture(recorded.Texture, "textures") with { IsPartOfArray = true });
-                samplers.Add(globalSampler);
+                samplers.Add(GraphicsContext.GlobalSampler);
             }
         }
 
@@ -236,7 +208,7 @@ public class Canvas
 
     private void DrawBatch(RenderOpType op, BlendMode blendMode, int at, int count, bool renderPassStarted)
     {
-        commandList.SetPipeline(renderingOps[op].GetPipelineFor(blendMode));
+        commandList.SetPipeline(GraphicsContext.RenderingOps[op].GetPipelineFor(blendMode));
 
         if(!renderPassStarted)
         {
@@ -250,10 +222,10 @@ public class Canvas
         commandList.Draw(6, at, count);
     }
 
-    public void BlitTo(TextureFramebuffer target)
+    public void BlitTo(TextureFramebuffer target, bool flipY = false)
     {
         commandList = GraphicsDevice.CreateCommandList();
-        commandList.Blit(renderTarget, target, false);
+        commandList.Blit(renderTarget, target, flipY);
         GraphicsDevice.Submit(commandList.End());
     }
 }

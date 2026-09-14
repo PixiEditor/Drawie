@@ -6,24 +6,18 @@ using Drawie.Rendering;
 
 namespace Drawie2Sample;
 
-public static class AntiAliasingCircleSample
+public class AntiAliasingCircleSample : ArcoSample
 {
-    static Drawie.Backend.Arco.Canvas cnvs = null;
-
-    public static void Draw(TextureFramebuffer fb)
+    public AntiAliasingCircleSample(ArcoGraphicsContext context, VecI size) : base(context, size)
     {
-        if (cnvs == null)
+    }
+
+    public override void OnInit()
+    {
+        RenderSurface.Canvas.DrawCircle(100, 100, 50, new Paint()
         {
-            cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, new VecI(fb.Size.X / 4, fb.Size.Y / 4));
-            cnvs.DrawCircle(100, 100, 50, new Paint()
-            {
-                Color = Colors.Green,
-                IsAntiAliased = true
-            });
-            
-            cnvs.Flush();
-        }
-        
-        cnvs.BlitTo(fb);
+            Color = Colors.Green,
+            IsAntiAliased = true
+        });
     }
 }

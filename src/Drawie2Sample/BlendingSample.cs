@@ -6,12 +6,11 @@ using Drawie.Numerics;
 using Drawie.RenderApi.Abstraction.RenderTargets;
 using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.Rendering;
+using Drawie2Sample;
 using Canvas = Drawie.Backend.Arco.Canvas;
 
-public static class BlendingSample
+public class BlendingSample : ArcoSample
 {
-    static Canvas cnvs = null;
-
     private static readonly BlendMode[] HardwareBlendModes =
     [
         BlendMode.Src,
@@ -29,59 +28,55 @@ public static class BlendingSample
     ];
 
 
-    public static void Draw(TextureFramebuffer target)
+    public BlendingSample(ArcoGraphicsContext context, VecI size) : base(context, size)
     {
-        if (cnvs == null)
+    }
+
+    public override void OnInit()
+    {
+        const int columns = 4;
+        const float padding = 20;
+        const float labelHeight = 30;
+
+        float cellWidth = RenderSurface.DeviceClipSize.Size.X / (float)columns;
+        int rows = (HardwareBlendModes.Length + columns - 1) / columns;
+        float cellHeight = RenderSurface.DeviceClipSize.Size.Y / rows;
+
+        for (int i = 0; i < HardwareBlendModes.Length; i++)
         {
-            cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, target.Size);
-            const int columns = 4;
-            const float padding = 20;
-            const float labelHeight = 30;
+            var mode = HardwareBlendModes[i];
 
-            float cellWidth = target.Size.X / (float)columns;
-            int rows = (HardwareBlendModes.Length + columns - 1) / columns;
-            float cellHeight = target.Size.Y / rows;
+            int column = i % columns;
+            int row = i / columns;
 
-            for (int i = 0; i < HardwareBlendModes.Length; i++)
-            {
-                var mode = HardwareBlendModes[i];
+            float cellX = column * cellWidth;
+            float cellY = row * cellHeight;
 
-                int column = i % columns;
-                int row = i / columns;
+            float size = Math.Min(cellWidth, cellHeight - labelHeight) * 0.55f;
 
-                float cellX = column * cellWidth;
-                float cellY = row * cellHeight;
+            float centerX = cellX + cellWidth / 2f;
+            float centerY = cellY + labelHeight + (cellHeight - labelHeight) / 2f;
 
-                float size = Math.Min(cellWidth, cellHeight - labelHeight) * 0.55f;
+            RenderSurface.Canvas.DrawRect(
+                centerX - size * 0.65f,
+                centerY - size * 0.5f,
+                size,
+                size,
+                new Paint
+                {
+                    Color = Colors.Red.WithAlpha(128),
+                });
 
-                float centerX = cellX + cellWidth / 2f;
-                float centerY = cellY + labelHeight + (cellHeight - labelHeight) / 2f;
-
-                cnvs.DrawRect(
-                    centerX - size * 0.65f,
-                    centerY - size * 0.5f,
-                    size,
-                    size,
-                    new Paint
-                    {
-                        Color = Colors.Red.WithAlpha(128),
-                    });
-
-                cnvs.DrawRect(
-                    centerX - size * 0.15f,
-                    centerY - size * 0.5f,
-                    size,
-                    size,
-                    new Paint
-                    {
-                        Color = Colors.Green.WithAlpha(128),
-                        BlendMode = mode
-                    });
-            }
-
-            cnvs.Flush();
+            RenderSurface.Canvas.DrawRect(
+                centerX - size * 0.15f,
+                centerY - size * 0.5f,
+                size,
+                size,
+                new Paint
+                {
+                    Color = Colors.Green.WithAlpha(128),
+                    BlendMode = mode
+                });
         }
-        
-        cnvs.BlitTo(target);
     }
 }

@@ -156,21 +156,25 @@ internal sealed class VulkanCommandList : CommandList, IDisposable
             }
         }
 
-        int i = 0;
-
-        var preparedTextures = textures as PreparedTexture[] ?? textures.ToArray();
-        foreach (var preparedTexture in preparedTextures)
+        if (textures != null)
         {
-            (int set, int binding) = FindSetAndBinding(preparedTexture.Name);
-            if (binding == -1)
-                throw new ArgumentException($"Could not find {preparedTexture.Name} inside current shader program.");
-            if (binding < 0)
-                throw new ArgumentOutOfRangeException(nameof(binding));
+            int i = 0;
 
-            var arrIndex = GetTextureArrayIndex(preparedTexture, preparedTextures);
+            var preparedTextures = textures as PreparedTexture[] ?? textures.ToArray();
+            foreach (var preparedTexture in preparedTextures)
+            {
+                (int set, int binding) = FindSetAndBinding(preparedTexture.Name);
+                if (binding == -1)
+                    throw new ArgumentException(
+                        $"Could not find {preparedTexture.Name} inside current shader program.");
+                if (binding < 0)
+                    throw new ArgumentOutOfRangeException(nameof(binding));
 
-            UpdateDescriptor(set, (uint)binding, preparedTexture, samplers.ElementAt(i), arrIndex);
-            i++;
+                var arrIndex = GetTextureArrayIndex(preparedTexture, preparedTextures);
+
+                UpdateDescriptor(set, (uint)binding, preparedTexture, samplers.ElementAt(i), arrIndex);
+                i++;
+            }
         }
     }
 

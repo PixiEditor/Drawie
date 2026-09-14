@@ -6,31 +6,13 @@ using Drawie.Rendering;
 
 namespace Drawie2Sample;
 
-public static class Sandbox
+public class Sandbox : ArcoSample
 {
-    static Drawie.Backend.Arco.Canvas cnvs = null;
-
-    public static void Draw(TextureFramebuffer fb)
+    public Sandbox(ArcoGraphicsContext context, VecI size) : base(context, size)
     {
-        if (cnvs == null)
-        {
-            cnvs = new Canvas(DrawingBackendApi.Current.ActiveRenderApi.GraphicsDevice, new VecI(fb.Size.X / 4, fb.Size.Y / 4));
-            cnvs.DrawCircle(400, 400, 200, new Paint()
-            {
-                Color = Colors.Green,
-                IsAntiAliased = false
-            });
-            
-            
-            cnvs.DrawCircle(850, 400, 200, new Paint()
-            {
-                Color = Colors.Green,
-                IsAntiAliased = true
-            });
-            
-            cnvs.Flush();
-        }
-        
-        cnvs.BlitTo(fb);
+    }
+
+    public override void OnInit()
+    {
     }
 }
