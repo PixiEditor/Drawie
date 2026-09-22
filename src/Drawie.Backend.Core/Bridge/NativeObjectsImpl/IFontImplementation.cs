@@ -33,4 +33,5 @@ public interface IFontImplementation
     public int GetGlyphCount(IntPtr objectPointer);
     public ushort[] GetGlyphs(IntPtr objectPointer, int[] codePoints);
     public bool ContainsGlyph(IntPtr objectPointer, int codePoint);
+    public bool ContainsGlyphs(IntPtr objectPointer, int[] codePoints);
 }

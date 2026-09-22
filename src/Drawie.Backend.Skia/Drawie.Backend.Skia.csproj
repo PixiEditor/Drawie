@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="BmpSharp" Version="0.2.0" />
     <PackageReference Include="SkiaSharp" Version="$(SkiaSharpVersion)" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="$(SkiaSharpVersion)" />
     <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="$(SkiaSharpVersion)" />
   </ItemGroup>
 
