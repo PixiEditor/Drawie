@@ -1,4 +1,5 @@
-﻿using Drawie.Backend.Core.ColorsImpl;
+﻿using System.Globalization;
+using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
@@ -180,7 +181,14 @@ public class RichText
             return [];
         }
 
-        var glyphPositions = new VecF[RawText.Replace("\n", string.Empty).Length + Lines.Length];
+        var elements = StringInfo.GetTextElementEnumerator(RawText.Replace("\n", string.Empty));
+        int count = 0;
+        while (elements.MoveNext())
+        {
+            count++;
+        }
+
+        var glyphPositions = new VecF[count + Lines.Length];
         using Paint measurementPaint = new Paint();
         measurementPaint.Style = PaintStyle.StrokeAndFill;
         measurementPaint.StrokeWidth = StrokeWidth;
@@ -203,11 +211,20 @@ public class RichText
                 continue;
             }
 
-            float lastGlyphWidth = font.GetGlyphWidths(line[^1].ToString(), measurementPaint).FirstOrDefault();
-            glyphPositions[startingIndex + line.Length] =
-                new VecF(glyphPositions[startingIndex + line.Length - 1].X + lastGlyphWidth, (float)lineOffset.Y);
+            var actualLineLength = GetActualLineLength(line);
 
-            startingIndex += line.Length + 1;
+            var lineElements = StringInfo.GetTextElementEnumerator(line);
+            string lastElement = null;
+            while(lineElements.MoveNext())
+            {
+                lastElement = lineElements.GetTextElement();
+            }
+
+            float lastGlyphWidth = font.GetGlyphWidths(lastElement, measurementPaint).FirstOrDefault();
+            glyphPositions[startingIndex + actualLineLength] =
+                new VecF(glyphPositions[startingIndex + actualLineLength - 1].X + lastGlyphWidth, (float)lineOffset.Y);
+
+            startingIndex += actualLineLength + 1;
         }
 
         return glyphPositions;
@@ -224,7 +241,14 @@ public class RichText
         measurementPaint.Style = PaintStyle.StrokeAndFill;
         measurementPaint.StrokeWidth = StrokeWidth;
 
-        var glyphWidths = new float[RawText.Replace("\n", string.Empty).Length + Lines.Length];
+        var elements = StringInfo.GetTextElementEnumerator(RawText.Replace("\n", string.Empty));
+        int count = 0;
+        while (elements.MoveNext())
+        {
+            count++;
+        }
+
+        var glyphWidths = new float[count + Lines.Length];
         int startingIndex = 0;
         for (int i = 0; i < Lines.Length; i++)
         {
@@ -242,10 +266,31 @@ public class RichText
                 continue;
             }
 
-            startingIndex += line.Length + 1;
+            var actualLineLength = GetActualLineLength(line);
+
+            startingIndex += actualLineLength + 1;
         }
 
         return glyphWidths;
+    }
+
+    private static int GetActualLineLength(string line)
+    {
+        int actualLineLength = 0;
+        for (int j = 0; j < line.Length; j++)
+        {
+            if (char.IsHighSurrogate(line[j]) && j + 1 < line.Length && char.IsLowSurrogate(line[j + 1]))
+            {
+                actualLineLength++;
+                j++;
+            }
+            else
+            {
+                actualLineLength++;
+            }
+        }
+
+        return actualLineLength;
     }
 
     public VecD GetLineOffset(int lineIndex, Font font)

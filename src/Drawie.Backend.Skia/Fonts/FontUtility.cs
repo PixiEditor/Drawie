@@ -43,6 +43,7 @@ public class FontUtility
             int runStart = elementStart;
             int runEnd = elementStart;
 
+            bool setFallback = false;
             do
             {
                 element = elements.GetTextElement();
@@ -61,7 +62,10 @@ public class FontUtility
                 if (fallback != null)
                 {
                     currentTypeface = fallback;
-                    break;
+                    if(setFallback)
+                        break;
+
+                    setFallback = true;
                 }
             } while (elements.MoveNext());
 
