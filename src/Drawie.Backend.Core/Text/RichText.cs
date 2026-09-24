@@ -12,7 +12,7 @@ namespace Drawie.Backend.Core.Text;
 public class RichText : ICacheable
 {
     public const double PtToPx = 1.3333333333333333;
-    public List<TextInline> Inlines { get; } = new();
+    public IReadOnlyList<TextInline> Inlines => InlinesMutable;
     public string RawText => string.Concat(Inlines.Select(x => x.Text));
     public string FormattedText => RawText.Replace('\n', ' ');
     public IReadOnlyCollection<TextInline>[] Lines => ChopInlinesIntoLines();
@@ -23,6 +23,8 @@ public class RichText : ICacheable
     public Paintable StrokePaintable { get; set; }
     public double MaxWidth { get; set; } = double.MaxValue;
     public double? Spacing { get; set; }
+
+    private List<TextInline> InlinesMutable { get; } = new();
 
     public int TextGlyphCount
     {
@@ -74,18 +76,24 @@ public class RichText : ICacheable
     public RichText(string text, FontData font, double maxWidth = double.MaxValue)
     {
         MaxWidth = maxWidth;
-        Inlines.Add(new TextInline(text ?? string.Empty, font));
+        InlinesMutable.Add(new TextInline(text ?? string.Empty, font));
     }
 
     public RichText(IEnumerable<TextInline> inlines, double maxWidth = double.MaxValue)
     {
         MaxWidth = maxWidth;
-        Inlines.AddRange(inlines);
+        InlinesMutable.AddRange(inlines);
     }
 
-    public void AddInline(TextInline inline) { Inlines.Add(inline); }
-    public void AddInline(string text, FontData font) { Inlines.Add(new TextInline(text, font)); }
-    public void Clear() { Inlines.Clear(); }
+    public int IndexOfInline(TextInline inline)
+    {
+        return InlinesMutable.IndexOf(inline);
+    }
+
+    public void UpdateInline(int index, TextInline inline) { InlinesMutable[index] = inline; }
+    public void AddInline(TextInline inline) { InlinesMutable.Add(inline); }
+    public void AddInline(string text, FontData font) { InlinesMutable.Add(new TextInline(text, font)); }
+    public void Clear() { InlinesMutable.Clear(); }
 
     public TextInline? GetInlineAt(int index, out int inlineStart, out int inlineEnd)
     {
