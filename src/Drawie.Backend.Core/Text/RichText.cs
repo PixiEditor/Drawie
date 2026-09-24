@@ -87,16 +87,24 @@ public class RichText : ICacheable
     public void AddInline(string text, FontData font) { Inlines.Add(new TextInline(text, font)); }
     public void Clear() { Inlines.Clear(); }
 
-    public TextInline? GetInlineAt(int index)
+    public TextInline? GetInlineAt(int index, out int inlineStart, out int inlineEnd)
     {
         int offset = 0;
         foreach (TextInline inline in Inlines)
         {
             int end = offset + inline.Text.Length;
-            if (index >= offset && index <= end) return inline;
+            if (index >= offset && index <= end)
+            {
+                inlineStart = offset;
+                inlineEnd = end;
+                return inline;
+            }
+
             offset = end;
         }
 
+        inlineStart = -1;
+        inlineEnd = -1;
         return null;
     }
 
@@ -380,6 +388,7 @@ public class RichText : ICacheable
         {
             hash.Add(inline.GetCacheHash());
         }
+
         return hash.ToHashCode();
     }
 
