@@ -325,32 +325,51 @@ public class RichText : ICacheable
     public VecF[] GetGlyphPositions(bool includeEndPosition = false)
     {
         if (Inlines.Count == 0) return [];
+
         List<VecF> positions = new();
         double x = 0;
         double y = 0;
+
         foreach (TextInline inline in Inlines)
         {
-            if (string.IsNullOrEmpty(inline.Text)) continue;
+            if (string.IsNullOrEmpty(inline.Text))
+                continue;
+
             using Font font = inline.Font.ToFont();
-            foreach (string line in inline.Text.Split('\n'))
+
+            string[] lines = inline.Text.Split('\n');
+
+            for (int i = 0; i < lines.Length; i++)
             {
+                string line = lines[i];
+
                 VecF[] linePositions = font.GetGlyphPositions(line);
                 foreach (VecF glyphPosition in linePositions)
                 {
                     positions.Add(glyphPosition + new VecF((float)x, (float)y));
                 }
 
-                if (!string.IsNullOrEmpty(line)) x += font.MeasureText(line);
+                if (!string.IsNullOrEmpty(line))
+                    x += font.MeasureText(line);
 
-                if (includeEndPosition)
+                bool lineEnds = i < lines.Length - 1;
+
+                if (lineEnds)
                 {
-                    positions.Add(new VecF((float)x, (float)y));
-                }
+                    if (includeEndPosition)
+                        positions.Add(new VecF((float)x, (float)y));
 
-                y += inline.LineHeight > 0 ? inline.LineHeight : font.Size * PtToPx;
-                x = 0;
+                    y += inline.LineHeight > 0
+                        ? inline.LineHeight
+                        : font.Size * PtToPx;
+
+                    x = 0;
+                }
             }
         }
+
+        if (includeEndPosition)
+            positions.Add(new VecF((float)x, (float)y));
 
         return positions.ToArray();
     }
@@ -566,5 +585,60 @@ public class RichText : ICacheable
             }
         }
         return isEmpty;
+    }
+
+    public TextInline SplitInline(int inlineIndex, int cursorPosition, int selectionEnd)
+    {
+        TextInline inline = InlinesMutable[inlineIndex];
+
+        int inlineStart = GetInlineStart(inline);
+        int inlineEnd = GetInlineEnd(inline);
+
+        int start = Math.Clamp(cursorPosition - inlineStart, 0, inlineEnd - inlineStart);
+        int end = Math.Clamp(selectionEnd - inlineStart, 0, inlineEnd - inlineStart);
+
+        if (start > end)
+            (start, end) = (end, start);
+
+        string[] elements = GetTextElements(inline.Text);
+
+        string before = string.Concat(elements[..start]);
+        string selected = string.Concat(elements[start..end]);
+        string after = string.Concat(elements[end..]);
+
+        InlinesMutable.RemoveAt(inlineIndex);
+
+        int insertIndex = inlineIndex;
+
+        if (before.Length > 0)
+        {
+            TextInline beforeInline = inline.Clone();
+            beforeInline.Text = before;
+            InlinesMutable.Insert(insertIndex++, beforeInline);
+        }
+
+        TextInline selectedInline = inline.Clone();
+        selectedInline.Text = selected;
+        InlinesMutable.Insert(insertIndex++, selectedInline);
+
+        if (after.Length > 0)
+        {
+            TextInline afterInline = inline.Clone();
+            afterInline.Text = after;
+            InlinesMutable.Insert(insertIndex, afterInline);
+        }
+
+        return selectedInline;
+    }
+
+    private static string[] GetTextElements(string text)
+    {
+        var elements = new List<string>();
+        var enumerator = StringInfo.GetTextElementEnumerator(text);
+
+        while (enumerator.MoveNext())
+            elements.Add(enumerator.GetTextElement());
+
+        return elements.ToArray();
     }
 }
