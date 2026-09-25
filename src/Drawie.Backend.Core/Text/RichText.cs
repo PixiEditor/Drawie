@@ -17,10 +17,6 @@ public class RichText : ICacheable
     public string FormattedText => RawText.Replace('\n', ' ');
     public IReadOnlyCollection<TextInline>[] Lines => ChopInlinesIntoLines();
 
-    public bool Fill { get; set; }
-    public Paintable FillPaintable { get; set; }
-    public float StrokeWidth { get; set; }
-    public Paintable StrokePaintable { get; set; }
     public double MaxWidth { get; set; } = double.MaxValue;
     public double? Spacing { get; set; }
 
@@ -182,9 +178,6 @@ public class RichText : ICacheable
     public void Paint(Canvas canvas, VecD position, Paint paint, VectorPath? onPath = null, VecD? pathOffset = null)
     {
         if (pathOffset == null) pathOffset = VecD.Zero;
-        bool hasStroke = StrokeWidth > 0;
-        bool hasFill = Fill && FillPaintable.AnythingVisible;
-        bool strokeAndFillEqual = StrokePaintable == FillPaintable;
         if (onPath != null)
         {
             PaintOnPath(canvas, position, paint, onPath, pathOffset.Value);
@@ -210,11 +203,14 @@ public class RichText : ICacheable
 
 
                 VecD inlinePosition = new VecD(lineX, y);
+                bool hasStroke = inline.StrokeWidth > 0 && inline.StrokePaintable != null && inline is {  StrokePaintable.AnythingVisible: true };
+                bool hasFill = inline.FillPaintable != null && inline is { Fill: true, FillPaintable.AnythingVisible: true };
+                bool strokeAndFillEqual = inline.StrokePaintable == inline.FillPaintable;
                 if (hasStroke && hasFill && strokeAndFillEqual)
                 {
                     paint.Style = PaintStyle.StrokeAndFill;
-                    paint.SetPaintable(StrokePaintable);
-                    paint.StrokeWidth = StrokeWidth;
+                    paint.SetPaintable(inline.StrokePaintable);
+                    paint.StrokeWidth = inline.StrokeWidth;
                     canvas.DrawText(inline.Text, inlinePosition, font, paint);
                 }
                 else
@@ -222,15 +218,15 @@ public class RichText : ICacheable
                     if (hasStroke)
                     {
                         paint.Style = PaintStyle.Stroke;
-                        paint.SetPaintable(StrokePaintable);
-                        paint.StrokeWidth = StrokeWidth;
+                        paint.SetPaintable(inline.StrokePaintable);
+                        paint.StrokeWidth = inline.StrokeWidth;
                         canvas.DrawText(inline.Text, inlinePosition, font, paint);
                     }
 
                     if (hasFill)
                     {
                         paint.Style = PaintStyle.Fill;
-                        paint.SetPaintable(FillPaintable);
+                        paint.SetPaintable(inline.FillPaintable);
                         canvas.DrawText(inline.Text, inlinePosition, font, paint);
                     }
                 }
@@ -244,18 +240,18 @@ public class RichText : ICacheable
 
     private void PaintOnPath(Canvas canvas, VecD position, Paint paint, VectorPath path, VecD pathOffset)
     {
-        bool hasStroke = StrokeWidth > 0;
-        bool hasFill = Fill && FillPaintable.AnythingVisible;
-        bool strokeAndFillEqual = StrokePaintable == FillPaintable;
         foreach (TextInline inline in Inlines)
         {
             if (string.IsNullOrEmpty(inline.Text)) continue;
             using Font font = inline.Font.ToFont();
+            bool hasStroke = inline.StrokeWidth > 0 && inline.StrokePaintable != null && inline is {  StrokePaintable.AnythingVisible: true };
+            bool hasFill = inline.FillPaintable != null && inline is { Fill: true, FillPaintable.AnythingVisible: true };
+            bool strokeAndFillEqual = inline.StrokePaintable == inline.FillPaintable;
             if (hasStroke && hasFill && strokeAndFillEqual)
             {
                 paint.Style = PaintStyle.StrokeAndFill;
-                paint.SetPaintable(StrokePaintable);
-                paint.StrokeWidth = StrokeWidth;
+                paint.SetPaintable(inline.StrokePaintable);
+                paint.StrokeWidth = inline.StrokeWidth;
                 canvas.DrawTextOnPath(path, inline.Text, pathOffset, font, paint);
             }
             else
@@ -263,15 +259,15 @@ public class RichText : ICacheable
                 if (hasStroke)
                 {
                     paint.Style = PaintStyle.Stroke;
-                    paint.SetPaintable(StrokePaintable);
-                    paint.StrokeWidth = StrokeWidth;
+                    paint.SetPaintable(inline.StrokePaintable);
+                    paint.StrokeWidth = inline.StrokeWidth;
                     canvas.DrawTextOnPath(path, inline.Text, pathOffset, font, paint);
                 }
 
                 if (hasFill)
                 {
                     paint.Style = PaintStyle.Fill;
-                    paint.SetPaintable(FillPaintable);
+                    paint.SetPaintable(inline.FillPaintable);
                     canvas.DrawTextOnPath(path, inline.Text, pathOffset, font, paint);
                 }
             }
@@ -380,13 +376,14 @@ public class RichText : ICacheable
         List<float> widths = new();
         using Paint measurementPaint = new Paint();
         measurementPaint.Style = PaintStyle.StrokeAndFill;
-        measurementPaint.StrokeWidth = StrokeWidth;
+        measurementPaint.StrokeWidth = 1; // Default stroke width
         foreach (TextInline inline in Inlines)
         {
             if (string.IsNullOrEmpty(inline.Text)) continue;
             using Font font = inline.Font.ToFont();
             foreach (string line in inline.Text.Split('\n'))
             {
+                measurementPaint.StrokeWidth = inline.StrokeWidth;
                 widths.AddRange(font.GetGlyphWidths(line, measurementPaint));
             }
         }
@@ -561,30 +558,8 @@ public class RichText : ICacheable
 
         return new RichText(clonedInlines, MaxWidth)
         {
-            Fill = Fill,
-            FillPaintable = FillPaintable,
-            StrokeWidth = StrokeWidth,
-            StrokePaintable = StrokePaintable,
             Spacing = Spacing,
         };
-    }
-
-    public bool IsLineEmpty(int desiredLineIndex)
-    {
-        if(desiredLineIndex < 0 || desiredLineIndex >= Lines.Length)
-            return true;
-
-        var line = Lines[desiredLineIndex];
-        bool isEmpty = true;
-        foreach (var inline in line)
-        {
-            if(inline.Text.Any(x => x != '\n'))
-            {
-                isEmpty = false;
-                break;
-            }
-        }
-        return isEmpty;
     }
 
     public TextInline SplitInline(int inlineIndex, int cursorPosition, int selectionEnd)
@@ -629,6 +604,34 @@ public class RichText : ICacheable
         }
 
         return selectedInline;
+    }
+
+    public TextInline MergeAdjacentInlines(TextInline target)
+    {
+        int targetIndex = InlinesMutable.IndexOf(target);
+
+        if (targetIndex < 0)
+            return target;
+
+        if (targetIndex > 0 &&
+            InlinesMutable[targetIndex - 1].HasEqualSettings(InlinesMutable[targetIndex]))
+        {
+            TextInline previous = InlinesMutable[targetIndex - 1];
+            previous.Text += target.Text;
+            InlinesMutable.RemoveAt(targetIndex);
+
+            target = previous;
+            targetIndex--;
+        }
+
+        if (targetIndex + 1 < InlinesMutable.Count && InlinesMutable[targetIndex].HasEqualSettings(InlinesMutable[targetIndex + 1]))
+        {
+            TextInline next = InlinesMutable[targetIndex + 1];
+            target.Text += next.Text;
+            InlinesMutable.RemoveAt(targetIndex + 1);
+        }
+
+        return target;
     }
 
     private static string[] GetTextElements(string text)
