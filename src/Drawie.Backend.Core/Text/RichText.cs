@@ -127,25 +127,38 @@ public class RichText : ICacheable
     public void AddInline(string text, FontData font) { InlinesMutable.Add(new TextInline(text, font)); }
     public void Clear() { InlinesMutable.Clear(); }
 
-    public TextInline? GetInlineAt(int index, out int inlineStart, out int inlineEnd)
+    public TextInline? GetInlineAt(int cursorPos, out int inlineStart, out int inlineEnd)
     {
         int offset = 0;
-        foreach (TextInline inline in Inlines)
+
+        foreach (var inline in InlinesMutable)
         {
-            int end = offset + inline.Text.Length;
-            if (index >= offset && index <= end)
+            int length = GetTextElementLength(inline.Text);
+
+            if (cursorPos >= offset && cursorPos <= offset + length)
             {
                 inlineStart = offset;
-                inlineEnd = end;
+                inlineEnd = offset + length;
                 return inline;
             }
 
-            offset = end;
+            offset += length;
         }
 
         inlineStart = -1;
         inlineEnd = -1;
         return null;
+    }
+
+    private static int GetTextElementLength(string text)
+    {
+        int length = 0;
+        var enumerator = StringInfo.GetTextElementEnumerator(text);
+
+        while (enumerator.MoveNext())
+            length++;
+
+        return length;
     }
 
     public int GetInlineStart(TextInline inline)
