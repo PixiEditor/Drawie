@@ -48,7 +48,13 @@ public class RichText : ICacheable
         List<TextInline> currentLine = new();
         foreach (TextInline inline in Inlines)
         {
-            string[] inlineLines = inline.Text.Split('\n');
+            if (string.IsNullOrEmpty(inline.Text))
+            {
+                continue;
+            }
+
+            var inlineLines = inline.Text.Split('\n');
+
             for (int i = 0; i < inlineLines.Length; i++)
             {
                 string lineText = inlineLines[i];
@@ -57,6 +63,10 @@ public class RichText : ICacheable
                     var clonedInline = inline.Clone();
                     clonedInline.Text = lineText;
                     currentLine.Add(clonedInline);
+                }
+                else
+                {
+                    currentLine.Add(new TextInline("\n", inline.Font));
                 }
 
                 if (i < inlineLines.Length - 1)
@@ -69,6 +79,28 @@ public class RichText : ICacheable
 
         if (currentLine.Count > 0) lines.Add(currentLine);
         return lines.ToArray();
+    }
+
+    private List<string> Split(string inlineText)
+    {
+        List<string> splits = new();
+        string currentSplit = string.Empty;
+        foreach (var aChar in inlineText)
+        {
+            if (aChar == '\n')
+            {
+                splits.Add(currentSplit);
+                splits.Add("\n");
+                currentSplit = string.Empty;
+            }
+            else
+            {
+                currentSplit += aChar;
+            }
+        }
+
+        splits.Add(currentSplit);
+        return splits;
     }
 
     public RichText() { }
@@ -157,6 +189,13 @@ public class RichText : ICacheable
                 if (string.IsNullOrEmpty(inline.Text)) continue;
                 using Font font = inline.Font.ToFont();
                 lineHeight = Math.Max(lineHeight, inline.LineHeight > 0 ? inline.LineHeight : font.Size * PtToPx);
+
+                if (inline.Text == "\n")
+                {
+                    continue;
+                }
+
+
                 VecD inlinePosition = new VecD(lineX, y);
                 if (hasStroke && hasFill && strokeAndFillEqual)
                 {
@@ -270,7 +309,7 @@ public class RichText : ICacheable
         return bounds ?? RectD.Empty;
     }
 
-    public VecF[] GetGlyphPositions()
+    public VecF[] GetGlyphPositions(bool includeEndPosition = false)
     {
         if (Inlines.Count == 0) return [];
         List<VecF> positions = new();
@@ -289,6 +328,12 @@ public class RichText : ICacheable
                 }
 
                 if (!string.IsNullOrEmpty(line)) x += font.MeasureText(line);
+
+                if (includeEndPosition)
+                {
+                    positions.Add(new VecF((float)x, (float)y));
+                }
+
                 y += inline.LineHeight > 0 ? inline.LineHeight : font.Size * PtToPx;
                 x = 0;
             }
@@ -319,26 +364,35 @@ public class RichText : ICacheable
 
     public int IndexOnLine(int cursorPosition, out int lineIndex)
     {
-        int index = 0;
-        lineIndex = 0;
-        foreach (var line in Lines)
+        for (var i = 0; i < Lines.Length; i++)
         {
-            var lineLength = GetLineLength(line);
-            if (cursorPosition <= index + lineLength) return cursorPosition - index;
-            index += lineLength + 1;
-            lineIndex++;
+            var startEnd = GetLineStartEnd(i);
+            if (cursorPosition >= startEnd.lineStart && cursorPosition <= startEnd.lineEnd)
+            {
+                lineIndex = i;
+                return cursorPosition - startEnd.lineStart;
+            }
         }
 
-        return cursorPosition - index;
+        lineIndex = Lines.Length - 1;
+        return cursorPosition;
     }
 
-    private int GetLineLength(IReadOnlyCollection<TextInline> line)
+    private int GetLineLength(IReadOnlyCollection<TextInline> line, bool newLineIsZeroLength = false)
     {
         int length = 0;
         foreach (var inline in line)
         {
             var enumerator = StringInfo.GetTextElementEnumerator(inline.Text);
-            while (enumerator.MoveNext()) length++;
+            while (enumerator.MoveNext())
+            {
+                if(enumerator.GetTextElement() == "\n" && newLineIsZeroLength)
+                {
+                    continue;
+                }
+
+                length++;
+            }
         }
 
         return length;
@@ -346,16 +400,29 @@ public class RichText : ICacheable
 
     public int GetIndexOnLine(int line, int index)
     {
-        int currentIndex = 0;
-        for (int i = 0; i < line; i++) currentIndex += GetLineLength(Lines[i]) + 1;
+        int currentIndex = CountLineLength(line, true);
         return Math.Clamp(currentIndex + index, currentIndex, currentIndex + GetLineLength(Lines[line]));
     }
 
     public (int lineStart, int lineEnd) GetLineStartEnd(int lineIndex)
     {
+        var currentIndex = CountLineLength(lineIndex, true);
+        return (currentIndex, currentIndex + GetLineLength(Lines[lineIndex], true));
+    }
+
+    private int CountLineLength(int lineIndex, bool accountNewLines)
+    {
         int currentIndex = 0;
-        for (int i = 0; i < lineIndex; i++) currentIndex += GetLineLength(Lines[i]) + 1;
-        return (currentIndex, currentIndex + GetLineLength(Lines[lineIndex]) + 1);
+        for (int i = 0; i < lineIndex; i++)
+        {
+            currentIndex += GetLineLength(Lines[i]);
+            if (accountNewLines && (Lines[i].Count != 1 || Lines[i].First().Text != "\n"))
+            {
+                currentIndex++; // Account for the newline character between lines
+            }
+        }
+
+        return currentIndex;
     }
 
     public VectorPath ToPath()
@@ -468,5 +535,23 @@ public class RichText : ICacheable
             StrokePaintable = StrokePaintable,
             Spacing = Spacing,
         };
+    }
+
+    public bool IsLineEmpty(int desiredLineIndex)
+    {
+        if(desiredLineIndex < 0 || desiredLineIndex >= Lines.Length)
+            return true;
+
+        var line = Lines[desiredLineIndex];
+        bool isEmpty = true;
+        foreach (var inline in line)
+        {
+            if(inline.Text.Any(x => x != '\n'))
+            {
+                isEmpty = false;
+                break;
+            }
+        }
+        return isEmpty;
     }
 }
