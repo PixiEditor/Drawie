@@ -194,7 +194,7 @@ public class RichText : ICacheable
             {
                 if (string.IsNullOrEmpty(inline.Text)) continue;
                 using Font font = inline.Font.ToFont();
-                lineHeight = Math.Max(lineHeight, inline.LineHeight > 0 ? inline.LineHeight : font.Size * PtToPx);
+                lineHeight = inline.LineHeight > 0 ? inline.LineHeight : font.Size * PtToPx;
 
                 if (inline.Text == "\n")
                 {
@@ -203,8 +203,10 @@ public class RichText : ICacheable
 
 
                 VecD inlinePosition = new VecD(lineX, y);
-                bool hasStroke = inline.StrokeWidth > 0 && inline.StrokePaintable != null && inline is {  StrokePaintable.AnythingVisible: true };
-                bool hasFill = inline.FillPaintable != null && inline is { Fill: true, FillPaintable.AnythingVisible: true };
+                bool hasStroke = inline.StrokeWidth > 0 && inline.StrokePaintable != null &&
+                                 inline is { StrokePaintable.AnythingVisible: true };
+                bool hasFill = inline.FillPaintable != null &&
+                               inline is { Fill: true, FillPaintable.AnythingVisible: true };
                 bool strokeAndFillEqual = inline.StrokePaintable == inline.FillPaintable;
                 if (hasStroke && hasFill && strokeAndFillEqual)
                 {
@@ -244,8 +246,10 @@ public class RichText : ICacheable
         {
             if (string.IsNullOrEmpty(inline.Text)) continue;
             using Font font = inline.Font.ToFont();
-            bool hasStroke = inline.StrokeWidth > 0 && inline.StrokePaintable != null && inline is {  StrokePaintable.AnythingVisible: true };
-            bool hasFill = inline.FillPaintable != null && inline is { Fill: true, FillPaintable.AnythingVisible: true };
+            bool hasStroke = inline.StrokeWidth > 0 && inline.StrokePaintable != null &&
+                             inline is { StrokePaintable.AnythingVisible: true };
+            bool hasFill = inline.FillPaintable != null &&
+                           inline is { Fill: true, FillPaintable.AnythingVisible: true };
             bool strokeAndFillEqual = inline.StrokePaintable == inline.FillPaintable;
             if (hasStroke && hasFill && strokeAndFillEqual)
             {
@@ -274,6 +278,35 @@ public class RichText : ICacheable
 
             pathOffset += new VecD(font.MeasureText(inline.Text), 0);
         }
+    }
+
+    public List<TextInline> GetInlinesInRange(int from, int to)
+    {
+        if (from == to)
+        {
+            return Inlines.ToList();
+        }
+
+        int selectionStart = Math.Min(from, to);
+        int selectionFinish = Math.Max(from, to);
+
+        List<TextInline> result = new();
+
+        int position = 0;
+
+        foreach (TextInline inline in Inlines)
+        {
+            int inlineStart = position;
+            int inlineEnd = position + inline.Text.Length;
+
+            if (inlineStart < selectionFinish && inlineEnd > selectionStart)
+            {
+                result.Add(inline);
+            }
+
+            position = inlineEnd;
+        }
+        return result;
     }
 
     public RectD MeasureBounds()
@@ -415,7 +448,7 @@ public class RichText : ICacheable
             var enumerator = StringInfo.GetTextElementEnumerator(inline.Text);
             while (enumerator.MoveNext())
             {
-                if(enumerator.GetTextElement() == "\n" && newLineIsZeroLength)
+                if (enumerator.GetTextElement() == "\n" && newLineIsZeroLength)
                 {
                     continue;
                 }
@@ -556,10 +589,7 @@ public class RichText : ICacheable
     {
         var clonedInlines = Inlines.Select(inline => inline.Clone()).ToList();
 
-        return new RichText(clonedInlines, MaxWidth)
-        {
-            Spacing = Spacing,
-        };
+        return new RichText(clonedInlines, MaxWidth) { Spacing = Spacing, };
     }
 
     public TextInline SplitInline(int inlineIndex, int cursorPosition, int selectionEnd)
@@ -624,7 +654,8 @@ public class RichText : ICacheable
             targetIndex--;
         }
 
-        if (targetIndex + 1 < InlinesMutable.Count && InlinesMutable[targetIndex].HasEqualSettings(InlinesMutable[targetIndex + 1]))
+        if (targetIndex + 1 < InlinesMutable.Count &&
+            InlinesMutable[targetIndex].HasEqualSettings(InlinesMutable[targetIndex + 1]))
         {
             TextInline next = InlinesMutable[targetIndex + 1];
             target.Text += next.Text;
