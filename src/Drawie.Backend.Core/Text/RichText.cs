@@ -18,7 +18,6 @@ public class RichText : ICacheable
     public IReadOnlyCollection<TextInline>[] Lines => ChopInlinesIntoLines();
 
     public double MaxWidth { get; set; } = double.MaxValue;
-    public double? Spacing { get; set; }
 
     private List<TextInline> InlinesMutable { get; } = new();
 
@@ -194,13 +193,13 @@ public class RichText : ICacheable
             {
                 if (string.IsNullOrEmpty(inline.Text)) continue;
                 using Font font = inline.Font.ToFont();
-                lineHeight = inline.LineHeight > 0 ? inline.LineHeight : font.Size * PtToPx;
 
                 if (inline.Text == "\n")
                 {
                     continue;
                 }
 
+                lineHeight = inline.LineHeight * PtToPx;
 
                 VecD inlinePosition = new VecD(lineX, y);
                 bool hasStroke = inline.StrokeWidth > 0 && inline.StrokePaintable != null &&
@@ -282,11 +281,6 @@ public class RichText : ICacheable
 
     public List<TextInline> GetInlinesInRange(int from, int to)
     {
-        if (from == to)
-        {
-            return Inlines.ToList();
-        }
-
         int selectionStart = Math.Min(from, to);
         int selectionFinish = Math.Max(from, to);
 
@@ -299,7 +293,7 @@ public class RichText : ICacheable
             int inlineStart = position;
             int inlineEnd = position + inline.Text.Length;
 
-            if (inlineStart < selectionFinish && inlineEnd > selectionStart)
+            if (inlineStart < selectionFinish && inlineEnd >= selectionStart)
             {
                 result.Add(inline);
             }
@@ -312,40 +306,39 @@ public class RichText : ICacheable
     public RectD MeasureBounds()
     {
         if (Inlines.Count == 0) return RectD.Empty;
+
         RectD? bounds = null;
         double x = 0;
         double y = 0;
-        double lineHeight = 0;
-        foreach (TextInline inline in Inlines)
+
+        foreach (var line in Lines)
         {
-            if (string.IsNullOrEmpty(inline.Text)) continue;
-            using Font font = inline.Font.ToFont();
-            string[] lines = inline.Text.Split('\n');
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string line = lines[i];
-                if (!string.IsNullOrEmpty(line))
-                {
-                    font.MeasureText(line, out RectD inlineBounds);
-                    inlineBounds = new RectD(inlineBounds.X + x, inlineBounds.Y + y, inlineBounds.Width,
-                        inlineBounds.Height);
-                    bounds = bounds == null ? inlineBounds : bounds.Value.Union(inlineBounds);
-                }
+            double lineHeight = 0;
 
-                if (i < lines.Length - 1)
-                {
-                    y += lineHeight > 0 ? lineHeight : font.Size * PtToPx;
-                    x = 0;
-                    lineHeight = 0;
-                }
+            foreach (TextInline inline in line)
+            {
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
+                using Font font = inline.Font.ToFont();
+
+                font.MeasureText(inline.Text, out RectD inlineBounds);
+                inlineBounds = new RectD(
+                    inlineBounds.X + x,
+                    inlineBounds.Y + y,
+                    inlineBounds.Width,
+                    inlineBounds.Height);
+
+                bounds = bounds == null
+                    ? inlineBounds
+                    : bounds.Value.Union(inlineBounds);
+
+                x += font.MeasureText(inline.Text);
+                lineHeight = Math.Max(lineHeight, inline.LineHeight * PtToPx);
             }
 
-            if (lines.Length > 0)
-            {
-                string lastLine = lines[^1];
-                lineHeight = Math.Max(lineHeight, inline.LineHeight > 0 ? inline.LineHeight : font.Size * PtToPx);
-                if (!string.IsNullOrEmpty(lastLine)) x += font.MeasureText(lastLine);
-            }
+            y += lineHeight;
+            x = 0;
         }
 
         return bounds ?? RectD.Empty;
@@ -359,69 +352,34 @@ public class RichText : ICacheable
         double x = 0;
         double y = 0;
 
-        foreach (TextInline inline in Inlines)
+        foreach (var line in Lines)
         {
-            if (string.IsNullOrEmpty(inline.Text))
-                continue;
+            double lineHeight = 0;
 
-            using Font font = inline.Font.ToFont();
-
-            string[] lines = inline.Text.Split('\n');
-
-            for (int i = 0; i < lines.Length; i++)
+            foreach (TextInline inline in line)
             {
-                string line = lines[i];
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
 
-                VecF[] linePositions = font.GetGlyphPositions(line);
-                foreach (VecF glyphPosition in linePositions)
-                {
+                lineHeight = Math.Max(lineHeight, inline.LineHeight * PtToPx);
+
+                using Font font = inline.Font.ToFont();
+
+                VecF[] glyphPositions = font.GetGlyphPositions(inline.Text);
+                foreach (VecF glyphPosition in glyphPositions)
                     positions.Add(glyphPosition + new VecF((float)x, (float)y));
-                }
 
-                if (!string.IsNullOrEmpty(line))
-                    x += font.MeasureText(line);
-
-                bool lineEnds = i < lines.Length - 1;
-
-                if (lineEnds)
-                {
-                    if (includeEndPosition)
-                        positions.Add(new VecF((float)x, (float)y));
-
-                    y += inline.LineHeight > 0
-                        ? inline.LineHeight
-                        : font.Size * PtToPx;
-
-                    x = 0;
-                }
+                x += font.MeasureText(inline.Text);
             }
-        }
 
-        if (includeEndPosition)
-            positions.Add(new VecF((float)x, (float)y));
+            if (includeEndPosition)
+                positions.Add(new VecF((float)x, (float)y));
+
+            y += lineHeight;
+            x = 0;
+        }
 
         return positions.ToArray();
-    }
-
-    public float[] GetGlyphWidths()
-    {
-        if (Inlines.Count == 0) return [];
-        List<float> widths = new();
-        using Paint measurementPaint = new Paint();
-        measurementPaint.Style = PaintStyle.StrokeAndFill;
-        measurementPaint.StrokeWidth = 1; // Default stroke width
-        foreach (TextInline inline in Inlines)
-        {
-            if (string.IsNullOrEmpty(inline.Text)) continue;
-            using Font font = inline.Font.ToFont();
-            foreach (string line in inline.Text.Split('\n'))
-            {
-                measurementPaint.StrokeWidth = inline.StrokeWidth;
-                widths.AddRange(font.GetGlyphWidths(line, measurementPaint));
-            }
-        }
-
-        return widths.ToArray();
     }
 
     public int IndexOnLine(int cursorPosition, out int lineIndex)
@@ -520,7 +478,6 @@ public class RichText : ICacheable
     {
         HashCode hash = new HashCode();
         hash.Add(MaxWidth);
-        hash.Add(Spacing);
         foreach (TextInline inline in Inlines)
         {
             hash.Add(inline.GetCacheHash());
@@ -556,9 +513,7 @@ public class RichText : ICacheable
             {
                 if (currentLine == lineIndex)
                 {
-                    double inlineLineHeight = inline.LineHeight > 0
-                        ? inline.LineHeight
-                        : inline.Font.Size * PtToPx;
+                    double inlineLineHeight = inline.LineHeight * PtToPx;
 
                     lineHeight = Math.Max(lineHeight, inlineLineHeight);
                 }
@@ -574,9 +529,7 @@ public class RichText : ICacheable
 
             if (lines.Length > 0 && currentLine == lineIndex)
             {
-                double inlineLineHeight = inline.LineHeight > 0
-                    ? inline.LineHeight
-                    : inline.Font.Size * PtToPx;
+                double inlineLineHeight = inline.LineHeight * PtToPx;
 
                 lineHeight = Math.Max(lineHeight, inlineLineHeight);
             }
@@ -589,7 +542,7 @@ public class RichText : ICacheable
     {
         var clonedInlines = Inlines.Select(inline => inline.Clone()).ToList();
 
-        return new RichText(clonedInlines, MaxWidth) { Spacing = Spacing, };
+        return new RichText(clonedInlines, MaxWidth);
     }
 
     public TextInline SplitInline(int inlineIndex, int cursorPosition, int selectionEnd)

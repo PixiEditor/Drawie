@@ -26,6 +26,7 @@ public class TextInline : ICacheable
     {
         Text = text;
         Font = font;
+        LineHeight = (float)font.Size;
     }
 
     public int GetCacheHash()
