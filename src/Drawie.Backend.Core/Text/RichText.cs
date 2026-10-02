@@ -196,10 +196,20 @@ public class RichText : ICacheable
 
             if (index > 0)
             {
+                bool allEmpty = true;
                 foreach (TextInline inline in line)
                 {
+                    bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                    allEmpty &= isEmpty;
+                    if (isEmpty) continue;
                     maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
                     maxFontSize = Math.Max(maxFontSize, inline.Font.Size * PtToPx);
+                }
+
+                if (allEmpty)
+                {
+                    maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
+                    maxFontSize = line.FirstOrDefault()?.Font.Size * PtToPx ?? 0;
                 }
             }
 
@@ -301,23 +311,38 @@ public class RichText : ICacheable
     public List<TextInline> GetInlinesInRange(int from, int to)
     {
         int selectionStart = Math.Min(from, to);
-        int selectionFinish = Math.Max(from, to);
+        int selectionEnd = Math.Max(from, to);
 
         List<TextInline> result = new();
 
-        int position = 0;
+        if (Inlines.Count == 0)
+            return result;
+
+        if (selectionStart == selectionEnd)
+        {
+            var inlineAt = GetInlineAt(selectionStart, out int inlineStart, out int inlineEnd);
+            if (inlineAt != null)
+            {
+                result.Add(inlineAt);
+            }
+
+            return result;
+        }
+
+        int currentPosition = 0;
 
         foreach (TextInline inline in Inlines)
         {
-            int inlineStart = position;
-            int inlineEnd = position + inline.Text.Length;
+            int inlineStart = currentPosition;
+            int inlineEnd = currentPosition + inline.Text.Length;
 
-            if (inlineStart <= selectionFinish && inlineEnd >= selectionStart)
-            {
+            if (inlineStart < selectionEnd && inlineEnd > selectionStart)
                 result.Add(inline);
-            }
 
-            position = inlineEnd;
+            currentPosition = inlineEnd;
+
+            if (currentPosition >= selectionEnd)
+                break;
         }
 
         return result;
@@ -338,11 +363,18 @@ public class RichText : ICacheable
 
             if (index > 0)
             {
+                bool allEmpty = true;
                 foreach (TextInline inline in line)
                 {
-                    maxLineHeight = Math.Max(
-                        maxLineHeight,
-                        inline.LineHeight * PtToPx);
+                    bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                    allEmpty &= isEmpty;
+                    if (isEmpty) continue;
+                    maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+                }
+
+                if (allEmpty)
+                {
+                    maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
                 }
             }
 
@@ -389,11 +421,18 @@ public class RichText : ICacheable
 
             if (index > 0)
             {
+                bool allEmpty = true;
                 foreach (TextInline inline in line)
                 {
-                    maxLineHeight = Math.Max(
-                        maxLineHeight,
-                        inline.LineHeight * PtToPx);
+                    bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                    allEmpty &= isEmpty;
+                    if (isEmpty) continue;
+                    maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+                }
+
+                if (allEmpty)
+                {
+                    maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
                 }
             }
 
