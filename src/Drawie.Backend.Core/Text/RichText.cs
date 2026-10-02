@@ -505,37 +505,10 @@ public class RichText : ICacheable
         int currentLine = 0;
         double lineHeight = 0;
 
-        foreach (TextInline inline in Inlines)
-        {
-            string[] lines = inline.Text.Split('\n');
+        if(lineIndex < 0 || lineIndex >= Lines.Length)
+            return 0;
 
-            for (int i = 0; i < lines.Length; i++)
-            {
-                if (currentLine == lineIndex)
-                {
-                    double inlineLineHeight = inline.LineHeight * PtToPx;
-
-                    lineHeight = Math.Max(lineHeight, inlineLineHeight);
-                }
-
-                if (i < lines.Length - 1)
-                {
-                    if (currentLine == lineIndex)
-                        return lineHeight;
-
-                    currentLine++;
-                }
-            }
-
-            if (lines.Length > 0 && currentLine == lineIndex)
-            {
-                double inlineLineHeight = inline.LineHeight * PtToPx;
-
-                lineHeight = Math.Max(lineHeight, inlineLineHeight);
-            }
-        }
-
-        return lineHeight;
+        return Lines[lineIndex].Max(inline => inline.LineHeight * PtToPx);
     }
 
     public RichText Clone()
