@@ -187,60 +187,66 @@ public class RichText : ICacheable
 
         double x = position.X;
         double y = position.Y;
-        var measured = MeasureBounds();
+        double boundingWidth = MeasureBounds().Width;
 
         for (var index = 0; index < Lines.Length; index++)
         {
             var line = Lines[index];
             double maxLineHeight = 0;
             double maxFontSize = 0;
+            double measuredLineWidth = 0;
 
-            if (index > 0)
+            bool allEmpty = true;
+            foreach (TextInline inline in line)
             {
-                bool allEmpty = true;
-                foreach (TextInline inline in line)
+                bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                allEmpty &= isEmpty;
+                if (isEmpty) continue;
+                if (index > 0)
                 {
-                    bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
-                    allEmpty &= isEmpty;
-                    if (isEmpty) continue;
                     maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
                     maxFontSize = Math.Max(maxFontSize, inline.Font.Size * PtToPx);
                 }
 
-                if (allEmpty)
-                {
-                    maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
-                }
+                using Font font = inline.Font.ToFont();
+                measuredLineWidth += font.MeasureText(inline.Text);
+            }
+
+            if (allEmpty)
+            {
+                maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
             }
 
             double lineX = x;
 
             TextAlign? alignment = null;
 
+            int saved = canvas.Save();
+
             foreach (TextInline inline in line)
             {
                 if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
                     continue;
 
+                using Font font = inline.Font.ToFont();
                 if (alignment == null)
                 {
                     alignment = inline.Alignment;
-                }
 
-                using Font font = inline.Font.ToFont();
+                    if (alignment == TextAlign.Center)
+                    {
+                        canvas.Translate((float)((boundingWidth - measuredLineWidth) / 2f), 0);
+                    }
+                    else if (alignment == TextAlign.Right)
+                    {
+                        canvas.Translate((float)(boundingWidth - measuredLineWidth), 0);
+                    }
+                }
 
                 double topOffset = maxLineHeight;
+                double measuredInlineWidth = font.MeasureText(inline.Text);
 
                 VecD inlinePosition = new VecD(lineX, y + topOffset);
-                double measuredWidth = font.MeasureText(inline.Text);
-                if (alignment == TextAlign.Center)
-                {
-                    inlinePosition.X += measured.Width / 2f;
-                }
-                else if (alignment == TextAlign.Right)
-                {
-                    inlinePosition.X += measured.Width;
-                }
 
                 bool hasStroke = inline is { StrokeWidth: > 0, StrokePaintable.AnythingVisible: true };
 
@@ -254,7 +260,7 @@ public class RichText : ICacheable
                     paint.Style = PaintStyle.StrokeAndFill;
                     paint.SetPaintable(inline.StrokePaintable);
                     paint.StrokeWidth = inline.StrokeWidth;
-                    canvas.DrawText(inline.Text, inlinePosition, alignment.Value, font, paint);
+                    canvas.DrawText(inline.Text, inlinePosition, TextAlign.Left, font, paint);
                 }
                 else
                 {
@@ -263,19 +269,21 @@ public class RichText : ICacheable
                         paint.Style = PaintStyle.Stroke;
                         paint.SetPaintable(inline.StrokePaintable);
                         paint.StrokeWidth = inline.StrokeWidth;
-                        canvas.DrawText(inline.Text, inlinePosition, alignment.Value, font, paint);
+                        canvas.DrawText(inline.Text, inlinePosition, TextAlign.Left, font, paint);
                     }
 
                     if (hasFill)
                     {
                         paint.Style = PaintStyle.Fill;
                         paint.SetPaintable(inline.FillPaintable);
-                        canvas.DrawText(inline.Text, inlinePosition, alignment.Value, font, paint);
+                        canvas.DrawText(inline.Text, inlinePosition, TextAlign.Left, font, paint);
                     }
                 }
 
-                lineX += measuredWidth;
+                lineX += measuredInlineWidth;
             }
+
+            canvas.RestoreToCount(saved);
 
             y += maxLineHeight;
         }
@@ -294,21 +302,19 @@ public class RichText : ICacheable
             var line = Lines[index];
             double maxLineHeight = 0;
 
-            if (index > 0)
+            bool allEmpty = true;
+            foreach (TextInline inline in line)
             {
-                bool allEmpty = true;
-                foreach (TextInline inline in line)
-                {
-                    bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
-                    allEmpty &= isEmpty;
-                    if (isEmpty) continue;
+                bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                allEmpty &= isEmpty;
+                if (isEmpty) continue;
+                if(index > 0)
                     maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
-                }
+            }
 
-                if (allEmpty)
-                {
-                    maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
-                }
+            if (allEmpty)
+            {
+                maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
             }
 
             foreach (TextInline inline in line)
@@ -353,22 +359,23 @@ public class RichText : ICacheable
             var line = Lines[index];
             double maxLineHeight = 0;
             TextAlign? alignment = null;
+            double measuredLineWidth = 0;
 
-            if (index > 0)
+            bool allEmpty = true;
+            foreach (TextInline inline in line)
             {
-                bool allEmpty = true;
-                foreach (TextInline inline in line)
-                {
-                    bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
-                    allEmpty &= isEmpty;
-                    if (isEmpty) continue;
+                bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                allEmpty &= isEmpty;
+                if (isEmpty) continue;
+                if (index > 0)
                     maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
-                }
+                using Font font = inline.Font.ToFont();
+                measuredLineWidth += font.MeasureText(inline.Text);
+            }
 
-                if (allEmpty)
-                {
-                    maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
-                }
+            if (allEmpty)
+            {
+                maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
             }
 
             double offsetX = 0;
@@ -385,11 +392,11 @@ public class RichText : ICacheable
                     alignment = inline.Alignment;
                     if (alignment == TextAlign.Center)
                     {
-                        offsetX = (boundingWidth - measuredLine) / 2f;
+                        offsetX = (boundingWidth - measuredLineWidth) / 2f;
                     }
                     else if (alignment == TextAlign.Right)
                     {
-                        offsetX = boundingWidth - measuredLine;
+                        offsetX = boundingWidth - measuredLineWidth;
                     }
                 }
 
@@ -492,11 +499,11 @@ public class RichText : ICacheable
         return result;
     }
 
-    public int IndexOnLine(int cursorPosition, out int lineIndex)
+    public int IndexOnLine(int cursorPosition, out int lineIndex, bool accountNewLines = true)
     {
         for (var i = 0; i < Lines.Length; i++)
         {
-            var startEnd = GetLineStartEnd(i);
+            var startEnd = GetLineStartEnd(i, accountNewLines);
             if (cursorPosition >= startEnd.lineStart && cursorPosition <= startEnd.lineEnd)
             {
                 lineIndex = i;
@@ -534,9 +541,9 @@ public class RichText : ICacheable
         return Math.Clamp(currentIndex + index, currentIndex, currentIndex + GetLineLength(Lines[line]));
     }
 
-    public (int lineStart, int lineEnd) GetLineStartEnd(int lineIndex)
+    public (int lineStart, int lineEnd) GetLineStartEnd(int lineIndex, bool accountNewLines = true)
     {
-        var currentIndex = CountLineLength(lineIndex, true);
+        var currentIndex = CountLineLength(lineIndex, accountNewLines);
         return (currentIndex, currentIndex + GetLineLength(Lines[lineIndex], true));
     }
 
