@@ -34,10 +34,7 @@ public class FontUtility
 
             if (elementStart > start)
             {
-                yield return new FontRun(
-                    start,
-                    elementStart - start,
-                    currentTypeface);
+                yield return new FontRun(start, elementStart - start, currentTypeface);
             }
 
             int runStart = elementStart;
@@ -71,10 +68,7 @@ public class FontUtility
 
             if (runEnd > runStart)
             {
-                yield return new FontRun(
-                    runStart,
-                    runEnd - runStart,
-                    currentTypeface);
+                yield return new FontRun(runStart, runEnd - runStart, currentTypeface);
             }
 
             start = runEnd;

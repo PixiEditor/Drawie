@@ -187,6 +187,7 @@ public class RichText : ICacheable
 
         double x = position.X;
         double y = position.Y;
+        var measured = MeasureBounds();
 
         for (var index = 0; index < Lines.Length; index++)
         {
@@ -209,39 +210,51 @@ public class RichText : ICacheable
                 if (allEmpty)
                 {
                     maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
-                    maxFontSize = line.FirstOrDefault()?.Font.Size * PtToPx ?? 0;
                 }
             }
 
             double lineX = x;
+
+            TextAlign? alignment = null;
 
             foreach (TextInline inline in line)
             {
                 if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
                     continue;
 
+                if (alignment == null)
+                {
+                    alignment = inline.Alignment;
+                }
+
                 using Font font = inline.Font.ToFont();
 
                 double topOffset = maxLineHeight;
 
                 VecD inlinePosition = new VecD(lineX, y + topOffset);
+                double measuredWidth = font.MeasureText(inline.Text);
+                if (alignment == TextAlign.Center)
+                {
+                    inlinePosition.X += measured.Width / 2f;
+                }
+                else if (alignment == TextAlign.Right)
+                {
+                    inlinePosition.X += measured.Width;
+                }
 
-                bool hasStroke = inline.StrokeWidth > 0 &&
-                                 inline.StrokePaintable != null &&
-                                 inline.StrokePaintable.AnythingVisible;
+                bool hasStroke = inline is { StrokeWidth: > 0, StrokePaintable.AnythingVisible: true };
 
-                bool hasFill = inline.FillPaintable != null &&
-                               inline.Fill &&
-                               inline.FillPaintable.AnythingVisible;
+                bool hasFill = inline is { FillPaintable.AnythingVisible: true, Fill: true };
 
                 bool strokeAndFillEqual = inline.StrokePaintable == inline.FillPaintable;
+
 
                 if (hasStroke && hasFill && strokeAndFillEqual)
                 {
                     paint.Style = PaintStyle.StrokeAndFill;
                     paint.SetPaintable(inline.StrokePaintable);
                     paint.StrokeWidth = inline.StrokeWidth;
-                    canvas.DrawText(inline.Text, inlinePosition, font, paint);
+                    canvas.DrawText(inline.Text, inlinePosition, alignment.Value, font, paint);
                 }
                 else
                 {
@@ -250,23 +263,154 @@ public class RichText : ICacheable
                         paint.Style = PaintStyle.Stroke;
                         paint.SetPaintable(inline.StrokePaintable);
                         paint.StrokeWidth = inline.StrokeWidth;
-                        canvas.DrawText(inline.Text, inlinePosition, font, paint);
+                        canvas.DrawText(inline.Text, inlinePosition, alignment.Value, font, paint);
                     }
 
                     if (hasFill)
                     {
                         paint.Style = PaintStyle.Fill;
                         paint.SetPaintable(inline.FillPaintable);
-                        canvas.DrawText(inline.Text, inlinePosition, font, paint);
+                        canvas.DrawText(inline.Text, inlinePosition, alignment.Value, font, paint);
                     }
                 }
 
-                lineX += font.MeasureText(inline.Text);
+                lineX += measuredWidth;
             }
 
             y += maxLineHeight;
         }
     }
+
+    public RectD MeasureBounds()
+    {
+        if (Inlines.Count == 0) return RectD.Empty;
+
+        RectD? bounds = null;
+        double x = 0;
+        double y = 0;
+
+        for (var index = 0; index < Lines.Length; index++)
+        {
+            var line = Lines[index];
+            double maxLineHeight = 0;
+
+            if (index > 0)
+            {
+                bool allEmpty = true;
+                foreach (TextInline inline in line)
+                {
+                    bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                    allEmpty &= isEmpty;
+                    if (isEmpty) continue;
+                    maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+                }
+
+                if (allEmpty)
+                {
+                    maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
+                }
+            }
+
+            foreach (TextInline inline in line)
+            {
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
+                using Font font = inline.Font.ToFont();
+
+                font.MeasureText(inline.Text, out RectD inlineBounds);
+                inlineBounds = new RectD(
+                    inlineBounds.X + x,
+                    inlineBounds.Y + y + maxLineHeight,
+                    inlineBounds.Width,
+                    inlineBounds.Height);
+
+                bounds = bounds == null
+                    ? inlineBounds
+                    : bounds.Value.Union(inlineBounds);
+
+                x += font.MeasureText(inline.Text);
+            }
+
+            y += maxLineHeight;
+            x = 0;
+        }
+
+        return bounds ?? RectD.Empty;
+    }
+
+    public VecF[] GetGlyphPositions(bool includeEndPosition = false)
+    {
+        if (Inlines.Count == 0) return [];
+
+        List<VecF> positions = new();
+        double x = 0;
+        double y = 0;
+        double boundingWidth = MeasureBounds().Width;
+
+        for (var index = 0; index < Lines.Length; index++)
+        {
+            var line = Lines[index];
+            double maxLineHeight = 0;
+            TextAlign? alignment = null;
+
+            if (index > 0)
+            {
+                bool allEmpty = true;
+                foreach (TextInline inline in line)
+                {
+                    bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                    allEmpty &= isEmpty;
+                    if (isEmpty) continue;
+                    maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+                }
+
+                if (allEmpty)
+                {
+                    maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
+                }
+            }
+
+            double offsetX = 0;
+            foreach (TextInline inline in line)
+            {
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
+                using Font font = inline.Font.ToFont();
+                var measuredLine = font.MeasureText(inline.Text);
+
+                if (alignment == null)
+                {
+                    alignment = inline.Alignment;
+                    if (alignment == TextAlign.Center)
+                    {
+                        offsetX = (boundingWidth - measuredLine) / 2f;
+                    }
+                    else if (alignment == TextAlign.Right)
+                    {
+                        offsetX = boundingWidth - measuredLine;
+                    }
+                }
+
+                VecF[] glyphPositions = font.GetGlyphPositions(inline.Text);
+
+                foreach (VecF glyphPosition in glyphPositions)
+                    positions.Add(glyphPosition + new VecF((float)x + (float)offsetX, (float)y + (float)maxLineHeight));
+
+                x += measuredLine;
+            }
+
+            if (includeEndPosition)
+                positions.Add(new VecF((float)x + (float)offsetX, (float)y + (float)maxLineHeight));
+
+            y += maxLineHeight;
+            x = 0;
+        }
+
+        return positions.ToArray();
+    }
+
 
     private void PaintOnPath(Canvas canvas, VecD position, Paint paint, VectorPath path, VecD pathOffset)
     {
@@ -346,118 +490,6 @@ public class RichText : ICacheable
         }
 
         return result;
-    }
-
-    public RectD MeasureBounds()
-    {
-        if (Inlines.Count == 0) return RectD.Empty;
-
-        RectD? bounds = null;
-        double x = 0;
-        double y = 0;
-
-        for (var index = 0; index < Lines.Length; index++)
-        {
-            var line = Lines[index];
-            double maxLineHeight = 0;
-
-            if (index > 0)
-            {
-                bool allEmpty = true;
-                foreach (TextInline inline in line)
-                {
-                    bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
-                    allEmpty &= isEmpty;
-                    if (isEmpty) continue;
-                    maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
-                }
-
-                if (allEmpty)
-                {
-                    maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
-                }
-            }
-
-            foreach (TextInline inline in line)
-            {
-                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
-                    continue;
-
-                using Font font = inline.Font.ToFont();
-
-                font.MeasureText(inline.Text, out RectD inlineBounds);
-                inlineBounds = new RectD(
-                    inlineBounds.X + x,
-                    inlineBounds.Y + y + maxLineHeight,
-                    inlineBounds.Width,
-                    inlineBounds.Height);
-
-                bounds = bounds == null
-                    ? inlineBounds
-                    : bounds.Value.Union(inlineBounds);
-
-                x += font.MeasureText(inline.Text);
-            }
-
-            y += maxLineHeight;
-            x = 0;
-        }
-
-        return bounds ?? RectD.Empty;
-    }
-
-    public VecF[] GetGlyphPositions(bool includeEndPosition = false)
-    {
-        if (Inlines.Count == 0) return [];
-
-        List<VecF> positions = new();
-        double x = 0;
-        double y = 0;
-
-        for (var index = 0; index < Lines.Length; index++)
-        {
-            var line = Lines[index];
-            double maxLineHeight = 0;
-
-            if (index > 0)
-            {
-                bool allEmpty = true;
-                foreach (TextInline inline in line)
-                {
-                    bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
-                    allEmpty &= isEmpty;
-                    if (isEmpty) continue;
-                    maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
-                }
-
-                if (allEmpty)
-                {
-                    maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
-                }
-            }
-
-            foreach (TextInline inline in line)
-            {
-                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
-                    continue;
-
-                using Font font = inline.Font.ToFont();
-
-                VecF[] glyphPositions = font.GetGlyphPositions(inline.Text);
-                foreach (VecF glyphPosition in glyphPositions)
-                    positions.Add(glyphPosition + new VecF((float)x, (float)y + (float)maxLineHeight));
-
-                x += font.MeasureText(inline.Text);
-            }
-
-            if (includeEndPosition)
-                positions.Add(new VecF((float)x, (float)y + (float)maxLineHeight));
-
-            y += maxLineHeight;
-            x = 0;
-        }
-
-        return positions.ToArray();
     }
 
     public int IndexOnLine(int cursorPosition, out int lineIndex)

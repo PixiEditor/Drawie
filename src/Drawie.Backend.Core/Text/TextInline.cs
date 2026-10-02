@@ -6,8 +6,9 @@ public class TextInline : ICacheable
 {
     public string Text { get; set; }
     public FontData Font { get; set; }
-    //TODO:
-    public RichTextAlign Alignment { get; set; }
+
+    public TextAlign Alignment { get; set; }
+
     //TODO:
     public TextDecoration Decoration { get; set; }
     public float LineHeight { get; set; }
@@ -15,6 +16,7 @@ public class TextInline : ICacheable
     public bool Fill { get; set; } = true;
     public Paintable? FillPaintable { get; set; }
     public Paintable? StrokePaintable { get; set; }
+
     public float StrokeWidth { get; set; }
     //TODO:
     // public TextDecorationType DecorationType { get; set; }
@@ -49,8 +51,14 @@ public class TextInline : ICacheable
     {
         return new TextInline(Text, Font)
         {
-            Alignment = Alignment, Decoration = Decoration, LineHeight = LineHeight, LetterSpacing = LetterSpacing,
-            Fill = Fill, FillPaintable = FillPaintable, StrokePaintable = StrokePaintable, StrokeWidth = StrokeWidth,
+            Alignment = Alignment,
+            Decoration = Decoration,
+            LineHeight = LineHeight,
+            LetterSpacing = LetterSpacing,
+            Fill = Fill,
+            FillPaintable = FillPaintable,
+            StrokePaintable = StrokePaintable,
+            StrokeWidth = StrokeWidth,
         };
     }
 
@@ -65,8 +73,8 @@ public class TextInline : ICacheable
                && StrokePaintable?.GetCacheHash() == other.StrokePaintable?.GetCacheHash()
                && Math.Abs(StrokeWidth - other.StrokeWidth) < float.Epsilon
                && Font.Bold == other.Font.Bold
-                && Font.Italic == other.Font.Italic
-                && Math.Abs(Font.Size - other.Font.Size) < float.Epsilon
-                && Font.Family.Equals(other.Font.Family);
+               && Font.Italic == other.Font.Italic
+               && Math.Abs(Font.Size - other.Font.Size) < float.Epsilon
+               && Font.Family.Equals(other.Font.Family);
     }
 }
