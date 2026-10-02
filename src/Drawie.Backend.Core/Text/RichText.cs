@@ -194,12 +194,12 @@ public class RichText : ICacheable
                 if (string.IsNullOrEmpty(inline.Text)) continue;
                 using Font font = inline.Font.ToFont();
 
+                lineHeight = inline.LineHeight * PtToPx;
                 if (inline.Text == "\n")
                 {
                     continue;
                 }
 
-                lineHeight = inline.LineHeight * PtToPx;
 
                 VecD inlinePosition = new VecD(lineX, y);
                 bool hasStroke = inline.StrokeWidth > 0 && inline.StrokePaintable != null &&
@@ -317,6 +317,7 @@ public class RichText : ICacheable
 
             foreach (TextInline inline in line)
             {
+                lineHeight = Math.Max(lineHeight, inline.LineHeight * PtToPx);
                 if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
                     continue;
 
@@ -334,7 +335,6 @@ public class RichText : ICacheable
                     : bounds.Value.Union(inlineBounds);
 
                 x += font.MeasureText(inline.Text);
-                lineHeight = Math.Max(lineHeight, inline.LineHeight * PtToPx);
             }
 
             y += lineHeight;
@@ -358,10 +358,10 @@ public class RichText : ICacheable
 
             foreach (TextInline inline in line)
             {
+                lineHeight = Math.Max(lineHeight, inline.LineHeight * PtToPx);
+
                 if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
                     continue;
-
-                lineHeight = Math.Max(lineHeight, inline.LineHeight * PtToPx);
 
                 using Font font = inline.Font.ToFont();
 
