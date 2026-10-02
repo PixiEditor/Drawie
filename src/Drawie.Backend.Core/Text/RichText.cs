@@ -176,7 +176,9 @@ public class RichText : ICacheable
 
     public void Paint(Canvas canvas, VecD position, Paint paint, VectorPath? onPath = null, VecD? pathOffset = null)
     {
-        if (pathOffset == null) pathOffset = VecD.Zero;
+        if (pathOffset == null)
+            pathOffset = VecD.Zero;
+
         if (onPath != null)
         {
             PaintOnPath(canvas, position, paint, onPath, pathOffset.Value);
@@ -185,28 +187,45 @@ public class RichText : ICacheable
 
         double x = position.X;
         double y = position.Y;
-        foreach (var line in Lines)
+
+        for (var index = 0; index < Lines.Length; index++)
         {
-            double lineHeight = 0;
+            var line = Lines[index];
+            double maxLineHeight = 0;
+            double maxFontSize = 0;
+
+            if (index > 0)
+            {
+                foreach (TextInline inline in line)
+                {
+                    maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+                    maxFontSize = Math.Max(maxFontSize, inline.Font.Size * PtToPx);
+                }
+            }
+
             double lineX = x;
+
             foreach (TextInline inline in line)
             {
-                if (string.IsNullOrEmpty(inline.Text)) continue;
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
                 using Font font = inline.Font.ToFont();
 
-                lineHeight = inline.LineHeight * PtToPx;
-                if (inline.Text == "\n")
-                {
-                    continue;
-                }
+                double topOffset = maxLineHeight;
 
+                VecD inlinePosition = new VecD(lineX, y + topOffset);
 
-                VecD inlinePosition = new VecD(lineX, y);
-                bool hasStroke = inline.StrokeWidth > 0 && inline.StrokePaintable != null &&
-                                 inline is { StrokePaintable.AnythingVisible: true };
+                bool hasStroke = inline.StrokeWidth > 0 &&
+                                 inline.StrokePaintable != null &&
+                                 inline.StrokePaintable.AnythingVisible;
+
                 bool hasFill = inline.FillPaintable != null &&
-                               inline is { Fill: true, FillPaintable.AnythingVisible: true };
+                               inline.Fill &&
+                               inline.FillPaintable.AnythingVisible;
+
                 bool strokeAndFillEqual = inline.StrokePaintable == inline.FillPaintable;
+
                 if (hasStroke && hasFill && strokeAndFillEqual)
                 {
                     paint.Style = PaintStyle.StrokeAndFill;
@@ -235,7 +254,7 @@ public class RichText : ICacheable
                 lineX += font.MeasureText(inline.Text);
             }
 
-            y += lineHeight;
+            y += maxLineHeight;
         }
     }
 
@@ -293,13 +312,14 @@ public class RichText : ICacheable
             int inlineStart = position;
             int inlineEnd = position + inline.Text.Length;
 
-            if (inlineStart < selectionFinish && inlineEnd >= selectionStart)
+            if (inlineStart <= selectionFinish && inlineEnd >= selectionStart)
             {
                 result.Add(inline);
             }
 
             position = inlineEnd;
         }
+
         return result;
     }
 
@@ -311,13 +331,23 @@ public class RichText : ICacheable
         double x = 0;
         double y = 0;
 
-        foreach (var line in Lines)
+        for (var index = 0; index < Lines.Length; index++)
         {
-            double lineHeight = 0;
+            var line = Lines[index];
+            double maxLineHeight = 0;
+
+            if (index > 0)
+            {
+                foreach (TextInline inline in line)
+                {
+                    maxLineHeight = Math.Max(
+                        maxLineHeight,
+                        inline.LineHeight * PtToPx);
+                }
+            }
 
             foreach (TextInline inline in line)
             {
-                lineHeight = Math.Max(lineHeight, inline.LineHeight * PtToPx);
                 if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
                     continue;
 
@@ -326,7 +356,7 @@ public class RichText : ICacheable
                 font.MeasureText(inline.Text, out RectD inlineBounds);
                 inlineBounds = new RectD(
                     inlineBounds.X + x,
-                    inlineBounds.Y + y,
+                    inlineBounds.Y + y + maxLineHeight,
                     inlineBounds.Width,
                     inlineBounds.Height);
 
@@ -337,7 +367,7 @@ public class RichText : ICacheable
                 x += font.MeasureText(inline.Text);
             }
 
-            y += lineHeight;
+            y += maxLineHeight;
             x = 0;
         }
 
@@ -352,14 +382,23 @@ public class RichText : ICacheable
         double x = 0;
         double y = 0;
 
-        foreach (var line in Lines)
+        for (var index = 0; index < Lines.Length; index++)
         {
-            double lineHeight = 0;
+            var line = Lines[index];
+            double maxLineHeight = 0;
+
+            if (index > 0)
+            {
+                foreach (TextInline inline in line)
+                {
+                    maxLineHeight = Math.Max(
+                        maxLineHeight,
+                        inline.LineHeight * PtToPx);
+                }
+            }
 
             foreach (TextInline inline in line)
             {
-                lineHeight = Math.Max(lineHeight, inline.LineHeight * PtToPx);
-
                 if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
                     continue;
 
@@ -367,15 +406,15 @@ public class RichText : ICacheable
 
                 VecF[] glyphPositions = font.GetGlyphPositions(inline.Text);
                 foreach (VecF glyphPosition in glyphPositions)
-                    positions.Add(glyphPosition + new VecF((float)x, (float)y));
+                    positions.Add(glyphPosition + new VecF((float)x, (float)y + (float)maxLineHeight));
 
                 x += font.MeasureText(inline.Text);
             }
 
             if (includeEndPosition)
-                positions.Add(new VecF((float)x, (float)y));
+                positions.Add(new VecF((float)x, (float)y + (float)maxLineHeight));
 
-            y += lineHeight;
+            y += maxLineHeight;
             x = 0;
         }
 
@@ -461,7 +500,7 @@ public class RichText : ICacheable
                 if (line != inline.Text.Split('\n').Last())
                 {
                     x = 0;
-                    y += inline.LineHeight > 0 ? inline.LineHeight : font.Size * PtToPx;
+                    y += inline.LineHeight * PtToPx;
                 }
             }
         }
@@ -505,7 +544,7 @@ public class RichText : ICacheable
         int currentLine = 0;
         double lineHeight = 0;
 
-        if(lineIndex < 0 || lineIndex >= Lines.Length)
+        if (lineIndex < 0 || lineIndex >= Lines.Length)
             return 0;
 
         return Lines[lineIndex].Max(inline => inline.LineHeight * PtToPx);
