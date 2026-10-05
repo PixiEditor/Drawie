@@ -28,7 +28,7 @@ public record struct FontData : ICacheable
 
     public Font? ToFont(bool defaultFallback = true)
     {
-        Font? font = Font.FromFontFamily(Family, new FontStyle(Weight, FontStyleSlant.Upright, FontStyleWidth.Normal));
+        Font? font = Font.FromFontFamily(Family, new FontStyle(Weight, Slant, Width));
         if (font == null)
         {
             if (defaultFallback)
@@ -44,8 +44,6 @@ public record struct FontData : ICacheable
         font.Size = Size;
         font.SubPixel = SubPixel;
         font.Edging = Edging;
-        font.Weight = Weight;
-        font.Slant = Slant;
         return font;
     }
 
