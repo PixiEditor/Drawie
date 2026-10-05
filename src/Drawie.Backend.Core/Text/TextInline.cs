@@ -1,4 +1,5 @@
-﻿using Drawie.Backend.Core.ColorsImpl.Paintables;
+﻿using Drawie.Backend.Core.ColorsImpl;
+using Drawie.Backend.Core.ColorsImpl.Paintables;
 
 namespace Drawie.Backend.Core.Text;
 
@@ -29,6 +30,7 @@ public class TextInline : ICacheable
         Text = text;
         Font = font;
         LineHeight = (float)font.Size;
+        FillPaintable = Colors.Black;
     }
 
     public int GetCacheHash()
