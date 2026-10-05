@@ -72,8 +72,8 @@ public class TextInline : ICacheable
                && FillPaintable?.GetCacheHash() == other.FillPaintable?.GetCacheHash()
                && StrokePaintable?.GetCacheHash() == other.StrokePaintable?.GetCacheHash()
                && Math.Abs(StrokeWidth - other.StrokeWidth) < float.Epsilon
-               && Font.Bold == other.Font.Bold
-               && Font.Italic == other.Font.Italic
+               && Font.Weight == other.Font.Weight
+               && Font.Slant == other.Font.Slant
                && Math.Abs(Font.Size - other.Font.Size) < float.Epsilon
                && Font.Family.Equals(other.Font.Family);
     }

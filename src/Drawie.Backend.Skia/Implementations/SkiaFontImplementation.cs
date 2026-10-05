@@ -261,38 +261,38 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         throw new InvalidOperationException("Native font object not found");
     }
 
-    public bool GetBold(IntPtr objectPointer)
+    public FontStyleWeight GetWeight(IntPtr objectPointer)
     {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
-            return font.Typeface.IsBold || font.Embolden;
+            return font.Embolden ? FontStyleWeight.Bold : (FontStyleWeight)font.Typeface.FontWeight;
         }
 
         throw new InvalidOperationException("Native font object not found");
     }
 
-    public void SetBold(IntPtr objectPointer, bool value, FontFamilyName family)
+    public void SetWeight(IntPtr objectPointer, FontStyleWeight value, FontFamilyName family)
     {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
             if (family.FontUri is { IsFile: true })
             {
-                font.Embolden = value;
+                font.Embolden = (int)value >= 600;
             }
             else
             {
-                if (font.Typeface.IsBold == value)
+                if (font.Typeface.FontWeight == (int)value)
                 {
                     return;
                 }
 
-                if (family.FontUri is { IsFile: true } && font.Embolden == value)
+                if (family.FontUri is { IsFile: true } && font.Embolden == ((int)value >= 600))
                 {
                     return;
                 }
 
-                bool italic = GetItalic(objectPointer);
-                UpdateTypeface(objectPointer, italic, value, font);
+                var slant = GetSlant(objectPointer);
+                UpdateTypeface(objectPointer, slant, value, font);
             }
 
             return;
@@ -301,33 +301,33 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         throw new InvalidOperationException("Native font object not found");
     }
 
-    public bool GetItalic(IntPtr objectPointer)
+    public FontStyleSlant GetSlant(IntPtr objectPointer)
     {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
-            return font.Typeface.IsItalic || font.SkewX != 0;
+            return font.SkewX != 0 ? FontStyleSlant.Oblique : (FontStyleSlant)font.Typeface.FontSlant;
         }
 
         throw new InvalidOperationException("Native font object not found");
     }
 
-    public void SetItalic(IntPtr objectPointer, bool value, FontFamilyName family)
+    public void SetSlant(IntPtr objectPointer, FontStyleSlant value, FontFamilyName family)
     {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
             if (family.FontUri is { IsFile: true })
             {
-                font.SkewX = value ? -0.25f : 0;
+                font.SkewX = value != FontStyleSlant.Upright ? -0.25f : 0;
             }
             else
             {
-                if (font.Typeface.IsItalic == value)
+                if (font.Typeface.FontSlant == (SKFontStyleSlant)value)
                 {
                     return;
                 }
 
-                bool bold = GetBold(objectPointer);
-                UpdateTypeface(objectPointer, value, bold, font);
+                var weight = GetWeight(objectPointer);
+                UpdateTypeface(objectPointer, value, weight, font);
             }
 
             return;
@@ -336,23 +336,9 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         throw new InvalidOperationException("Native font object not found");
     }
 
-    private void UpdateTypeface(IntPtr objectPointer, bool italic, bool bold, SKFont font)
+    private void UpdateTypeface(IntPtr objectPointer, FontStyleSlant slant, FontStyleWeight weight, SKFont font)
     {
-        SKFontStyle fontStyle = SKFontStyle.Normal;
-        if (bold && italic)
-        {
-            fontStyle = SKFontStyle.BoldItalic;
-        }
-        else if (bold)
-        {
-            fontStyle = SKFontStyle.Bold;
-        }
-        else if (italic)
-        {
-            fontStyle = SKFontStyle.Italic;
-        }
-
-        SKTypeface newTypeFace = SKTypeface.FromFamilyName(font.Typeface.FamilyName, fontStyle);
+        SKTypeface newTypeFace = SKTypeface.FromFamilyName(font.Typeface.FamilyName, new SKFontStyle((int)weight, font.Typeface.FontWidth, (SKFontStyleSlant)slant));
 
         SKFont newFont = new(newTypeFace, font.Size);
         newFont.Subpixel = font.Subpixel;
@@ -401,6 +387,11 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         }
 
         throw new InvalidOperationException("Native font object not found");
+    }
+
+    public FontStyle[] GetAvailableFontStyles(string fontFamily)
+    {
+        return SKFontManager.Default.GetFontStyles(fontFamily).Select(style => new FontStyle((FontStyleWeight)style.Weight, (FontStyleSlant)style.Slant, (FontStyleWidth)style.Width)).ToArray();
     }
 
     public Font CreateDefault(float fontSize)

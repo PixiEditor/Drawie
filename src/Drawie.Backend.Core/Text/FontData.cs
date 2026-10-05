@@ -6,8 +6,9 @@ public record struct FontData : ICacheable
     public FontFamilyName Family { get; set; }
     public bool SubPixel { get; set; }
     public FontEdging Edging { get; set; }
-    public bool Bold { get; set; }
-    public bool Italic { get; set; }
+    public FontStyleWeight Weight { get; set; }
+    public FontStyleSlant Slant { get; set; }
+    public FontStyleWidth Width { get; set; }
 
     public FontData(FontFamilyName family)
     {
@@ -15,8 +16,9 @@ public record struct FontData : ICacheable
         Family = family;
         SubPixel = true;
         Edging = FontEdging.AntiAlias;
-        Bold = false;
-        Italic = false;
+        Weight = FontStyleWeight.Normal;
+        Slant = FontStyleSlant.Upright;
+        Width = FontStyleWidth.Normal;
     }
 
     public static FontData CreateDefault()
@@ -26,7 +28,7 @@ public record struct FontData : ICacheable
 
     public Font? ToFont(bool defaultFallback = true)
     {
-        Font font = Font.FromFontFamily(Family);
+        Font? font = Font.FromFontFamily(Family, new FontStyle(Weight, FontStyleSlant.Upright, FontStyleWidth.Normal));
         if (font == null)
         {
             if (defaultFallback)
@@ -42,8 +44,8 @@ public record struct FontData : ICacheable
         font.Size = Size;
         font.SubPixel = SubPixel;
         font.Edging = Edging;
-        font.Bold = Bold;
-        font.Italic = Italic;
+        font.Weight = Weight;
+        font.Slant = Slant;
         return font;
     }
 
@@ -53,8 +55,8 @@ public record struct FontData : ICacheable
         code.Add(Size);
         code.Add(SubPixel);
         code.Add(Edging);
-        code.Add(Bold);
-        code.Add(Italic);
+        code.Add(Weight);
+        code.Add(Slant);
         code.Add(Family.Name);
         code.Add(Family.FontUri != null ? 1 : 0);
         if (Family.FontUri != null)

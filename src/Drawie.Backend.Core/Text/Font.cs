@@ -57,28 +57,28 @@ public class Font : NativeObject
     public bool IsDisposed { get; private set; }
     public int GlyphCount => DrawingBackendApi.Current.FontImplementation.GetGlyphCount(ObjectPointer);
 
-    public bool Bold
+    public FontStyleWeight Weight
     {
-        get => DrawingBackendApi.Current.FontImplementation.GetBold(ObjectPointer);
+        get => DrawingBackendApi.Current.FontImplementation.GetWeight(ObjectPointer);
         set
         {
-            bool wasBold = Bold;
-            DrawingBackendApi.Current.FontImplementation.SetBold(ObjectPointer, value, Family);
-            if (wasBold != value)
+            var previousWeight = Weight;
+            DrawingBackendApi.Current.FontImplementation.SetWeight(ObjectPointer, value, Family);
+            if (previousWeight != value)
             {
                 Changed?.Invoke();
             }
         }
     }
 
-    public bool Italic
+    public FontStyleSlant Slant
     {
-        get => DrawingBackendApi.Current.FontImplementation.GetItalic(ObjectPointer);
+        get => DrawingBackendApi.Current.FontImplementation.GetSlant(ObjectPointer);
         set
         {
-            bool wasItalic = Italic;
-            DrawingBackendApi.Current.FontImplementation.SetItalic(ObjectPointer, value, Family);
-            if (wasItalic != value)
+            FontStyleSlant previousSlant = Slant;
+            DrawingBackendApi.Current.FontImplementation.SetSlant(ObjectPointer, value, Family);
+            if (previousSlant != value)
             {
                 Changed?.Invoke();
             }
@@ -135,7 +135,7 @@ public class Font : NativeObject
         return DrawingBackendApi.Current.FontImplementation.FromFamilyName(familyName);
     }
 
-    public static Font? FromFontFamily(FontFamilyName familyName)
+    public static Font? FromFontFamily(FontFamilyName familyName, FontStyle? style = null)
     {
         if (familyName.FontUri != null)
         {
@@ -158,7 +158,7 @@ public class Font : NativeObject
             }
         }
 
-        return DrawingBackendApi.Current.FontImplementation.FromFamilyName(familyName.Name);
+        return DrawingBackendApi.Current.FontImplementation.FromFamilyName(familyName.Name, style?.Weight ?? FontStyleWeight.Normal, style?.Width ?? FontStyleWidth.Normal, style?.Slant ?? FontStyleSlant.Upright);
     }
 
     public VecF[] GetGlyphPositions(string text)
@@ -204,7 +204,7 @@ public class Font : NativeObject
         }
 
         return Family.Equals(other.Family) && Size.Equals(other.Size) && SubPixel == other.SubPixel &&
-               Edging == other.Edging && Bold == other.Bold && Italic == other.Italic && GlyphCount == other.GlyphCount;
+               Edging == other.Edging && Weight == other.Weight && Slant == other.Slant && GlyphCount == other.GlyphCount;
     }
 
     public override bool Equals(object? obj)
@@ -225,5 +225,10 @@ public class Font : NativeObject
         }
 
         return Equals((Font)obj);
+    }
+
+    public static FontStyle[] GetAvailableFontStyles(string fontFamily)
+    {
+        return DrawingBackendApi.Current.FontImplementation.GetAvailableFontStyles(fontFamily);
     }
 }

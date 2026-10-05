@@ -26,12 +26,13 @@ public interface IFontImplementation
     public void SetSubPixel(IntPtr objectPointer, bool value);
     public FontEdging GetEdging(IntPtr objectPointer);
     public void SetEdging(IntPtr objectPointer, FontEdging value);
-    public bool GetBold(IntPtr objectPointer);
-    public void SetBold(IntPtr objectPointer, bool value, FontFamilyName family);
-    public bool GetItalic(IntPtr objectPointer);
-    public void SetItalic(IntPtr objectPointer, bool value, FontFamilyName family);
+    public FontStyleWeight GetWeight(IntPtr objectPointer);
+    public void SetWeight(IntPtr objectPointer, FontStyleWeight value, FontFamilyName family);
+    public FontStyleSlant GetSlant(IntPtr objectPointer);
+    public void SetSlant(IntPtr objectPointer, FontStyleSlant value, FontFamilyName family);
     public int GetGlyphCount(IntPtr objectPointer);
     public ushort[] GetGlyphs(IntPtr objectPointer, int[] codePoints);
     public bool ContainsGlyph(IntPtr objectPointer, int codePoint);
     public bool ContainsGlyphs(IntPtr objectPointer, int[] codePoints);
+    public FontStyle[] GetAvailableFontStyles(string fontFamily);
 }
