@@ -16,9 +16,7 @@ public class RichText : ICacheable
     public string RawText => string.Concat(Inlines.Select(x => x.Text));
     public string FormattedText => RawText.Replace('\n', ' ');
     public IReadOnlyCollection<TextInline>[] Lines => ChopInlinesIntoLines();
-
     public double MaxWidth { get; set; } = double.MaxValue;
-
     private List<TextInline> InlinesMutable { get; } = new();
 
     public int TextGlyphCount
