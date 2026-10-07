@@ -306,7 +306,7 @@ public class RichText : ICacheable
                 bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
                 allEmpty &= isEmpty;
                 if (isEmpty) continue;
-                if(index > 0)
+                if (index > 0)
                     maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
             }
 
@@ -563,25 +563,149 @@ public class RichText : ICacheable
     public VectorPath ToPath()
     {
         VectorPath path = new VectorPath();
-        double x = 0;
+
+        double boundingWidth = MeasureBounds().Width;
         double y = 0;
-        foreach (TextInline inline in Inlines)
+
+        for (int index = 0; index < Lines.Length; index++)
         {
-            using Font font = inline.Font.ToFont();
-            foreach (string line in inline.Text.Split('\n'))
+            var line = Lines[index];
+
+            double maxLineHeight = 0;
+            double measuredLineWidth = 0;
+            TextAlign? alignment = null;
+
+            bool allEmpty = true;
+
+            foreach (TextInline inline in line)
             {
-                Matrix3X3 matrix = Matrix3X3.CreateTranslation((float)x, (float)y);
-                path.AddPath(font.GetTextPath(line), matrix, AddPathMode.Append);
-                x += font.MeasureText(line);
-                if (line != inline.Text.Split('\n').Last())
-                {
-                    x = 0;
-                    y += inline.LineHeight * PtToPx;
-                }
+                bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                allEmpty &= isEmpty;
+
+                if (isEmpty)
+                    continue;
+
+                if (index > 0) maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+
+                using Font font = inline.Font.ToFont();
+                measuredLineWidth += font.MeasureText(inline.Text);
             }
+
+            if (allEmpty)
+            {
+                maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
+            }
+
+            double x = 0;
+            double offsetX = 0;
+
+            foreach (TextInline inline in line)
+            {
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
+                using Font font = inline.Font.ToFont();
+
+                if (alignment == null)
+                {
+                    alignment = inline.Alignment;
+
+                    if (alignment == TextAlign.Center)
+                    {
+                        offsetX = (boundingWidth - measuredLineWidth) / 2;
+                    }
+                    else if (alignment == TextAlign.Right)
+                    {
+                        offsetX = boundingWidth - measuredLineWidth;
+                    }
+                }
+
+                Matrix3X3 matrix = Matrix3X3.CreateTranslation((float)(x + offsetX), (float)(y + maxLineHeight));
+
+                path.AddPath(font.GetTextPath(inline.Text), matrix, AddPathMode.Append);
+
+                x += font.MeasureText(inline.Text);
+            }
+
+            y += maxLineHeight;
         }
 
         return path;
+    }
+
+    public (VectorPath path, TextInline inline)[] ToInlinePaths()
+    {
+        List<(VectorPath path, TextInline inline)> inlinePaths = new List<(VectorPath path, TextInline inline)>();
+
+        double boundingWidth = MeasureBounds().Width;
+        double y = 0;
+
+        for (int index = 0; index < Lines.Length; index++)
+        {
+            var line = Lines[index];
+
+            double maxLineHeight = 0;
+            double measuredLineWidth = 0;
+            TextAlign? alignment = null;
+
+            bool allEmpty = true;
+
+            foreach (TextInline inline in line)
+            {
+                bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                allEmpty &= isEmpty;
+
+                if (isEmpty)
+                    continue;
+
+                if (index > 0) maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+
+                using Font font = inline.Font.ToFont();
+                measuredLineWidth += font.MeasureText(inline.Text);
+            }
+
+            if (allEmpty)
+            {
+                maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
+            }
+
+            double x = 0;
+            double offsetX = 0;
+
+            foreach (TextInline inline in line)
+            {
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
+                using Font font = inline.Font.ToFont();
+
+                if (alignment == null)
+                {
+                    alignment = inline.Alignment;
+
+                    if (alignment == TextAlign.Center)
+                    {
+                        offsetX = (boundingWidth - measuredLineWidth) / 2;
+                    }
+                    else if (alignment == TextAlign.Right)
+                    {
+                        offsetX = boundingWidth - measuredLineWidth;
+                    }
+                }
+
+                Matrix3X3 matrix = Matrix3X3.CreateTranslation((float)(x + offsetX), (float)(y + maxLineHeight));
+
+                var path = font.GetTextPath(inline.Text);
+                path.Transform(matrix);
+                inlinePaths.Add((path, inline));
+
+                x += font.MeasureText(inline.Text);
+            }
+
+            y += maxLineHeight;
+        }
+
+        return inlinePaths.ToArray();
     }
 
     public override string ToString()
@@ -705,6 +829,7 @@ public class RichText : ICacheable
 
         return target;
     }
+
 
     private static string[] GetTextElements(string text)
     {
