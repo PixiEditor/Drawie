@@ -836,4 +836,23 @@ public class RichText : ICacheable
     {
         InlinesMutable.Remove(inline);
     }
+
+    /// <summary>
+    ///     Includes surrogate pairs and combining characters, so the returned string may be longer than 1 character.
+    /// </summary>
+    /// <param name="cursor">Cursor position</param>
+    /// <returns>A single char or a string representing a surrogate pair or combining character</returns>
+    public string? GetCharAtCursor(int cursor)
+    {
+        var inline = GetInlineAt(cursor, out int inlineStart, out int inlineEnd);
+        if (inline == null)
+            return null;
+
+        int index = cursor - inlineStart;
+        var elements = GetTextElements(inline.Text);
+        if (index < 0 || index >= elements.Length)
+            return null;
+        var element = elements[index];
+        return element;
+    }
 }

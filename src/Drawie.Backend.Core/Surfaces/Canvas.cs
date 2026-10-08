@@ -261,7 +261,7 @@ namespace Drawie.Backend.Core.Surfaces
             bounds = new RectD(position.X + bounds.X, position.Y + bounds.Y, bounds.Width, bounds.Height);
             var reset = ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
-                (float)position.Y, font, paint);
+                (float)position.Y, font, TextAlign.Left, paint);
 
             reset.Dispose();
             Changed?.Invoke(bounds);
@@ -273,7 +273,7 @@ namespace Drawie.Backend.Core.Surfaces
             bounds = new RectD(position.X + bounds.X, position.Y + bounds.Y, bounds.Width, bounds.Height);
             var reset = ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
-                (float)position.Y, align, font, paint);
+                (float)position.Y, font, align, paint);
 
             reset.Dispose();
 

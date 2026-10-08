@@ -294,35 +294,39 @@ namespace Drawie.Skia.Implementations
 
         public void DrawText(IntPtr objPtr, string text, float x, float y, Paint paint)
         {
+            if(string.IsNullOrEmpty(text)) return;
             this[objPtr].DrawText(SKTextBlob.Create(text, defaultFont), x, y, _paintImpl[paint.ObjectPointer]);
         }
 
-        public void DrawText(IntPtr objPtr, string text, float x, float y, Font font, Paint paint)
+        public void DrawText(IntPtr objPtr, string text, float x, float y, Font font, TextAlign align, Paint paint)
         {
+            if(string.IsNullOrEmpty(text)) return;
+
             SKFont baseFont = _fontImpl[font.ObjectPointer];
             SKPaint skPaint = _paintImpl[paint.ObjectPointer];
 
             double currentX = x;
 
-            foreach (FontUtility.FontRun run in FontUtility.GetFontRuns(text, baseFont))
+            var runs = FontUtility.GetFontRuns(text, baseFont);
+            var fontRuns = runs as FontUtility.FontRun[] ?? runs.ToArray();
+            if (fontRuns.Count() == 1 && fontRuns.First().Typeface == baseFont.Typeface)
+            {
+                this[objPtr].DrawText(text, x, y, (SKTextAlign)align, baseFont, skPaint);
+                return;
+            }
+
+            foreach (FontUtility.FontRun run in fontRuns)
             {
                 string runText = text.Substring(run.Start, run.Length);
 
                 using SKFont runFont = FontUtility.CreateFont(baseFont, run.Typeface);
                 using SKShaper shaper = new(run.Typeface);
 
-                this[objPtr].DrawShapedText(shaper, runText, new SKPoint((float)currentX, y), SKTextAlign.Left,
+                this[objPtr].DrawShapedText(shaper, runText, new SKPoint((float)currentX, y), (SKTextAlign)align,
                     runFont, skPaint);
 
                 currentX += shaper.Shape(runText, runFont).Width;
             }
-        }
-
-        public void DrawText(IntPtr objectPointer, string text, float x, float y, TextAlign align, Font font,
-            Paint paint)
-        {
-            SKFont skFont = _fontImpl[font.ObjectPointer];
-            this[objectPointer].DrawText(text, x, y, (SKTextAlign)align, skFont, _paintImpl[paint.ObjectPointer]);
         }
 
         public int SaveLayer(IntPtr objectPointer)
