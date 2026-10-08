@@ -74,28 +74,6 @@ public class RichText : ICacheable
         return lines.ToArray();
     }
 
-    private List<string> Split(string inlineText)
-    {
-        List<string> splits = new();
-        string currentSplit = string.Empty;
-        foreach (var aChar in inlineText)
-        {
-            if (aChar == '\n')
-            {
-                splits.Add(currentSplit);
-                splits.Add("\n");
-                currentSplit = string.Empty;
-            }
-            else
-            {
-                currentSplit += aChar;
-            }
-        }
-
-        splits.Add(currentSplit);
-        return splits;
-    }
-
     public RichText() { }
 
     public RichText(string text, FontData font, double maxWidth = double.MaxValue)
@@ -550,7 +528,7 @@ public class RichText : ICacheable
         int currentIndex = 0;
         for (int i = 0; i < lineIndex; i++)
         {
-            currentIndex += GetLineLength(Lines[i]);
+            currentIndex += GetLineLength(Lines[i], true);
             if (accountNewLines && (Lines[i].Count != 1 || Lines[i].First().Text != "\n"))
             {
                 currentIndex++; // Account for the newline character between lines
@@ -808,8 +786,8 @@ public class RichText : ICacheable
         if (targetIndex < 0)
             return target;
 
-        if (targetIndex > 0 &&
-            InlinesMutable[targetIndex - 1].HasEqualSettings(InlinesMutable[targetIndex]))
+        if (targetIndex > 0 && (InlinesMutable[targetIndex - 1].HasEqualSettings(InlinesMutable[targetIndex])
+            || CanMergeLineSettings(InlinesMutable[targetIndex - 1], InlinesMutable[targetIndex])))
         {
             TextInline previous = InlinesMutable[targetIndex - 1];
             previous.Text += target.Text;
@@ -819,8 +797,8 @@ public class RichText : ICacheable
             targetIndex--;
         }
 
-        if (targetIndex + 1 < InlinesMutable.Count &&
-            InlinesMutable[targetIndex].HasEqualSettings(InlinesMutable[targetIndex + 1]))
+        if (targetIndex + 1 < InlinesMutable.Count && (InlinesMutable[targetIndex].HasEqualSettings(InlinesMutable[targetIndex + 1])
+            || CanMergeLineSettings(InlinesMutable[targetIndex], InlinesMutable[targetIndex + 1])))
         {
             TextInline next = InlinesMutable[targetIndex + 1];
             target.Text += next.Text;
@@ -828,6 +806,18 @@ public class RichText : ICacheable
         }
 
         return target;
+    }
+
+    private bool CanMergeLineSettings(TextInline p0, TextInline p1)
+    {
+        var lineIndexOf = IndexOnLine(GetInlineStart(p0), out int lineIndex0, true);
+        var lineIndexOf1 = IndexOnLine(GetInlineStart(p1), out int lineIndex1, true);
+        if(lineIndex0 != lineIndex1)
+        {
+            return false;
+        }
+
+        return p0.HasEqualSettings(p1, true);
     }
 
 
@@ -840,5 +830,10 @@ public class RichText : ICacheable
             elements.Add(enumerator.GetTextElement());
 
         return elements.ToArray();
+    }
+
+    public void RemoveInline(TextInline inline)
+    {
+        InlinesMutable.Remove(inline);
     }
 }

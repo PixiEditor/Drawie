@@ -1,4 +1,5 @@
-﻿using Drawie.Backend.Core.ColorsImpl;
+﻿using System.Globalization;
+using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.ColorsImpl.Paintables;
 
 namespace Drawie.Backend.Core.Text;
@@ -14,6 +15,20 @@ public class TextInline : ICacheable
     public Paintable? FillPaintable { get; set; }
     public Paintable? StrokePaintable { get; set; }
     public float StrokeWidth { get; set; }
+
+    public int GlyphCount
+    {
+        get
+        {
+            var iterator = StringInfo.GetTextElementEnumerator(Text);
+            int count = 0;
+            while (iterator.MoveNext())
+            {
+                count++;
+            }
+            return count;
+        }
+    }
 
     //TODO:
     // public TextDecoration Decoration { get; set; }
@@ -61,12 +76,10 @@ public class TextInline : ICacheable
         };
     }
 
-    public bool HasEqualSettings(TextInline other)
+    public bool HasEqualSettings(TextInline other, bool ignoreLineSharedSettings = false)
     {
-        return Alignment == other.Alignment
-               //&& Decoration == other.Decoration
+        return (ignoreLineSharedSettings || Alignment == other.Alignment)
                && Math.Abs(LineHeight - other.LineHeight) < float.Epsilon
-               //&& Math.Abs(LetterSpacing - other.LetterSpacing) < float.Epsilon
                && Fill == other.Fill
                && FillPaintable?.GetCacheHash() == other.FillPaintable?.GetCacheHash()
                && StrokePaintable?.GetCacheHash() == other.StrokePaintable?.GetCacheHash()
