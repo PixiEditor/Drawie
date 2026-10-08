@@ -138,7 +138,7 @@ public class RichText : ICacheable
         foreach (TextInline current in Inlines)
         {
             if (ReferenceEquals(current, inline)) return offset;
-            offset += current.Text.Length;
+            offset += current.GlyphCount;
         }
 
         return -1;
@@ -147,7 +147,7 @@ public class RichText : ICacheable
     public int GetInlineEnd(TextInline inline)
     {
         int start = GetInlineStart(inline);
-        return start < 0 ? -1 : start + inline.Text.Length;
+        return start < 0 ? -1 : start + inline.GlyphCount;
     }
 
     public void Paint(Canvas canvas, VecD position, Paint paint, VectorPath? onPath = null, VecD? pathOffset = null)
@@ -461,7 +461,7 @@ public class RichText : ICacheable
         foreach (TextInline inline in Inlines)
         {
             int inlineStart = currentPosition;
-            int inlineEnd = currentPosition + inline.Text.Length;
+            int inlineEnd = currentPosition + inline.GlyphCount;
 
             if (inlineStart < selectionEnd && inlineEnd > selectionStart)
                 result.Add(inline);
