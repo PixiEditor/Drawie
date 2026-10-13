@@ -15,9 +15,26 @@ public class RichText : ICacheable
     public IReadOnlyList<TextInline> Inlines => InlinesMutable;
     public string RawText => string.Concat(Inlines.Select(x => x.Text));
     public string FormattedText => RawText.Replace('\n', ' ');
-    public IReadOnlyCollection<TextInline>[] Lines => ChopInlinesIntoLines();
+    public IReadOnlyCollection<TextInline>[] Lines
+    {
+        get
+        {
+            if (lastChoppedHash == GetCacheHash() && lastChoppedLines != null)
+            {
+                return lastChoppedLines;
+            }
+
+            lastChoppedHash = GetCacheHash();
+            lastChoppedLines = ChopInlinesIntoLines();
+            return lastChoppedLines;
+        }
+    }
+
     public double MaxWidth { get; set; } = double.MaxValue;
     private List<TextInline> InlinesMutable { get; } = new();
+
+    private IReadOnlyCollection<TextInline>[] lastChoppedLines;
+    private int lastChoppedHash = -1;
 
     public int TextGlyphCount
     {
@@ -854,5 +871,68 @@ public class RichText : ICacheable
             return null;
         var element = elements[index];
         return element;
+    }
+
+    public VecD GetInlinePosition(TextInline target)
+    {
+        double x = 0;
+        double y = 0;
+        double boundingWidth = MeasureBounds().Width;
+
+        foreach (var line in Lines)
+        {
+            double maxLineHeight = 0;
+            double measuredLineWidth = 0;
+            TextAlign? alignment = null;
+            bool allEmpty = true;
+
+            foreach (TextInline inline in line)
+            {
+                bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                allEmpty &= isEmpty;
+
+                if (isEmpty)
+                    continue;
+
+                maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+
+                using Font font = inline.Font.ToFont();
+                measuredLineWidth += font.MeasureText(inline.Text);
+            }
+
+            if (allEmpty)
+                maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
+
+            double offsetX = 0;
+
+            foreach (TextInline inline in line)
+            {
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
+                using Font font = inline.Font.ToFont();
+                double measuredLine = font.MeasureText(inline.Text);
+
+                if (alignment == null)
+                {
+                    alignment = inline.Alignment;
+
+                    if (alignment == TextAlign.Center)
+                        offsetX = (boundingWidth - measuredLineWidth) / 2f;
+                    else if (alignment == TextAlign.Right)
+                        offsetX = boundingWidth - measuredLineWidth;
+                }
+
+                if (inline == target)
+                    return new VecD(x + offsetX, y);
+
+                x += measuredLine;
+            }
+
+            y += maxLineHeight;
+            x = 0;
+        }
+
+        return VecD.Zero;
     }
 }
