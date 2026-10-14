@@ -13,6 +13,7 @@ public class RichText : ICacheable, IDisposable
     public IReadOnlyList<TextInline> Inlines => InlinesMutable;
     public string RawText => string.Concat(Inlines.Select(x => x.Text));
     public string FormattedText => RawText.Replace('\n', ' ');
+
     public IReadOnlyCollection<TextInline>[] Lines
     {
         get
@@ -34,12 +35,22 @@ public class RichText : ICacheable, IDisposable
     private IReadOnlyCollection<TextInline>[] lastChoppedLines;
     private Dictionary<FontData, Font> fontCache = new();
     private int lastChoppedHash = -1;
+    private int lastMeasuredHash = -1;
+    private int lastGlyphPositionsHash = -1;
+    private RectD lastMeasuredBounds;
+    private VecF[] lastGlyphPositions;
+    private int cachedTextGlyphCount = -1;
+    private string lastRawText = null;
 
     public int TextGlyphCount
     {
         get
         {
-            // TODO: Caching
+            if (lastRawText == RawText)
+            {
+                return cachedTextGlyphCount;
+            }
+
             int count = 0;
             var iterator = StringInfo.GetTextElementEnumerator(RawText);
             while (iterator.MoveNext())
@@ -47,7 +58,9 @@ public class RichText : ICacheable, IDisposable
                 count++;
             }
 
-            return count;
+            lastRawText = RawText;
+            cachedTextGlyphCount = count;
+            return cachedTextGlyphCount;
         }
     }
 
@@ -285,6 +298,12 @@ public class RichText : ICacheable, IDisposable
     {
         if (Inlines.Count == 0) return RectD.Empty;
 
+        int hash = GetCacheHash();
+        if (lastMeasuredHash == hash)
+        {
+            return lastMeasuredBounds;
+        }
+
         RectD? bounds = null;
         double x = 0;
         double y = 0;
@@ -334,12 +353,20 @@ public class RichText : ICacheable, IDisposable
             x = 0;
         }
 
-        return bounds ?? RectD.Empty;
+        lastMeasuredHash = hash;
+        lastMeasuredBounds = bounds ?? RectD.Empty;
+        return lastMeasuredBounds;
     }
 
     public VecF[] GetGlyphPositions(bool includeEndPosition = false)
     {
         if (Inlines.Count == 0) return [];
+
+        int hash = GetCacheHash();
+        if (lastGlyphPositionsHash == hash)
+        {
+            return lastGlyphPositions;
+        }
 
         List<VecF> positions = new();
         double x = 0;
@@ -407,7 +434,9 @@ public class RichText : ICacheable, IDisposable
             x = 0;
         }
 
-        return positions.ToArray();
+        lastGlyphPositions = positions.ToArray();
+        lastGlyphPositionsHash = hash;
+        return lastGlyphPositions;
     }
 
 
@@ -803,7 +832,7 @@ public class RichText : ICacheable, IDisposable
             return target;
 
         if (targetIndex > 0 && (InlinesMutable[targetIndex - 1].HasEqualSettings(InlinesMutable[targetIndex])
-            || CanMergeLineSettings(InlinesMutable[targetIndex - 1], InlinesMutable[targetIndex])))
+                                || CanMergeLineSettings(InlinesMutable[targetIndex - 1], InlinesMutable[targetIndex])))
         {
             TextInline previous = InlinesMutable[targetIndex - 1];
             previous.Text += target.Text;
@@ -813,8 +842,9 @@ public class RichText : ICacheable, IDisposable
             targetIndex--;
         }
 
-        if (targetIndex + 1 < InlinesMutable.Count && (InlinesMutable[targetIndex].HasEqualSettings(InlinesMutable[targetIndex + 1])
-            || CanMergeLineSettings(InlinesMutable[targetIndex], InlinesMutable[targetIndex + 1])))
+        if (targetIndex + 1 < InlinesMutable.Count &&
+            (InlinesMutable[targetIndex].HasEqualSettings(InlinesMutable[targetIndex + 1])
+             || CanMergeLineSettings(InlinesMutable[targetIndex], InlinesMutable[targetIndex + 1])))
         {
             TextInline next = InlinesMutable[targetIndex + 1];
             target.Text += next.Text;
@@ -828,7 +858,7 @@ public class RichText : ICacheable, IDisposable
     {
         var lineIndexOf = IndexOnLine(GetInlineStart(p0), out int lineIndex0, true);
         var lineIndexOf1 = IndexOnLine(GetInlineStart(p1), out int lineIndex1, true);
-        if(lineIndex0 != lineIndex1)
+        if (lineIndex0 != lineIndex1)
         {
             return false;
         }
@@ -937,7 +967,7 @@ public class RichText : ICacheable, IDisposable
 
     private Font GetFont(FontData font)
     {
-        if(fontCache.TryGetValue(font, out var cachedFont) && !cachedFont.IsDisposed)
+        if (fontCache.TryGetValue(font, out var cachedFont) && !cachedFont.IsDisposed)
         {
             return cachedFont;
         }
