@@ -1,6 +1,4 @@
 ﻿using System.Globalization;
-using Drawie.Backend.Core.ColorsImpl;
-using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
@@ -9,7 +7,7 @@ using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Text;
 
-public class RichText : ICacheable
+public class RichText : ICacheable, IDisposable
 {
     public const double PtToPx = 1.3333333333333333;
     public IReadOnlyList<TextInline> Inlines => InlinesMutable;
@@ -34,6 +32,7 @@ public class RichText : ICacheable
     private List<TextInline> InlinesMutable { get; } = new();
 
     private IReadOnlyCollection<TextInline>[] lastChoppedLines;
+    private Dictionary<FontData, Font> fontCache = new();
     private int lastChoppedHash = -1;
 
     public int TextGlyphCount
@@ -201,7 +200,7 @@ public class RichText : ICacheable
                     maxFontSize = Math.Max(maxFontSize, inline.Font.Size * PtToPx);
                 }
 
-                using Font font = inline.Font.ToFont();
+                Font font = GetFont(inline.Font);
                 measuredLineWidth += font.MeasureText(inline.Text);
             }
 
@@ -221,7 +220,7 @@ public class RichText : ICacheable
                 if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
                     continue;
 
-                using Font font = inline.Font.ToFont();
+                Font font = GetFont(inline.Font);
                 if (alignment == null)
                 {
                     alignment = inline.Alignment;
@@ -315,7 +314,7 @@ public class RichText : ICacheable
                 if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
                     continue;
 
-                using Font font = inline.Font.ToFont();
+                Font font = GetFont(inline.Font);
 
                 font.MeasureText(inline.Text, out RectD inlineBounds);
                 inlineBounds = new RectD(
@@ -362,7 +361,7 @@ public class RichText : ICacheable
                 if (isEmpty) continue;
                 if (index > 0)
                     maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
-                using Font font = inline.Font.ToFont();
+                Font font = GetFont(inline.Font);
                 measuredLineWidth += font.MeasureText(inline.Text);
             }
 
@@ -377,7 +376,7 @@ public class RichText : ICacheable
                 if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
                     continue;
 
-                using Font font = inline.Font.ToFont();
+                Font font = GetFont(inline.Font);
                 var measuredLine = font.MeasureText(inline.Text);
 
                 if (alignment == null)
@@ -417,7 +416,7 @@ public class RichText : ICacheable
         foreach (TextInline inline in Inlines)
         {
             if (string.IsNullOrEmpty(inline.Text)) continue;
-            using Font font = inline.Font.ToFont();
+            Font font = GetFont(inline.Font);
             bool hasStroke = inline.StrokeWidth > 0 && inline.StrokePaintable != null &&
                              inline is { StrokePaintable.AnythingVisible: true };
             bool hasFill = inline.FillPaintable != null &&
@@ -582,7 +581,7 @@ public class RichText : ICacheable
 
                 if (index > 0) maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
 
-                using Font font = inline.Font.ToFont();
+                Font font = GetFont(inline.Font);
                 measuredLineWidth += font.MeasureText(inline.Text);
             }
 
@@ -599,7 +598,7 @@ public class RichText : ICacheable
                 if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
                     continue;
 
-                using Font font = inline.Font.ToFont();
+                Font font = GetFont(inline.Font);
 
                 if (alignment == null)
                 {
@@ -655,7 +654,7 @@ public class RichText : ICacheable
 
                 if (index > 0) maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
 
-                using Font font = inline.Font.ToFont();
+                Font font = GetFont(inline.Font);
                 measuredLineWidth += font.MeasureText(inline.Text);
             }
 
@@ -672,7 +671,7 @@ public class RichText : ICacheable
                 if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
                     continue;
 
-                using Font font = inline.Font.ToFont();
+                Font font = GetFont(inline.Font);
 
                 if (alignment == null)
                 {
@@ -896,7 +895,7 @@ public class RichText : ICacheable
 
                 maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
 
-                using Font font = inline.Font.ToFont();
+                Font font = GetFont(inline.Font);
                 measuredLineWidth += font.MeasureText(inline.Text);
             }
 
@@ -910,7 +909,7 @@ public class RichText : ICacheable
                 if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
                     continue;
 
-                using Font font = inline.Font.ToFont();
+                Font font = GetFont(inline.Font);
                 double measuredLine = font.MeasureText(inline.Text);
 
                 if (alignment == null)
@@ -934,5 +933,39 @@ public class RichText : ICacheable
         }
 
         return VecD.Zero;
+    }
+
+    private Font GetFont(FontData font)
+    {
+        if(fontCache.TryGetValue(font, out var cachedFont) && !cachedFont.IsDisposed)
+        {
+            return cachedFont;
+        }
+
+        var fontOfEqualSettings = fontCache.FirstOrDefault(x => x.Key.Equals(font));
+
+        if (fontOfEqualSettings.Value != null && !fontOfEqualSettings.Value.IsDisposed)
+        {
+            return fontOfEqualSettings.Value;
+        }
+
+        var newFont = font.ToFont();
+        if (newFont == null)
+        {
+            newFont = Font.CreateDefault((float)font.Size);
+        }
+
+        fontCache[font] = newFont;
+        return newFont;
+    }
+
+    public void Dispose()
+    {
+        foreach (var font in fontCache)
+        {
+            font.Value.Dispose();
+        }
+
+        fontCache.Clear();
     }
 }
