@@ -989,7 +989,7 @@ public class RichText : ICacheable, IDisposable
         return newFont;
     }
 
-    public void Dispose()
+    public void ClearCache()
     {
         foreach (var font in fontCache)
         {
@@ -997,5 +997,10 @@ public class RichText : ICacheable, IDisposable
         }
 
         fontCache.Clear();
+    }
+
+    void IDisposable.Dispose()
+    {
+        ClearCache();
     }
 }
