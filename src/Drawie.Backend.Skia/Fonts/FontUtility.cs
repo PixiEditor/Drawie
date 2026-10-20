@@ -12,76 +12,64 @@ public class FontUtility
         if (string.IsNullOrEmpty(text))
             yield break;
 
-        if (baseFont.ContainsGlyphs(text))
-        {
-            yield return new FontRun(0, text.Length, baseFont.Typeface);
-            yield break;
-        }
-
         var elements = StringInfo.GetTextElementEnumerator(text);
+        var runs = new List<FontRun>();
 
-        int start = 0;
+        int runStart = 0;
         SKTypeface currentTypeface = baseFont.Typeface;
 
         while (elements.MoveNext())
         {
             string element = elements.GetTextElement();
-
-            if (currentTypeface.ContainsGlyphs(element))
-                continue;
-
             int elementStart = elements.ElementIndex;
 
-            if (elementStart > start)
+            SKTypeface typeface = baseFont.ContainsGlyphs(element)
+                ? baseFont.Typeface
+                : GetFallbackTypeface(element, baseFont) ?? baseFont.Typeface;
+
+            if (elementStart == 0)
             {
-                yield return new FontRun(start, elementStart - start, currentTypeface);
+                currentTypeface = typeface;
+                continue;
             }
 
-            int runStart = elementStart;
-            int runEnd = elementStart;
-
-            bool setFallback = false;
-            do
+            if (typeface != currentTypeface)
             {
-                element = elements.GetTextElement();
-                runEnd = elements.ElementIndex + element.Length;
-
-                if (currentTypeface.ContainsGlyphs(element))
-                    break;
-
-                int codepoint = element.EnumerateRunes().First().Value;
-
-                SKTypeface? fallback =
-                    SKFontManager.Default.MatchCharacter(baseFont.Typeface.FamilyName, baseFont.Typeface.FontWeight,
-                        baseFont.Typeface.FontWidth, baseFont.Typeface.FontSlant, null,
-                        codepoint);
-
-                if (fallback != null)
-                {
-                    currentTypeface = fallback;
-                    if(setFallback)
-                        break;
-
-                    setFallback = true;
-                }
-            } while (elements.MoveNext());
-
-            if (runEnd > runStart)
-            {
-                yield return new FontRun(runStart, runEnd - runStart, currentTypeface);
+                runs.Add(new FontRun(runStart, elementStart - runStart, currentTypeface));
+                runStart = elementStart;
+                currentTypeface = typeface;
             }
-
-            start = runEnd;
-            currentTypeface = baseFont.Typeface;
-
-            if (runEnd >= text.Length)
-                break;
         }
 
-        if (start < text.Length)
+        if (runStart < text.Length)
+            runs.Add(new FontRun(runStart, text.Length - runStart, currentTypeface));
+
+        foreach (var run in runs)
+            yield return run;
+    }
+
+    private static SKTypeface? GetFallbackTypeface(string element, SKFont baseFont)
+    {
+        foreach (var rune in element.EnumerateRunes())
         {
-            yield return new FontRun(start, text.Length - start, baseFont.Typeface);
+            if (baseFont.ContainsGlyphs(rune.ToString()))
+                continue;
+
+            var fallback = SKFontManager.Default.MatchCharacter(
+                baseFont.Typeface.FamilyName,
+                baseFont.Typeface.FontWeight,
+                baseFont.Typeface.FontWidth,
+                baseFont.Typeface.FontSlant,
+                null,
+                rune.Value);
+
+            if (fallback is null || !fallback.ContainsGlyphs(element))
+                return null;
+
+            return fallback;
         }
+
+        return null;
     }
 
     public static SKFont CreateFont(SKFont baseFont, SKTypeface typeface)

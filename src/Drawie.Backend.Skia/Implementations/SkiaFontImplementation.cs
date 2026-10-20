@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
+using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Text;
 using Drawie.Backend.Core.Vector;
@@ -30,8 +31,26 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
     {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
-            var path = font.GetTextPath(text);
-            return new VectorPath(pathImplementation.AddManagedInstance(path));
+            using SKPathBuilder pathBuilder = new SKPathBuilder();
+            float offsetX = 0;
+            foreach (FontUtility.FontRun run in FontUtility.GetFontRuns(text, font))
+            {
+                string runText = text.Substring(run.Start, run.Length);
+
+                using SKFont runFont = FontUtility.CreateFont(font, run.Typeface);
+                using SKShaper shaper = new(run.Typeface);
+
+                var shaped = shaper.Shape(runText, runFont);
+
+                using var targetFont = FontUtility.CreateFont(font, run.Typeface);
+                var path = targetFont.GetTextPath(runText);
+
+                pathBuilder.AddPath(path, offsetX, 0, SKPathAddMode.Append);
+
+                offsetX += shaped.Width;
+            }
+
+            return new VectorPath(pathImplementation.AddManagedInstance(pathBuilder.Snapshot()));
         }
 
         throw new InvalidOperationException("Native font object not found");
@@ -186,7 +205,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         return GlyphWidths(objectPointer, text);
     }
 
-    private float[]  GlyphWidths(IntPtr objectPointer, string text, Paint? paint = null)
+    private float[] GlyphWidths(IntPtr objectPointer, string text, Paint? paint = null)
     {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
@@ -338,7 +357,8 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     private void UpdateTypeface(IntPtr objectPointer, FontStyleSlant slant, FontStyleWeight weight, SKFont font)
     {
-        SKTypeface newTypeFace = SKTypeface.FromFamilyName(font.Typeface.FamilyName, new SKFontStyle((int)weight, font.Typeface.FontWidth, (SKFontStyleSlant)slant));
+        SKTypeface newTypeFace = SKTypeface.FromFamilyName(font.Typeface.FamilyName,
+            new SKFontStyle((int)weight, font.Typeface.FontWidth, (SKFontStyleSlant)slant));
 
         SKFont newFont = new(newTypeFace, font.Size);
         newFont.Subpixel = font.Subpixel;
@@ -391,7 +411,9 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public FontStyle[] GetAvailableFontStyles(string fontFamily)
     {
-        return SKFontManager.Default.GetFontStyles(fontFamily).Select(style => new FontStyle((FontStyleWeight)style.Weight, (FontStyleSlant)style.Slant, (FontStyleWidth)style.Width)).ToArray();
+        return SKFontManager.Default.GetFontStyles(fontFamily).Select(style =>
+                new FontStyle((FontStyleWeight)style.Weight, (FontStyleSlant)style.Slant, (FontStyleWidth)style.Width))
+            .ToArray();
     }
 
     public Font CreateDefault(float fontSize)
