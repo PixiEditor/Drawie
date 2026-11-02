@@ -30,7 +30,7 @@ public static class AppBuilderExtensions
         return builder;
     }
 
-    private static async Task InitializeDrawie(Action gpuTimeoutFallback)
+    private static async Task InitializeDrawie(Action gpuFailedCallback)
     {
         try
         {
@@ -40,7 +40,8 @@ public static class AppBuilderExtensions
 
             if (compositor == null)
             {
-                Console.WriteLine("No compositor available. Exiting");
+                Console.WriteLine("No compositor available.");
+                gpuFailedCallback();
                 return;
             }
 
@@ -51,7 +52,7 @@ public static class AppBuilderExtensions
             if (completedTask != interopTask)
             {
                 Console.WriteLine("Timed out waiting for GPU interop.");
-                gpuTimeoutFallback();
+                gpuFailedCallback();
                 return;
             }
 
@@ -81,7 +82,9 @@ public static class AppBuilderExtensions
             else
             {
                 if (interop == null)
+                {
                     throw new InvalidOperationException("No composition GPU interop available.");
+                }
 
                 var contextInfo = new AvaloniaInteropContextInfo();
 
@@ -118,6 +121,7 @@ public static class AppBuilderExtensions
         catch (Exception ex)
         {
             Console.WriteLine($"Drawie initialization failed: {ex}");
+            gpuFailedCallback();
         }
     }
 }
