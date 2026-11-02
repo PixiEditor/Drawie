@@ -1,4 +1,4 @@
-﻿using Drawie.Backend.Core;
+using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.Numerics;
@@ -56,38 +56,6 @@ namespace Drawie.Skia.Implementations
             SKImage snapshot = surface.Snapshot(bounds.ToSkRectI());
 
             return new Image(AddManagedInstance(snapshot));
-        }
-
-        /*public Image? TextureSnapshot(DrawingSurface drawingSurface)
-        {
-            var surface = _surfaceImplementation![drawingSurface.ObjectPointer];
-
-            VecI size = new VecI(surface.Canvas.DeviceClipBounds.Width, surface.Canvas.DeviceClipBounds.Height);
-            
-            /*
-            var fbInfo = DrawingBackendApi.Current.SurfaceImplementation.GetFramebufferInfo(drawingSurface.ObjectPointer);
-
-            if (fbInfo is not SkiaFramebufferInfo skiaFramebufferInfo)
-            {
-                return null;
-            }
-            
-            SKImage? snapshot = CreateFromFramebuffer(skiaFramebufferInfo, size, SurfaceOrigin.BottomLeft, out var textureInfo);
-            if (snapshot == null) return null;#1#
-
-            var nativeTexture =_surfaceImplementation.GraphicsDevice.CreateTexture(new TextureDesc()
-            {
-                Width = size.X,
-                Height = size.Y,
-                Format = TextureFormat.RGBA8_Unorm
-            });
-
-            SKImage snapshot = SnapshotToOwnedTexture(surface, (uint)nativeTexture.TextureId, size.X, size.Y,
-                SurfaceOrigin.BottomLeft, out var textureInfo);
-
-            AddManagedInstance(snapshot);
-            textureInfos[snapshot.Handle] = textureInfo;
-            return new Image(snapshot.Handle);
         }
         
         internal SKImage? SnapshotToOwnedTexture(

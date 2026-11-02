@@ -1,4 +1,4 @@
-﻿using Drawie.Backend.Core.Bridge.Operations;
+using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Mesh;
 using Drawie.Backend.Core.Numerics;
@@ -9,7 +9,9 @@ using Drawie.Backend.Core.Text;
 using Drawie.Backend.Core.Vector;
 using Drawie.Numerics;
 using Drawie.Skia.Extensions;
+using Drawie.Skia.Fonts;
 using SkiaSharp;
+using SkiaSharp.HarfBuzz;
 
 namespace Drawie.Skia.Implementations
 {
@@ -55,6 +57,16 @@ namespace Drawie.Skia.Implementations
             canvas.DrawSurface(
                 _surfaceImpl[drawingSurface.ObjectPointer],
                 x, y,
+                paint != null ? _paintImpl[paint.ObjectPointer] : null);
+        }
+
+        public void DrawSurface(IntPtr objPtr, DrawingSurface drawingSurface, float x, float y,
+            SamplingOptions samplingOptions, Paint? paint)
+        {
+            var canvas = this[objPtr];
+            canvas.DrawSurface(
+                _surfaceImpl[drawingSurface.ObjectPointer],
+                x, y, samplingOptions.ToSkSamplingOptions(),
                 paint != null ? _paintImpl[paint.ObjectPointer] : null);
         }
 
@@ -261,6 +273,7 @@ namespace Drawie.Skia.Implementations
             this[objPtr].DrawImage(
                 _imageImpl[image.ObjectPointer],
                 destRect.ToSKRect(),
+                SKSamplingOptions.Default,
                 paint == null ? null : _paintImpl[paint.ObjectPointer]);
         }
 
@@ -270,30 +283,50 @@ namespace Drawie.Skia.Implementations
                 _imageImpl[image.ObjectPointer],
                 sourceRect.ToSKRect(),
                 destRect.ToSKRect(),
+                SKSamplingOptions.Default,
                 paint == null ? null : _paintImpl[paint.ObjectPointer]);
         }
 
         public void DrawBitmap(IntPtr objPtr, Bitmap bitmap, float x, float y, Paint? paint)
         {
-            this[objPtr].DrawBitmap(_bitmapImpl[bitmap.ObjectPointer], x, y);
+            this[objPtr].DrawBitmap(_bitmapImpl[bitmap.ObjectPointer], x, y, SKSamplingOptions.Default);
         }
 
         public void DrawText(IntPtr objPtr, string text, float x, float y, Paint paint)
         {
+            if(string.IsNullOrEmpty(text)) return;
             this[objPtr].DrawText(SKTextBlob.Create(text, defaultFont), x, y, _paintImpl[paint.ObjectPointer]);
         }
-        
-        public void DrawText(IntPtr objPtr, string text, float x, float y, Font font, Paint paint)
-        {
-            SKFont skFont = _fontImpl[font.ObjectPointer];
-            this[objPtr].DrawText(text, x, y, skFont, _paintImpl[paint.ObjectPointer]);
-        }
 
-        public void DrawText(IntPtr objectPointer, string text, float x, float y, TextAlign align, Font font,
-            Paint paint)
+        public void DrawText(IntPtr objPtr, string text, float x, float y, Font font, TextAlign align, Paint paint)
         {
-            SKFont skFont = _fontImpl[font.ObjectPointer];
-            this[objectPointer].DrawText(text, x, y, (SKTextAlign)align, skFont, _paintImpl[paint.ObjectPointer]);
+            if(string.IsNullOrEmpty(text)) return;
+
+            SKFont baseFont = _fontImpl[font.ObjectPointer];
+            SKPaint skPaint = _paintImpl[paint.ObjectPointer];
+
+            double currentX = x;
+
+            var runs = FontUtility.GetFontRuns(text, baseFont);
+            var fontRuns = runs as FontUtility.FontRun[] ?? runs.ToArray();
+            if (fontRuns.Count() == 1 && fontRuns.First().Typeface == baseFont.Typeface)
+            {
+                this[objPtr].DrawText(text, x, y, (SKTextAlign)align, baseFont, skPaint);
+                return;
+            }
+
+            foreach (FontUtility.FontRun run in fontRuns)
+            {
+                string runText = text.Substring(run.Start, run.Length);
+
+                using SKFont runFont = FontUtility.CreateFont(baseFont, run.Typeface);
+                using SKShaper shaper = new(run.Typeface);
+
+                this[objPtr].DrawShapedText(shaper, runText, new SKPoint((float)currentX, y), (SKTextAlign)align,
+                    runFont, skPaint);
+
+                currentX += shaper.Shape(runText, runFont).Width;
+            }
         }
 
         public int SaveLayer(IntPtr objectPointer)

@@ -17,116 +17,110 @@ namespace Drawie.Interop.Avalonia;
 
 public static class AppBuilderExtensions
 {
-    public static AppBuilder WithDrawie(this AppBuilder builder)
+    public static AppBuilder WithDrawie(this AppBuilder builder, Action gpuTimeoutFallback)
     {
-        builder.AfterSetup(c =>
+        builder.AfterSetup(_ =>
         {
-            Dispatcher.UIThread.Post(() =>
-            {
-                Console.WriteLine("Initializing Drawie...");
-
-                var compositor = Compositor.TryGetDefaultCompositor();
-                if (compositor == null)
-                {
-                    Console.WriteLine("No compositor available. Exiting");
-                    return;
-                }
-
-                compositor.TryGetCompositionGpuInterop().AsTask().ContinueWith((t) =>
-                {
-                    var interop = t.Result;
-                    Dispatcher.UIThread.Invoke(() =>
-                    {
-                        var openglFeature = compositor.TryGetRenderInterfaceFeature(
-                                typeof(IOpenGlTextureSharingRenderInterfaceContextFeature))
-                            .Result;
-
-                        IOpenGlTextureSharingRenderInterfaceContextFeature? sharingFeature = null;
-                        bool isOpenGl = openglFeature is IOpenGlTextureSharingRenderInterfaceContextFeature;
-                        sharingFeature = openglFeature as IOpenGlTextureSharingRenderInterfaceContextFeature;
-
-                        IRenderApi renderApi = null;
-                        IDisposable? disposableContext = null;
-                        IDisposable? ctxDisposablePostRun = null;
-                        if (isOpenGl)
-                        {
-                            var ctx = sharingFeature!.CreateSharedContext();
-                            OpenGlInteropContext context = new OpenGlInteropContext(ctx, ctx is EglContext);
-                            ctxDisposablePostRun = ctx.MakeCurrent();
-
-                            renderApi = new OpenGlRenderApi(context);
-
-                            IDrawieInteropContext.SetCurrent(context);
-                        }
-                        else
-                        {
-                            if (interop == null)
-                            {
-                                string configPath = Path.Combine(
-                                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                    "PixiEditor",
-                                    "render_api.config");
-
-                                Console.WriteLine(
-                                    $"Vulkan support was reported as available, but no interop was found. Pass --opengl command line argument to use OpenGL instead or enter \"OpenGL\" inside a file: '{configPath}'.");
-                                throw new InvalidOperationException(
-                                    "Vulkan support was reported as available, but no interop was found. Pass --opengl command line argument to use OpenGL instead or enter \"OpenGL\" inside a file: '" +
-                                    configPath + "'.");
-                            }
-
-                            AvaloniaInteropContextInfo contextInfo = new AvaloniaInteropContextInfo();
-
-                            Console.WriteLine("Initializing Vulkan context...");
-                            VulkanInteropContext context = new VulkanInteropContext(interop);
-                            context.Initialize(contextInfo);
-
-                            renderApi = new VulkanRenderApi(context);
-                            DrawieInterop.VulkanInteropContext = context;
-                            IDrawieInteropContext.SetCurrent(context);
-                            disposableContext = context;
-                        }
-
-                        SkiaDrawingBackend drawingBackend = new SkiaDrawingBackend();
-
-                        DrawingEngine drawingEngine =
-                            new DrawingEngine(renderApi, null, drawingBackend,
-                                new AvaloniaRenderingDispatcher());
-
-                        // It's very likely that this is not needed and may cause issues when reopening main window without
-                        // proper reinitialization.
-                        // But leaving in case it is needed for some reason
-                        /*if (c.Instance.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                        {
-                            desktop.Exit += (sender, args) =>
-                            {
-                                var mainWindow = (sender as IClassicDesktopStyleApplicationLifetime).MainWindow;
-                                if (!mainWindow.IsLoaded)
-                                {
-                                    drawingEngine.Dispose();
-                                    disposableContext?.Dispose();
-                                }
-                                else
-                                {
-                                    mainWindow.Unloaded += (o, eventArgs) =>
-                                    {
-                                        drawingEngine.Dispose();
-                                        disposableContext?.Dispose();
-                                    };
-                                }
-                            };
-                        }*/
-
-                        Console.WriteLine("Starting Drawie...");
-                        drawingEngine.Run();
-
-                        Console.WriteLine("\t- Using GPU: " +
-                                          IDrawieInteropContext.Current.GetGpuDiagnostics().ActiveGpuInfo);
-                        ctxDisposablePostRun?.Dispose();
-                    });
-                });
-            }, DispatcherPriority.Loaded);
+            Dispatcher.UIThread.InvokeAsync(
+                async () => await InitializeDrawie(gpuTimeoutFallback),
+                DispatcherPriority.Loaded);
         });
 
         return builder;
+    }
+
+    private static async Task InitializeDrawie(Action gpuFailedCallback)
+    {
+        try
+        {
+            Console.WriteLine("Initializing Drawie...");
+
+            var compositor = Compositor.TryGetDefaultCompositor();
+
+            if (compositor == null)
+            {
+                Console.WriteLine("No compositor available.");
+                gpuFailedCallback();
+                return;
+            }
+
+            var interopTask = compositor.TryGetCompositionGpuInterop().AsTask();
+
+            var completedTask = await Task.WhenAny(interopTask, Task.Delay(TimeSpan.FromSeconds(10)));
+
+            if (completedTask != interopTask)
+            {
+                Console.WriteLine("Timed out waiting for GPU interop.");
+                gpuFailedCallback();
+                return;
+            }
+
+            var interop = await (completedTask as Task<ICompositionGpuInterop>);
+
+            var openglFeature = await compositor.TryGetRenderInterfaceFeature(
+                typeof(IOpenGlTextureSharingRenderInterfaceContextFeature));
+
+            bool isOpenGl = openglFeature is IOpenGlTextureSharingRenderInterfaceContextFeature;
+
+            IRenderApi renderApi;
+            IDisposable? disposableContext = null;
+            IDisposable? ctxDisposablePostRun = null;
+
+            if (isOpenGl)
+            {
+                var sharingFeature = (IOpenGlTextureSharingRenderInterfaceContextFeature)openglFeature!;
+
+                var ctx = sharingFeature.CreateSharedContext();
+                var context = new OpenGlInteropContext(ctx, ctx is EglContext);
+
+                ctxDisposablePostRun = ctx.MakeCurrent();
+
+                renderApi = new OpenGlRenderApi(context);
+                IDrawieInteropContext.SetCurrent(context);
+            }
+            else
+            {
+                if (interop == null)
+                {
+                    throw new InvalidOperationException("No composition GPU interop available.");
+                }
+
+                var contextInfo = new AvaloniaInteropContextInfo();
+
+                Console.WriteLine("Initializing Vulkan context...");
+
+                var context = new VulkanInteropContext(interop);
+                context.Initialize(contextInfo);
+
+                renderApi = new VulkanRenderApi(context);
+                DrawieInterop.VulkanInteropContext = context;
+                IDrawieInteropContext.SetCurrent(context);
+
+                disposableContext = context;
+            }
+
+            var drawingBackend = new SkiaDrawingBackend();
+
+            var drawingEngine = new DrawingEngine(
+                renderApi,
+                null,
+                drawingBackend,
+                new AvaloniaRenderingDispatcher());
+
+            Console.WriteLine("Starting Drawie...");
+
+            drawingEngine.Run();
+
+            Console.WriteLine(
+                "\t- Using GPU: " +
+                IDrawieInteropContext.Current.GetGpuDiagnostics().ActiveGpuInfo);
+
+            ctxDisposablePostRun?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Drawie initialization failed: {ex}");
+            gpuFailedCallback();
+        }
     }
 }

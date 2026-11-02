@@ -49,9 +49,22 @@ public class RadialGradientPaintable : GradientPaintable, IPositionPaintable
     {
         return new RadialGradientPaintable(Center, Radius, GradientStops.Select(x => x))
         {
-            AbsoluteValues = AbsoluteValues,
-            Transform = Transform
+            AbsoluteValues = AbsoluteValues, Transform = Transform
         };
+    }
+
+    public override int GetCacheHash()
+    {
+        HashCode hash = new HashCode();
+        foreach (var gradientStop in GradientStops)
+        {
+            hash.Add(gradientStop.Color.GetHashCode());
+            hash.Add(gradientStop.Offset.GetHashCode());
+        }
+
+        hash.Add(Center);
+        hash.Add(Radius);
+        return hash.ToHashCode();
     }
 
     protected bool Equals(RadialGradientPaintable other)

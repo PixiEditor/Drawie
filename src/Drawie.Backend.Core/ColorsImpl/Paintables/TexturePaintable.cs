@@ -67,6 +67,14 @@ public class TexturePaintable : Paintable
         //lastSnapshot?.Dispose();
     }
 
+    public override int GetCacheHash()
+    {
+        HashCode hash = new HashCode();
+        hash.Add(Image.GetHashCode());
+        hash.Add(SamplingOptions.GetHashCode());
+        return hash.ToHashCode();
+    }
+
     public override Paintable? Clone()
     {
         return new TexturePaintable(Image);

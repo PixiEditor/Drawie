@@ -71,4 +71,9 @@ public class ColorPaintable : Paintable
     {
         return $"{Color}";
     }
+
+    public override int GetCacheHash()
+    {
+        return Color.GetHashCode();
+    }
 }

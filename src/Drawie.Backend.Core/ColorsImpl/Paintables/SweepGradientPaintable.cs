@@ -56,6 +56,19 @@ public class SweepGradientPaintable : GradientPaintable, IPositionPaintable
         };
     }
 
+    public override int GetCacheHash()
+    {
+        HashCode hash = new HashCode();
+        foreach (var gradientStop in GradientStops)
+        {
+            hash.Add(gradientStop.Color.GetHashCode());
+            hash.Add(gradientStop.Offset.GetHashCode());
+        }
+        hash.Add(Center);
+        hash.Add(Angle);
+        return hash.ToHashCode();
+    }
+
     protected bool Equals(SweepGradientPaintable other)
     {
         return base.Equals(other) && Center.Equals(other.Center) && Angle.Equals(other.Angle);

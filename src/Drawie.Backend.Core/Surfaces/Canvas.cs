@@ -53,6 +53,12 @@ namespace Drawie.Backend.Core.Surfaces
             Changed?.Invoke(null);
         }
 
+        public void DrawSurface(DrawingSurface original, float x, float y, SamplingOptions samplingOptions, Paint? paint)
+        {
+            DrawingBackendApi.Current.CanvasImplementation.DrawSurface(ObjectPointer, original, x, y, samplingOptions, paint);
+            Changed?.Invoke(null);
+        }
+
         public void DrawSurface(DrawingSurface original, float x, float y) => DrawSurface(original, x, y, null);
 
         public void DrawSurface(DrawingSurface surfaceToDraw, VecD size, Paint paint)
@@ -255,7 +261,7 @@ namespace Drawie.Backend.Core.Surfaces
             bounds = new RectD(position.X + bounds.X, position.Y + bounds.Y, bounds.Width, bounds.Height);
             var reset = ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
-                (float)position.Y, font, paint);
+                (float)position.Y, font, TextAlign.Left, paint);
 
             reset.Dispose();
             Changed?.Invoke(bounds);
@@ -267,7 +273,7 @@ namespace Drawie.Backend.Core.Surfaces
             bounds = new RectD(position.X + bounds.X, position.Y + bounds.Y, bounds.Width, bounds.Height);
             var reset = ApplyPaintable(bounds, paint);
             DrawingBackendApi.Current.CanvasImplementation.DrawText(ObjectPointer, text, (float)position.X,
-                (float)position.Y, align, font, paint);
+                (float)position.Y, font, align, paint);
 
             reset.Dispose();
 

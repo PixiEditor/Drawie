@@ -91,6 +91,9 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
 
     public event Action<VectorPath>? Changed;
 
+    private List<object> DisposeLockers { get; } = new();
+    private bool DisposeQueued { get; set; }
+
     public static VectorPath? FromSvgPath(string svgPath)
     {
         return DrawingBackendApi.Current.PathImplementation.FromSvgPath(svgPath);
@@ -135,6 +138,20 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
     {
     }
 
+    public void LockDispose(object locker)
+    {
+        DisposeLockers.Add(locker);
+    }
+
+    public void UnlockDispose(object locker)
+    {
+        DisposeLockers.Remove(locker);
+        if (DisposeQueued && DisposeLockers.Count == 0)
+        {
+            Dispose();
+        }
+    }
+
     /// <param name="matrix">The matrix to use for transformation.</param>
     /// <summary>Applies a transformation matrix to the all the elements in the path.</summary>
     public void Transform(Matrix3X3 matrix)
@@ -145,8 +162,15 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
 
     public override void Dispose()
     {
+        if (DisposeLockers.Count > 0)
+        {
+            DisposeQueued = true;
+            return;
+        }
+
         DrawingBackendApi.Current.PathImplementation.Dispose(this);
         IsDisposed = true;
+        DisposeQueued = false;
     }
 
     public void Reset()
@@ -265,12 +289,14 @@ public class VectorPath : NativeObject, IEnumerable<(PathVerb verb, VecF[] point
 
     public Matrix3X3 GetMatrixAtDistance(float distance, bool forceClose, PathMeasureMatrixMode mode)
     {
-        return DrawingBackendApi.Current.PathImplementation.GetMatrixAtDistance(ObjectPointer, distance, forceClose, mode);
+        return DrawingBackendApi.Current.PathImplementation.GetMatrixAtDistance(ObjectPointer, distance, forceClose,
+            mode);
     }
 
     public Vec4D GetPositionAndTangentAtDistance(float distance, bool forceClose)
     {
-        return DrawingBackendApi.Current.PathImplementation.GetPositionAndTangentAtDistance(ObjectPointer, distance, forceClose);
+        return DrawingBackendApi.Current.PathImplementation.GetPositionAndTangentAtDistance(ObjectPointer, distance,
+            forceClose);
     }
 
     public PathIterator CreateIterator(bool forceClose)

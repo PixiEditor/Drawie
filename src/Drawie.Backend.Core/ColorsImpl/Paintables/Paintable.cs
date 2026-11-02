@@ -5,7 +5,7 @@ using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.ColorsImpl.Paintables;
 
-public abstract class Paintable : IDisposable, ICloneable
+public abstract class Paintable : IDisposable, ICloneable, ICacheable
 {
     public abstract bool AnythingVisible { get; }
     public bool AbsoluteValues { get; set; } = false;
@@ -24,4 +24,5 @@ public abstract class Paintable : IDisposable, ICloneable
     public virtual void DisposeShaderElements() { }
 
     public virtual void ModifyPaint(Paint paint) { }
+    public abstract int GetCacheHash();
 }

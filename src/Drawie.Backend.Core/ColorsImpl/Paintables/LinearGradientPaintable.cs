@@ -48,6 +48,19 @@ public class LinearGradientPaintable : GradientPaintable, IStartEndPaintable
         };
     }
 
+    public override int GetCacheHash()
+    {
+        HashCode hash = new HashCode();
+        foreach (var gradientStop in GradientStops)
+        {
+            hash.Add(gradientStop.Color.GetHashCode());
+            hash.Add(gradientStop.Offset.GetHashCode());
+        }
+        hash.Add(Start);
+        hash.Add(End);
+        return hash.ToHashCode();
+    }
+
     protected bool Equals(LinearGradientPaintable other)
     {
         return base.Equals(other) && Start.Equals(other.Start) && End.Equals(other.End);

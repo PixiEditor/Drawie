@@ -125,7 +125,7 @@ public partial class BuiltInFunctions
         "half4 color",
         nameof(RgbToHsl),
         $$"""
-          half3 hsl; // init to 0 to avoid warnings ? (and reverse if + remove first part)
+          half3 hsl = half3(0);
           
           float fmin = min(min(color.r, color.g), color.b); //Min. value of RGB
           float fmax = max(max(color.r, color.g), color.b); //Max. value of RGB

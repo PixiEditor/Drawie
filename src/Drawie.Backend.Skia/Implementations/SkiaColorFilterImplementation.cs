@@ -11,9 +11,7 @@ namespace Drawie.Skia.Implementations
         public IntPtr CreateBlendMode(Color color, BlendMode blendMode)
         {
             SKColorFilter skColorFilter = SKColorFilter.CreateBlendMode(color.ToSKColor(), (SKBlendMode)blendMode);
-            AddManagedInstance(skColorFilter);
-
-            return skColorFilter.Handle;
+            return AddManagedInstance(skColorFilter);
         }
 
         public IntPtr CreateColorMatrix(float[] matrix)
