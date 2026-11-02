@@ -18,19 +18,19 @@ namespace Drawie.Interop.VulkanAvalonia;
 
 public static class AppBuilderExtensions
 {
-    public static AppBuilder WithDrawie(this AppBuilder builder)
+    public static AppBuilder WithDrawie(this AppBuilder builder, Action gpuTimeoutFallback)
     {
         builder.AfterSetup(_ =>
         {
             Dispatcher.UIThread.InvokeAsync(
-                async () => await InitializeDrawie(),
+                async () => await InitializeDrawie(gpuTimeoutFallback),
                 DispatcherPriority.Loaded);
         });
 
         return builder;
     }
 
-    private static async Task InitializeDrawie()
+    private static async Task InitializeDrawie(Action gpuTimeoutFallback)
     {
         try
         {
@@ -44,15 +44,18 @@ public static class AppBuilderExtensions
                 return;
             }
 
-            Console.WriteLine("Requesting composition GPU interop...");
+            var interopTask = compositor.TryGetCompositionGpuInterop().AsTask();
 
-            var interopTask = compositor.TryGetCompositionGpuInterop();
+            var completedTask = await Task.WhenAny(interopTask, Task.Delay(TimeSpan.FromSeconds(10)));
 
-            Console.WriteLine($"Interop completed: {interopTask.IsCompleted}");
+            if (completedTask != interopTask)
+            {
+                Console.WriteLine("Timed out waiting for GPU interop.");
+                gpuTimeoutFallback();
+                return;
+            }
 
-            var interop = await interopTask;
-
-            Console.WriteLine($"Interop acquired: {interop != null}");
+            var interop = await (completedTask as Task<ICompositionGpuInterop>);
 
             var openglFeature = await compositor.TryGetRenderInterfaceFeature(
                 typeof(IOpenGlTextureSharingRenderInterfaceContextFeature));
