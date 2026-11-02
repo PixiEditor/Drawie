@@ -1,4 +1,4 @@
-using Drawie.Backend.Core;
+﻿using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.Numerics;
@@ -100,7 +100,7 @@ namespace Drawie.Skia.Implementations
                 (GRSurfaceOrigin)origin,
                 SKColorType.Rgba8888,
                 SKAlphaType.Premul);
-        }*/
+        }
         
         internal SKImage? CreateFromFramebuffer(SkiaNativeSurfaceInfo skiaNativeSurfaceInfo, VecI size, SurfaceOrigin surfaceOrigin, out ITexture fbInfo)
         {

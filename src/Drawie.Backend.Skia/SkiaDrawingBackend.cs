@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
@@ -210,25 +210,7 @@ namespace Drawie.Skia
                 SurfaceImplementation.CreateFromNativeTexture(renderTexture, size, surfaceOrigin, true, out var fbInfo);
             if (native == null)
             {
-                var imageInfo = new GRVkImageInfo()
-                {
-                    CurrentQueueFamily = texture.QueueFamily,
-                    Format = texture.ImageFormat,
-                    Image = texture.ImageHandle,
-                    ImageLayout = texture.Layout,
-                    ImageTiling = texture.Tiling,
-                    ImageUsageFlags = texture.UsageFlags,
-                    LevelCount = 1,
-                    SampleCount = 1,
-                    Protected = false,
-                    SharingMode = texture.TargetSharingMode,
-                };
-
-                var surface = SKSurface.Create(GraphicsContext, new GRBackendRenderTarget(size.X, size.Y, imageInfo),
-                    (GRSurfaceOrigin)surfaceOrigin, SKColorType.Rgba8888,
-                    new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));
-
-                return DrawingSurface.FromNative(surface);
+                return null;
             }
 
             SurfaceImplementation.AddManagedInstance(native);
