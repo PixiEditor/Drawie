@@ -55,11 +55,7 @@ namespace Drawie.Backend.Core.Bridge.Operations
             float radiusY, Paint paint);
 
         public void DrawText(IntPtr objectPointer, string text, float x, float y, Paint paint);
-        public void DrawText(IntPtr objectPointer, string text, float x, float y, Font font, Paint paint);
-
-        public void DrawText(IntPtr objectPointer, string text, float x, float y, TextAlign align, Font font,
-            Paint paint);
-
+        public void DrawText(IntPtr objectPointer, string text, float x, float y, Font font, TextAlign align, Paint paint);
         public int SaveLayer(IntPtr objectPtr);
         public int SaveLayer(IntPtr objectPtr, Paint paint);
         public int SaveLayer(IntPtr objectPtr, Paint paint, RectD bounds);

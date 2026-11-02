@@ -1,10 +1,14 @@
 ﻿using System.Collections.Concurrent;
 using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
+using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Backend.Core.Text;
 using Drawie.Backend.Core.Vector;
 using Drawie.Numerics;
+using Drawie.Skia.Fonts;
 using SkiaSharp;
+using SkiaSharp.HarfBuzz;
+using Buffer = HarfBuzzSharp.Buffer;
 
 namespace Drawie.Skia.Implementations;
 
@@ -27,8 +31,26 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
     {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
-            var path = font.GetTextPath(text);
-            return new VectorPath(pathImplementation.AddManagedInstance(path));
+            using SKPathBuilder pathBuilder = new SKPathBuilder();
+            float offsetX = 0;
+            foreach (FontUtility.FontRun run in FontUtility.GetFontRuns(text, font))
+            {
+                string runText = text.Substring(run.Start, run.Length);
+
+                using SKFont runFont = FontUtility.CreateFont(font, run.Typeface);
+                using SKShaper shaper = new(run.Typeface);
+
+                var shaped = shaper.Shape(runText, runFont);
+
+                using var targetFont = FontUtility.CreateFont(font, run.Typeface);
+                var path = targetFont.GetTextPath(runText);
+
+                pathBuilder.AddPath(path, offsetX, 0, SKPathAddMode.Append);
+
+                offsetX += shaped.Width;
+            }
+
+            return new VectorPath(pathImplementation.AddManagedInstance(pathBuilder.Snapshot()));
         }
 
         throw new InvalidOperationException("Native font object not found");
@@ -38,7 +60,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
     {
         SKTypeface typeface = SKTypeface.FromStream(stream);
 
-        if(typeface == null)
+        if (typeface == null)
         {
             return null;
         }
@@ -71,25 +93,64 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public double MeasureText(IntPtr objectPointer, string text)
     {
-        if (TryGetInstance(objectPointer, out SKFont? font))
+        if (!TryGetInstance(objectPointer, out SKFont? baseFont))
+            throw new InvalidOperationException("Native font object not found");
+
+        double currentWidth = 0;
+
+        foreach (FontUtility.FontRun run in FontUtility.GetFontRuns(text, baseFont))
         {
-            return font.MeasureText(text);
+            string runText = text.Substring(run.Start, run.Length);
+
+            using SKFont runFont = FontUtility.CreateFont(baseFont, run.Typeface);
+            using SKShaper shaper = new(run.Typeface);
+
+            SKShaper.Result shaped = shaper.Shape(runText, runFont);
+
+            currentWidth += shaped.Width;
         }
 
-        throw new InvalidOperationException("Native font object not found");
+        return currentWidth;
     }
 
     public double MeasureText(IntPtr objectPointer, string text, out RectD bounds, Paint? paint = null)
     {
-        if (TryGetInstance(objectPointer, out SKFont? font))
+        if (!TryGetInstance(objectPointer, out SKFont? baseFont))
+            throw new InvalidOperationException("Native font object not found");
+
+        SKPaint? skPaint = (SKPaint?)paint?.Native;
+
+        double currentX = 0;
+        SKRect totalBounds = SKRect.Empty;
+
+        foreach (FontUtility.FontRun run in FontUtility.GetFontRuns(text, baseFont))
         {
-            SKPaint? skPaint = (SKPaint)paint?.Native;
-            double measurement = font.MeasureText(text, out SKRect skBounds, skPaint);
-            bounds = new RectD(skBounds.Left, skBounds.Top, skBounds.Width, skBounds.Height);
-            return measurement;
+            string runText = text.Substring(run.Start, run.Length);
+
+            using SKFont runFont = FontUtility.CreateFont(baseFont, run.Typeface);
+            using SKShaper shaper = new(run.Typeface);
+
+            SKShaper.Result shaped = shaper.Shape(runText, runFont);
+
+            runFont.MeasureText(runText, out SKRect runBounds, skPaint);
+
+            runBounds.Offset((float)currentX, 0);
+
+            totalBounds = totalBounds.IsEmpty
+                ? runBounds
+                : SKRect.Union(totalBounds, runBounds);
+
+            currentX += shaped.Width;
         }
 
-        throw new InvalidOperationException("Native font object not found");
+        bounds = new RectD(
+            totalBounds.Left,
+            totalBounds.Top,
+            totalBounds.Width,
+            totalBounds.Height);
+
+        bounds = bounds with { Width = currentX };
+        return currentX;
     }
 
     public int BreakText(IntPtr objectPointer, string text, double maxWidth, out float measuredWidth)
@@ -106,8 +167,34 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
     {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
-            SKPoint[] skPoints = font.GetGlyphPositions(text);
-            return CastUtility.UnsafeArrayCast<SKPoint, VecF>(skPoints);
+            if (font.ContainsGlyphs(text))
+            {
+                SKPoint[] skPoints = font.GetGlyphPositions(text);
+                return CastUtility.UnsafeArrayCast<SKPoint, VecF>(skPoints);
+            }
+
+            List<VecF> positions = new();
+
+            double currentX = 0;
+
+            foreach (FontUtility.FontRun run in FontUtility.GetFontRuns(text, font))
+            {
+                string runText = text.Substring(run.Start, run.Length);
+
+                using SKFont runFont = FontUtility.CreateFont(font, run.Typeface);
+                using SKShaper shaper = new(run.Typeface);
+
+                SKShaper.Result shaped = shaper.Shape(runText, runFont);
+
+                foreach (var shapedPoint in shaped.Points)
+                {
+                    positions.Add(new VecF(shapedPoint.X + (float)currentX, shapedPoint.Y));
+                }
+
+                currentX += shaped.Width;
+            }
+
+            return positions.ToArray();
         }
 
         throw new InvalidOperationException("Native font object not found");
@@ -115,10 +202,32 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public float[] GetGlyphWidths(IntPtr objectPointer, string text)
     {
+        return GlyphWidths(objectPointer, text);
+    }
+
+    private float[] GlyphWidths(IntPtr objectPointer, string text, Paint? paint = null)
+    {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
-            float[] widths = font.GetGlyphWidths(text);
-            return widths;
+            if (font.ContainsGlyphs(text))
+            {
+                float[] widths = font.GetGlyphWidths(text);
+                return widths;
+            }
+
+            List<float> shapedWidths = new();
+            foreach (FontUtility.FontRun run in FontUtility.GetFontRuns(text, font))
+            {
+                string runText = text.Substring(run.Start, run.Length);
+
+                using SKFont runFont = FontUtility.CreateFont(font, run.Typeface);
+
+                var widths = runFont.GetGlyphWidths(runText);
+
+                shapedWidths.AddRange(widths);
+            }
+
+            return shapedWidths.ToArray();
         }
 
         throw new InvalidOperationException("Native font object not found");
@@ -126,13 +235,7 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
 
     public float[] GetGlyphWidths(IntPtr objectPointer, string text, Paint paint)
     {
-        if (TryGetInstance(objectPointer, out SKFont? font))
-        {
-            float[] widths = font.GetGlyphWidths(text, (SKPaint)paint.Native);
-            return widths;
-        }
-
-        throw new InvalidOperationException("Native font object not found");
+        return GlyphWidths(objectPointer, text, paint);
     }
 
     public bool GetSubPixel(IntPtr objectPointer)
@@ -177,38 +280,38 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         throw new InvalidOperationException("Native font object not found");
     }
 
-    public bool GetBold(IntPtr objectPointer)
+    public FontStyleWeight GetWeight(IntPtr objectPointer)
     {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
-            return font.Typeface.IsBold || font.Embolden;
+            return font.Embolden ? FontStyleWeight.Bold : (FontStyleWeight)font.Typeface.FontWeight;
         }
 
         throw new InvalidOperationException("Native font object not found");
     }
 
-    public void SetBold(IntPtr objectPointer, bool value, FontFamilyName family)
+    public void SetWeight(IntPtr objectPointer, FontStyleWeight value, FontFamilyName family)
     {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
             if (family.FontUri is { IsFile: true })
             {
-                font.Embolden = value;
+                font.Embolden = (int)value >= 600;
             }
             else
             {
-                if (font.Typeface.IsBold == value)
+                if (font.Typeface.FontWeight == (int)value)
                 {
                     return;
                 }
 
-                if (family.FontUri is { IsFile: true } && font.Embolden == value)
+                if (family.FontUri is { IsFile: true } && font.Embolden == ((int)value >= 600))
                 {
                     return;
                 }
 
-                bool italic = GetItalic(objectPointer);
-                UpdateTypeface(objectPointer, italic, value, font);
+                var slant = GetSlant(objectPointer);
+                UpdateTypeface(objectPointer, slant, value, font);
             }
 
             return;
@@ -217,33 +320,33 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         throw new InvalidOperationException("Native font object not found");
     }
 
-    public bool GetItalic(IntPtr objectPointer)
+    public FontStyleSlant GetSlant(IntPtr objectPointer)
     {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
-            return font.Typeface.IsItalic || font.SkewX != 0;
+            return font.SkewX != 0 ? FontStyleSlant.Oblique : (FontStyleSlant)font.Typeface.FontSlant;
         }
 
         throw new InvalidOperationException("Native font object not found");
     }
 
-    public void SetItalic(IntPtr objectPointer, bool value, FontFamilyName family)
+    public void SetSlant(IntPtr objectPointer, FontStyleSlant value, FontFamilyName family)
     {
         if (TryGetInstance(objectPointer, out SKFont? font))
         {
             if (family.FontUri is { IsFile: true })
             {
-                font.SkewX = value ? -0.25f : 0;
+                font.SkewX = value != FontStyleSlant.Upright ? -0.25f : 0;
             }
             else
             {
-                if (font.Typeface.IsItalic == value)
+                if (font.Typeface.FontSlant == (SKFontStyleSlant)value)
                 {
                     return;
                 }
 
-                bool bold = GetBold(objectPointer);
-                UpdateTypeface(objectPointer, value, bold, font);
+                var weight = GetWeight(objectPointer);
+                UpdateTypeface(objectPointer, value, weight, font);
             }
 
             return;
@@ -252,23 +355,10 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         throw new InvalidOperationException("Native font object not found");
     }
 
-    private void UpdateTypeface(IntPtr objectPointer, bool italic, bool bold, SKFont font)
+    private void UpdateTypeface(IntPtr objectPointer, FontStyleSlant slant, FontStyleWeight weight, SKFont font)
     {
-        SKFontStyle fontStyle = SKFontStyle.Normal;
-        if (bold && italic)
-        {
-            fontStyle = SKFontStyle.BoldItalic;
-        }
-        else if (bold)
-        {
-            fontStyle = SKFontStyle.Bold;
-        }
-        else if (italic)
-        {
-            fontStyle = SKFontStyle.Italic;
-        }
-
-        SKTypeface newTypeFace = SKTypeface.FromFamilyName(font.Typeface.FamilyName, fontStyle);
+        SKTypeface newTypeFace = SKTypeface.FromFamilyName(font.Typeface.FamilyName,
+            new SKFontStyle((int)weight, font.Typeface.FontWidth, (SKFontStyleSlant)slant));
 
         SKFont newFont = new(newTypeFace, font.Size);
         newFont.Subpixel = font.Subpixel;
@@ -307,6 +397,23 @@ public class SkiaFontImplementation : SkObjectImplementation<SKFont>, IFontImple
         }
 
         throw new InvalidOperationException("Native font object not found");
+    }
+
+    public bool ContainsGlyphs(IntPtr objectPointer, int[] glyphIds)
+    {
+        if (TryGetInstance(objectPointer, out SKFont? font))
+        {
+            return font.ContainsGlyphs(glyphIds);
+        }
+
+        throw new InvalidOperationException("Native font object not found");
+    }
+
+    public FontStyle[] GetAvailableFontStyles(string fontFamily)
+    {
+        return SKFontManager.Default.GetFontStyles(fontFamily).Select(style =>
+                new FontStyle((FontStyleWeight)style.Weight, (FontStyleSlant)style.Slant, (FontStyleWidth)style.Width))
+            .ToArray();
     }
 
     public Font CreateDefault(float fontSize)

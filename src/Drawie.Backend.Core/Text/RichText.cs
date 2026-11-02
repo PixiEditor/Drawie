@@ -1,5 +1,4 @@
-﻿using Drawie.Backend.Core.ColorsImpl;
-using Drawie.Backend.Core.ColorsImpl.Paintables;
+﻿using System.Globalization;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
@@ -8,311 +7,1000 @@ using Drawie.Numerics;
 
 namespace Drawie.Backend.Core.Text;
 
-public class RichText
+public class RichText : ICacheable, IDisposable
 {
     public const double PtToPx = 1.3333333333333333;
-    public string RawText { get; set; }
+    public IReadOnlyList<TextInline> Inlines => InlinesMutable;
+    public string RawText => string.Concat(Inlines.Select(x => x.Text));
+    public string FormattedText => RawText.Replace('\n', ' ');
 
-    public string FormattedText { get; }
-
-    public string[] Lines { get; }
-    public bool Fill { get; set; }
-    public Paintable FillPaintable { get; set; }
-    public float StrokeWidth { get; set; }
-    public Paintable StrokePaintable { get; set; }
-    public double MaxWidth { get; set; } = double.MaxValue;
-    public double? Spacing { get; set; }
-
-    public RichText(string text, double maxWidth = double.MaxValue)
+    public IReadOnlyCollection<TextInline>[] Lines
     {
-        if (text == null)
+        get
         {
-            text = string.Empty;
+            if (lastChoppedHash == GetCacheHash() && lastChoppedLines != null)
+            {
+                return lastChoppedLines;
+            }
+
+            lastChoppedHash = GetCacheHash();
+            lastChoppedLines = ChopInlinesIntoLines();
+            return lastChoppedLines;
         }
-
-        RawText = text;
-        MaxWidth = maxWidth;
-
-        FormattedText = text.Replace('\n', ' ');
-        Lines = text.Split('\n');
     }
 
-    public void Paint(Canvas canvas, VecD position, Font font, Paint paint, VectorPath? onPath, VecD? pathOffset = null)
+    public double MaxWidth { get; set; } = double.MaxValue;
+    private List<TextInline> InlinesMutable { get; } = new();
+
+    private IReadOnlyCollection<TextInline>[] lastChoppedLines;
+    private Dictionary<FontData, Font> fontCache = new();
+    private int lastChoppedHash = -1;
+    private int lastMeasuredHash = -1;
+    private int lastGlyphPositionsHash = -1;
+    private RectD lastMeasuredBounds;
+    private VecF[] lastGlyphPositions;
+    private int cachedTextGlyphCount = -1;
+    private string lastRawText = null;
+
+    public int TextGlyphCount
     {
-        if (pathOffset == null)
+        get
         {
-            pathOffset = VecD.Zero;
+            if (lastRawText == RawText)
+            {
+                return cachedTextGlyphCount;
+            }
+
+            int count = 0;
+            var iterator = StringInfo.GetTextElementEnumerator(RawText);
+            while (iterator.MoveNext())
+            {
+                count++;
+            }
+
+            lastRawText = RawText;
+            cachedTextGlyphCount = count;
+            return cachedTextGlyphCount;
+        }
+    }
+
+    private IReadOnlyCollection<TextInline>[] ChopInlinesIntoLines()
+    {
+        List<IReadOnlyCollection<TextInline>> lines = new();
+        List<TextInline> currentLine = new();
+        foreach (TextInline inline in Inlines)
+        {
+            if (string.IsNullOrEmpty(inline.Text))
+            {
+                continue;
+            }
+
+            var inlineLines = inline.Text.Split('\n');
+
+            for (int i = 0; i < inlineLines.Length; i++)
+            {
+                string lineText = inlineLines[i];
+                if (!string.IsNullOrEmpty(lineText))
+                {
+                    var clonedInline = inline.Clone();
+                    clonedInline.Text = lineText;
+                    currentLine.Add(clonedInline);
+                }
+                else
+                {
+                    currentLine.Add(new TextInline("\n", inline.Font));
+                }
+
+                if (i < inlineLines.Length - 1)
+                {
+                    lines.Add(currentLine);
+                    currentLine = new List<TextInline>();
+                }
+            }
         }
 
-        bool hasStroke = StrokeWidth > 0;
-        bool hasFill = Fill && FillPaintable.AnythingVisible;
-        bool strokeAndFillEqual = StrokePaintable == FillPaintable;
+        if (currentLine.Count > 0) lines.Add(currentLine);
+        return lines.ToArray();
+    }
+
+    public RichText() { }
+
+    public RichText(string text, FontData font, double maxWidth = double.MaxValue)
+    {
+        MaxWidth = maxWidth;
+        InlinesMutable.Add(new TextInline(text ?? string.Empty, font));
+    }
+
+    public RichText(IEnumerable<TextInline> inlines, double maxWidth = double.MaxValue)
+    {
+        MaxWidth = maxWidth;
+        InlinesMutable.AddRange(inlines);
+    }
+
+    public int IndexOfInline(TextInline inline)
+    {
+        return InlinesMutable.IndexOf(inline);
+    }
+
+    public void UpdateInline(int index, TextInline inline) { InlinesMutable[index] = inline; }
+    public void AddInline(TextInline inline) { InlinesMutable.Add(inline); }
+    public void AddInline(string text, FontData font) { InlinesMutable.Add(new TextInline(text, font)); }
+    public void Clear() { InlinesMutable.Clear(); }
+
+    public TextInline? GetInlineAt(int cursorPos, out int inlineStart, out int inlineEnd)
+    {
+        int offset = 0;
+
+        foreach (var inline in InlinesMutable)
+        {
+            int length = GetTextElementLength(inline.Text);
+
+            if (cursorPos >= offset && cursorPos <= offset + length)
+            {
+                inlineStart = offset;
+                inlineEnd = offset + length;
+                return inline;
+            }
+
+            offset += length;
+        }
+
+        inlineStart = -1;
+        inlineEnd = -1;
+        return null;
+    }
+
+    private static int GetTextElementLength(string text)
+    {
+        int length = 0;
+        var enumerator = StringInfo.GetTextElementEnumerator(text);
+
+        while (enumerator.MoveNext())
+            length++;
+
+        return length;
+    }
+
+    public int GetInlineStart(TextInline inline)
+    {
+        int offset = 0;
+        foreach (TextInline current in Inlines)
+        {
+            if (ReferenceEquals(current, inline)) return offset;
+            offset += current.GlyphCount;
+        }
+
+        return -1;
+    }
+
+    public int GetInlineEnd(TextInline inline)
+    {
+        int start = GetInlineStart(inline);
+        return start < 0 ? -1 : start + inline.GlyphCount;
+    }
+
+    public void Paint(Canvas canvas, VecD position, Paint paint, VectorPath? onPath = null, VecD? pathOffset = null)
+    {
+        if (pathOffset == null)
+            pathOffset = VecD.Zero;
 
         if (onPath != null)
         {
-            if (hasStroke && hasFill && strokeAndFillEqual)
-            {
-                paint.Style = PaintStyle.StrokeAndFill;
-                paint.SetPaintable(StrokePaintable);
-                paint.StrokeWidth = StrokeWidth;
-
-                canvas.DrawTextOnPath(onPath, FormattedText, pathOffset.Value, font, paint);
-            }
-            else
-            {
-                if (hasStroke)
-                {
-                    paint.Style = PaintStyle.Stroke;
-                    paint.SetPaintable(StrokePaintable);
-                    paint.StrokeWidth = StrokeWidth;
-                    canvas.DrawTextOnPath(onPath, FormattedText, pathOffset.Value, font, paint);
-                }
-
-                if (hasFill)
-                {
-                    paint.Style = PaintStyle.Fill;
-                    paint.SetPaintable(FillPaintable);
-                    canvas.DrawTextOnPath(onPath, FormattedText, pathOffset.Value, font, paint);
-                }
-            }
+            PaintOnPath(canvas, position, paint, onPath, pathOffset.Value);
+            return;
         }
-        else
-        {
-            for (var i = 0; i < Lines.Length; i++)
-            {
-                var line = Lines[i];
 
-                VecD linePosition = position + GetLineOffset(i, font);
+        double x = position.X;
+        double y = position.Y;
+        double boundingWidth = MeasureBounds().Width;
+
+        for (var index = 0; index < Lines.Length; index++)
+        {
+            var line = Lines[index];
+            double maxLineHeight = 0;
+            double maxFontSize = 0;
+            double measuredLineWidth = 0;
+
+            bool allEmpty = true;
+            foreach (TextInline inline in line)
+            {
+                bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                allEmpty &= isEmpty;
+                if (isEmpty) continue;
+                if (index > 0)
+                {
+                    maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+                    maxFontSize = Math.Max(maxFontSize, inline.Font.Size * PtToPx);
+                }
+
+                Font font = GetFont(inline.Font);
+                measuredLineWidth += font.MeasureText(inline.Text);
+            }
+
+            if (allEmpty)
+            {
+                maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
+            }
+
+            double lineX = x;
+
+            TextAlign? alignment = null;
+
+            int saved = canvas.Save();
+
+            foreach (TextInline inline in line)
+            {
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
+                Font font = GetFont(inline.Font);
+                if (alignment == null)
+                {
+                    alignment = inline.Alignment;
+
+                    if (alignment == TextAlign.Center)
+                    {
+                        canvas.Translate((float)((boundingWidth - measuredLineWidth) / 2f), 0);
+                    }
+                    else if (alignment == TextAlign.Right)
+                    {
+                        canvas.Translate((float)(boundingWidth - measuredLineWidth), 0);
+                    }
+                }
+
+                double topOffset = maxLineHeight;
+                double measuredInlineWidth = font.MeasureText(inline.Text);
+
+                VecD inlinePosition = new VecD(lineX, y + topOffset);
+
+                bool hasStroke = inline is { StrokeWidth: > 0, StrokePaintable.AnythingVisible: true };
+
+                bool hasFill = inline is { FillPaintable.AnythingVisible: true, Fill: true };
+
+                bool strokeAndFillEqual = inline.StrokePaintable == inline.FillPaintable;
+
 
                 if (hasStroke && hasFill && strokeAndFillEqual)
                 {
                     paint.Style = PaintStyle.StrokeAndFill;
-                    paint.SetPaintable(StrokePaintable);
-                    paint.StrokeWidth = StrokeWidth;
-
-                    PaintLine(canvas, line, linePosition, font, paint);
+                    paint.SetPaintable(inline.StrokePaintable);
+                    paint.StrokeWidth = inline.StrokeWidth;
+                    canvas.DrawText(inline.Text, inlinePosition, TextAlign.Left, font, paint);
                 }
                 else
                 {
                     if (hasStroke)
                     {
                         paint.Style = PaintStyle.Stroke;
-                        paint.SetPaintable(StrokePaintable);
-                        paint.StrokeWidth = StrokeWidth;
-                        PaintLine(canvas, line, linePosition, font, paint);
+                        paint.SetPaintable(inline.StrokePaintable);
+                        paint.StrokeWidth = inline.StrokeWidth;
+                        canvas.DrawText(inline.Text, inlinePosition, TextAlign.Left, font, paint);
                     }
 
                     if (hasFill)
                     {
                         paint.Style = PaintStyle.Fill;
-                        paint.SetPaintable(FillPaintable);
-                        PaintLine(canvas, line, linePosition, font, paint);
+                        paint.SetPaintable(inline.FillPaintable);
+                        canvas.DrawText(inline.Text, inlinePosition, TextAlign.Left, font, paint);
                     }
                 }
+
+                lineX += measuredInlineWidth;
             }
+
+            canvas.RestoreToCount(saved);
+
+            y += maxLineHeight;
         }
     }
 
-    private void PaintLine(Canvas canvas, string line, VecD position, Font font, Paint paint)
+    public RectD MeasureBounds()
     {
-        canvas.DrawText(line, position, font, paint);
-    }
+        if (Inlines.Count == 0) return RectD.Empty;
 
-    public RectD MeasureBounds(Font font)
-    {
-        if (font == null)
+        int hash = GetCacheHash();
+        if (lastMeasuredHash == hash)
         {
-            return RectD.Empty;
+            return lastMeasuredBounds;
         }
 
-        using Paint measurementPaint = new Paint();
-        measurementPaint.Style = PaintStyle.StrokeAndFill;
-        measurementPaint.StrokeWidth = StrokeWidth;
+        RectD? bounds = null;
+        double x = 0;
+        double y = 0;
 
-        RectD? finalBounds = null;
-        double height = 0;
-        RectD? lastBounds = null;
-
-        for (var i = 0; i < Lines.Length; i++)
+        for (var index = 0; index < Lines.Length; index++)
         {
-            var line = Lines[i];
-            if (string.IsNullOrEmpty(line))
+            var line = Lines[index];
+            double maxLineHeight = 0;
+
+            bool allEmpty = true;
+            foreach (TextInline inline in line)
             {
-                continue;
+                bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                allEmpty &= isEmpty;
+                if (isEmpty) continue;
+                if (index > 0)
+                    maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
             }
 
-            font.MeasureText(line, out RectD bounds, measurementPaint);
-
-            lastBounds = bounds;
-
-            if (finalBounds == null)
+            if (allEmpty)
             {
-                finalBounds = bounds;
+                maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
+            }
+
+            foreach (TextInline inline in line)
+            {
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
+                Font font = GetFont(inline.Font);
+
+                font.MeasureText(inline.Text, out RectD inlineBounds);
+                inlineBounds = new RectD(
+                    inlineBounds.X + x,
+                    inlineBounds.Y + y + maxLineHeight,
+                    inlineBounds.Width,
+                    inlineBounds.Height);
+
+                bounds = bounds == null
+                    ? inlineBounds
+                    : bounds.Value.Union(inlineBounds);
+
+                x += font.MeasureText(inline.Text);
+            }
+
+            y += maxLineHeight;
+            x = 0;
+        }
+
+        lastMeasuredHash = hash;
+        lastMeasuredBounds = bounds ?? RectD.Empty;
+        return lastMeasuredBounds;
+    }
+
+    public VecF[] GetGlyphPositions(bool includeEndPosition = false)
+    {
+        if (Inlines.Count == 0) return [];
+
+        int hash = GetCacheHash();
+        if (lastGlyphPositionsHash == hash)
+        {
+            return lastGlyphPositions;
+        }
+
+        List<VecF> positions = new();
+        double x = 0;
+        double y = 0;
+        double boundingWidth = MeasureBounds().Width;
+
+        for (var index = 0; index < Lines.Length; index++)
+        {
+            var line = Lines[index];
+            double maxLineHeight = 0;
+            TextAlign? alignment = null;
+            double measuredLineWidth = 0;
+
+            bool allEmpty = true;
+            foreach (TextInline inline in line)
+            {
+                bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                allEmpty &= isEmpty;
+                if (isEmpty) continue;
+                if (index > 0)
+                    maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+                Font font = GetFont(inline.Font);
+                measuredLineWidth += font.MeasureText(inline.Text);
+            }
+
+            if (allEmpty)
+            {
+                maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
+            }
+
+            double offsetX = 0;
+            foreach (TextInline inline in line)
+            {
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
+                Font font = GetFont(inline.Font);
+                var measuredLine = font.MeasureText(inline.Text);
+
+                if (alignment == null)
+                {
+                    alignment = inline.Alignment;
+                    if (alignment == TextAlign.Center)
+                    {
+                        offsetX = (boundingWidth - measuredLineWidth) / 2f;
+                    }
+                    else if (alignment == TextAlign.Right)
+                    {
+                        offsetX = boundingWidth - measuredLineWidth;
+                    }
+                }
+
+                VecF[] glyphPositions = font.GetGlyphPositions(inline.Text);
+
+                foreach (VecF glyphPosition in glyphPositions)
+                    positions.Add(glyphPosition + new VecF((float)x + (float)offsetX, (float)y + (float)maxLineHeight));
+
+                x += measuredLine;
+            }
+
+            if (includeEndPosition)
+                positions.Add(new VecF((float)x + (float)offsetX, (float)y + (float)maxLineHeight));
+
+            y += maxLineHeight;
+            x = 0;
+        }
+
+        lastGlyphPositions = positions.ToArray();
+        lastGlyphPositionsHash = hash;
+        return lastGlyphPositions;
+    }
+
+
+    private void PaintOnPath(Canvas canvas, VecD position, Paint paint, VectorPath path, VecD pathOffset)
+    {
+        foreach (TextInline inline in Inlines)
+        {
+            if (string.IsNullOrEmpty(inline.Text)) continue;
+            Font font = GetFont(inline.Font);
+            bool hasStroke = inline.StrokeWidth > 0 && inline.StrokePaintable != null &&
+                             inline is { StrokePaintable.AnythingVisible: true };
+            bool hasFill = inline.FillPaintable != null &&
+                           inline is { Fill: true, FillPaintable.AnythingVisible: true };
+            bool strokeAndFillEqual = inline.StrokePaintable == inline.FillPaintable;
+            if (hasStroke && hasFill && strokeAndFillEqual)
+            {
+                paint.Style = PaintStyle.StrokeAndFill;
+                paint.SetPaintable(inline.StrokePaintable);
+                paint.StrokeWidth = inline.StrokeWidth;
+                canvas.DrawTextOnPath(path, inline.Text, pathOffset, font, paint);
             }
             else
             {
-                finalBounds = finalBounds.Value.Union(bounds);
+                if (hasStroke)
+                {
+                    paint.Style = PaintStyle.Stroke;
+                    paint.SetPaintable(inline.StrokePaintable);
+                    paint.StrokeWidth = inline.StrokeWidth;
+                    canvas.DrawTextOnPath(path, inline.Text, pathOffset, font, paint);
+                }
+
+                if (hasFill)
+                {
+                    paint.Style = PaintStyle.Fill;
+                    paint.SetPaintable(inline.FillPaintable);
+                    canvas.DrawTextOnPath(path, inline.Text, pathOffset, font, paint);
+                }
             }
 
-            if (Lines.Length == 1)
-            {
-                height = bounds.Height;
-            }
+            pathOffset += new VecD(font.MeasureText(inline.Text), 0);
         }
-
-        if (Lines.Length > 1 && lastBounds != null)
-        {
-            height = GetLineOffset(Lines.Length - 1, font).Y + lastBounds.Value.Height;
-        }
-
-        if (finalBounds == null)
-        {
-            return RectD.Empty;
-        }
-
-        return new RectD(finalBounds.Value.X, finalBounds.Value.Y, finalBounds.Value.Width, height);
     }
 
-    public VecF[] GetGlyphPositions(Font font)
+    public List<TextInline> GetInlinesInRange(int from, int to)
     {
-        if (Lines == null || RawText == null || Lines.Length == 0 || font == null)
-        {
-            return [];
-        }
+        int selectionStart = Math.Min(from, to);
+        int selectionEnd = Math.Max(from, to);
 
-        var glyphPositions = new VecF[RawText.Replace("\n", string.Empty).Length + Lines.Length];
-        using Paint measurementPaint = new Paint();
-        measurementPaint.Style = PaintStyle.StrokeAndFill;
-        measurementPaint.StrokeWidth = StrokeWidth;
+        List<TextInline> result = new();
 
-        int startingIndex = 0;
-        for (int i = 0; i < Lines.Length; i++)
+        if (Inlines.Count == 0)
+            return result;
+
+        if (selectionStart == selectionEnd)
         {
-            var line = Lines[i];
-            VecD lineOffset = GetLineOffset(i, font);
-            VecF[] lineGlyphPositions = font.GetGlyphPositions(line);
-            for (int j = 0; j < lineGlyphPositions.Length; j++)
+            var inlineAt = GetInlineAt(selectionStart, out int inlineStart, out int inlineEnd);
+            if (inlineAt != null)
             {
-                glyphPositions[startingIndex + j] = lineGlyphPositions[j] + lineOffset;
+                result.Add(inlineAt);
             }
 
-            if (line.Length == 0)
-            {
-                glyphPositions[startingIndex] = new VecF(0, (float)lineOffset.Y);
-                startingIndex++;
-                continue;
-            }
-
-            float lastGlyphWidth = font.GetGlyphWidths(line[^1].ToString(), measurementPaint).FirstOrDefault();
-            glyphPositions[startingIndex + line.Length] =
-                new VecF(glyphPositions[startingIndex + line.Length - 1].X + lastGlyphWidth, (float)lineOffset.Y);
-
-            startingIndex += line.Length + 1;
+            return result;
         }
 
-        return glyphPositions;
+        int currentPosition = 0;
+
+        foreach (TextInline inline in Inlines)
+        {
+            int inlineStart = currentPosition;
+            int inlineEnd = currentPosition + inline.GlyphCount;
+
+            if (inlineStart < selectionEnd && inlineEnd > selectionStart)
+                result.Add(inline);
+
+            currentPosition = inlineEnd;
+
+            if (currentPosition >= selectionEnd)
+                break;
+        }
+
+        return result;
     }
 
-    public float[] GetGlyphWidths(Font font)
+    public int IndexOnLine(int cursorPosition, out int lineIndex, bool accountNewLines = true)
     {
-        if (font == null)
+        for (var i = 0; i < Lines.Length; i++)
         {
-            return [];
-        }
-
-        using Paint measurementPaint = new Paint();
-        measurementPaint.Style = PaintStyle.StrokeAndFill;
-        measurementPaint.StrokeWidth = StrokeWidth;
-
-        var glyphWidths = new float[RawText.Replace("\n", string.Empty).Length + Lines.Length];
-        int startingIndex = 0;
-        for (int i = 0; i < Lines.Length; i++)
-        {
-            var line = Lines[i];
-            float[] lineGlyphWidths = font.GetGlyphWidths(line, measurementPaint);
-            for (int j = 0; j < lineGlyphWidths.Length; j++)
-            {
-                glyphWidths[startingIndex + j] = lineGlyphWidths[j];
-            }
-
-            if (line.Length == 0)
-            {
-                glyphWidths[startingIndex] = 0;
-                startingIndex++;
-                continue;
-            }
-
-            startingIndex += line.Length + 1;
-        }
-
-        return glyphWidths;
-    }
-
-    public VecD GetLineOffset(int lineIndex, Font font)
-    {
-        if (font == null)
-        {
-            return VecD.Zero;
-        }
-
-        double lineHeight = Spacing ?? font.Size * PtToPx;
-        return new VecD(0, lineIndex * lineHeight);
-    }
-
-    public int IndexOnLine(int cursorPosition, out int lineIndex)
-    {
-        int index = 0;
-        lineIndex = 0;
-        for (int i = 0; i < Lines.Length; i++)
-        {
-            var line = Lines[i];
-            if (cursorPosition <= index + line.Length)
+            var startEnd = GetLineStartEnd(i, accountNewLines);
+            if (cursorPosition >= startEnd.lineStart && cursorPosition <= startEnd.lineEnd)
             {
                 lineIndex = i;
-                return cursorPosition - index;
+                return cursorPosition - startEnd.lineStart;
             }
-
-            index += line.Length + 1;
         }
 
+        lineIndex = Lines.Length - 1;
         return cursorPosition;
+    }
+
+    private int GetLineLength(IReadOnlyCollection<TextInline> line, bool newLineIsZeroLength = false)
+    {
+        int length = 0;
+        foreach (var inline in line)
+        {
+            var enumerator = StringInfo.GetTextElementEnumerator(inline.Text);
+            while (enumerator.MoveNext())
+            {
+                if (enumerator.GetTextElement() == "\n" && newLineIsZeroLength)
+                {
+                    continue;
+                }
+
+                length++;
+            }
+        }
+
+        return length;
     }
 
     public int GetIndexOnLine(int line, int index)
     {
-        int currentIndex = 0;
-        int lineZeroIndex = 0;
-        for (int i = 0; i <= line; i++)
-        {
-            lineZeroIndex = currentIndex;
-            currentIndex += Lines[i].Length + 1;
-        }
-
-        return Math.Clamp(lineZeroIndex + index, lineZeroIndex, lineZeroIndex + Lines[line].Length);
+        int currentIndex = CountLineLength(line, true);
+        return Math.Clamp(currentIndex + index, currentIndex, currentIndex + GetLineLength(Lines[line]));
     }
 
-    public (int lineStart, int lineEnd) GetLineStartEnd(int lineIndex)
+    public (int lineStart, int lineEnd) GetLineStartEnd(int lineIndex, bool accountNewLines = true)
+    {
+        var currentIndex = CountLineLength(lineIndex, accountNewLines);
+        return (currentIndex, currentIndex + GetLineLength(Lines[lineIndex], true));
+    }
+
+    private int CountLineLength(int lineIndex, bool accountNewLines)
     {
         int currentIndex = 0;
         for (int i = 0; i < lineIndex; i++)
         {
-            currentIndex += Lines[i].Length + 1;
+            currentIndex += GetLineLength(Lines[i], true);
+            if (accountNewLines && (Lines[i].Count != 1 || Lines[i].First().Text != "\n"))
+            {
+                currentIndex++; // Account for the newline character between lines
+            }
         }
 
-        return (currentIndex, currentIndex + Lines[lineIndex].Length + 1);
+        return currentIndex;
     }
 
-    public VectorPath ToPath(Font font)
+    public VectorPath ToPath()
     {
         VectorPath path = new VectorPath();
 
-        for (var i = 0; i < Lines.Length; i++)
+        double boundingWidth = MeasureBounds().Width;
+        double y = 0;
+
+        for (int index = 0; index < Lines.Length; index++)
         {
-            var line = Lines[i];
-            Matrix3X3 matrix = Matrix3X3.CreateTranslation(0, (float)GetLineOffset(i, font).Y);
-            path.AddPath(font.GetTextPath(line), matrix, AddPathMode.Append);
+            var line = Lines[index];
+
+            double maxLineHeight = 0;
+            double measuredLineWidth = 0;
+            TextAlign? alignment = null;
+
+            bool allEmpty = true;
+
+            foreach (TextInline inline in line)
+            {
+                bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                allEmpty &= isEmpty;
+
+                if (isEmpty)
+                    continue;
+
+                if (index > 0) maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+
+                Font font = GetFont(inline.Font);
+                measuredLineWidth += font.MeasureText(inline.Text);
+            }
+
+            if (allEmpty)
+            {
+                maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
+            }
+
+            double x = 0;
+            double offsetX = 0;
+
+            foreach (TextInline inline in line)
+            {
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
+                Font font = GetFont(inline.Font);
+
+                if (alignment == null)
+                {
+                    alignment = inline.Alignment;
+
+                    if (alignment == TextAlign.Center)
+                    {
+                        offsetX = (boundingWidth - measuredLineWidth) / 2;
+                    }
+                    else if (alignment == TextAlign.Right)
+                    {
+                        offsetX = boundingWidth - measuredLineWidth;
+                    }
+                }
+
+                Matrix3X3 matrix = Matrix3X3.CreateTranslation((float)(x + offsetX), (float)(y + maxLineHeight));
+
+                path.AddPath(font.GetTextPath(inline.Text), matrix, AddPathMode.Append);
+
+                x += font.MeasureText(inline.Text);
+            }
+
+            y += maxLineHeight;
         }
 
         return path;
+    }
+
+    public (VectorPath path, TextInline inline)[] ToInlinePaths()
+    {
+        List<(VectorPath path, TextInline inline)> inlinePaths = new List<(VectorPath path, TextInline inline)>();
+
+        double boundingWidth = MeasureBounds().Width;
+        double y = 0;
+
+        for (int index = 0; index < Lines.Length; index++)
+        {
+            var line = Lines[index];
+
+            double maxLineHeight = 0;
+            double measuredLineWidth = 0;
+            TextAlign? alignment = null;
+
+            bool allEmpty = true;
+
+            foreach (TextInline inline in line)
+            {
+                bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                allEmpty &= isEmpty;
+
+                if (isEmpty)
+                    continue;
+
+                if (index > 0) maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+
+                Font font = GetFont(inline.Font);
+                measuredLineWidth += font.MeasureText(inline.Text);
+            }
+
+            if (allEmpty)
+            {
+                maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
+            }
+
+            double x = 0;
+            double offsetX = 0;
+
+            foreach (TextInline inline in line)
+            {
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
+                Font font = GetFont(inline.Font);
+
+                if (alignment == null)
+                {
+                    alignment = inline.Alignment;
+
+                    if (alignment == TextAlign.Center)
+                    {
+                        offsetX = (boundingWidth - measuredLineWidth) / 2;
+                    }
+                    else if (alignment == TextAlign.Right)
+                    {
+                        offsetX = boundingWidth - measuredLineWidth;
+                    }
+                }
+
+                Matrix3X3 matrix = Matrix3X3.CreateTranslation((float)(x + offsetX), (float)(y + maxLineHeight));
+
+                var path = font.GetTextPath(inline.Text);
+                path.Transform(matrix);
+                inlinePaths.Add((path, inline));
+
+                x += font.MeasureText(inline.Text);
+            }
+
+            y += maxLineHeight;
+        }
+
+        return inlinePaths.ToArray();
+    }
+
+    public override string ToString()
+    {
+        return FormattedText;
+    }
+
+    public int GetCacheHash()
+    {
+        HashCode hash = new HashCode();
+        hash.Add(MaxWidth);
+        foreach (TextInline inline in Inlines)
+        {
+            hash.Add(inline.GetCacheHash());
+        }
+
+        return hash.ToHashCode();
+    }
+
+    public VecD GetLineOffset(int lineIndex)
+    {
+        if (lineIndex <= 0)
+            return VecD.Zero;
+
+        double y = 0;
+
+        for (int i = 0; i < lineIndex; i++)
+            y += GetLineHeight(i);
+
+        return new VecD(0, y);
+    }
+
+    // TODO: Calculate once and cache the line heights for performance
+    public double GetLineHeight(int lineIndex)
+    {
+        int currentLine = 0;
+        double lineHeight = 0;
+
+        if (lineIndex < 0 || lineIndex >= Lines.Length)
+            return 0;
+
+        return Lines[lineIndex].Max(inline => inline.LineHeight * PtToPx);
+    }
+
+    public RichText Clone()
+    {
+        var clonedInlines = Inlines.Select(inline => inline.Clone()).ToList();
+
+        return new RichText(clonedInlines, MaxWidth);
+    }
+
+    public TextInline SplitInline(int inlineIndex, int cursorPosition, int selectionEnd)
+    {
+        TextInline inline = InlinesMutable[inlineIndex];
+
+        int inlineStart = GetInlineStart(inline);
+        int inlineEnd = GetInlineEnd(inline);
+
+        int start = Math.Clamp(cursorPosition - inlineStart, 0, inlineEnd - inlineStart);
+        int end = Math.Clamp(selectionEnd - inlineStart, 0, inlineEnd - inlineStart);
+
+        if (start > end)
+            (start, end) = (end, start);
+
+        string[] elements = GetTextElements(inline.Text);
+
+        string before = string.Concat(elements[..start]);
+        string selected = string.Concat(elements[start..end]);
+        string after = string.Concat(elements[end..]);
+
+        InlinesMutable.RemoveAt(inlineIndex);
+
+        int insertIndex = inlineIndex;
+
+        if (before.Length > 0)
+        {
+            TextInline beforeInline = inline.Clone();
+            beforeInline.Text = before;
+            InlinesMutable.Insert(insertIndex++, beforeInline);
+        }
+
+        TextInline selectedInline = inline.Clone();
+        selectedInline.Text = selected;
+        InlinesMutable.Insert(insertIndex++, selectedInline);
+
+        if (after.Length > 0)
+        {
+            TextInline afterInline = inline.Clone();
+            afterInline.Text = after;
+            InlinesMutable.Insert(insertIndex, afterInline);
+        }
+
+        return selectedInline;
+    }
+
+    public TextInline MergeAdjacentInlines(TextInline target)
+    {
+        int targetIndex = InlinesMutable.IndexOf(target);
+
+        if (targetIndex < 0)
+            return target;
+
+        if (targetIndex > 0 && (InlinesMutable[targetIndex - 1].HasEqualSettings(InlinesMutable[targetIndex])
+                                || CanMergeLineSettings(InlinesMutable[targetIndex - 1], InlinesMutable[targetIndex])))
+        {
+            TextInline previous = InlinesMutable[targetIndex - 1];
+            previous.Text += target.Text;
+            InlinesMutable.RemoveAt(targetIndex);
+
+            target = previous;
+            targetIndex--;
+        }
+
+        if (targetIndex + 1 < InlinesMutable.Count &&
+            (InlinesMutable[targetIndex].HasEqualSettings(InlinesMutable[targetIndex + 1])
+             || CanMergeLineSettings(InlinesMutable[targetIndex], InlinesMutable[targetIndex + 1])))
+        {
+            TextInline next = InlinesMutable[targetIndex + 1];
+            target.Text += next.Text;
+            InlinesMutable.RemoveAt(targetIndex + 1);
+        }
+
+        return target;
+    }
+
+    private bool CanMergeLineSettings(TextInline p0, TextInline p1)
+    {
+        var lineIndexOf = IndexOnLine(GetInlineStart(p0), out int lineIndex0, true);
+        var lineIndexOf1 = IndexOnLine(GetInlineStart(p1), out int lineIndex1, true);
+        if (lineIndex0 != lineIndex1)
+        {
+            return false;
+        }
+
+        return p0.HasEqualSettings(p1, true);
+    }
+
+
+    private static string[] GetTextElements(string text)
+    {
+        var elements = new List<string>();
+        var enumerator = StringInfo.GetTextElementEnumerator(text);
+
+        while (enumerator.MoveNext())
+            elements.Add(enumerator.GetTextElement());
+
+        return elements.ToArray();
+    }
+
+    public void RemoveInline(TextInline inline)
+    {
+        InlinesMutable.Remove(inline);
+    }
+
+    /// <summary>
+    ///     Includes surrogate pairs and combining characters, so the returned string may be longer than 1 character.
+    /// </summary>
+    /// <param name="cursor">Cursor position</param>
+    /// <returns>A single char or a string representing a surrogate pair or combining character</returns>
+    public string? GetCharAtCursor(int cursor)
+    {
+        var inline = GetInlineAt(cursor, out int inlineStart, out int inlineEnd);
+        if (inline == null)
+            return null;
+
+        int index = cursor - inlineStart;
+        var elements = GetTextElements(inline.Text);
+        if (index < 0 || index >= elements.Length)
+            return null;
+        var element = elements[index];
+        return element;
+    }
+
+    public VecD GetInlinePosition(TextInline target)
+    {
+        double x = 0;
+        double y = 0;
+        double boundingWidth = MeasureBounds().Width;
+
+        foreach (var line in Lines)
+        {
+            double maxLineHeight = 0;
+            double measuredLineWidth = 0;
+            TextAlign? alignment = null;
+            bool allEmpty = true;
+
+            foreach (TextInline inline in line)
+            {
+                bool isEmpty = string.IsNullOrEmpty(inline.Text) || inline.Text == "\n";
+                allEmpty &= isEmpty;
+
+                if (isEmpty)
+                    continue;
+
+                maxLineHeight = Math.Max(maxLineHeight, inline.LineHeight * PtToPx);
+
+                Font font = GetFont(inline.Font);
+                measuredLineWidth += font.MeasureText(inline.Text);
+            }
+
+            if (allEmpty)
+                maxLineHeight = line.FirstOrDefault()?.LineHeight * PtToPx ?? 0;
+
+            double offsetX = 0;
+
+            foreach (TextInline inline in line)
+            {
+                if (string.IsNullOrEmpty(inline.Text) || inline.Text == "\n")
+                    continue;
+
+                Font font = GetFont(inline.Font);
+                double measuredLine = font.MeasureText(inline.Text);
+
+                if (alignment == null)
+                {
+                    alignment = inline.Alignment;
+
+                    if (alignment == TextAlign.Center)
+                        offsetX = (boundingWidth - measuredLineWidth) / 2f;
+                    else if (alignment == TextAlign.Right)
+                        offsetX = boundingWidth - measuredLineWidth;
+                }
+
+                if (inline == target)
+                    return new VecD(x + offsetX, y);
+
+                x += measuredLine;
+            }
+
+            y += maxLineHeight;
+            x = 0;
+        }
+
+        return VecD.Zero;
+    }
+
+    private Font GetFont(FontData font)
+    {
+        if (fontCache.TryGetValue(font, out var cachedFont) && !cachedFont.IsDisposed)
+        {
+            return cachedFont;
+        }
+
+        var fontOfEqualSettings = fontCache.FirstOrDefault(x => x.Key.Equals(font));
+
+        if (fontOfEqualSettings.Value != null && !fontOfEqualSettings.Value.IsDisposed)
+        {
+            return fontOfEqualSettings.Value;
+        }
+
+        var newFont = font.ToFont();
+        if (newFont == null)
+        {
+            newFont = Font.CreateDefault((float)font.Size);
+        }
+
+        fontCache[font] = newFont;
+        return newFont;
+    }
+
+    public void ClearCache()
+    {
+        foreach (var font in fontCache)
+        {
+            font.Value.Dispose();
+        }
+
+        fontCache.Clear();
+    }
+
+    void IDisposable.Dispose()
+    {
+        ClearCache();
     }
 }
