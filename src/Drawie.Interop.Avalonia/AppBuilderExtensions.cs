@@ -41,7 +41,6 @@ public static class AppBuilderExtensions
             if (compositor == null)
             {
                 Console.WriteLine("No compositor available.");
-                gpuFailedCallback();
                 return;
             }
 
