@@ -26,7 +26,8 @@ public interface IImageFilterImplementation
     public IntPtr? CreateTile(RectD source, RectD dest, ImageFilter input);
     public void DisposeObject(IntPtr objectPointer);
     public IntPtr? CreateBlendMode(Blender blendMode, ImageFilter? background, ImageFilter? foreground);
-    public IntPtr? CreateDisplacementMap(ColorChannel xChannel, ColorChannel yChannel, float scale, ImageFilter displacement);
+    public IntPtr? CreateDisplacementMap(ColorChannel xChannel, ColorChannel yChannel, float scale,
+        ImageFilter displacementMap, ImageFilter? targetFilter);
     public IntPtr? CreateBlur(float sigmaX, float sigmaY, TileMode timeMode);
     public IntPtr? CreateDilate(float radiusX, float radiusY);
     public IntPtr? CreateErode(float radiusX, float radiusY);

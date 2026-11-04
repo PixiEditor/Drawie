@@ -200,12 +200,14 @@ namespace Drawie.Skia.Implementations
             return AddManagedInstance(skImageFilter);
         }
 
-        public IntPtr? CreateDisplacementMap(ColorChannel xChannel, ColorChannel yChannel, float scale, ImageFilter displacement)
+        public IntPtr? CreateDisplacementMap(ColorChannel xChannel, ColorChannel yChannel, float scale,
+            ImageFilter displacementMap, ImageFilter? targetFilter)
         {
-            if (TryGetInstance(displacement.ObjectPointer, out var displacementFilter) && displacementFilter != null)
+            if (TryGetInstance(displacementMap.ObjectPointer, out var displacementFilter) && displacementFilter != null)
             {
+                TryGetInstance(targetFilter.ObjectPointer, out var targetSkFilter);
                 var skImageFilter = SKImageFilter.CreateDisplacementMapEffect((SKColorChannel)xChannel, (SKColorChannel)yChannel,
-                    scale, displacementFilter);
+                    scale, displacementFilter, targetSkFilter);
 
                 if (skImageFilter == null)
                 {

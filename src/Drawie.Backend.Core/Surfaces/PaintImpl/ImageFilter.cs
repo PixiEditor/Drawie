@@ -159,9 +159,9 @@ public class ImageFilter : NativeObject
         return new ImageFilter(dilate.Value) { WellKnownType = ImageFilterType.Dilate };
     }
 
-    public static ImageFilter? CreateDisplacementMap(ColorChannel xChannel, ColorChannel yChannel, float scale, ImageFilter displacementMap)
+    public static ImageFilter? CreateDisplacementMap(ColorChannel xChannel, ColorChannel yChannel, float scale, ImageFilter displacementMap, ImageFilter? targetFilter = null)
     {
-        var dilate = DrawingBackendApi.Current.ImageFilterImplementation.CreateDisplacementMap(xChannel, yChannel, scale, displacementMap);
+        var dilate = DrawingBackendApi.Current.ImageFilterImplementation.CreateDisplacementMap(xChannel, yChannel, scale, displacementMap, targetFilter);
 
         if (dilate == null)
             return null;
