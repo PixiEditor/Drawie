@@ -23,11 +23,13 @@ public interface IImageFilterImplementation
         ImageFilter? input);
 
     public IntPtr? CreateShader(Shader shader, bool dither);
-    public IntPtr? CreateImage(Image image);
     public IntPtr? CreateTile(RectD source, RectD dest, ImageFilter input);
     public void DisposeObject(IntPtr objectPointer);
     public IntPtr? CreateBlendMode(Blender blendMode, ImageFilter? background, ImageFilter? foreground);
+    public IntPtr? CreateDisplacementMap(ColorChannel xChannel, ColorChannel yChannel, float scale, ImageFilter displacement);
     public IntPtr? CreateBlur(float sigmaX, float sigmaY, TileMode timeMode);
     public IntPtr? CreateDilate(float radiusX, float radiusY);
+    public IntPtr? CreateErode(float radiusX, float radiusY);
     public IntPtr? CreateMerge(ImageFilter[] filters);
+    public IntPtr? CreateImage(Image image, SamplingOptions sampling);
 }

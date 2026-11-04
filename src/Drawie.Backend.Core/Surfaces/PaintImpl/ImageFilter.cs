@@ -107,17 +107,14 @@ public class ImageFilter : NativeObject
         return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.Shader };
     }
 
-    public static ImageFilter? CreateImage(Image image)
+    public static ImageFilter? CreateImage(Image image, SamplingOptions samplingOptions)
     {
-        var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateImage(image);
+        var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateImage(image, samplingOptions);
 
         if (filter == null)
             return null;
 
-        return new ImageFilter(filter.Value)
-        {
-            WellKnownType = ImageFilterType.Image
-        };
+        return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.Image };
     }
 
     public static ImageFilter? CreateTile(RectD source, RectD destination, ImageFilter input)
@@ -162,6 +159,26 @@ public class ImageFilter : NativeObject
         return new ImageFilter(dilate.Value) { WellKnownType = ImageFilterType.Dilate };
     }
 
+    public static ImageFilter? CreateDisplacementMap(ColorChannel xChannel, ColorChannel yChannel, float scale, ImageFilter displacementMap)
+    {
+        var dilate = DrawingBackendApi.Current.ImageFilterImplementation.CreateDisplacementMap(xChannel, yChannel, scale, displacementMap);
+
+        if (dilate == null)
+            return null;
+
+        return new ImageFilter(dilate.Value) { WellKnownType = ImageFilterType.DisplacementMap };
+    }
+
+    public static ImageFilter? CreateErode(float radiusX, float radiusY)
+    {
+        var erode = DrawingBackendApi.Current.ImageFilterImplementation.CreateErode(radiusX, radiusY);
+
+        if (erode == null)
+            return null;
+
+        return new ImageFilter(erode.Value) { WellKnownType = ImageFilterType.Erode };
+    }
+
     public static ImageFilter? CreateMerge(params ImageFilter[] filters)
     {
         var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateMerge(filters);
@@ -185,5 +202,7 @@ public enum ImageFilterType
     Image,
     Tile,
     Dilate,
-    Merge
+    Merge,
+    Erode,
+    DisplacementMap
 }

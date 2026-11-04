@@ -6,6 +6,7 @@ using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
+using Drawie.Skia.Extensions;
 using SkiaSharp;
 
 namespace Drawie.Skia.Implementations
@@ -82,6 +83,22 @@ namespace Drawie.Skia.Implementations
             return AddManagedInstance(skImageFilter);
         }
 
+        public IntPtr? CreateImage(Image image, SamplingOptions sampling)
+        {
+            if (ImageImplementation.TryGetInstance(image.ObjectPointer, out var skImage))
+            {
+                var skImageFilter = SKImageFilter.CreateImage(skImage, sampling.ToSkSamplingOptions());
+                if (skImageFilter == null)
+                {
+                    return null;
+                }
+
+                return AddManagedInstance(skImageFilter);
+            }
+
+            return null;
+        }
+
         public IntPtr? CreateDropShadow(float dx, float dy, float sigmaX, float sigmaY, Color color,
             ImageFilter? input)
         {
@@ -103,23 +120,6 @@ namespace Drawie.Skia.Implementations
         {
             var skShader = ShaderImplementation[shader.ObjectPointer];
             var skImageFilter = SKImageFilter.CreateShader(skShader, dither);
-
-            if (skImageFilter == null)
-                return null;
-
-            return AddManagedInstance(skImageFilter);
-        }
-
-        public IntPtr? CreateImage(Image image)
-        {
-            if (image == null)
-            {
-                return IntPtr.Zero;
-            }
-
-
-            SKImage target = ImageImplementation[image.ObjectPointer];
-            var skImageFilter = SKImageFilter.CreateImage(target);
 
             if (skImageFilter == null)
                 return null;
@@ -192,6 +192,35 @@ namespace Drawie.Skia.Implementations
         public IntPtr? CreateDilate(float radiusX, float radiusY)
         {
             var skImageFilter = SKImageFilter.CreateDilate(radiusX, radiusY);
+            if (skImageFilter == null)
+            {
+                return null;
+            }
+
+            return AddManagedInstance(skImageFilter);
+        }
+
+        public IntPtr? CreateDisplacementMap(ColorChannel xChannel, ColorChannel yChannel, float scale, ImageFilter displacement)
+        {
+            if (TryGetInstance(displacement.ObjectPointer, out var displacementFilter) && displacementFilter != null)
+            {
+                var skImageFilter = SKImageFilter.CreateDisplacementMapEffect((SKColorChannel)xChannel, (SKColorChannel)yChannel,
+                    scale, displacementFilter);
+
+                if (skImageFilter == null)
+                {
+                    return null;
+                }
+
+                return AddManagedInstance(skImageFilter);
+            }
+
+            return null;
+        }
+
+        public IntPtr? CreateErode(float radiusX, float radiusY)
+        {
+            var skImageFilter = SKImageFilter.CreateErode(radiusX, radiusY);
 
             if (skImageFilter == null)
             {
