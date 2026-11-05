@@ -10,9 +10,12 @@ namespace Drawie.Interop.Avalonia.OpenGl;
 public class OpenGlInteropContext : IOpenGlContext, IDrawieInteropContext
 {
     public bool IsGlViaAngle { get; }
+
     public static OpenGlInteropContext? Current { get; private set; }
 
     public IGlContext Context { get; }
+
+    private Dictionary<ulong, IOpenGlTexture> managedTextures = new Dictionary<ulong, IOpenGlTexture>();
 
     public OpenGlInteropContext(IGlContext context, bool isGlViaAngle)
     {
@@ -35,6 +38,23 @@ public class OpenGlInteropContext : IOpenGlContext, IDrawieInteropContext
     public RenderApiResources CreateResources(CompositionDrawingSurface surface, ICompositionGpuInterop interop)
     {
         return new OpenGlRenderApiResources(surface, interop);
+    }
+
+    public void AddManagedTexture(IOpenGlTexture texture)
+    {
+        managedTextures[texture.TextureId] = texture;
+    }
+
+    public IOpenGlTexture? GetManagedTexture(ulong textureId)
+    {
+        managedTextures.TryGetValue(textureId, out var texture);
+        return texture;
+
+    }
+
+    public void RemoveManagedTexture(ulong textureId)
+    {
+        managedTextures.Remove(textureId);
     }
 
     public GpuDiagnostics GetGpuDiagnostics()

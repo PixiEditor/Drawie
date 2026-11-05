@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using Avalonia.Logging;
+using Avalonia.OpenGL.Egl;
 using Avalonia.Vulkan;
 using Drawie.Interop.Avalonia.Vulkan;
 using Drawie.Interop.VulkanAvalonia;
@@ -32,7 +33,7 @@ class Program
                     Win32RenderingMode.Vulkan
                 },
             })
-            .With(new X11PlatformOptions() { RenderingMode = new[] { X11RenderingMode.Vulkan, X11RenderingMode.Glx } })
+            .With(new X11PlatformOptions() { RenderingMode = new[] { X11RenderingMode.Egl, X11RenderingMode.Glx } })
             .WithDrawie()
             .LogToTrace(LogEventLevel.Debug, "Vulkan");
 }

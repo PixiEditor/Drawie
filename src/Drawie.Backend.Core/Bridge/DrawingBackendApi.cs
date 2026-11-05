@@ -22,6 +22,7 @@ namespace Drawie.Backend.Core.Bridge
         }
 
         public static bool HasBackend => _current != null;
+        public static bool Initialized { get; private set; }
 
         public static void SetupBackend(IDrawingBackend backend, IRenderingDispatcher dispatcher)
         {
@@ -32,8 +33,6 @@ namespace Drawie.Backend.Core.Bridge
 
             _current = backend;
             _current.RenderingDispatcher = dispatcher;
-
-            OnBackendInitialized?.Invoke();
         }
 
         public static void InitializeBackend(IRenderApi renderApi)
@@ -44,6 +43,9 @@ namespace Drawie.Backend.Core.Bridge
             }
 
             _current.Setup(renderApi);
+            _current.RenderingDispatcher.RenderApiReady();
+            OnBackendInitialized?.Invoke();
+            Initialized = true;
         }
     }
 }

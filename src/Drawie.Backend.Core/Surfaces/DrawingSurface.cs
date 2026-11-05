@@ -2,10 +2,11 @@
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction.RenderTargets;
 
 namespace Drawie.Backend.Core.Surfaces
 {
-    public class DrawingSurface : NativeObject, IPixelsMap
+    public class DrawingSurface : NativeObject, IPixelsMap, IRenderTarget
     {
         public override object Native =>
             DrawingBackendApi.Current.SurfaceImplementation.GetNativeSurface(ObjectPointer);
@@ -17,6 +18,9 @@ namespace Drawie.Backend.Core.Surfaces
 
         public RectD LocalClipBounds =>
             DrawingBackendApi.Current.SurfaceImplementation.GetLocalClipBounds(ObjectPointer);
+
+        VecI IRenderTarget.Size => DeviceClipBounds.Size;
+        public ulong SurfaceId => DrawingBackendApi.Current.SurfaceImplementation.GetNativeSurfaceInfo(ObjectPointer).SurfaceId;
 
         public bool IsDisposed => isDisposed || Canvas.IsDisposed;
 
@@ -45,7 +49,7 @@ namespace Drawie.Backend.Core.Surfaces
         {
             return DrawingBackendApi.Current.ImageImplementation.Snapshot(this);
         }
-
+        
         public Image Snapshot(RectI bounds)
         {
             return DrawingBackendApi.Current.ImageImplementation.Snapshot(this, bounds);

@@ -4,7 +4,7 @@
 import {dotnet} from './_framework/dotnet.js'
 import {Drawie} from "./scripts/drawie.js";
 
-const {setModuleImports, getAssemblyExports, getConfig} = await dotnet
+const {setModuleImports, getAssemblyExports, getConfig, runMain} = await dotnet
     .withDiagnosticTracing(false)
     .withApplicationArgumentsFromQuery()
     .create();
@@ -15,4 +15,4 @@ drawie.addDrawieImports();
 await drawie.addDrawieExports();
 
 const config = getConfig();
-await dotnet.run();
+await runMain();

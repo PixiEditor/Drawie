@@ -1,7 +1,7 @@
 ﻿using Drawie.JSInterop;
 using Drawie.RenderApi.WebGl;
 using Drawie.Skia;
-using Drawie.Windowing.Browser;
+using Drawie.Host.Browser;
 
 namespace DrawiEngine.Browser;
 

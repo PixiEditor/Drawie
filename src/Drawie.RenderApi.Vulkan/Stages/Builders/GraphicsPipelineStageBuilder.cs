@@ -12,7 +12,8 @@ public class GraphicsPipelineStageBuilder : IDisposable
     public Device LogicalDevice { get; set; }
 
     public GraphicsPipelineStageType Type { get; set; }
-    public string ShaderPath { get; set; }
+    public string? ShaderPath { get; set; }
+    public byte[]? ShaderBytes { get; set; }
 
     public string EntryName { get; set; } = "main";
 
@@ -34,20 +35,24 @@ public class GraphicsPipelineStageBuilder : IDisposable
     {
         if (created)
         {
-            throw new GraphicsPipelineBuilderException("Stage was already created");
+            return createdStage;
         }
 
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ShaderPath);
-        if (stream == null)
+        byte[] code = ShaderBytes ?? Array.Empty<byte>();
+        if (ShaderBytes == null)
         {
-            throw new GraphicsPipelineBuilderException("Shader file not found");
-        }
+            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ShaderPath);
+            if (stream == null)
+            {
+                throw new GraphicsPipelineBuilderException("Shader file not found");
+            }
 
-        byte[] code = new byte[stream.Length];
-        var read = stream.Read(code, 0, code.Length);
-        if (read != code.Length)
-        {
-            throw new GraphicsPipelineBuilderException("Failed to read shader file");
+            code = new byte[stream.Length];
+            var read = stream.Read(code, 0, code.Length);
+            if (read != code.Length)
+            {
+                throw new GraphicsPipelineBuilderException("Failed to read shader file");
+            }
         }
 
         shaderModule = CreateShaderModule(code);

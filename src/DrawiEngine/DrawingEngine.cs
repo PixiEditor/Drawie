@@ -1,7 +1,7 @@
 ﻿using Drawie.Backend.Core;
 using Drawie.Backend.Core.Bridge;
 using Drawie.RenderApi;
-using Drawie.Windowing;
+using Drawie.Host;
 
 namespace DrawiEngine;
 
@@ -32,14 +32,14 @@ public class DrawingEngine
         Console.WriteLine($"\t- DrawingBackend: {DrawingBackend}");
 
         app.Initialize(this);
-        IWindow window = app.CreateMainWindow();
+        IHost host = app.CreateMainWindow();
 
-        window.Initialize();
+        host.Initialize();
 
         DrawingBackendApi.InitializeBackend(RenderApi);
 
         app.Run();
-        window.Show();
+        host.Show();
     }
 
     public void Run()
@@ -55,5 +55,6 @@ public class DrawingEngine
     public async ValueTask Dispose()
     {
         await DrawingBackend.DisposeAsync();
+        RenderApi.Dispose();
     }
 }

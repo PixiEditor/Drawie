@@ -4,6 +4,7 @@ using Avalonia.Rendering.Composition;
 using Drawie.Backend.Core.Bridge;
 using Drawie.Interop.Avalonia.Core;
 using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction.Textures;
 using Drawie.RenderApi.OpenGL;
 using Silk.NET.OpenGL;
 
@@ -42,7 +43,7 @@ public class OpenGlRenderApiResources : RenderApiResources
             fbo = Context.GlInterface.GenFramebuffer();
         }
 
-        fboTexture = new OpenGlTexture((uint)fbo, null);
+        fboTexture = new OpenGlTexture((uint)fbo, GL.GetApi(s => Context.GlInterface.GetProcAddress(s)), 0, 0);
     }
 
     public override async ValueTask DisposeAsync()

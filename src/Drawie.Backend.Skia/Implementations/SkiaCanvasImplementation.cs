@@ -1,4 +1,4 @@
-﻿using Drawie.Backend.Core.Bridge.Operations;
+using Drawie.Backend.Core.Bridge.Operations;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Mesh;
 using Drawie.Backend.Core.Numerics;
@@ -25,7 +25,7 @@ namespace Drawie.Skia.Implementations
         private readonly SkObjectImplementation<SKFont> _fontImpl;
         private readonly SkObjectImplementation<SKVertices> _verticesImpl;
 
-        private SKFont defaultFont => new SKFont(SKTypeface.Default, 12);
+        private static SKFont defaultFont = new SKFont(SKTypeface.Default);
 
         public SkiaCanvasImplementation(SkObjectImplementation<SKPaint> paintImpl,
             SkObjectImplementation<SKImage> imageImpl, SkObjectImplementation<SKBitmap> bitmapImpl,
@@ -295,7 +295,9 @@ namespace Drawie.Skia.Implementations
         public void DrawText(IntPtr objPtr, string text, float x, float y, Paint paint)
         {
             if(string.IsNullOrEmpty(text)) return;
-            this[objPtr].DrawText(SKTextBlob.Create(text, defaultFont), x, y, _paintImpl[paint.ObjectPointer]);
+            
+            SKPaint skPaint = _paintImpl[paint.ObjectPointer];
+            DrawShapedText(objPtr, text, x, y, TextAlign.Left, defaultFont, skPaint);
         }
 
         public void DrawText(IntPtr objPtr, string text, float x, float y, Font font, TextAlign align, Paint paint)
@@ -305,6 +307,11 @@ namespace Drawie.Skia.Implementations
             SKFont baseFont = _fontImpl[font.ObjectPointer];
             SKPaint skPaint = _paintImpl[paint.ObjectPointer];
 
+            DrawShapedText(objPtr, text, x, y, align, baseFont, skPaint);
+        }
+
+        private void DrawShapedText(IntPtr objPtr, string text, float x, float y, TextAlign align, SKFont baseFont, SKPaint skPaint)
+        {
             double currentX = x;
 
             var runs = FontUtility.GetFontRuns(text, baseFont);

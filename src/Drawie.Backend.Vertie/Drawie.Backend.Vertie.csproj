@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Drawie.Backend.Vertie</RootNamespace>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Drawie.Shaders.Common\Drawie.Shaders.Common.csproj" />
+        <ProjectReference Include="..\Drawie.Numerics\Drawie.Numerics.csproj" />
+        <ProjectReference Include="..\Drawie.Rendering\Drawie.Rendering.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AssimpNetter" Version="6.0.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Geometry\" />
+    </ItemGroup>
+
+</Project>

@@ -1,14 +1,14 @@
 ﻿using Drawie.Backend.Core.Bridge;
 using Drawie.Backend.Core.ColorsImpl;
-using Drawie.Backend.Core.ColorsImpl.Paintables;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.ImageData;
 using Drawie.Backend.Core.Surfaces.PaintImpl;
 using Drawie.Numerics;
+using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Backend.Core;
 
-public class Texture : IDisposable, ICloneable, IPixelsMap
+public class Texture : IDisposable, ICloneable, IPixelsMap, INativeSurfaceInfo, ILazyExternallyAccessibleTexture
 {
     public VecI Size { get; }
     public DrawingSurface DrawingSurface { get; private set; }
@@ -21,6 +21,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
     public ColorSpace ColorSpace { get; }
 
     public ImageInfo ImageInfo { get; }
+    public ulong TextureId => SurfaceId;
 
     private DrawingSurface? cpuSurface;
     private Pixmap? cpuPixmap;
@@ -86,7 +87,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
 
         return tex;
     }
-    
+
     public static Texture ForProcessing(Canvas copySizeAndMatrixFrom, ColorSpace colorSpace)
     {
         Texture tex = new Texture(
@@ -120,11 +121,12 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
                         throw new Exception("Could not create DrawingSurface for Texture.");
                     }
                 }
+
+                DrawingSurface.Changed += DrawingSurfaceOnChanged;
             }
         );
 
         ImageInfo = imageImageInfo;
-        DrawingSurface.Changed += DrawingSurfaceOnChanged;
         Changed += OnChanged;
     }
 
@@ -301,7 +303,7 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         if (isDisposed)
             throw new ObjectDisposedException("Texture");
 
-        if(cpuSurface == null)
+        if (cpuSurface == null)
             return;
 
         using var ctx = EnsureContext();
@@ -408,4 +410,17 @@ public class Texture : IDisposable, ICloneable, IPixelsMap
         surf.SaveToDesktop();
     }
 #endif
+    
+    public void EnsureExternallyAccessible()
+    {
+        if (DrawingBackendApi.Current.SurfaceImplementation.GetNativeSurfaceInfo(DrawingSurface.ObjectPointer) == null)
+        {
+            DrawingBackendApi.Current.SurfaceImplementation.ToExternallyAccessibleSurface(DrawingSurface.ObjectPointer);
+        }
+    }
+
+    public ulong SurfaceId =>
+        DrawingBackendApi.Current.SurfaceImplementation.GetNativeSurfaceInfo(DrawingSurface.ObjectPointer)
+            ?.SurfaceId ?? DrawingBackendApi.Current.SurfaceImplementation
+            .ToExternallyAccessibleSurface(DrawingSurface.ObjectPointer)?.SurfaceId ?? throw new Exception("Unable to get native texture info.");
 }

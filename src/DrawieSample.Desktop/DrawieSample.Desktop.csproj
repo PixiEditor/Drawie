@@ -2,15 +2,15 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>DrawieSample</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Drawie2Sample\Drawie2Sample.csproj" />
     <ProjectReference Include="..\DrawiEngine.Desktop\DrawiEngine.Desktop.csproj" />
     <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
-    <ProjectReference Include="..\DrawieSample\DrawieSample.csproj" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-﻿using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
+using Drawie.Backend.Core.Bridge.NativeObjectsImpl;
 using Drawie.Backend.Core.ColorsImpl;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Backend.Core.Surfaces;

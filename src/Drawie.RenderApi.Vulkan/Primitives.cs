@@ -5,7 +5,7 @@ namespace Drawie.RenderApi.Vulkan;
 
 public static class Primitives
 {
-    public static Vertex[] Vertices = new Vertex[]
+    public static Vertex2D[] Vertices = new Vertex2D[]
     {
         new()
         {

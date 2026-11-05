@@ -2,6 +2,8 @@
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Shaders;
 using Drawie.Numerics;
+using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Backend.Core.Surfaces.ImageData
 {
@@ -25,6 +27,9 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
 
         public VecI Size => new VecI(Width, Height);
         public bool IsDisposed => isDisposed;
+        /*
+        public ulong TextureId => DrawingBackendApi.Current.ImageImplementation.GetTextureId(ObjectPointer).Value;
+        */
 
         private bool isDisposed;
 
@@ -100,5 +105,6 @@ namespace Drawie.Backend.Core.Surfaces.ImageData
         {
             return DrawingBackendApi.Current.ImageImplementation.ToShader(ObjectPointer, clamp, tileMode, fillMatrixValue);
         }
+
     }
 }

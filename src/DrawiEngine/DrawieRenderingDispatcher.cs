@@ -4,7 +4,40 @@ namespace DrawiEngine;
 
 public class DrawieRenderingDispatcher : IRenderingDispatcher
 {
-    public Action<Action> Invoke { get; } = action => action();
+    private bool renderApiReady = false;
+
+    private List<Action> queuedActions = new List<Action>();
+
+    public Action<Action> Invoke { get; }
+
+    public DrawieRenderingDispatcher()
+    {
+        Invoke = OnInvoke;
+    }
+
+    private void OnInvoke(Action action)
+    {
+        if (renderApiReady)
+        {
+            action();
+        }
+        else
+        {
+            queuedActions.Add(action);
+        }
+    }
+
+    void IRenderingDispatcher.RenderApiReady()
+    {
+        renderApiReady = true;
+
+        foreach (var action in queuedActions)
+        {
+            action();
+        }
+
+        queuedActions.Clear();
+    }
 
     public async Task<TResult> InvokeAsync<TResult>(Func<TResult> func)
     {

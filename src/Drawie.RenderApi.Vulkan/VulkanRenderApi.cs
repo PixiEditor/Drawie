@@ -1,15 +1,17 @@
+using Drawie.RenderApi.Abstraction;
 using Silk.NET.Vulkan;
 
 namespace Drawie.RenderApi.Vulkan;
 
 public class VulkanRenderApi : IVulkanRenderApi
 {
-    private List<IWindowRenderApi> windowRenderApis = new List<IWindowRenderApi>();
-    public IReadOnlyCollection<IWindowRenderApi> WindowRenderApis => windowRenderApis;
+    private List<IHostViewRenderApi> windowRenderApis = new List<IHostViewRenderApi>();
+    public IReadOnlyCollection<IHostViewRenderApi> WindowRenderApis => windowRenderApis;
+    public IGraphicsDevice GraphicsDevice { get; private set; }
     public IVulkanContext VulkanContext { get; private set; }
 
-    IReadOnlyCollection<IVulkanWindowRenderApi> IVulkanRenderApi.WindowRenderApis =>
-        windowRenderApis.Cast<IVulkanWindowRenderApi>().ToList();
+    IReadOnlyCollection<IVulkanHostViewRenderApi> IVulkanRenderApi.WindowRenderApis =>
+        windowRenderApis.Cast<IVulkanHostViewRenderApi>().ToList();
 
     public VulkanRenderApi()
     {
@@ -18,26 +20,46 @@ public class VulkanRenderApi : IVulkanRenderApi
     public VulkanRenderApi(IVulkanContext vulkanContext)
     {
         VulkanContext = vulkanContext;
+        GraphicsDevice = CreateGraphicsDevice(vulkanContext);
     }
 
-    public IWindowRenderApi CreateWindowRenderApi()
+    public IHostViewRenderApi CreateWindowRenderApi()
     {
-        VulkanWindowRenderApi windowRenderApi;
+        VulkanHostViewRenderApi hostViewRenderApi;
         if (windowRenderApis.Count == 0)
         {
             var context = new VulkanWindowContext();
             VulkanContext = context;
+            
+            hostViewRenderApi = new VulkanHostViewRenderApi(context);
 
-            windowRenderApi = new VulkanWindowRenderApi(context);
-            windowRenderApis.Add(windowRenderApi);
-            return windowRenderApi;
+            hostViewRenderApi.Initialized += () => { GraphicsDevice = CreateGraphicsDevice(context); };
+            windowRenderApis.Add(hostViewRenderApi);
+            return hostViewRenderApi;
         }
 
-        var existingWindowRenderApi = windowRenderApis.First() as VulkanWindowRenderApi;
+        var existingWindowRenderApi = windowRenderApis.First() as VulkanHostViewRenderApi;
 
-        windowRenderApi = new VulkanWindowRenderApi(existingWindowRenderApi.Context);
+        hostViewRenderApi = new VulkanHostViewRenderApi(existingWindowRenderApi.Context);
 
-        windowRenderApis.Add(windowRenderApi);
-        return windowRenderApi;
+        windowRenderApis.Add(hostViewRenderApi);
+        return hostViewRenderApi;
+    }
+    
+    private static IGraphicsDevice CreateGraphicsDevice(IVulkanContext context)
+    {
+        if (context is not VulkanContext vulkanContext || vulkanContext.Api is null)
+            throw new InvalidOperationException("Vulkan graphics device is available only after the Vulkan context is initialized.");
+
+        return new VulkanGraphicsDevice(vulkanContext);
+    }
+
+    public void Dispose()
+    {
+        GraphicsDevice?.Dispose();
+        GraphicsDevice = null;
+        
+        if(VulkanContext is IDisposable disposable)
+            disposable.Dispose();
     }
 }

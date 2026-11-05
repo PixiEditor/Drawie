@@ -1,5 +1,5 @@
 ﻿using Drawie.Backend.Core.Bridge;
-using Drawie.Windowing;
+using Drawie.Host;
 
 namespace DrawiEngine;
 
@@ -17,11 +17,11 @@ public abstract class DrawieApp
         Engine = engine;
     }
 
-    public abstract IWindow CreateMainWindow();
+    public abstract IHost CreateMainWindow();
 
     public void Run()
     {
-        if (DrawingBackendApi.HasBackend)
+        if (DrawingBackendApi.Initialized)
         {
             OnInitialize();
         }

@@ -1,0 +1,45 @@
+<Project>
+    <PropertyGroup>
+        <ShaderOutputDirectory>$(IntermediateOutputPath)CompiledShaders</ShaderOutputDirectory>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference
+                Include="$(MSBuildThisFileDirectory)..\Drawie.ShaderCompiler\Drawie.ShaderCompiler.csproj"
+                ReferenceOutputAssembly="false"/>
+    </ItemGroup>
+
+    <UsingTask
+            TaskName="Drawie.ShaderCompiler.ShaderCompilerTask"
+            AssemblyFile="$(MSBuildThisFileDirectory)..\Drawie.ShaderCompiler\bin\$(Configuration)\net10.0\Drawie.ShaderCompiler.dll"/>
+
+    <Target
+            Name="CompileDrawieShaders"
+            Condition="'@(ShaderFiles)' != ''"
+            BeforeTargets="PrepareForBuild">
+
+        <Message
+                Importance="High"
+                Text="SHADER COMPILER: $(MSBuildProjectName) Browser=$(IsBrowserBuild)" />
+
+        <MakeDir
+                Directories="$(ShaderOutputDirectory)"/>
+
+        <ShaderCompilerTask
+                ShaderRoot="$(ShaderRoot)"
+                OutputDirectory="$(ShaderOutputDirectory)"
+                Browser="$(IsBrowserBuild)"/>
+
+        <ItemGroup>
+            <CompiledShaderResources
+                    Include="$(ShaderOutputDirectory)\**\*.shader;
+                 $(ShaderOutputDirectory)\**\*.reflection.json"/>
+
+            <EmbeddedResource Include="@(CompiledShaderResources)">
+                <LogicalName>$(AssemblyName).BuiltInShaders.%(CompiledShaderResources.Filename)%(CompiledShaderResources.Extension)</LogicalName>
+            </EmbeddedResource>
+        </ItemGroup>
+
+    </Target>
+
+</Project>

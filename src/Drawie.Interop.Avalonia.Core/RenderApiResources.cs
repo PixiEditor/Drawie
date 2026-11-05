@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Rendering.Composition;
 using Drawie.RenderApi;
+using Drawie.RenderApi.Abstraction.Textures;
 
 namespace Drawie.Interop.Avalonia.Core;
 

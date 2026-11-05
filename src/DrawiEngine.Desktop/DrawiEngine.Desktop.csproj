@@ -9,7 +9,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Drawie.RenderApi.OpenGl\Drawie.RenderApi.OpenGl.csproj" />
       <ProjectReference Include="..\Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj" />
-      <ProjectReference Include="..\Drawie.Windowing.Glfw\Drawie.Windowing.Glfw.csproj" />
+      <ProjectReference Include="..\Drawie.Host.Glfw\Drawie.Host.Glfw.csproj" />
       <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj" />
     </ItemGroup>
 

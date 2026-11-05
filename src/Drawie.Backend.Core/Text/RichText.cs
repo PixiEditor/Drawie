@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Drawie.Backend.Core.Numerics;
 using Drawie.Backend.Core.Surfaces;
 using Drawie.Backend.Core.Surfaces.PaintImpl;

@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Drawie.JSInterop\Drawie.JSInterop.csproj" />
+      <ProjectReference Include="..\Drawie.RenderApi.Web.Common\Drawie.RenderApi.Web.Common.csproj" />
+      <ProjectReference Include="..\Drawie.Host\Drawie.Host.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.JSInterop" Version="8.0.8" />
+    </ItemGroup>
+
+</Project>

@@ -1,7 +1,9 @@
+using Drawie.RenderApi.Abstraction;
+
 namespace Drawie.RenderApi;
 
 public interface IVulkanRenderApi : IRenderApi
 {
-    public new IReadOnlyCollection<IVulkanWindowRenderApi> WindowRenderApis { get; }
+    public new IReadOnlyCollection<IVulkanHostViewRenderApi> WindowRenderApis { get; }
     public IVulkanContext VulkanContext { get; }
 }

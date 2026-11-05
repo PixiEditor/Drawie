@@ -1,0 +1,47 @@
+<Solution>
+  <Folder Name="/Backends/">
+    <Project Path="Drawie.Backend.Core/Drawie.Backend.Core.csproj" />
+    <Project Path="Drawie.Backend.Skia/Drawie.Backend.Skia.csproj" />
+    <Project Path="Drawie.Backend.Vertie/Drawie.Backend.Vertie.csproj" />
+    <Project Path="Drawie.Rendering/Drawie.Rendering.csproj" />
+  </Folder>
+  <Folder Name="/Compilation/">
+    <Project Path="Drawie.ShaderCompiler/Drawie.ShaderCompiler.csproj" />
+  </Folder>
+  <Folder Name="/Hosts/">
+    <Project Path="Drawie.Host.Browser/Drawie.Host.Browser.csproj" />
+    <Project Path="Drawie.Host.Glfw/Drawie.Host.Glfw.csproj" />
+    <Project Path="Drawie.Host/Drawie.Host.csproj" />
+  </Folder>
+  <Folder Name="/Interops/">
+    <Project Path="Drawie.Interop.Avalonia.Core/Drawie.Interop.Avalonia.Core.csproj" />
+    <Project Path="Drawie.Interop.Avalonia.OpenGl/Drawie.Interop.Avalonia.OpenGl.csproj" />
+    <Project Path="Drawie.Interop.Avalonia.Vulkan/Drawie.Interop.Avalonia.Vulkan.csproj" />
+    <Project Path="Drawie.Interop.Avalonia/Drawie.Interop.Avalonia.csproj" />
+  </Folder>
+  <Folder Name="/Layers/">
+    <Project Path="Drawie.Layer.UI.ImGui/Drawie.Layer.UI.ImGui.csproj" />
+    <Project Path="Drawie.Layer.UI.MiniUi/Drawie.Layer.UI.MiniUi.csproj" />
+  </Folder>
+  <Folder Name="/RenderApis/">
+    <Project Path="Drawie.RenderApi.OpenGl/Drawie.RenderApi.OpenGl.csproj" />
+    <Project Path="Drawie.RenderApi.Vulkan/Drawie.RenderApi.Vulkan.csproj" />
+    <Project Path="Drawie.RenderApi.Web.Common/Drawie.RenderApi.Web.Common.csproj" />
+    <Project Path="Drawie.RenderApi.WebGl/Drawie.RenderApi.WebGl.csproj" />
+    <Project Path="Drawie.RenderApi/Drawie.RenderApi.csproj" />
+    <Project Path="Drawie.Shaders.Common/Drawie.Shaders.Common.csproj" />
+  </Folder>
+  <Folder Name="/_Samples/">
+    <Project Path="Drawie.AvaloniaInterop/Drawie.AvaloniaInterop.csproj" />
+    <Project Path="Drawie2Sample/Drawie2Sample.csproj" />
+    <Project Path="DrawieSample.Browser/DrawieSample.Browser.csproj" />
+    <Project Path="DrawieSample.Desktop/DrawieSample.Desktop.csproj" />
+    <Project Path="ShaderPlayground/ShaderPlayground.csproj" />
+  </Folder>
+  <Project Path="Drawie.JSInterop/Drawie.JSInterop.csproj" />
+  <Project Path="Drawie.Numerics/Drawie.Numerics.csproj" />
+  <Project Path="Drawie.Tests/Drawie.Tests.csproj" />
+  <Project Path="DrawiEngine.Browser/DrawiEngine.Browser.csproj" />
+  <Project Path="DrawiEngine.Desktop/DrawiEngine.Desktop.csproj" />
+  <Project Path="DrawiEngine/DrawiEngine.csproj" />
+</Solution>

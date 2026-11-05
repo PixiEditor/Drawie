@@ -8,6 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Drawie.Backend.Core\Drawie.Backend.Core.csproj" />
-    <ProjectReference Include="..\Drawie.Windowing\Drawie.Windowing.csproj" />
+    <ProjectReference Include="..\Drawie.Host\Drawie.Host.csproj" />
   </ItemGroup>
   </Project>

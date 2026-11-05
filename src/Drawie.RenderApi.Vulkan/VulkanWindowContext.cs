@@ -4,6 +4,7 @@ using Drawie.RenderApi.Vulkan.Exceptions;
 using Drawie.RenderApi.Vulkan.Helpers;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
+using Silk.NET.Vulkan.Extensions.EXT;
 using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace Drawie.RenderApi.Vulkan;
@@ -30,12 +31,12 @@ public class VulkanWindowContext : VulkanContext
     public override void Initialize(IVulkanContextInfo contextInfo)
     {
         Api = Vk.GetApi();
-        
         TryAddValidationLayer("VK_LAYER_KHRONOS_validation");
         
         deviceExtensions.Add(KhrSwapchain.ExtensionName);
         
         SetupInstance(contextInfo);
+        
         SetupDebugMessenger();
 
         if (contextInfo.HasSurface)
@@ -75,7 +76,8 @@ public class VulkanWindowContext : VulkanContext
 
         PhysicalDeviceFeatures deviceFeatures = new()
         {
-            SamplerAnisotropy = false
+            SamplerAnisotropy = false,
+            FillModeNonSolid = true
         };
 
         DeviceCreateInfo createInfo = new()

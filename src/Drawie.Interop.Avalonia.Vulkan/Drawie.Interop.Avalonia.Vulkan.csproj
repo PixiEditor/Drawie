@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -14,12 +14,6 @@
         <ProjectReference Include="..\Drawie.RenderApi.Vulkan\Drawie.RenderApi.Vulkan.csproj"/>
         <ProjectReference Include="..\Drawie.RenderApi\Drawie.RenderApi.csproj"/>
         <ProjectReference Include="..\DrawiEngine\DrawiEngine.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Reference Include="Avalonia.Vulkan">
-            <HintPath>..\Drawie.AvaloniaInterop\bin\Debug\net10.0\Avalonia.Vulkan.dll</HintPath>
-        </Reference>
     </ItemGroup>
 
     <ItemGroup>
