@@ -119,8 +119,7 @@ public class ImageFilter : NativeObject
 
     public static ImageFilter? CreateTile(RectD source, RectD destination, ImageFilter input)
     {
-        var filter =
-            DrawingBackendApi.Current.ImageFilterImplementation.CreateTile(source, destination, input);
+        var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateTile(source, destination, input);
 
         if (filter == null)
             return null;
@@ -188,6 +187,27 @@ public class ImageFilter : NativeObject
 
         return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.Merge };
     }
+
+    public static ImageFilter? CreateOffset(float valueX, float valueY)
+    {
+        var filter = DrawingBackendApi.Current.ImageFilterImplementation.CreateOffset(valueX, valueY);
+
+        if (filter == null)
+            return null;
+
+        return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.Offset };
+    }
+
+    public static ImageFilter? CreateMagnifier(RectD bounds, float zoomValue, float insetValue, SamplingOptions sampling)
+    {
+        var filter =
+            DrawingBackendApi.Current.ImageFilterImplementation.CreateMagnifier(bounds, zoomValue, insetValue,
+                sampling);
+        if (filter == null)
+            return null;
+
+        return new ImageFilter(filter.Value) { WellKnownType = ImageFilterType.Magnifier };
+    }
 }
 
 public enum ImageFilterType
@@ -204,5 +224,7 @@ public enum ImageFilterType
     Dilate,
     Merge,
     Erode,
-    DisplacementMap
+    DisplacementMap,
+    Offset,
+    Magnifier
 }

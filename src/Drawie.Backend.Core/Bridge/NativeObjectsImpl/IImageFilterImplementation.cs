@@ -23,7 +23,7 @@ public interface IImageFilterImplementation
         ImageFilter? input);
 
     public IntPtr? CreateShader(Shader shader, bool dither);
-    public IntPtr? CreateTile(RectD source, RectD dest, ImageFilter input);
+    public IntPtr? CreateTile(RectD source, RectD dest, ImageFilter? input = null);
     public void DisposeObject(IntPtr objectPointer);
     public IntPtr? CreateBlendMode(Blender blendMode, ImageFilter? background, ImageFilter? foreground);
     public IntPtr? CreateDisplacementMap(ColorChannel xChannel, ColorChannel yChannel, float scale,
@@ -33,4 +33,6 @@ public interface IImageFilterImplementation
     public IntPtr? CreateErode(float radiusX, float radiusY);
     public IntPtr? CreateMerge(ImageFilter[] filters);
     public IntPtr? CreateImage(Image image, SamplingOptions sampling);
+    public IntPtr? CreateOffset(float valueX, float valueY);
+    public IntPtr? CreateMagnifier(RectD bounds, float zoomValue, float insetValue, SamplingOptions sampling);
 }

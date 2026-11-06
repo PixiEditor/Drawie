@@ -99,6 +99,25 @@ namespace Drawie.Skia.Implementations
             return null;
         }
 
+        public IntPtr? CreateOffset(float valueX, float valueY)
+        {
+            var skImageFilter = SKImageFilter.CreateOffset(valueX, valueY);
+
+            if (skImageFilter == null)
+                return null;
+
+            return AddManagedInstance(skImageFilter);
+        }
+
+        public IntPtr? CreateMagnifier(RectD bounds, float zoomValue, float insetValue, SamplingOptions sampling)
+        {
+            SKImageFilter filter = SKImageFilter.CreateMagnifier(bounds.ToSKRect(), zoomValue, insetValue, sampling.ToSkSamplingOptions());
+            if (filter == null)
+                return null;
+
+            return AddManagedInstance(filter);
+        }
+
         public IntPtr? CreateDropShadow(float dx, float dy, float sigmaX, float sigmaY, Color color,
             ImageFilter? input)
         {
@@ -129,13 +148,8 @@ namespace Drawie.Skia.Implementations
 
         public IntPtr? CreateTile(RectD source, RectD dest, ImageFilter input)
         {
-            if (input == null)
-            {
-                throw new System.ArgumentNullException(nameof(input));
-            }
-
-            var skImageFilter = SKImageFilter.CreateTile(source.ToSKRect(), dest.ToSKRect(),
-                this[input.ObjectPointer]);
+            SKImageFilter skImageFilter;
+            skImageFilter = SKImageFilter.CreateTile(source.ToSKRect(), dest.ToSKRect(), this[input.ObjectPointer]);
 
             if (skImageFilter == null)
                 return null;
@@ -205,8 +219,14 @@ namespace Drawie.Skia.Implementations
         {
             if (TryGetInstance(displacementMap.ObjectPointer, out var displacementFilter) && displacementFilter != null)
             {
-                TryGetInstance(targetFilter.ObjectPointer, out var targetSkFilter);
-                var skImageFilter = SKImageFilter.CreateDisplacementMapEffect((SKColorChannel)xChannel, (SKColorChannel)yChannel,
+                SKImageFilter? targetSkFilter = null;
+                if (targetFilter != null)
+                {
+                    TryGetInstance(targetFilter.ObjectPointer, out targetSkFilter);
+                }
+
+                var skImageFilter = SKImageFilter.CreateDisplacementMapEffect((SKColorChannel)xChannel,
+                    (SKColorChannel)yChannel,
                     scale, displacementFilter, targetSkFilter);
 
                 if (skImageFilter == null)
